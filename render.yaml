@@ -2,16 +2,12 @@ services:
   - type: web
     name: song-daq
     env: node
-    plan: starter
+    plan: free
     buildCommand: npm install && npx prisma generate && npx prisma db push && npm run build
     startCommand: npm start
-    disk:
-      name: sqlite-data
-      mountPath: /data
-      sizeGB: 1
     envVars:
       - key: DATABASE_URL
-        value: file:/data/sqlite.db
+        value: file:./dev.db
       - key: NEXT_PUBLIC_SOLANA_NETWORK
         value: devnet
       - key: NEXT_PUBLIC_SOLANA_RPC
