@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: song-daq
+    env: node
+    plan: starter
+    buildCommand: npm install && npx prisma generate && npx prisma db push && npm run build
+    startCommand: npm start
+    disk:
+      name: sqlite-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        value: file:/data/sqlite.db
+      - key: NEXT_PUBLIC_SOLANA_NETWORK
+        value: devnet
+      - key: NEXT_PUBLIC_SOLANA_RPC
+        value: https://api.devnet.solana.com
+      - key: NEXT_PUBLIC_AUDIUS_APP_NAME
+        value: songdaq
+      - key: NEXT_PUBLIC_AUDIUS_API_KEY
+        value: "464c31e5cec821ddae579cdf67a5af7433334948"
+      - key: AUDIUS_API_SECRET_KEY
+        value: "3J0bE5AdiNsC9M9AdKwYO6TQiFadrtWOJftsvOEDgfM="
