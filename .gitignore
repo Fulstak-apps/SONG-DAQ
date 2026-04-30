@@ -1,0 +1,10 @@
+node_modules
+.next
+out
+.env
+.env.local
+*.log
+.DS_Store
+anchor/target
+anchor/.anchor
+prisma/migrations/dev.db*

@@ -1,0 +1,192 @@
+"use client";
+import { useEffect, useState } from "react";
+import { useSession } from "@/lib/store";
+import { CoinLauncher } from "@/components/CoinLauncher";
+import { fmtSol, fmtNum } from "@/lib/pricing";
+
+import { Glossary } from "@/components/Tooltip";
+
+export default function ArtistPage() {
+  const { address, audius } = useSession();
+  const [me, setMe] = useState<any>(null);
+  const [mySongs, setMySongs] = useState<any[]>([]);
+  const [busy, setBusy] = useState<string | null>(null);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  async function loadMe() {
+    if (!address) return;
+    const r = await fetch(`/api/me?wallet=${address}`).then((r) => r.json()).catch(() => ({}));
+    setMe(r.user);
+  }
+
+  async function loadSongs() {
+    if (!address) return;
+    const r = await fetch(`/api/songs?sort=new`).then((r) => r.json()).catch(() => ({}));
+    const filtered = (r.songs || []).filter((s: any) => s.artistWallet?.wallet === address);
+    setMySongs(filtered);
+  }
+
+  useEffect(() => { loadMe(); loadSongs(); }, [address, audius?.userId]);
+
+  async function simulateRoyalty(songId: string, source: string) {
+    setBusy(`${songId}:${source}`); setMsg(null);
+    try {
+      const r = await fetch("/api/royalty", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ songId, amountSol: 0.5, source }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || "failed");
+      setMsg(`✓ Distributed 0.5 SOL (${source})`);
+      loadSongs();
+    } catch (e: any) {
+      setMsg(`✗ ${e.message}`);
+    } finally { setBusy(null); }
+  }
+
+  if (!address) {
+    return <div className="panel p-10 text-center text-white/50 text-sm uppercase tracking-widest font-bold">Connect a wallet to access artist tools.</div>;
+  }
+  if (!audius) {
+    return (
+      <div className="panel p-10 text-center space-y-4 max-w-lg mx-auto mt-10 shadow-2xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-tr from-violet/5 to-transparent pointer-events-none" />
+        <div className="text-white text-lg font-bold">Audius Authentication Required</div>
+        <div className="text-white/60 text-sm leading-relaxed">
+          Sign in with Audius to verify your artist identity and establish ownership.
+        </div>
+        <div className="text-[10px] text-white/40 uppercase tracking-widest font-bold border-t border-white/10 pt-4 mt-4">
+          Verification unlocks automated royalty splitting and token launch capabilities.
+        </div>
+      </div>
+    );
+  }
+
+  if (me?.role && me.role !== "ARTIST") {
+    return (
+      <div className="panel p-10 text-center space-y-4 max-w-lg mx-auto mt-10 shadow-2xl relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-tr from-red/5 to-transparent pointer-events-none" />
+        <div className="text-white text-lg font-bold">Artist Access Restricted</div>
+        <div className="text-white/60 text-sm leading-relaxed">
+          Your account is currently registered as an Investor. Only verified Artists can launch Song Coins and access the studio.
+        </div>
+      </div>
+    );
+  }
+
+  const artistRevenue = mySongs.reduce((acc, s) => acc + (s.royaltyPool * s.artistShareBps) / 10_000, 0);
+  const totalCap = mySongs.reduce((acc, s) => acc + s.marketCap, 0);
+  const totalHolders = 0;
+
+  return (
+    <div className="space-y-6 max-w-[1200px] mx-auto">
+      <header className="relative panel p-8 overflow-hidden shadow-2xl border border-white/10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-neon/10 rounded-full blur-[100px] pointer-events-none mix-blend-screen" />
+        <div className="relative z-10">
+          <h1 className="text-4xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 flex items-center gap-3">
+            Song Studio
+            {audius.verified && <span className="text-[10px] uppercase tracking-widest text-black bg-neon px-2 py-0.5 rounded shadow-[0_0_10px_rgba(0,229,114,0.5)] font-bold">Verified</span>}
+          </h1>
+          <p className="text-white/60 mt-2 font-medium">
+            Authenticated as <span className="text-white">@{audius.handle}</span> · Status <span className={me?.role === "ARTIST" ? "text-neon drop-shadow-[0_0_5px_rgba(0,229,114,0.4)]" : "text-white/40 uppercase tracking-widest text-[10px]"}>{me?.role ?? "INVESTOR"}</span>
+          </p>
+        </div>
+      </header>
+
+      <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Stat k="Active Artist Coins" v={fmtNum(mySongs.length)} tooltip="Number of your coins currently trading on the market." />
+        <Stat k="Total Network Cap" v={`${fmtSol(totalCap, 2)} SOL`} tooltip="The combined market capitalization of all your listed songs." />
+        <Stat k="Cumulative Revenue" v={`${fmtSol(artistRevenue, 4)} SOL`} accent="gain" tooltip="Total SOL you have earned from your retained shares." />
+        <Stat k="Unique Holders" v={fmtNum(totalHolders)} tooltip="Total number of unique addresses holding your song tokens." />
+      </section>
+
+      <CoinLauncher onLaunched={() => { loadMe(); loadSongs(); }} />
+
+      <section className="panel overflow-hidden">
+        <div className="px-6 py-5 border-b border-white/10 flex items-center justify-between bg-black/20">
+          <span className="text-white font-bold tracking-tight">Song Coin Launch Dashboard</span>
+          {msg && <span className={`text-[10px] uppercase tracking-widest font-bold px-3 py-1 rounded bg-black/40 border border-white/10 shadow-inner ${msg.startsWith("✗") ? "text-red" : "text-neon drop-shadow-[0_0_5px_rgba(0,229,114,0.3)]"}`}>{msg}</span>}
+        </div>
+        
+        {!mySongs.length ? (
+          <div className="px-6 py-12 text-center relative">
+            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/5 pointer-events-none" />
+            <div className="text-white/40 uppercase tracking-widest font-bold text-xs relative z-10">No active assets</div>
+            <div className="text-white/30 text-[10px] mt-2 relative z-10">Use the studio above to tokenize your first track.</div>
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm text-left">
+              <thead className="bg-black/40 text-white/40 text-[10px] uppercase tracking-widest font-semibold border-b border-white/5">
+                <tr>
+                  <th className="px-6 py-4 font-medium w-1/3">Asset</th>
+                  <th className="px-6 py-4 font-medium text-right">Metrics (SOL)</th>
+                  <th className="px-6 py-4 font-medium text-center">Split Distribution</th>
+                  <th className="px-6 py-4 font-medium text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {mySongs.map((s) => (
+                  <tr key={s.id} className="hover:bg-white/5 transition group">
+                    <td className="px-6 py-4">
+                      <div className="flex items-center gap-3">
+                        <span className="font-mono text-xs font-bold text-white group-hover:text-neon transition drop-shadow-[0_0_5px_rgba(255,255,255,0.2)]">{s.symbol}</span>
+                        <span className="text-white/80 truncate max-w-[200px] font-medium">{s.title}</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex flex-col items-end gap-1">
+                        <span className="num font-bold text-white shadow-sm">{fmtSol(s.price, 6)}</span>
+                        <div className="flex gap-2 text-[9px] uppercase tracking-widest text-white/40 font-mono">
+                          <span>Cap {fmtSol(s.marketCap, 2)}</span>
+                          <span>|</span>
+                          <span>Vol {fmtSol(s.volume24h, 2)}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <span className="text-[10px] uppercase tracking-widest font-bold bg-violet/10 text-violet border border-violet/20 px-2 py-0.5 rounded shadow-[0_0_5px_rgba(155,81,224,0.2)]">Artist {(s.artistShareBps/100).toFixed(0)}%</span>
+                        <span className="text-[10px] uppercase tracking-widest font-bold bg-neon/10 text-neon border border-neon/20 px-2 py-0.5 rounded shadow-[0_0_5px_rgba(0,229,114,0.2)]">Holders {(s.holderShareBps/100).toFixed(0)}%</span>
+                        <span className="text-[10px] uppercase tracking-widest font-bold bg-white/5 text-white/50 border border-white/10 px-2 py-0.5 rounded">Protocol {(s.protocolShareBps/100).toFixed(0)}%</span>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-2">
+                        <button className="px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white/5 border border-white/10 hover:bg-white/10 text-white hover:border-white/30" disabled={busy === `${s.id}:audius` || !s.streamingEnabled} onClick={() => simulateRoyalty(s.id, "audius")}>
+                          {busy === `${s.id}:audius` ? "Processing..." : "Stream"}
+                        </button>
+                        <button className="px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-bold transition-all disabled:opacity-30 disabled:cursor-not-allowed bg-white/5 border border-white/10 hover:bg-white/10 text-white hover:border-white/30" disabled={busy === `${s.id}:trading` || !s.tradingFeesEnabled} onClick={() => simulateRoyalty(s.id, "trading")}>
+                          Trading
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+    </div>
+  );
+}
+
+function Stat({ k, v, accent, tooltip }: { k: string; v: string; accent?: "gain" | "lose", tooltip?: string }) {
+  const content = (
+    <div className="label mb-1">
+      {tooltip ? <Glossary term={k} def={tooltip}>{k}</Glossary> : k}
+    </div>
+  );
+
+  return (
+    <div className="panel p-5 relative overflow-hidden group">
+      <div className="absolute -right-5 -top-5 w-16 h-16 bg-white/5 rounded-full blur-[20px] pointer-events-none group-hover:bg-white/10 transition" />
+      {content}
+      <div className={`mt-2 text-2xl font-mono font-bold tracking-tight ${accent === "gain" ? "gain drop-shadow-[0_0_10px_rgba(0,229,114,0.4)]" : accent === "lose" ? "lose drop-shadow-[0_0_10px_rgba(255,51,102,0.4)]" : "text-white"}`}>
+        {v}
+      </div>
+    </div>
+  );
+}

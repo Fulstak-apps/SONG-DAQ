@@ -1,0 +1,205 @@
+// Song DAQ — Prisma schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String       @id @default(cuid())
+  wallet          String       @unique
+  walletType      String       @default("solana")
+  handle          String?      @unique
+  audiusUserId    String?      @unique
+  audiusHandle    String?
+  audiusName      String?
+  audiusAvatar    String?
+  audiusVerified  Boolean      @default(false)
+  role            String       @default("INVESTOR")
+  preferredMode   String       @default("INVESTOR")
+  createdAt       DateTime     @default(now())
+  holdings        Holding[]
+  coinHoldings    CoinHolding[]
+  trades          Trade[]
+  coinTrades      CoinTrade[]
+  payouts         RoyaltyPayout[]
+  artistTokens    SongToken[]  @relation("ArtistTokens")
+  watchlist       Watch[]
+  followers       Follow[]     @relation("FollowedBy")
+  following       Follow[]     @relation("Following")
+  social          SocialPost[]
+}
+
+model SongToken {
+  id                String         @id @default(cuid())
+  symbol            String         @unique
+  mintAddress       String?        @unique
+  audiusTrackId     String         @unique
+  title             String
+  artistName        String
+  artistWalletId    String
+  artistWallet      User           @relation("ArtistTokens", fields: [artistWalletId], references: [id])
+  artworkUrl        String?
+  streamUrl         String?
+  supply            Float          @default(1000000)
+  circulating       Float          @default(0)
+  reserveSol        Float          @default(0)
+  curveSlope        Float          @default(0.0000005)
+  basePrice         Float          @default(0.001)
+  artistShareBps    Int            @default(5000)
+  holderShareBps    Int            @default(3000)
+  protocolShareBps  Int            @default(2000)
+  streamingEnabled  Boolean        @default(true)
+  tradingFeesEnabled Boolean       @default(true)
+  externalRevenueEnabled Boolean   @default(false)
+  streams           Int            @default(0)
+  likes             Int            @default(0)
+  reposts           Int            @default(0)
+  performance       Float          @default(1.0)
+  price             Float          @default(0.001)
+  volume24h         Float          @default(0)
+  marketCap         Float          @default(0)
+  royaltyPool       Float          @default(0)
+  ath               Float          @default(0)
+  athAt             DateTime?
+  distributor       String?
+  royaltyVault      String?
+  splitsLocked      Boolean        @default(false)
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  holdings          Holding[]
+  trades            Trade[]
+  pricePoints       PricePoint[]
+  payouts           RoyaltyPayout[]
+  events            MarketEvent[]
+  watchers          Watch[]
+  social            SocialPost[]
+}
+
+model Holding {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  songId    String
+  song      SongToken @relation(fields: [songId], references: [id])
+  amount    Float
+  costBasis Float
+  updatedAt DateTime  @updatedAt
+  @@unique([userId, songId])
+}
+
+model Trade {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  songId    String
+  song      SongToken @relation(fields: [songId], references: [id])
+  side      String
+  amount    Float
+  price     Float
+  total     Float
+  fee       Float     @default(0)
+  txSig     String?
+  createdAt DateTime  @default(now())
+  @@index([songId, createdAt])
+}
+
+model PricePoint {
+  id        String    @id @default(cuid())
+  songId    String
+  song      SongToken @relation(fields: [songId], references: [id])
+  ts        DateTime  @default(now())
+  open      Float
+  high      Float
+  low       Float
+  close     Float
+  volume    Float     @default(0)
+  @@index([songId, ts])
+}
+
+model RoyaltyPayout {
+  id        String    @id @default(cuid())
+  songId    String
+  song      SongToken @relation(fields: [songId], references: [id])
+  userId    String?
+  user      User?     @relation(fields: [userId], references: [id])
+  bucket    String
+  amount    Float
+  createdAt DateTime  @default(now())
+  @@index([songId, createdAt])
+}
+
+model MarketEvent {
+  id        String    @id @default(cuid())
+  songId    String
+  song      SongToken @relation(fields: [songId], references: [id])
+  kind      String
+  payload   String
+  createdAt DateTime  @default(now())
+  @@index([createdAt])
+}
+
+model Watch {
+  id        String    @id @default(cuid())
+  userId    String
+  songId    String
+  user      User      @relation(fields: [userId], references: [id])
+  song      SongToken @relation(fields: [songId], references: [id])
+  createdAt DateTime  @default(now())
+  @@unique([userId, songId])
+}
+
+model Follow {
+  id          String  @id @default(cuid())
+  followerId  String
+  followingId String
+  follower    User    @relation("Following", fields: [followerId], references: [id])
+  following   User    @relation("FollowedBy", fields: [followingId], references: [id])
+  createdAt   DateTime @default(now())
+  @@unique([followerId, followingId])
+}
+
+model SocialPost {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  songId    String?
+  song      SongToken? @relation(fields: [songId], references: [id])
+  kind      String
+  text      String
+  createdAt DateTime  @default(now())
+  @@index([createdAt])
+}
+
+// ─── Audius Artist Coins (off-chain ledger; on-chain via Solana later) ───
+
+model CoinHolding {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  mint      String   // Solana mint addr
+  ticker    String
+  amount    Float
+  costBasis Float
+  updatedAt DateTime @updatedAt
+  @@unique([userId, mint])
+}
+
+model CoinTrade {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  mint      String
+  ticker    String
+  side      String   // BUY | SELL
+  amount    Float    // tokens
+  priceUsd  Float
+  totalUsd  Float
+  txSig     String?
+  createdAt DateTime @default(now())
+  @@index([mint, createdAt])
+}
