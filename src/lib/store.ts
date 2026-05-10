@@ -70,7 +70,7 @@ export const useUI = create<UIState>((set) => ({
   closeLoginModal: () => set({ loginModalOpen: false }),
   userMode: "INVESTOR",
   setUserMode: (m) => set({ userMode: m }),
-  theme: "light",
+  theme: "dark",
   setTheme: (t) => set({ theme: t }),
   activityToastVisible: true,
   setActivityToastVisible: (v) => set({ activityToastVisible: v }),
