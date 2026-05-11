@@ -18,6 +18,7 @@ import { calculateCoinRisk } from "@/lib/risk/calculateCoinRisk";
 import { readJson } from "@/lib/safeJson";
 import { useCoins } from "@/lib/useCoins";
 import { WhyFansCanBuy } from "./WhyFansCanBuy";
+import { pickAudiusArtwork } from "@/lib/audiusArtwork";
 
 const SOL_MINT = "So11111111111111111111111111111111111111112";
 const SOL_DECIMALS = 9;
@@ -261,7 +262,7 @@ export function CoinTradeModal({
   const royaltyStatus = (coin as any).splitsLocked ? "Royalty split locked" : "Royalty not verified yet";
 
   function trackArtwork(track: any) {
-    return track.artwork?.["480x480"] ?? track.artwork?.["150x150"] ?? track.artwork ?? track.artwork_url ?? track.image ?? coin?.logo_uri ?? null;
+    return pickAudiusArtwork(track, coin?.audius_track_artwork ?? coin?.logo_uri ?? coin?.artist_avatar ?? null);
   }
 
   function trackToPlayerTrack(track: any): PlayerTrack {

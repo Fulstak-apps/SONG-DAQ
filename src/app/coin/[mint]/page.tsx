@@ -19,6 +19,7 @@ import { Glossary, InfoTooltip } from "@/components/Tooltip";
 import { readJson } from "@/lib/safeJson";
 import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
+import { pickAudiusArtwork } from "@/lib/audiusArtwork";
 
 const CoinTradeModal = dynamic(() => import("@/components/CoinTradeModal").then((m) => m.CoinTradeModal), { ssr: false });
 const TradeFeed = dynamic(() => import("@/components/TradeFeed").then((m) => m.TradeFeed), { ssr: false });
@@ -42,14 +43,8 @@ function shortMint(m: string) {
   return m.length > 14 ? `${m.slice(0, 6)}…${m.slice(-4)}` : m;
 }
 
-function trackArtwork(track: any) {
-  return track?.artworkUrl ||
-    track?.artwork_url ||
-    track?.image ||
-    track?.artwork?.["1000x1000"] ||
-    track?.artwork?.["480x480"] ||
-    track?.artwork?.["150x150"] ||
-    null;
+function trackArtwork(track: any, fallback?: string | null) {
+  return pickAudiusArtwork(track, fallback ?? null);
 }
 
 export default function CoinPage() {
@@ -439,7 +434,7 @@ export default function CoinPage() {
                       id: `audius-track-${trackId}`,
                       title: trackTitle,
                       artist: coin.artist_name ?? coin.name,
-                      artwork: trackArtwork(t),
+                      artwork: trackArtwork(t, coin.audius_track_artwork ?? coin.logo_uri ?? coin.artist_avatar ?? null),
                       streamUrl: `https://api.audius.co/v1/tracks/${trackId}/stream?app_name=songdaq`,
                       href: trackUrl,
                     } : null;
@@ -447,7 +442,7 @@ export default function CoinPage() {
                     return (
                       <div key={trackId || trackTitle} className="flex gap-3 rounded-2xl border border-edge bg-panel p-3">
                         <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-edge bg-panel2">
-                          <SafeImage src={trackArtwork(t)} alt={trackTitle} fill sizes="56px" fallback={trackTitle} className="object-cover" />
+                          <SafeImage src={trackArtwork(t, coin.audius_track_artwork ?? coin.logo_uri ?? coin.artist_avatar ?? null)} alt={trackTitle} fill sizes="56px" fallback={trackTitle} className="object-cover" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="flex flex-wrap items-start justify-between gap-2">
@@ -536,7 +531,7 @@ export default function CoinPage() {
                     id: `audius-track-${trackId}`,
                     title: trackTitle,
                     artist: coin.artist_name ?? coin.name,
-                    artwork: trackArtwork(t),
+                    artwork: trackArtwork(t, coin.audius_track_artwork ?? coin.logo_uri ?? coin.artist_avatar ?? null),
                     streamUrl: `https://api.audius.co/v1/tracks/${trackId}/stream?app_name=songdaq`,
                     href: trackUrl,
                   } : null;
@@ -545,7 +540,7 @@ export default function CoinPage() {
                     <div key={trackId || trackTitle} className="rounded-xl border border-edge bg-panel2 p-2.5">
                       <div className="flex items-start gap-2">
                         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-edge bg-panel">
-                          <SafeImage src={trackArtwork(t)} alt={trackTitle} fill sizes="40px" fallback={trackTitle} className="object-cover" />
+                          <SafeImage src={trackArtwork(t, coin.audius_track_artwork ?? coin.logo_uri ?? coin.artist_avatar ?? null)} alt={trackTitle} fill sizes="40px" fallback={trackTitle} className="object-cover" />
                         </div>
                         <div className="min-w-0 flex-1">
                           <div className="text-xs font-black text-white break-words">{trackTitle}</div>
@@ -814,7 +809,7 @@ export default function CoinPage() {
                   id: `audius-track-${trackId}`,
                   title: trackTitle,
                   artist: coin.artist_name ?? coin.name,
-                  artwork: trackArtwork(t),
+                  artwork: trackArtwork(t, coin.audius_track_artwork ?? coin.logo_uri ?? coin.artist_avatar ?? null),
                   streamUrl: `https://api.audius.co/v1/tracks/${trackId}/stream?app_name=songdaq`,
                   href: trackUrl,
                 } : null;
@@ -832,7 +827,7 @@ export default function CoinPage() {
                       title={`Open ${trackTitle} on Audius`}
                     >
                       <SafeImage
-                        src={trackArtwork(t)}
+                        src={trackArtwork(t, coin.audius_track_artwork ?? coin.logo_uri ?? coin.artist_avatar ?? null)}
                         fill sizes="64px" alt={trackTitle} fallback={trackTitle} className="object-cover group-hover:scale-105 transition-transform duration-500"
                       />
                       <div className="absolute inset-0 bg-bg/20 group-hover:bg-transparent transition-all" />

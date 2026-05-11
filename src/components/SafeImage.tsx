@@ -17,10 +17,10 @@ export function SafeImage({
   ...rest
 }: Omit<ImageProps, "src"> & { src?: string | null; fallback?: string }) {
   const [errored, setErrored] = useState(false);
+  const safeSrc = typeof src === "string" && src.trim() ? src.trim() : null;
   const initial = (fallback ?? alt ?? "?").trim().charAt(0).toUpperCase() || "?";
-  const showFallback = !src || errored;
 
-  if (showFallback) {
+  if (!safeSrc || errored) {
     const fillStyle = (rest as any).fill ? "absolute inset-0" : "inline-grid";
     const w = (rest as any).width;
     const h = (rest as any).height;
@@ -37,7 +37,7 @@ export function SafeImage({
   return (
     <Image
       {...rest}
-      src={src}
+      src={safeSrc}
       alt={alt}
       className={className}
       onError={() => setErrored(true)}

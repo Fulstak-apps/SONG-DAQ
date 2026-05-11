@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { pickAudiusArtwork } from "@/lib/audiusArtwork";
 import { fetchJson } from "@/lib/fetchTimeout";
 
 export const dynamic = "force-dynamic";
@@ -9,18 +10,8 @@ const FALLBACK_HOSTS = [
   "https://discoveryprovider2.audius.co",
 ];
 
-function pickArtwork(track: any) {
-  return track?.artwork?.["1000x1000"] ||
-    track?.artwork?.["480x480"] ||
-    track?.artwork?.["150x150"] ||
-    track?.artwork?.url ||
-    track?.artwork_url ||
-    track?.image ||
-    null;
-}
-
 function normalizeTrack(track: any) {
-  const artwork = pickArtwork(track);
+  const artwork = pickAudiusArtwork(track);
   return {
     ...track,
     artworkUrl: artwork,

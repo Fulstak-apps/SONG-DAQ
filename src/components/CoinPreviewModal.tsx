@@ -13,6 +13,7 @@ import { fmtNum, fmtPct } from "@/lib/pricing";
 import type { AudiusCoin } from "@/lib/audiusCoins";
 import { readJson } from "@/lib/safeJson";
 import { useCoins } from "@/lib/useCoins";
+import { pickAudiusArtwork } from "@/lib/audiusArtwork";
 
 interface RecentTradeDTO {
   id: string;
@@ -170,11 +171,15 @@ export function CoinPreviewModal({
   const royaltyStatus = (coin as any).splitsLocked ? "Royalty split locked" : "Royalty pending";
 
   function trackToPlayerTrack(track: any): PlayerTrack {
+    const artwork = pickAudiusArtwork(
+      track,
+      activeCoin.audius_track_artwork ?? activeCoin.logo_uri ?? activeCoin.artist_avatar ?? null,
+    );
     return {
       id: `audius-track-${track.id}`,
       title: track.title ?? "Untitled",
       artist: track.user?.name ?? activeCoin.artist_name ?? activeCoin.name,
-      artwork: track.artwork ?? track.artwork_url ?? track.image ?? activeCoin.logo_uri ?? null,
+      artwork,
       streamUrl: `https://api.audius.co/v1/tracks/${track.id}/stream?app_name=songdaq`,
       href: track.permalink ?? (activeCoin.artist_handle ? `https://audius.co/${activeCoin.artist_handle}` : undefined),
     };
