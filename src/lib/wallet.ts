@@ -64,6 +64,8 @@ interface SolWindow {
   backpack?: SolanaProvider | { solana?: SolanaProvider };
 }
 
+const connectLocks = new Map<WalletId, Promise<ConnectResult>>();
+
 function w(): SolWindow & Window {
   return globalThis as any;
 }
@@ -238,7 +240,11 @@ function allSolanaCandidates(): SolanaProvider[] {
     win.solana,
     ...(Array.isArray(win.solana?.providers) ? win.solana.providers : []),
   ];
-  return candidates.filter(isProviderLike);
+  const unique: SolanaProvider[] = [];
+  for (const candidate of candidates.filter(isProviderLike)) {
+    if (!unique.includes(candidate)) unique.push(candidate);
+  }
+  return unique;
 }
 
 async function waitForProvider(id: WalletId, timeoutMs = 3_500): Promise<SolanaProvider | null> {
@@ -281,23 +287,12 @@ async function connectProvider(provider: SolanaProvider, id: WalletId) {
   const existing = connectedPublicKey(null, provider);
   if (existing) return { publicKey: { toString: () => existing } };
 
-  if (id === "phantom") {
-    try {
-      const trusted = await withWalletTimeout(provider.connect({ onlyIfTrusted: true }), label, 2_500);
-      if (connectedPublicKey(trusted, provider)) return trusted;
-    } catch {
-      /* Not trusted yet; fall through to the normal approval popup. */
-    }
-  }
-
   try {
-    const options = id === "phantom" ? { onlyIfTrusted: false } : undefined;
-    return await withWalletTimeout(provider.connect(options), label);
-  } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const canRetryWithoutOptions = id === "phantom" && /argument|option|parameter|unexpected|unsupported/i.test(message);
-    if (!canRetryWithoutOptions) throw error;
     return await withWalletTimeout(provider.connect(), label);
+  } catch (error) {
+    const connected = connectedPublicKey(null, provider);
+    if (connected) return { publicKey: { toString: () => connected } };
+    throw error;
   }
 }
 
@@ -318,6 +313,16 @@ async function waitForConnectedPublicKey(result: unknown, provider: SolanaProvid
 }
 
 export async function connectWallet(id: WalletId): Promise<ConnectResult> {
+  const existingLock = connectLocks.get(id);
+  if (existingLock) return existingLock;
+  const run = connectWalletUnlocked(id).finally(() => {
+    if (connectLocks.get(id) === run) connectLocks.delete(id);
+  });
+  connectLocks.set(id, run);
+  return run;
+}
+
+async function connectWalletUnlocked(id: WalletId): Promise<ConnectResult> {
   switch (id) {
     case "phantom": {
       const p = await waitForProvider("phantom");
