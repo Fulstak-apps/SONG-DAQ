@@ -47,7 +47,9 @@ type SolanaProvider = {
   isBackpack?: boolean;
   providers?: SolanaProvider[];
   publicKey?: { toString(): string } | null;
+  isConnected?: boolean;
   connect: (options?: Record<string, unknown>) => Promise<{ publicKey?: { toString(): string } } | void>;
+  request?: (payload: { method: string; params?: Record<string, unknown> }) => Promise<{ publicKey?: { toString(): string } } | void>;
   disconnect?: () => Promise<void>;
   signAndSendTransaction?: (tx: Transaction | VersionedTransaction) => Promise<string | { signature: string }>;
   signTransaction?: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
@@ -161,7 +163,10 @@ function normalizeWalletError(error: unknown, id: WalletId) {
     return new Error(`${label} already has a connection request open. Close any wallet popup, unlock ${label}, then try again.`);
   }
   if (/unexpected|internal|unknown/i.test(message)) {
-    return new Error(`${label} returned an unexpected connection error. Close any wallet popup, unlock ${label}, refresh this page, and try again.`);
+    return new Error(`${label} returned an unexpected connection error. Close any wallet popup, unlock ${label}, make sure Solana is enabled in Phantom, refresh this page, and try again.`);
+  }
+  if (/blocked|malicious|unsafe|domain|review/i.test(message)) {
+    return new Error(`${label} blocked this domain/request. That usually means the dApp domain needs Phantom review or must be allowed in wallet settings before Phantom will connect.`);
   }
   return error instanceof Error ? error : new Error(message);
 }
@@ -314,19 +319,19 @@ async function connectProvider(provider: SolanaProvider, id: WalletId) {
   if (existing) return { publicKey: { toString: () => existing } };
 
   const requestConnect = (options?: Record<string, unknown>) => withWalletTimeout(provider.connect(options), label);
+  const requestRpcConnect = () => provider.request
+    ? withWalletTimeout(provider.request({ method: "connect" }), label)
+    : requestConnect();
 
   try {
-    if (id === "phantom") {
-      return await requestConnect({ onlyIfTrusted: false });
-    }
     return await requestConnect();
   } catch (error) {
     const message = walletErrorMessage(error);
-    const canRetryWithoutOptions = id === "phantom" && !/reject|denied|cancel|already processing|already pending|request pending|pending request/i.test(message) && /argument|option|parameter|unexpected|unsupported|internal|unknown/i.test(message);
-    if (!canRetryWithoutOptions) throw normalizeWalletError(error, id);
+    const canRetryWithRpc = id === "phantom" && !/reject|denied|cancel|already processing|already pending|request pending|pending request|blocked|malicious|unsafe/i.test(message);
+    if (!canRetryWithRpc) throw normalizeWalletError(error, id);
     await wait(350);
     try {
-      return await requestConnect();
+      return await requestRpcConnect();
     } catch (retryError) {
       throw normalizeWalletError(retryError, id);
     }
