@@ -305,13 +305,25 @@ function connectedPublicKey(result: unknown, provider: SolanaProvider) {
   return (result as any)?.publicKey?.toString?.() || provider.publicKey?.toString?.();
 }
 
+async function waitForConnectedPublicKey(result: unknown, provider: SolanaProvider, label: string) {
+  const immediate = connectedPublicKey(result, provider);
+  if (immediate) return immediate;
+  const startedAt = Date.now();
+  while (Date.now() - startedAt < 2_000) {
+    await new Promise((resolve) => setTimeout(resolve, 100));
+    const next = connectedPublicKey(result, provider);
+    if (next) return next;
+  }
+  throw new Error(`${label} approved the connection but did not return a public key. Unlock the wallet, refresh, and try again.`);
+}
+
 export async function connectWallet(id: WalletId): Promise<ConnectResult> {
   switch (id) {
     case "phantom": {
       const p = await waitForProvider("phantom");
       if (!p) throw new Error("Phantom was not detected. Make sure the Phantom extension is installed, enabled, and allowed on this site, then refresh.");
       const r = await connectProvider(p, "phantom");
-      const publicKey = connectedPublicKey(r, p);
+      const publicKey = await waitForConnectedPublicKey(r, p, "Phantom");
       const address = assertValidSolanaAddress(publicKey, "Phantom");
       requestWalletBalanceRefresh(address);
       return { address, kind: "solana", provider: id };
@@ -320,7 +332,7 @@ export async function connectWallet(id: WalletId): Promise<ConnectResult> {
       const p = await waitForProvider("solflare");
       if (!p) throw new Error("Solflare was not detected. Make sure the extension is installed, enabled, and allowed on this site, then refresh.");
       const r = await connectProvider(p, "solflare");
-      const address = assertValidSolanaAddress(connectedPublicKey(r, p), "Solflare");
+      const address = assertValidSolanaAddress(await waitForConnectedPublicKey(r, p, "Solflare"), "Solflare");
       requestWalletBalanceRefresh(address);
       return { address, kind: "solana", provider: id };
     }
@@ -328,7 +340,7 @@ export async function connectWallet(id: WalletId): Promise<ConnectResult> {
       const p = await waitForProvider("backpack");
       if (!p) throw new Error("Backpack was not detected. Make sure the extension is installed, enabled, and allowed on this site, then refresh.");
       const r = await connectProvider(p, "backpack");
-      const publicKey = connectedPublicKey(r, p);
+      const publicKey = await waitForConnectedPublicKey(r, p, "Backpack");
       const address = assertValidSolanaAddress(publicKey, "Backpack");
       requestWalletBalanceRefresh(address);
       return { address, kind: "solana", provider: id };
