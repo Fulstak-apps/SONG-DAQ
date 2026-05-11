@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSession, useUI } from "@/lib/store";
 import { api } from "@/lib/api";
+import { getConnectedWalletId, sendSerializedTransaction } from "@/lib/wallet";
 import { fmtSol } from "@/lib/pricing";
 import { Glossary } from "@/components/Tooltip";
 
@@ -14,8 +15,11 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
   const [solIn, setSolIn] = useState<string>("");
   const [maxSlippageBps, setMax] = useState<string>("1500");
   const [quote, setQuote] = useState<any>(null);
+  const [quoteResponse, setQuoteResponse] = useState<any>(null);
+  const [swapRouteReady, setSwapRouteReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [ok, setOk] = useState<string | null>(null);
 
   const tokenAmt = Number(tokens) || 0;
   const solAmt = Number(solIn) || 0;
@@ -30,8 +34,13 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
     if (side === "BUY" && solAmt > 0) qs.set("solIn", String(solAmt));
     else if (tokenAmt > 0) qs.set("tokens", String(tokenAmt));
     api<any>(`/api/trade?${qs.toString()}`)
-      .then((d) => { if (alive) setQuote(d.quote); })
-      .catch((e) => { if (alive) { setErr(e.message); setQuote(null); } });
+      .then((d) => {
+        if (!alive) return;
+        setQuote(d.quote);
+        setQuoteResponse(d.quoteResponse || null);
+        setSwapRouteReady(Boolean(d.swapRouteReady));
+      })
+      .catch((e) => { if (alive) { setErr(e.message); setQuote(null); setQuoteResponse(null); setSwapRouteReady(false); } });
     return () => { alive = false; };
   }, [song?.id, side, tokens, solIn, asset, song?.circulating, song?.performance]);
 
@@ -44,7 +53,9 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
     setBusy(true);
     setErr(null);
     try {
-      await api(`/api/trade`, {
+      const walletId = getConnectedWalletId() || provider;
+      if (!walletId || walletId === "audius") throw new Error("Connect Phantom, Solflare, or Backpack to trade.");
+      const built = await api<any>(`/api/trade`, {
         method: "POST",
         json: {
           songId: song.id,
@@ -53,9 +64,25 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
           walletType: kind,
           maxSlippageBps: Number(maxSlippageBps),
           asset,
+          quoteResponse,
           ...(side === "BUY" && solAmt > 0 ? { solIn: solAmt } : { tokens: tokenAmt }),
         },
       });
+      const swapTx = built.swapTransaction || built.transaction;
+      if (!swapTx) throw new Error("Swap route did not return a wallet transaction.");
+      const txSig = await sendSerializedTransaction(walletId as any, swapTx);
+      await api(`/api/trade`, {
+        method: "POST",
+        json: {
+          songId: song.id,
+          side,
+          wallet: address,
+          walletType: kind,
+          txSig,
+          quoteResponse: built.quoteResponse,
+        },
+      });
+      setOk(`${side === "BUY" ? "Bought" : "Sold"} ${(built.quote?.tokens ?? quote?.tokens ?? tokenAmt).toFixed(2)} ${song.symbol}`);
       onTraded();
     } catch (e: any) {
       setErr(e.message ?? String(e));
@@ -69,7 +96,6 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
   const displayTotal = quote ? quote.total : null;
   const displayAvgPrice = quote ? quote.avgPrice : null;
   const walletCanTransact = kind === "solana" && provider !== "audius";
-  const swapRouteReady = Boolean(song.swapRouteReady);
   const canExecute = !busy && walletCanTransact && swapRouteReady && Number(tokens || solIn) > 0 && !!quote;
 
   return (
@@ -89,7 +115,7 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
 
       <div className="space-y-5 relative z-10">
         <div className="rounded-xl border border-amber/20 bg-amber/5 px-4 py-3 text-[10px] uppercase tracking-widest font-bold text-amber leading-relaxed">
-          SONG·DAQ will never ask for a message signature as a fake trade. Wallet approval appears only when a real on-chain swap route is ready. This panel can preview pricing, but execution stays locked until swap routing is live.
+          SONG·DAQ will never ask for a message signature as a fake trade. Wallet approval appears only when Jupiter returns a real on-chain swap transaction for this exact order.
         </div>
         
         <div className="space-y-2">
@@ -166,6 +192,7 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
         <Row k="Settlement Units" v={quote ? `${quote.tokens.toFixed(2)} UNITS` : "—"} />
         <Row k="Price Impact" v={`${slippagePct}%`} color={Number(slippagePct) > 2 ? "text-red" : "text-neon"} />
         <Row k="Spot Price" v={quote ? `${fmtSol(quote.newSpotPrice, 6)} SOL` : "—"} />
+        <Row k="Route" v={swapRouteReady ? "Jupiter live route" : quote?.routeError || "Waiting for liquidity"} color={swapRouteReady ? "text-neon" : "text-amber"} />
         <Row k="Wallet Approval" v="On-chain swap only" color="text-neon" />
       </div>
 
@@ -179,6 +206,7 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
         </button>
 
         {err && <div className="text-red text-[10px] uppercase tracking-widest font-bold text-center bg-red/10 border border-red/20 py-2 rounded-lg">{err}</div>}
+        {ok && <div className="text-neon text-[10px] uppercase tracking-widest font-bold text-center bg-neon/10 border border-neon/20 py-2 rounded-lg">{ok}</div>}
         {!address && <div className="text-mute text-[10px] uppercase tracking-widest font-bold text-center">Authorization required to transact.</div>}
       </div>
     </div>
