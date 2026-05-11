@@ -782,9 +782,36 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                         help="This is the estimated price for 1 song coin at launch. The price can move up or down once people start buying and selling."
                         description={`Starting token price: ${formatCryptoWithFiat(basePrice, "SOL", basePriceUsd, currency, 6)}.`}
                       />
-                      <Field label="Curve Momentum" value={curveSlope} onChange={markCustom(setCurveSlope)} step={0.0000001} min={0} unit="Slope" />
-                      <Field label="Max Wallet Cap" value={maxWalletBps / 100} onChange={(n) => { setLaunchPreset("custom"); setMaxWalletBps(Math.round(n * 100)); }} step={0.25} min={0.1} unit="% of supply" />
-                      <Field label="Artist Hold / Vesting Allocation" value={artistAllocationBps / 100} onChange={(n) => { setLaunchPreset("custom"); setArtistAllocationBps(Math.round(n * 100)); }} step={0.25} min={0} unit="% of supply" />
+                      <Field
+                        label="Curve Momentum"
+                        value={curveSlope}
+                        onChange={markCustom(setCurveSlope)}
+                        step={0.0000001}
+                        min={0}
+                        unit="Slope"
+                        help="Curve momentum controls how quickly the token price can rise as more people buy. Higher momentum can make early buys move the price faster. Lower momentum makes price movement slower and smoother."
+                        description="Use a lower number for a calmer launch. Use a higher number only if you want the price curve to react more aggressively to demand."
+                      />
+                      <Field
+                        label="Max Wallet Cap"
+                        value={maxWalletBps / 100}
+                        onChange={(n) => { setLaunchPreset("custom"); setMaxWalletBps(Math.round(n * 100)); }}
+                        step={0.25}
+                        min={0.1}
+                        unit="% of supply"
+                        help="Max wallet cap is the most one wallet should be allowed to hold during launch. It helps stop one buyer from taking too much of the supply at the start."
+                        description="A smaller cap spreads coins across more fans. A larger cap lets bigger buyers take a bigger position."
+                      />
+                      <Field
+                        label="Artist Hold / Vesting Allocation"
+                        value={artistAllocationBps / 100}
+                        onChange={(n) => { setLaunchPreset("custom"); setArtistAllocationBps(Math.round(n * 100)); }}
+                        step={0.25}
+                        min={0}
+                        unit="% of supply"
+                        help="This is the artist's share of the total token supply. Vesting means the artist's share is held over time instead of all being freely sellable right away."
+                        description="Keeping the artist share vested helps fans trust that the artist is aligned with the coin long term."
+                      />
                     </>
                   )}
                   {allocationRisk && (
