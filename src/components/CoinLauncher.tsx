@@ -625,25 +625,63 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               className="flex flex-col items-center justify-center py-20 space-y-8"
             >
               {!result && !busy && (
-                <div className="text-center space-y-6 max-w-md">
+                <div className="w-full max-w-3xl space-y-6">
                   <div className="w-20 h-20 rounded-3xl bg-neon/10 border border-neon/30 flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(0,229,114,0.2)]">
                     <Rocket className="text-neon" size={40} />
                   </div>
-                  <div className="space-y-2">
+                  <div className="space-y-2 text-center">
                     <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Review Risk + Launch</h3>
                     <p className="text-mute text-sm font-medium">
                       Your connected artist wallet signs a clear launch flow. The coin is not tradable until the public curve/pool has verified liquidity, so fans can buy from the market instead of from the artist directly.
                     </p>
                   </div>
-                  <div className="panel p-4 text-left space-y-2 bg-panel border-edge">
-                    <Row k="Song" v={pick?.title ?? "Artist coin"} />
-                    <Row k="Supply" v={fmtNum(supply)} />
-                    <Row k="Liquidity" v={`${fmtNum(liquidityTokenAmount)} tokens + ${liquidityPairAmount} ${liquidityPairAsset}`} color="text-neon" />
-                    <Row k="Trading opens" v="After liquidity transaction verifies" color="text-neon" />
-                    <Row k="Liquidity lock" v={`${liquidityLockDays} days`} />
-                    <Row k="Artist allocation" v={`${(artistAllocationBps / 100).toFixed(2)}%`} />
-                    <Row k="Max wallet cap" v={`${(maxWalletBps / 100).toFixed(2)}%`} />
-                    <Row k="Royalty status" v="Pending verification" color="text-amber" />
+                  <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+                    <div className="panel p-4 text-left space-y-2 bg-panel border-edge">
+                      <div className="text-[10px] uppercase tracking-widest font-black text-white">Launch summary</div>
+                      <Row k="Song" v={pick?.title ?? "Artist coin"} />
+                      <Row k="Supply" v={fmtNum(supply)} />
+                      <Row k="Liquidity" v={`${fmtNum(liquidityTokenAmount)} tokens + ${liquidityPairAmount} ${liquidityPairAsset}`} color="text-neon" />
+                      <Row k="Trading opens" v="After liquidity transaction verifies" color="text-neon" />
+                      <Row k="Liquidity lock" v={`${liquidityLockDays} days`} />
+                      <Row k="Artist allocation" v={`${(artistAllocationBps / 100).toFixed(2)}%`} />
+                      <Row k="Max wallet cap" v={`${(maxWalletBps / 100).toFixed(2)}%`} />
+                      <Row k="Royalty status" v="Pending verification" color="text-amber" />
+                      <Row k="Signing policy" v="Wallet transaction only. No private key. No blind message." color="text-neon" />
+                    </div>
+                    <div className="panel p-4 text-left space-y-3 bg-panel border-edge">
+                      <div className="text-[10px] uppercase tracking-widest font-black text-white">Wallet approval preview</div>
+                      <div className="space-y-3 text-xs leading-relaxed text-mute">
+                        <div>
+                          <span className="font-black text-neon">Approval 1:</span> creates the SPL mint, attaches SONG·DAQ metadata, mints the fixed supply to your connected artist wallet, disables freeze authority, and revokes mint authority.
+                        </div>
+                        <div>
+                          <span className="font-black text-neon">Approval 2:</span> creates the public liquidity pool with the token amount and {liquidityPairAsset} amount shown here.
+                        </div>
+                        <div>
+                          Wallet prompts should show your wallet as signer, this token symbol, normal Solana programs, and no unlimited approval.
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
+                    <div className="rounded-xl border border-neon/20 bg-neon/10 p-4 text-left text-xs leading-relaxed text-neon/85">
+                      <div className="mb-2 text-[10px] uppercase tracking-widest font-black text-neon">Clean launch rules</div>
+                      <ul className="list-disc space-y-1 pl-4">
+                        <li>Fixed supply is created once.</li>
+                        <li>Freeze authority is disabled.</li>
+                        <li>Mint authority is revoked in the same mint transaction.</li>
+                        <li>Metadata includes the song, artist, image, royalty status, and liquidity status.</li>
+                      </ul>
+                    </div>
+                    <div className="rounded-xl border border-amber/20 bg-amber/10 p-4 text-left text-xs leading-relaxed text-amber/90">
+                      <div className="mb-2 text-[10px] uppercase tracking-widest font-black text-amber">Do not sign if you see</div>
+                      <ul className="list-disc space-y-1 pl-4">
+                        <li>A seed phrase, private key, or password request.</li>
+                        <li>A message signature pretending to launch or trade.</li>
+                        <li>A different domain, token, wallet, or amount than this preview.</li>
+                        <li>An unlimited approval or unknown wallet drain warning.</li>
+                      </ul>
+                    </div>
                   </div>
                   <label className="flex items-start gap-3 rounded-xl border border-edge bg-panel p-3 text-left text-xs text-mute">
                     <input type="checkbox" checked={ownershipConfirmed} onChange={(e) => setOwnershipConfirmed(e.target.checked)} className="mt-1" />

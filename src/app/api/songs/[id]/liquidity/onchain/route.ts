@@ -71,7 +71,7 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
         pairAsset: normalizedPairAsset,
         lockDays: normalizedLockDays,
       },
-      message: "Ready for wallet approval",
+      message: `Ready for wallet approval. This creates the public ${song.symbol} liquidity pool with ${normalizedTokenAmount.toLocaleString()} tokens and ${normalizedPairAmount} ${normalizedPairAsset}. It does not request a private key, message signature, or unlimited approval.`,
     });
   } catch (err) {
     if (err instanceof AuthError) {

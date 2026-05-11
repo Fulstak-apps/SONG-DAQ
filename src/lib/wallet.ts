@@ -31,6 +31,7 @@ import {
 } from "@solana/spl-token";
 
 const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
+const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
 const PHANTOM_REVIEW_MESSAGE =
   "Live wallet transactions are paused while SONG·DAQ completes Phantom/Blowfish domain review. You can still connect your wallet, browse, and use Paper Mode. After Phantom approves song-daq.onrender.com, live launch and trade signing will be enabled.";
 
@@ -128,6 +129,18 @@ async function withWalletTimeout<T>(promise: Promise<T>, label: string, timeoutM
   } finally {
     if (timer) clearTimeout(timer);
   }
+}
+
+function walletLabel(id: WalletId) {
+  return WALLETS.find((wallet) => wallet.id === id)?.label || "Wallet";
+}
+
+function createMemoInstruction(message: string) {
+  return new TransactionInstruction({
+    keys: [],
+    programId: MEMO_PROGRAM_ID,
+    data: Buffer.from(message.slice(0, 180), "utf8"),
+  });
 }
 
 function envOn(value: unknown) {
@@ -291,7 +304,11 @@ export async function sendSerializedTransaction(id: WalletId, base64Transaction:
   const tx = VersionedTransaction.deserialize(bytes);
 
   if (provider.signAndSendTransaction) {
-    const result = await provider.signAndSendTransaction(tx);
+    const result = await withWalletTimeout(
+      provider.signAndSendTransaction(tx),
+      `${walletLabel(id)} transaction approval`,
+      45_000,
+    );
     return typeof result === "string" ? result : result.signature;
   }
 
@@ -299,7 +316,11 @@ export async function sendSerializedTransaction(id: WalletId, base64Transaction:
     throw new Error("Wallet does not support transaction signing");
   }
 
-  const signed = await provider.signTransaction(tx);
+  const signed = await withWalletTimeout(
+    provider.signTransaction(tx),
+    `${walletLabel(id)} transaction signing`,
+    45_000,
+  );
   const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC || clusterApiUrl("mainnet-beta");
   const connection = new Connection(rpc, "confirmed");
   const sig = await connection.sendRawTransaction(signed.serialize(), {
@@ -353,6 +374,7 @@ export async function createArtistPaidSongMint(
   const metadataUri = metadata?.baseUrl
     ? `${metadata.baseUrl.replace(/\/$/, "")}/api/token-metadata/${mint.publicKey.toBase58()}`
     : undefined;
+  const memoSymbol = metadata?.symbol?.replace(/^\$/, "").trim().slice(0, 10).toUpperCase() || "SONG";
   const metadataInstruction = metadata && metadataUri
     ? createMetadataInstruction({
         mint: mint.publicKey,
@@ -372,6 +394,9 @@ export async function createArtistPaidSongMint(
     feePayer: payer,
     recentBlockhash: latest.blockhash,
   }).add(
+    createMemoInstruction(
+      `SONG·DAQ launch mint: $${memoSymbol}. Fixed supply song coin, artist wallet receives supply, metadata attached, freeze disabled, mint authority revoked.`,
+    ),
     SystemProgram.createAccount({
       fromPubkey: payer,
       newAccountPubkey: mint.publicKey,
@@ -399,10 +424,18 @@ export async function createArtistPaidSongMint(
 
   let sig: string;
   if (provider.signAndSendTransaction) {
-    const result = await provider.signAndSendTransaction(tx);
+    const result = await withWalletTimeout(
+      provider.signAndSendTransaction(tx),
+      `${walletLabel(id)} launch mint approval`,
+      45_000,
+    );
     sig = typeof result === "string" ? result : result.signature;
   } else if (provider.signTransaction) {
-    const signed = await provider.signTransaction(tx);
+    const signed = await withWalletTimeout(
+      provider.signTransaction(tx),
+      `${walletLabel(id)} launch mint signing`,
+      45_000,
+    );
     sig = await connection.sendRawTransaction(signed.serialize(), {
       skipPreflight: false,
       maxRetries: 3,
