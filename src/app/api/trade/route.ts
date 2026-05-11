@@ -17,7 +17,6 @@ export async function POST(req: NextRequest) {
     side,                // "BUY" | "SELL"
     wallet,
     walletType = "solana",
-    txSig,
   } = body ?? {};
 
   if (!songId || !side || !wallet) {
@@ -29,14 +28,10 @@ export async function POST(req: NextRequest) {
   if (walletType !== "solana") {
     return NextResponse.json({ error: "SONG·DAQ trading is Solana-only" }, { status: 400 });
   }
-  if (!txSig) {
-    return NextResponse.json({ error: "A confirmed Solana transaction signature is required" }, { status: 401 });
-  }
-
   return NextResponse.json(
     {
       error:
-        "Song Token trading opens after a verified liquidity pool or Jupiter route is connected. No off-chain fills are recorded.",
+        "A real on-chain swap route is required before SONG·DAQ asks your wallet to sign. No message signatures or fake off-chain fills are recorded.",
     },
     { status: 503 },
   );

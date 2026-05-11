@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ShieldCheck, ExternalLink } from "lucide-react";
+import { AlertTriangle, BadgeCheck, ExternalLink, Lock, ShieldCheck } from "lucide-react";
 import { PriceChart, type PricePointDTO } from "@/components/PriceChart";
 import { TradePanel } from "@/components/TradePanel";
 import { TradeFeed } from "@/components/TradeFeed";
@@ -425,6 +425,7 @@ export default function SongTradingPage() {
 
       <div className="space-y-6">
         {isTradable ? <TradePanel song={song} onTraded={load} /> : <PendingLiquidityPanel song={song} isOwner={isOwner} />}
+        <TokenTrustPanel song={song} isTradable={isTradable} />
         
         {!song.splitsLocked && (
           <div className="panel p-5 bg-orange-500/5 border border-orange-500/20 rounded-2xl space-y-4 shadow-xl">
@@ -469,6 +470,86 @@ export default function SongTradingPage() {
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function TokenTrustPanel({ song, isTradable }: { song: any; isTradable: boolean }) {
+  const hasMint = Boolean(song.mintAddress);
+  const hasMetadata = hasMint && Boolean(song.artworkUrl || song.streamUrl);
+  const hasLiquidity = Number(song.liquidityPairAmount || 0) > 0 && Number(song.liquidityTokenAmount || 0) > 0;
+  const liquidityVerified = Boolean(song.liquidityLocked && song.status === "LIVE");
+  const royaltyVerified = song.royaltyVerificationStatus === "verified" || song.royaltyBacked;
+  const artistVerified = Boolean(song.artistWallet?.audiusVerified);
+  const trustItems = [
+    {
+      label: "Fixed supply mint",
+      detail: hasMint ? "Mint authority revoked at launch" : "Mint pending",
+      ok: hasMint,
+    },
+    {
+      label: "Freeze authority",
+      detail: hasMint ? "Disabled for normal transfers" : "Pending",
+      ok: hasMint,
+    },
+    {
+      label: "Professional metadata",
+      detail: hasMetadata ? "Artwork/audio metadata attached" : "Fallback metadata only",
+      ok: hasMetadata,
+    },
+    {
+      label: "Launch liquidity",
+      detail: liquidityVerified ? "Verified and live" : hasLiquidity ? "Reserved, pending verification" : "Not added yet",
+      ok: liquidityVerified,
+      warn: hasLiquidity && !liquidityVerified,
+    },
+    {
+      label: "Artist identity",
+      detail: artistVerified ? "Audius profile verified" : "Audius-linked, not verified",
+      ok: artistVerified,
+      warn: !artistVerified,
+    },
+    {
+      label: "Royalty backing",
+      detail: royaltyVerified ? "Royalty split verified" : "Not royalty verified yet",
+      ok: royaltyVerified,
+      warn: !royaltyVerified,
+    },
+  ];
+
+  return (
+    <div className="panel p-5 space-y-4 shadow-xl">
+      <div className="flex items-start gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-neon/25 bg-neon/10 text-neon">
+          <ShieldCheck size={18} />
+        </div>
+        <div className="min-w-0">
+          <div className="text-[10px] uppercase tracking-widest font-black text-neon">Token Trust Check</div>
+          <p className="mt-1 text-xs leading-relaxed text-mute">
+            SONG·DAQ only opens trading after a real liquidity route is verified. Royalty status is separate from launch liquidity.
+          </p>
+        </div>
+      </div>
+      <div className="space-y-2">
+        {trustItems.map((item) => (
+          <div key={item.label} className="flex items-start justify-between gap-3 rounded-xl border border-edge bg-panel p-3">
+            <div className="min-w-0">
+              <div className="text-[10px] uppercase tracking-widest font-black text-ink">{item.label}</div>
+              <div className="mt-1 text-[11px] leading-relaxed text-mute">{item.detail}</div>
+            </div>
+            <div className={`mt-0.5 shrink-0 ${item.ok ? "text-neon" : item.warn ? "text-amber" : "text-red"}`}>
+              {item.ok ? <BadgeCheck size={17} /> : item.warn ? <AlertTriangle size={17} /> : <Lock size={17} />}
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className={`rounded-xl border p-3 text-[11px] leading-relaxed ${
+        isTradable ? "border-neon/20 bg-neon/10 text-neon" : "border-amber/20 bg-amber/10 text-amber"
+      }`}>
+        {isTradable
+          ? "Trading is enabled because launch liquidity is verified. Wallet approval should only appear for real on-chain swaps."
+          : "Trading is locked until launch liquidity is verified. This prevents fake fills and protects buyers from a frozen market."}
       </div>
     </div>
   );

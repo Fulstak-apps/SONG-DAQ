@@ -16,21 +16,26 @@ function validMint(mint: string) {
 }
 
 function fallbackMetadata(req: NextRequest, mint: string) {
+  const base = appUrl(req);
   return NextResponse.json(
     {
       name: "SONG·DAQ Song Token",
       symbol: "SONG",
-      description: "SONG·DAQ token metadata is being indexed. This mint was created for a song-linked market token.",
-      image: `${appUrl(req)}/api/token-image/${mint}`,
-      external_url: `${appUrl(req)}/market`,
+      description: "SONG·DAQ token metadata is being indexed. This is a fixed-supply song-linked market token. Trading opens only after launch liquidity is verified. Royalty activity is separate and must be verified by SONG·DAQ.",
+      image: `${base}/api/token-image/${mint}`,
+      external_url: `${base}/market`,
       properties: {
         category: "image",
-        files: [{ uri: `${appUrl(req)}/api/token-image/${mint}`, type: "image/svg+xml" }],
+        files: [{ uri: `${base}/api/token-image/${mint}`, type: "image/svg+xml" }],
       },
       attributes: [
         { trait_type: "Protocol", value: "SONG·DAQ" },
         { trait_type: "Asset Type", value: "Song Token" },
         { trait_type: "Status", value: "Indexing" },
+        { trait_type: "Mint Policy", value: "Fixed supply" },
+        { trait_type: "Freeze Policy", value: "Disabled" },
+        { trait_type: "Trading Policy", value: "Requires verified liquidity" },
+        { trait_type: "Royalty Policy", value: "Admin verified separately" },
       ],
     },
     { headers: { "cache-control": "public, max-age=60, s-maxage=60" } },
@@ -117,8 +122,14 @@ export async function GET(req: NextRequest, { params }: { params: { mint: string
         { trait_type: "Artist", value: artistName },
         { trait_type: "Audius Verified", value: song.artistWallet.audiusVerified ? "Yes" : "No" },
         { trait_type: "Audius Source", value: audiusUrl || "Pending" },
-        { trait_type: "Liquidity Status", value: song.liquidityPairAmount > 0 ? "Required liquidity recorded" : "Pending liquidity" },
+        { trait_type: "Mint Policy", value: "Fixed supply" },
+        { trait_type: "Mint Authority", value: "Revoked at launch" },
+        { trait_type: "Freeze Authority", value: "Disabled" },
+        { trait_type: "Metadata Policy", value: "Immutable after launch" },
+        { trait_type: "Liquidity Status", value: song.status === "LIVE" && song.liquidityLocked ? "Verified launch liquidity" : song.liquidityPairAmount > 0 ? "Reserved liquidity pending verification" : "Pending liquidity" },
+        { trait_type: "Trading Status", value: song.status === "LIVE" ? "Open" : "Locked until liquidity verification" },
         { trait_type: "Royalty Status", value: song.royaltyStatus },
+        { trait_type: "Royalty Verification", value: song.royaltyVerificationStatus },
         { trait_type: "Risk Label", value: song.riskLevel },
       ],
       links: {
