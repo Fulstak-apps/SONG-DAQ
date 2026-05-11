@@ -12,7 +12,7 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
     const database = databaseReadiness();
     if (!database.productionReady) {
       return NextResponse.json(
-        { error: "Liquidity verification is locked until the production database is reachable.", recommendation: database.recommendation },
+        { error: "Liquidity verification needs a reachable production database.", recommendation: database.recommendation },
         { status: 503 },
       );
     }

@@ -107,7 +107,7 @@ export async function POST(req: NextRequest) {
   const database = databaseReadiness();
   if (!database.productionReady) {
     return NextResponse.json(
-      { error: "Trading is locked until the production database is reachable.", recommendation: database.recommendation },
+      { error: "Trading needs a reachable production database.", recommendation: database.recommendation },
       { status: 503 },
     );
   }
@@ -200,7 +200,7 @@ export async function GET(req: NextRequest) {
   const database = databaseReadiness();
   if (!database.productionReady) {
     return NextResponse.json(
-      { error: "Trading is locked until the production database is reachable.", recommendation: database.recommendation, swapRouteReady: false },
+      { error: "Trading needs a reachable production database.", recommendation: database.recommendation, swapRouteReady: false },
       { status: 503 },
     );
   }

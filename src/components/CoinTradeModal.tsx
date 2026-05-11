@@ -17,7 +17,6 @@ import type { AudiusCoin } from "@/lib/audiusCoins";
 import { calculateCoinRisk } from "@/lib/risk/calculateCoinRisk";
 import { readJson } from "@/lib/safeJson";
 import { useCoins } from "@/lib/useCoins";
-import { LiveTradingStatusBanner } from "./LiveTradingStatusBanner";
 import { WhyFansCanBuy } from "./WhyFansCanBuy";
 
 const SOL_MINT = "So11111111111111111111111111111111111111112";
@@ -426,7 +425,6 @@ export function CoinTradeModal({
             <button className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/[0.055] hover:bg-white/[0.1] transition text-mute hover:text-ink border border-edge" onClick={onClose}>×</button>
           </header>
           <div className="px-4 pt-4 sm:px-6 space-y-3">
-            <LiveTradingStatusBanner compact />
             <WhyFansCanBuy compact />
           </div>
 

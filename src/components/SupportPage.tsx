@@ -33,7 +33,7 @@ const launchChecklist = [
 
 const walletHelp = [
   "If the wallet is not connected, SONG·DAQ should show a Connect Wallet button instead of zero balances.",
-  "If Phantom blocks a request, review the wallet warning and only continue if the site URL is correct.",
+  "If a wallet rejects a request, SONG·DAQ should show the real wallet error so it can be tested and fixed.",
   "If a balance looks wrong, refresh the wallet connection and confirm the same wallet address is selected.",
   "Live buys use SOL right now. Audius wallet buying is coming later because Audius has platform restrictions.",
 ];
@@ -114,8 +114,8 @@ export function SupportPage() {
         <SupportCard icon={<RefreshCw />} title="What Is Manual vs Automatic?">
           <p><strong className="text-ink">Automatic:</strong> the app can show coin pages, charts, Paper Mode, wallet state, portfolio records, submitted royalty requests, and admin dashboard data.</p>
           <p><strong className="text-ink">Manual:</strong> royalty verification, royalty payments received from distributors, Royalty Pool contributions, and any treasury movement are admin-reviewed for the MVP.</p>
-          <p>This protects users because real royalty money and treasury actions should not move without human review yet.</p>
-          <p>Automated royalty payouts, holder rewards, and live treasury actions stay locked until SONG·DAQ has legal review and a treasury automation audit.</p>
+          <p>Manual royalty and treasury controls live in the admin dashboard. They do not stop users from testing the public launch, buy, sell, and wallet flows.</p>
+          <p>If a launch or trade fails, SONG·DAQ should show the real backend or wallet error instead of a fake paused state.</p>
         </SupportCard>
       </section>
 
@@ -160,7 +160,7 @@ export function SupportPage() {
         <SupportCard icon={<ShieldAlert />} title="Public Launch Safety">
           <p>Before public launch, confirm real wallet buys, coin launches, portfolio tracking, admin login, royalty request submission, and mobile layouts all work on the Render app.</p>
           <p>Legal language must be reviewed by a qualified attorney before marketing song coins publicly.</p>
-          <p>Live Mode should stay conservative until treasury automation, Phantom trust review, and complete transaction monitoring are ready.</p>
+          <p>Public user flows should stay open for testing. Admin-only moderation and operational checks belong inside the admin dashboard.</p>
         </SupportCard>
       </section>
 

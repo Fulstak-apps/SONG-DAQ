@@ -552,7 +552,7 @@ function TokenTrustPanel({ song, isTradable }: { song: any; isTradable: boolean 
       }`}>
         {isTradable
           ? "Trading is enabled because launch liquidity is verified. Wallet approval should only appear for real on-chain swaps."
-          : "Trading is locked until launch liquidity is verified. This prevents fake fills and protects buyers from a frozen market."}
+          : "Trading needs launch liquidity before a real swap route can execute. If you try before a route exists, SONG·DAQ will show the actual router or backend error."}
       </div>
     </div>
   );

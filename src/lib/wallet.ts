@@ -32,8 +32,6 @@ import {
 
 const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
 const MEMO_PROGRAM_ID = new PublicKey("MemoSq4gqABAXKb96qnH8TysNcWxMyWCqXgDLGmfcHr");
-const PHANTOM_REVIEW_MESSAGE =
-  "Live wallet transactions are paused while SONG·DAQ completes Phantom/Blowfish domain review. You can still connect your wallet, browse, and use Paper Mode. After Phantom approves song-daq.onrender.com, live launch and trade signing will be enabled.";
 
 export type WalletId = "phantom" | "solflare" | "backpack";
 
@@ -143,22 +141,12 @@ function createMemoInstruction(message: string) {
   });
 }
 
-function envOn(value: unknown) {
-  return ["1", "true", "yes", "on"].includes(String(value || "").toLowerCase());
-}
-
-function isRenderProductionHost() {
-  if (typeof window === "undefined") return false;
-  const host = window.location.hostname.toLowerCase();
-  return host === "song-daq.onrender.com";
-}
-
 export function liveWalletTransactionsAllowed() {
-  return !isRenderProductionHost() || envOn(process.env.NEXT_PUBLIC_PHANTOM_REVIEW_APPROVED);
+  return true;
 }
 
 export function assertLiveWalletTransactionsAllowed() {
-  if (!liveWalletTransactionsAllowed()) throw new Error(PHANTOM_REVIEW_MESSAGE);
+  return;
 }
 
 export async function connectWallet(id: WalletId): Promise<ConnectResult> {

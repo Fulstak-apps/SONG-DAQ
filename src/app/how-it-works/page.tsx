@@ -6,7 +6,7 @@ const steps = [
   ["Artist verifies", "Artist signs in with Audius so SONG·DAQ can connect the coin to a real artist identity.", <Music key="music" />],
   ["Market opens", "The public allocation goes into a curve or liquidity pool. Fans buy from that market, not from the artist directly.", <Coins key="coins" />],
   ["Wallet signs", "Real buys, sells, and launches use an external Solana wallet. Paper Mode uses simulated money.", <Wallet key="wallet" />],
-  ["Trust is reviewed", "Phantom review, metadata, liquidity, royalty status, and admin checks protect users from confusing or unsafe launches.", <ShieldCheck key="shield" />],
+  ["Clear testing", "Launches, buys, sells, and wallet prompts run through the live flow so real backend or wallet errors are visible while testing.", <ShieldCheck key="shield" />],
 ] as const;
 
 export default function HowItWorksPage() {

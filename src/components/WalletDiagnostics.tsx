@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { AlertTriangle, Bug, RefreshCw, Wallet } from "lucide-react";
+import { Bug, RefreshCw, Wallet } from "lucide-react";
 import { WALLETS } from "@/lib/wallet";
 import { useNativeBalance } from "@/components/WalletBalance";
 import { useSession } from "@/lib/store";
@@ -72,7 +72,7 @@ export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
             <Wallet size={14} /> Wallet diagnostics
           </div>
           <p className="mt-1 text-xs leading-relaxed text-mute">
-            Checks installed wallets, connected address, network, SOL balance, Audius wallet, RPC, database, and Phantom review status.
+            Checks installed wallets, connected address, network, SOL balance, Audius wallet, RPC, and database status.
           </p>
         </div>
         <button onClick={loadHealth} className="btn h-9 px-3 text-[10px]" disabled={busy}>
@@ -87,7 +87,6 @@ export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
         <Diag label="Network" value={health?.network || "Checking"} ok={health?.network === "mainnet-beta" || health?.network === "devnet"} />
         <Diag label="RPC" value={health?.rpcConfigured ? "Configured" : "Missing"} ok={!!health?.rpcConfigured} />
         <Diag label="Database" value={health?.database?.connected ? "Connected" : "Slow/unreachable"} ok={!!health?.database?.connected} />
-        <Diag label="Phantom review" value={health?.walletTrust?.phantomReviewApproved ? "Approved" : "Pending"} ok={!!health?.walletTrust?.phantomReviewApproved} />
         <Diag label="Audius wallet" value={audius?.wallets?.sol ? `${audius.wallets.sol.slice(0, 6)}…${audius.wallets.sol.slice(-4)}` : "Not exposed"} ok={!!audius?.wallets?.sol} />
       </div>
 
@@ -98,13 +97,6 @@ export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
           </span>
         ))}
       </div>
-
-      {!health?.walletTrust?.phantomReviewApproved && (
-        <div className="rounded-xl border border-amber/20 bg-amber/10 p-3 text-xs leading-relaxed text-amber flex gap-2">
-          <AlertTriangle size={14} className="mt-0.5 shrink-0" />
-          Phantom may block live signing until review is approved. This does not stop wallet connection or Paper Mode.
-        </div>
-      )}
 
       <button onClick={reportIssue} disabled={reporting} className="btn-danger h-10 px-4 text-[10px] uppercase tracking-widest font-black">
         <Bug size={13} /> {reporting ? "Reporting…" : "Report wallet issue"}

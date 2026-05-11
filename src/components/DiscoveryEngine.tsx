@@ -148,7 +148,7 @@ function MarketPrimer({ onConnect }: { onConnect: () => void }) {
     {
       icon: <Wallet size={18} />,
       title: "Investors connect a Solana wallet",
-      text: "Trading requires a Solana signature. Browsing is open, but buying and selling stay locked until your investor wallet is connected.",
+      text: "Trading requires a Solana signature. Browse freely, then connect your investor wallet when you are ready to buy or sell.",
       tone: "text-neon border-neon/20 bg-neon/8",
     },
     {

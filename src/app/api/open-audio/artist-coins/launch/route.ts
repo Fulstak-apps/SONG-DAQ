@@ -15,7 +15,7 @@ export async function POST(req: NextRequest) {
     const database = databaseReadiness();
     if (!database.productionReady) {
       return NextResponse.json(
-        { error: "Artist Coin launch is locked until the production database is reachable.", recommendation: database.recommendation },
+        { error: "Artist Coin launch needs a reachable production database.", recommendation: database.recommendation },
         { status: 503 },
       );
     }

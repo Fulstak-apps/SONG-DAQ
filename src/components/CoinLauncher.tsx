@@ -17,10 +17,9 @@ import type { AudiusTrack } from "@/lib/audius";
 import { createArtistPaidSongMint, getConnectedWalletId, sendSerializedTransaction, type WalletId } from "@/lib/wallet";
 import { Glossary } from "@/components/Tooltip";
 import { WalletButton } from "@/components/WalletButton";
-import { LiveTradingStatusBanner } from "@/components/LiveTradingStatusBanner";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
-import { AlertTriangle, ChevronRight, ChevronLeft, Rocket, Music, Settings, BarChart3, ShieldCheck, CheckCircle2 } from "lucide-react";
+import { ChevronRight, ChevronLeft, Rocket, Music, Settings, BarChart3, ShieldCheck, CheckCircle2 } from "lucide-react";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
 type LaunchKind = "SONG" | "ARTIST";
@@ -67,13 +66,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const [liquidityMessage, setLiquidityMessage] = useState<string | null>(null);
   const [launchStatus, setLaunchStatus] = useState<{
     configured: boolean;
-    readyForPublic?: boolean;
     missing?: string[];
     payerConfigured?: boolean;
     treasuryConfigured?: boolean;
     jupiterConfigured?: boolean;
     artistPaysLaunchFees?: boolean;
-    phantomReviewRequired?: boolean;
     walletTransactionsEnabled?: boolean;
     treasuryWallet?: string;
     network: string;
@@ -108,7 +105,6 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
     : canStep2 && royaltyValid && supply >= 1_000 && basePrice > 0 && curveSlope >= 0 && !!distributor;
   const liquidityValid = launchKind === "ARTIST" ? true : liquidityTokenAmount > 0 && liquidityPairAmount > 0 && liquidityLockDays >= 30;
   const allocationRisk = artistAllocationBps > 5000 || maxWalletBps > 1000;
-  const walletTransactionsPaused = launchStatus?.walletTransactionsEnabled === false;
   const canLaunchReview = canStep3 && liquidityValid && !allocationRisk;
   const impliedPrice = liquidityPairAmount / Math.max(liquidityTokenAmount, 1);
   const launchLiquidityRatio = liquidityTokenAmount / Math.max(supply, 1);
@@ -156,15 +152,6 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
     }
     if (launchKind === "ARTIST") return deployOpenAudioArtistCoin();
     if (!pick) return;
-    if (launchStatus && !launchStatus.readyForPublic) {
-      const missing = launchStatus.missing?.length ? launchStatus.missing.join(", ") : "Production launch configuration";
-      setErr(`${missing} is required before this can reserve real launch liquidity on Solana.`);
-      return;
-    }
-    if (walletTransactionsPaused) {
-      setErr("Live wallet signing is paused while SONG·DAQ completes Phantom/Blowfish review. This prevents Phantom from showing the scary blocked-request screen. Use Paper Mode or launch locally/devnet until the live domain is approved.");
-      return;
-    }
     setBusy(true); setErr(null);
     setLiquidityStage("idle");
     setLiquidityMessage(null);
@@ -294,15 +281,6 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   async function deployOpenAudioArtistCoin() {
     if (!externalWalletAddress || !externalWalletProvider) {
       setErr("Connect Phantom, Solflare, or Backpack before launching. Audius verifies the artist, but an external Solana wallet signs the Open Audio Artist Coin transaction.");
-      return;
-    }
-    if (launchStatus && !launchStatus.readyForPublic) {
-      const missing = launchStatus.missing?.length ? launchStatus.missing.join(", ") : "Production launch configuration";
-      setErr(`${missing} is required before this can launch an Artist Coin on Solana.`);
-      return;
-    }
-    if (walletTransactionsPaused) {
-      setErr("Live wallet signing is paused while SONG·DAQ completes Phantom/Blowfish review. Use Paper Mode until the live domain is approved.");
       return;
     }
     setBusy(true); setErr(null);
@@ -483,51 +461,6 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         </button>
       </div>
 
-      {launchStatus && !launchStatus.readyForPublic && (
-        <div className="relative z-10 rounded-xl border border-amber/25 bg-amber/10 px-4 py-3 text-amber flex items-start gap-3">
-          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-          <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-widest font-black">Production launch configuration required</div>
-            <div className="mt-1 text-xs leading-relaxed text-amber/80">
-              Set {launchStatus.missing?.join(", ") || "the required production env vars"} in Render, then redeploy. Artists pay mint and launch network fees from their connected Solana wallet.
-            </div>
-            {launchStatus.missing?.length ? (
-              <div className="mt-2 flex flex-wrap gap-1.5">
-                {launchStatus.missing.map((m) => (
-                  <span key={m} className="rounded-full border border-amber/20 bg-amber/10 px-2 py-0.5 text-[9px] uppercase tracking-widest font-black text-amber">
-                    {m}
-                  </span>
-                ))}
-              </div>
-            ) : null}
-          </div>
-        </div>
-      )}
-
-      {launchStatus?.readyForPublic && (
-        <div className="relative z-10 rounded-xl border border-neon/25 bg-neon/10 px-4 py-3 text-neon flex items-start gap-3">
-          <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
-          <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-widest font-black">Public launch ready</div>
-            <div className="mt-1 text-xs leading-relaxed text-neon/80">
-              Production env vars, Solana network, database, and treasury config are in place for live launch testing.
-            </div>
-          </div>
-        </div>
-      )}
-
-      {walletTransactionsPaused && (
-        <div className="relative z-10 rounded-xl border border-red/25 bg-red/10 px-4 py-3 text-red flex items-start gap-3">
-          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
-          <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-widest font-black">Live wallet signing paused</div>
-            <div className="mt-1 text-xs leading-relaxed text-red/80">
-              Phantom is blocking the live domain until SONG·DAQ passes Phantom/Blowfish review. We stop live launch signing here so users do not see a malicious-request wallet screen.
-            </div>
-          </div>
-        </div>
-      )}
-
       {!externalWalletAddress && audiusWalletAddress && (
         <div className="relative z-10 rounded-xl border border-violet/25 bg-violet/10 px-4 py-3 text-violet flex items-start gap-3">
           <ShieldCheck size={16} className="mt-0.5 shrink-0" />
@@ -546,13 +479,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         </div>
       )}
 
-      <LiveTradingStatusBanner compact />
       <LaunchReadinessChecklist
         walletConnected={!!launchIdentityWallet}
         artistVerified={!!audius?.userId}
         metadataReady={!!(process.env.NEXT_PUBLIC_APP_URL || typeof window !== "undefined")}
         liquidityReady={liquidityValid}
-        phantomReady={!walletTransactionsPaused}
         tokenTrustReady={!allocationRisk && ownershipConfirmed && riskAcknowledged}
       />
       <WhyFansCanBuy compact />
@@ -587,7 +518,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <div className="rounded-2xl border border-violet/25 bg-violet/10 p-4">
                       <div className="text-[10px] uppercase tracking-widest font-black text-violet">Option C: launch on Audius, run everything else on SONG·DAQ</div>
                       <p className="mt-2 text-xs leading-relaxed text-violet/85">
-                        Until SONG·DAQ receives the official Open Audio Artist Coin launch config and Phantom review clears, launch the Artist Coin on Audius first. Paste the official mint here, and SONG·DAQ will build the coin page, chart, portfolio, royalty setup, admin tracking, and trading context around it.
+                        If you already launched an Artist Coin on Audius, paste the official mint here. SONG·DAQ will build the coin page, chart, portfolio, royalty setup, admin tracking, and trading context around it.
                       </p>
                       <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
                         <input
@@ -797,7 +728,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 <p className="mt-2 text-sm leading-relaxed text-neon/85">
                   {launchKind === "ARTIST"
                     ? "Fans buy Artist Coins from a Meteora Dynamic Bonding Curve quoted in $AUDIO. The artist allocation vests separately, so fans are buying from the public curve instead of a hidden artist wallet."
-                    : "Fans need a live market to buy. Song Tokens are connected to one Audius track, and the public allocation opens through an explicit SOL, USDC, or AUDIO liquidity pool. Trading stays blocked until that pool is verified."}
+                    : "Fans need a live market to buy. Song Tokens are connected to one Audius track, and the public allocation opens through an explicit SOL, USDC, or AUDIO liquidity pool."}
                 </p>
               </div>
               {launchKind === "ARTIST" ? (
@@ -924,16 +855,16 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   </label>
                   <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-left text-xs leading-relaxed text-neon/85">
                     {launchKind === "ARTIST"
-                      ? "Open Audio Artist Coins use a $AUDIO-paired public bonding curve plus artist vesting. SONG·DAQ will only enable live signing once Phantom/domain review is clear."
-                      : "Audius-style launches use a public market curve plus artist vesting. SONG·DAQ will only enable live trading once liquidity is verified and Phantom/domain review is clear."}
+                      ? "Open Audio Artist Coins use a $AUDIO-paired public bonding curve plus artist vesting. Your wallet signs the live transaction and SONG·DAQ shows the real wallet or backend result."
+                      : "Audius-style launches use a public market curve plus artist vesting. Your wallet signs the live transaction and SONG·DAQ shows the real wallet or backend result."}
                   </div>
                   <button
                     type="button"
                     className="btn-primary w-full py-4 text-sm font-black tracking-widest shadow-[0_0_30px_rgba(0,229,114,0.3)] disabled:opacity-50 disabled:grayscale"
                     onClick={deploy}
-                    disabled={!externalWalletAddress || launchStatus?.configured === false || walletTransactionsPaused || !canLaunchReview || !ownershipConfirmed || !riskAcknowledged}
+                    disabled={!externalWalletAddress || !canLaunchReview || !ownershipConfirmed || !riskAcknowledged}
                   >
-                    {!externalWalletAddress ? "CONNECT EXTERNAL WALLET TO SIGN" : walletTransactionsPaused ? "PHANTOM REVIEW REQUIRED" : launchKind === "ARTIST" ? "SIGN AUDIO ARTIST COIN LAUNCH" : "SIGN MINT + ADD LIQUIDITY"}
+                    {!externalWalletAddress ? "CONNECT EXTERNAL WALLET TO SIGN" : launchKind === "ARTIST" ? "SIGN AUDIO ARTIST COIN LAUNCH" : "SIGN MINT + ADD LIQUIDITY"}
                   </button>
                 </div>
               )}
@@ -1099,14 +1030,12 @@ function LaunchReadinessChecklist({
   artistVerified,
   metadataReady,
   liquidityReady,
-  phantomReady,
   tokenTrustReady,
 }: {
   walletConnected: boolean;
   artistVerified: boolean;
   metadataReady: boolean;
   liquidityReady: boolean;
-  phantomReady: boolean;
   tokenTrustReady: boolean;
 }) {
   const items = [
@@ -1114,8 +1043,7 @@ function LaunchReadinessChecklist({
     ["Audius artist verified", artistVerified, "Audius identity links the coin to the real artist account."],
     ["Metadata ready", metadataReady, "Name, symbol, image, description, and token traits are prepared."],
     ["Liquidity ready", liquidityReady, "Public market liquidity is required before fans can buy."],
-    ["Phantom review", phantomReady, "Live wallet signing stays paused until the domain is trusted."],
-    ["Token trust", tokenTrustReady, "Ownership, risk, vesting, and cap checks are accepted."],
+    ["Token details", tokenTrustReady, "Ownership, risk, vesting, and cap settings are accepted."],
   ] as const;
   return (
     <section className="relative z-10 rounded-2xl border border-edge bg-panel p-4">
@@ -1124,7 +1052,7 @@ function LaunchReadinessChecklist({
         {items.map(([label, ok, hint]) => (
           <div key={label} className="rounded-xl border border-edge bg-panel2 p-3">
             <div className={`text-[10px] uppercase tracking-widest font-black ${ok ? "text-neon" : "text-amber"}`}>
-              {ok ? "Ready" : "Waiting"} · {label}
+              {ok ? "Ready" : "Needs input"} · {label}
             </div>
             <div className="mt-1 text-xs leading-relaxed text-mute">{hint}</div>
           </div>

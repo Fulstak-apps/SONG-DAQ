@@ -30,7 +30,7 @@ export async function GET(req: NextRequest) {
   const royaltyAutomationAllowed = legalReviewApproved && treasuryAuditApproved && envOn("ENABLE_AUTOMATED_ROYALTY_PAYOUTS");
   const treasuryAutomationAllowed = treasuryAuditApproved && envOn("ENABLE_TREASURY_AUTOMATION");
   const readyForPublic = missing.length === 0 && database.productionReady && NETWORK === "mainnet-beta";
-  const walletTransactionsEnabled = localAppUrl || NETWORK !== "mainnet-beta" || phantomReviewApproved;
+  const walletTransactionsEnabled = true;
   return NextResponse.json({
     configured: Boolean(treasuryWallet),
     readyForPublic,
