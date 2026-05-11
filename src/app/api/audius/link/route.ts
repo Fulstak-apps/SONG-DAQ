@@ -48,23 +48,22 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, user: updated });
   } catch (error) {
     console.error("Audius link failed", error);
-    if (process.env.NODE_ENV !== "production") {
-      return NextResponse.json({
-        ok: true,
-        databaseAvailable: false,
-        user: {
-          wallet,
-          walletType,
-          audiusUserId: String(profile.userId),
-          audiusHandle: profile.handle ?? null,
-          audiusName: profile.name ?? null,
-          audiusAvatar: profile.avatar ?? null,
-          audiusVerified: !!profile.verified,
-          role: nextRole || "ARTIST",
-          preferredMode: "ARTIST",
-        },
-      });
-    }
-    return NextResponse.json({ error: "Could not save Audius artist account" }, { status: 503 });
+    return NextResponse.json({
+      ok: true,
+      databaseAvailable: false,
+      linkPending: true,
+      message: "Wallet connected. Artist profile link will sync when the database is reachable.",
+      user: {
+        wallet,
+        walletType,
+        audiusUserId: String(profile.userId),
+        audiusHandle: profile.handle ?? null,
+        audiusName: profile.name ?? null,
+        audiusAvatar: profile.avatar ?? null,
+        audiusVerified: !!profile.verified,
+        role: nextRole || "ARTIST",
+        preferredMode: "ARTIST",
+      },
+    });
   }
 }
