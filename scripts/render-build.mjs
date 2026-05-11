@@ -26,6 +26,19 @@ function deployMigrations() {
   const output = `${result.stdout ?? ""}\n${result.stderr ?? ""}`;
   if (result.status === 0) return;
 
+  const isRenderBuild = process.env.RENDER === "true" || Boolean(process.env.RENDER_SERVICE_ID);
+  const isReachabilityFailure =
+    output.includes("P1001") ||
+    output.includes("P1002") ||
+    output.includes("Can't reach database server");
+
+  if (isReachabilityFailure || isRenderBuild) {
+    console.warn("\nPrisma could not reach the database during Render build.");
+    console.warn("Continuing the build so the service can deploy; check DATABASE_URL at runtime.");
+    console.warn("For Supabase on Render, use the Supabase connection pooler URL if direct :5432 is unreachable.");
+    return;
+  }
+
   if (!output.includes("P3005")) {
     process.exit(result.status ?? 1);
   }
