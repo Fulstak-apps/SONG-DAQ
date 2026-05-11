@@ -14,9 +14,10 @@ interface TooltipProps {
   delay?: number;
   side?: "top" | "bottom";
   width?: number;
+  triggerClassName?: string;
 }
 
-export function Tooltip({ children, content, delay = 0.25, side = "top", width = 280 }: TooltipProps) {
+export function Tooltip({ children, content, delay = 0.25, side = "top", width = 280, triggerClassName = "" }: TooltipProps) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [pos, setPos] = useState({ left: 0, top: 0 });
@@ -58,7 +59,7 @@ export function Tooltip({ children, content, delay = 0.25, side = "top", width =
   return (
     <div
       ref={triggerRef}
-      className="relative inline-flex items-center cursor-help"
+      className={`relative inline-flex items-center cursor-help ${triggerClassName}`}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
       onTouchStart={() => setOpen(true)}

@@ -1,14 +1,14 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { loginWithAudius } from "@/lib/audiusOAuth";
+import { loginWithAudius, redirectToAudiusLogin } from "@/lib/audiusOAuth";
 import { useSession } from "@/lib/store";
 import { useUI } from "@/lib/store";
 import { SafeImage } from "./SafeImage";
 import { ShieldCheck, Loader2, X } from "lucide-react";
 
 export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
-  const { audius, clear, setSession } = useSession();
+  const { audius, address, provider, clear, setSession } = useSession();
   const setUserMode = useUI((s) => s.setUserMode);
   const [busy, setBusy] = useState<"oauth" | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -31,19 +31,21 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
     try {
       const profile = await loginWithAudius();
       const solWallet = profile.wallets?.sol || null;
+      const hasExternalWallet = !!address && provider !== "audius";
+      const linkWallet = hasExternalWallet ? address : solWallet;
       setSession({
         audius: profile,
-        address: solWallet,
-        kind: solWallet ? "solana" : null,
-        provider: solWallet ? "audius" : null,
+        ...(hasExternalWallet ? {} : solWallet ? { address: solWallet, kind: "solana" as const, provider: "audius" } : {}),
       });
       setUserMode("ARTIST");
       setOpen(false);
-      void fetch("/api/audius/link", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ profile, wallet: solWallet }),
-      }).catch(() => {});
+      if (linkWallet) {
+        void fetch("/api/audius/link", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ profile, wallet: linkWallet, walletType: "solana", role: "ARTIST" }),
+        }).catch(() => {});
+      }
     } catch (e: any) {
       setErr(e.message ?? String(e));
     } finally {
@@ -169,6 +171,16 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
             <p className="text-[10px] text-mute mt-3 leading-relaxed">
               OAuth opens Audius in a popup. Artist launch access requires verified Audius sign-in through the official connection flow.
             </p>
+            <button
+              className="btn w-full mt-3 text-[10px] font-black uppercase tracking-widest"
+              onClick={() => {
+                setErr(null);
+                void redirectToAudiusLogin().catch((e: any) => setErr(e?.message ?? String(e)));
+              }}
+              disabled={!!busy}
+            >
+              Try full-page sign in
+            </button>
             {err && <div className="text-red text-[10px] mt-2 bg-red/5 border border-red/10 rounded-lg px-3 py-2 font-bold">{err}</div>}
           </motion.div>
         )}

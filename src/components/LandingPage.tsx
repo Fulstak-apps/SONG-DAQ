@@ -153,13 +153,13 @@ export function LandingPage() {
         </div>
       </Section>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        <Section delay={0}><Step num={1} title="Upload" icon={<CloudUpload className="text-violet" size={24} />} desc="Upload your track to Audius." /></Section>
-        <Section delay={0.05}><Step num={2} title="Distribute" icon={<Globe className="text-violet" size={24} />} desc="Release via DistroKid, TuneCore, etc." /></Section>
-        <Section delay={0.1}><Step num={3} title="Tokenize" icon={<CircleDollarSign className="text-violet" size={24} />} desc="Create your song token. Set royalty share (min 10%)." active /></Section>
-        <Section delay={0.15}><Step num={4} title="Lock Splits" icon={<Lock className="text-neon" size={24} />} desc="Send unique royalty email to your distributor." /></Section>
-        <Section delay={0.2}><Step num={5} title="Verify" icon={<ShieldCheck className="text-violet" size={24} />} desc="Distributor confirms → Splits Locked badge." /></Section>
-        <Section delay={0.25}><Step num={6} title="Fans Invest" icon={<Users className="text-violet" size={24} />} desc="Royalties flow monthly. Everyone wins." /></Section>
+      <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3 lg:grid-cols-6">
+        <Section className="h-full" delay={0}><Step num={1} title="Upload" icon={<CloudUpload className="text-violet" size={24} />} desc="Upload your track to Audius." /></Section>
+        <Section className="h-full" delay={0.05}><Step num={2} title="Distribute" icon={<Globe className="text-violet" size={24} />} desc="Release via DistroKid, TuneCore, etc." /></Section>
+        <Section className="h-full" delay={0.1}><Step num={3} title="Tokenize" icon={<CircleDollarSign className="text-violet" size={24} />} desc="Create your song token. Set royalty share (min 10%)." active /></Section>
+        <Section className="h-full" delay={0.15}><Step num={4} title="Lock Splits" icon={<Lock className="text-neon" size={24} />} desc="Send unique royalty email to your distributor." /></Section>
+        <Section className="h-full" delay={0.2}><Step num={5} title="Verify" icon={<ShieldCheck className="text-violet" size={24} />} desc="Distributor confirms → Splits Locked badge." /></Section>
+        <Section className="h-full" delay={0.25}><Step num={6} title="Fans Invest" icon={<Users className="text-violet" size={24} />} desc="Royalties flow monthly. Everyone wins." /></Section>
       </div>
 
       {/* ═══ PRODUCT SHOWCASE ═════════════════════════════ */}
@@ -411,9 +411,10 @@ function Step({ num, title, icon, desc, active }: { num: number; title: string; 
   return (
     <Tooltip
       width={340}
+      triggerClassName="h-full w-full"
       content={<div><div className="font-black text-neon mb-1">{title}</div><p className="text-pure-white/70 text-xs leading-relaxed">{desc}</p></div>}
     >
-      <div className={`panel-elevated p-5 flex flex-col items-center text-center gap-3 h-full relative ${active ? "border-neon/20 shadow-neon-glow" : ""}`}>
+      <div className={`panel-elevated relative flex h-full min-h-[190px] flex-col items-center gap-3 p-5 text-center md:min-h-[210px] ${active ? "border-neon/20 shadow-neon-glow" : ""}`}>
         <div className="text-[9px] font-black text-mute tracking-widest">{String(num).padStart(2, "0")}</div>
         <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">{icon}</div>
         <div className="text-xs font-black uppercase tracking-widest text-white/70">{title}</div>

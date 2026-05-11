@@ -12,8 +12,8 @@ const FALLBACK_HOSTS = [
   "https://discoveryprovider2.audius.co",
   "https://discoveryprovider3.audius.co",
 ];
-const TOKEN_TIMEOUT_MS = 5_000;
-const PROFILE_TIMEOUT_MS = 2_500;
+const TOKEN_TIMEOUT_MS = 10_000;
+const PROFILE_TIMEOUT_MS = 8_000;
 
 async function discoveryHosts(): Promise<string[]> {
   const pinned = process.env.AUDIUS_DISCOVERY_HOST;
@@ -116,11 +116,11 @@ export async function POST(req: NextRequest) {
   //    discovery nodes as fallback.
   let tokens: any = null;
   let lastErr = "all hosts failed";
-  for (const host of allHosts.slice(0, 2)) {
+  for (const host of allHosts.slice(0, 4)) {
     const r = await tryExchange(host, String(code), String(codeVerifier), String(redirectUri));
     if (r.ok) { tokens = r.tokens; break; }
     lastErr = `(${r.status}) ${r.text}`;
-    if (r.status >= 400 && r.status < 500) break; // hard reject
+    if (r.status >= 400 && r.status < 500 && /invalid_grant|expired|already used/i.test(r.text)) break; // hard reject
   }
   if (!tokens?.access_token) {
     console.error("Audius token exchange failed", { redirectUri, lastErr });
@@ -152,7 +152,7 @@ export async function POST(req: NextRequest) {
 
   // Fallback: /v1/users/account on discovery nodes
   if (!data) {
-    for (const host of hosts.slice(0, 2)) {
+    for (const host of hosts.slice(0, 3)) {
       try {
         const accountUrl = new URL(`${host}/v1/users/account`);
         accountUrl.searchParams.set("app_name", APP);
@@ -172,7 +172,7 @@ export async function POST(req: NextRequest) {
 
   // Fallback: /v1/users/verify_token
   if (!data) {
-    for (const host of allHosts.slice(0, 2)) {
+    for (const host of allHosts.slice(0, 4)) {
       try {
         const j = await fetchJson<any>(
           `${host}/v1/users/verify_token?token=${encodeURIComponent(accessToken)}&app_name=${APP}&api_key=${encodeURIComponent(API_KEY)}`,
@@ -193,7 +193,7 @@ export async function POST(req: NextRequest) {
         const decoded = JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
         const id = decoded?.userId ?? decoded?.sub;
         if (id) {
-          for (const host of allHosts.slice(0, 2)) {
+          for (const host of allHosts.slice(0, 4)) {
             const userUrl = new URL(`${host}/v1/users/${encodeURIComponent(String(id))}`);
             userUrl.searchParams.set("app_name", APP);
             userUrl.searchParams.set("api_key", API_KEY);

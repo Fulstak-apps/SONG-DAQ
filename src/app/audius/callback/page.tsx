@@ -40,7 +40,7 @@ export default function AudiusCallback() {
       if (!codeVerifier) throw new Error("Missing Audius login verifier. Please return to SONG·DAQ and retry sign-in.");
 
       const ctrl = new AbortController();
-      const id = setTimeout(() => ctrl.abort(), 18_000);
+      const id = setTimeout(() => ctrl.abort(), 35_000);
       try {
         const r = await fetch("/api/audius/exchange", {
           method: "POST",
@@ -124,15 +124,18 @@ export default function AudiusCallback() {
         const profile = await exchangeInCallback(String(code), state ? String(state) : null);
         if (cancelled) return;
         const sol = profile.wallets?.sol ?? null;
+        const current = useSession.getState();
+        const hasExternalWallet = !!current.address && current.provider !== "audius";
+        const linkWallet = hasExternalWallet ? current.address : sol;
         setSession({
           audius: profile,
-          ...(sol ? { address: sol, kind: "solana" as const, provider: "audius" } : {}),
+          ...(hasExternalWallet ? {} : sol ? { address: sol, kind: "solana" as const, provider: "audius" } : {}),
         });
         setUserMode("ARTIST");
         try {
           localStorage.setItem("audius-oauth-profile", JSON.stringify({ source: "audius-oauth", state, profile, ts: Date.now() }));
         } catch {}
-        if (sol) await linkAudiusWithTimeout(sol, profile);
+        if (linkWallet) await linkAudiusWithTimeout(linkWallet, profile);
         cleanupOAuthStorage();
         setStatus("success");
         setMsg("Audius connected. Returning to SONG·DAQ...");

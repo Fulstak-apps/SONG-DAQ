@@ -69,7 +69,7 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
     return <button className="btn text-[10px] font-bold uppercase tracking-widest">{compact ? "Wallet" : "Connect"}</button>;
   }
 
-  if (hasExternalWallet && !connectOnly) {
+  if (hasExternalWallet) {
     return (
       <div className="flex items-center gap-2">
         {compact ? (

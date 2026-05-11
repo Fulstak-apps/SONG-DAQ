@@ -32,7 +32,7 @@ export interface AudiusProfile {
   wallets?: { sol: string | null; eth: string | null };
 }
 
-async function exchangeCodeForProfile(code: string, codeVerifier: string, redirectUri: string, timeoutMs = 12_000) {
+async function exchangeCodeForProfile(code: string, codeVerifier: string, redirectUri: string, timeoutMs = 30_000) {
   const ctrl = new AbortController();
   const timeout = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -47,7 +47,7 @@ async function exchangeCodeForProfile(code: string, codeVerifier: string, redire
     return j.profile as AudiusProfile;
   } catch (e: any) {
     if (e?.name === "AbortError") {
-      throw new Error("Audius sign-in timed out. Please retry in a moment.");
+      throw new Error("Audius sign-in is taking longer than expected. Please retry, or use full-page sign-in if the popup keeps timing out.");
     }
     throw e;
   } finally {
@@ -229,8 +229,8 @@ export function loginWithAudius(): Promise<AudiusProfile> {
       if (settled) return;
       settled = true; cleanup();
       try { popup.close(); } catch {}
-      reject(new Error("Audius login timed out. Please retry in a moment."));
-    }, 22_000);
+      reject(new Error("Audius login timed out. Please retry, or use full-page sign-in if the popup keeps timing out."));
+    }, 75_000);
 
     // Fallback: poll localStorage in case postMessage was missed.
     pollTimer = setInterval(() => {

@@ -119,25 +119,27 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     try {
       const profile = await loginWithAudius();
       const solWallet = profile.wallets?.sol || null;
+      const hasExternalWallet = !!address && provider !== "audius";
+      const linkWallet = hasExternalWallet ? address : solWallet;
       setSession({
         audius: profile,
-        address: solWallet,
-        kind: solWallet ? "solana" : null,
-        provider: solWallet ? "audius" : null,
+        ...(hasExternalWallet ? {} : solWallet ? { address: solWallet, kind: "solana" as const, provider: "audius" } : {}),
       });
       setUserMode("ARTIST");
       setStep("ARTIST_READY");
-      void fetchWithTimeout("/api/audius/link", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ wallet: solWallet, walletType: solWallet ? "solana" : null, profile, role: "ARTIST" }),
-      }, 2_500).catch(() => {});
+      if (linkWallet) {
+        void fetchWithTimeout("/api/audius/link", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ wallet: linkWallet, walletType: "solana", profile, role: "ARTIST" }),
+        }, 4_000).catch(() => {});
+      }
     } catch (e: any) {
       setErr(e.message ?? String(e));
     } finally {
       setBusy(null);
     }
-  }, [setSession, setUserMode]);
+  }, [address, provider, setSession, setUserMode]);
 
   if (!isOpen) return null;
 
