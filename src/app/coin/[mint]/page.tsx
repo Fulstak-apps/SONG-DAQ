@@ -1,5 +1,5 @@
 "use client";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useParams } from "next/navigation";
@@ -51,6 +51,7 @@ export default function CoinPage() {
   const { coins: allCoins } = useCoins("marketCap");
   const [search, setSearch] = useState("");
   const [tracks, setTracks] = useState<any[]>([]);
+  const loadingRef = useRef(false);
 
   const { mints: watched, toggle: toggleWatch, has: isWatched } = useCoinWatchlist();
   const { mints: recent, push: pushRecent } = useRecentCoins();
@@ -59,6 +60,8 @@ export default function CoinPage() {
   useEffect(() => { if (mint) pushRecent(String(mint)); }, [mint, pushRecent]);
 
   const load = useCallback(async () => {
+    if (loadingRef.current || document.visibilityState === "hidden") return;
+    loadingRef.current = true;
     try {
       const [coinR, histR] = await Promise.all([
         fetch(`/api/coins/${mint}`, { cache: "no-store" }),
@@ -71,13 +74,17 @@ export default function CoinPage() {
         const hj = await readJson<{ candles?: PricePointDTO[] }>(histR);
         setPoints(hj?.candles ?? []);
       }
-    } catch (e: any) { setErr(e.message); }
+    } catch (e: any) {
+      setErr(e.message);
+    } finally {
+      loadingRef.current = false;
+    }
   }, [mint, range]);
 
   useEffect(() => {
     load();
     const fast = isFastRange(range);
-    const i = setInterval(load, fast ? 1_000 : 6_000);
+    const i = setInterval(load, fast ? 5_000 : 15_000);
     return () => clearInterval(i);
   }, [load, range]);
 
@@ -450,13 +457,95 @@ export default function CoinPage() {
           </div>
 
           {/* Right Sidebar (Trade Panel) */}
-          <div className="w-full lg:w-[380px] border-t lg:border-t-0 lg:border-l border-edge bg-panel2 flex flex-col justify-center items-center shrink-0 p-4 sm:p-6 space-y-4 sm:space-y-6">
-            <div className="text-center space-y-2 mb-4">
+          <div className="w-full lg:w-[380px] border-t lg:border-t-0 lg:border-l border-edge bg-panel2 flex flex-col shrink-0 p-4 sm:p-6 space-y-4 sm:space-y-5 overflow-y-auto">
+            <div className="w-full rounded-2xl border border-edge bg-panel p-4 text-left">
+              <div className="flex gap-3">
+                <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-edge bg-panel2">
+                  <SafeImage src={coin.logo_uri} alt={coin.ticker} fill sizes="56px" fallback={coin.ticker} className="object-cover" />
+                </div>
+                <div className="min-w-0">
+                  <div className="text-[10px] uppercase tracking-widest font-black text-mute">Artist Token</div>
+                  <div className="mt-1 text-lg font-black text-white break-words">${coin.ticker} · {coin.name}</div>
+                  <div className="mt-0.5 text-xs font-bold text-white/70 break-words">{coin.artist_name || "Unknown Artist"}</div>
+                  {coin.artist_handle ? <div className="font-mono text-[10px] text-mute">@{coin.artist_handle}</div> : null}
+                </div>
+              </div>
+              <div className="mt-3 line-clamp-4 text-xs leading-relaxed text-mute">
+                {coin.description || "Artist token connected to Audius music and Solana market data."}
+              </div>
+              <div className="mt-3 flex flex-wrap gap-2">
+                {primaryTrack ? (
+                  <button type="button" onClick={() => playAudiusTrack(primaryTrack)} className="btn-primary h-9 px-3 text-[9px] uppercase tracking-widest font-black">
+                    {isPrimaryPlaying ? "Pause Song" : "Play Song"}
+                  </button>
+                ) : (
+                  <span className="inline-flex h-9 items-center rounded-xl border border-edge bg-panel2 px-3 text-[9px] uppercase tracking-widest font-black text-mute">No Preview</span>
+                )}
+                {coin.audius_track_url ? <a href={coin.audius_track_url} target="_blank" rel="noreferrer" className="btn h-9 px-3 text-[9px] uppercase tracking-widest font-black">Audius</a> : null}
+              </div>
+            </div>
+
+            <div className="w-full text-center space-y-2">
               <div className="text-3xl font-mono font-bold text-white tracking-tighter">${coin.ticker}</div>
               <div className="text-[10px] text-mute uppercase tracking-widest font-bold">Trading Desk</div>
             </div>
             <button onClick={() => setTradeSide("BUY")} className="btn-primary w-full py-4 text-lg">BUY</button>
             <button onClick={() => setTradeSide("SELL")} className="btn-danger w-full py-4 text-lg">SELL</button>
+            <div className="w-full rounded-2xl border border-edge bg-panel p-4 text-left">
+              <div className="flex items-center justify-between gap-3">
+                <div className="text-[10px] uppercase tracking-widest font-black text-mute">Issuer Discography</div>
+                <div className="text-[10px] uppercase tracking-widest font-black text-mute">{tracks.length ? `${Math.min(tracks.length, 4)} songs` : "Loading"}</div>
+              </div>
+              <div className="mt-3 space-y-2">
+                {tracks.length ? tracks.slice(0, 4).map((t: any) => {
+                  const trackTitle = String(t.title ?? "Untitled Track");
+                  const trackId = String(t.id ?? "");
+                  const linkedCoin = findLinkedCoin(t);
+                  const trackUrl = `https://audius.co/${coin.artist_handle}/${t.permalink ?? ""}`.replace(/\/+$/, "");
+                  const trackPlayer: PlayerTrack | null = trackId ? {
+                    id: `audius-track-${trackId}`,
+                    title: trackTitle,
+                    artist: coin.artist_name ?? coin.name,
+                    artwork: t.artwork?.["480x480"] ?? t.artwork?.["150x150"] ?? null,
+                    streamUrl: `https://api.audius.co/v1/tracks/${trackId}/stream?app_name=songdaq`,
+                    href: trackUrl,
+                  } : null;
+                  const isPlayingTrack = !!trackPlayer && current?.id === trackPlayer.id && playing;
+                  return (
+                    <div key={trackId || trackTitle} className="rounded-xl border border-edge bg-panel2 p-2.5">
+                      <div className="flex items-start gap-2">
+                        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-edge bg-panel">
+                          <SafeImage src={t.artwork?.["480x480"] ?? t.artwork?.["150x150"] ?? null} alt={trackTitle} fill sizes="40px" fallback={trackTitle} className="object-cover" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <div className="text-xs font-black text-white break-words">{trackTitle}</div>
+                          <div className="mt-0.5 text-[9px] uppercase tracking-widest text-mute">{fmtNum(t.playCount ?? t.play_count ?? 0)} plays</div>
+                        </div>
+                        <span className={`shrink-0 rounded-full border px-2 py-1 text-[7px] font-black uppercase tracking-widest ${
+                          linkedCoin ? "border-neon/30 bg-neon/10 text-neon" : "border-edge bg-white/[0.04] text-mute"
+                        }`}>
+                          {linkedCoin ? "Coin On" : "No Coin"}
+                        </span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {trackPlayer ? (
+                          <button type="button" onClick={() => playAudiusTrack(trackPlayer)} className="btn-primary h-7 px-2 text-[8px] uppercase tracking-widest font-black">
+                            {isPlayingTrack ? "Pause" : "Play"}
+                          </button>
+                        ) : null}
+                        {linkedCoin ? (
+                          <Link href={`/coin/${linkedCoin.mint}`} className="btn h-7 px-2 text-[8px] uppercase tracking-widest font-black">Open Coin</Link>
+                        ) : (
+                          <span className="inline-flex h-7 items-center rounded-lg border border-edge bg-panel px-2 text-[8px] uppercase tracking-widest font-black text-mute">No Coin Yet</span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                }) : (
+                  <div className="rounded-xl border border-edge bg-panel2 p-3 text-xs text-mute">Loading artist songs...</div>
+                )}
+              </div>
+            </div>
             <div className="w-full rounded-2xl border border-edge bg-panel p-4 text-left">
               <div className="text-[10px] uppercase tracking-widest font-black text-mute">Token Address</div>
               <div className="mt-2 break-all font-mono text-xs text-white/80">{coin.mint}</div>

@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { Copy, ExternalLink, Pause, Play, ShieldCheck, Star, X } from "lucide-react";
@@ -11,6 +11,8 @@ import { toast } from "@/lib/toast";
 import { CHART_RANGE_LABELS, CHART_RANGES, isFastRange, type ChartRange } from "@/lib/chartRanges";
 import { fmtNum, fmtPct } from "@/lib/pricing";
 import type { AudiusCoin } from "@/lib/audiusCoins";
+import { readJson } from "@/lib/safeJson";
+import { useCoins } from "@/lib/useCoins";
 
 interface RecentTradeDTO {
   id: string;
@@ -52,8 +54,11 @@ export function CoinPreviewModal({
   const [range, setRange] = useState<ChartRange>("1W");
   const [chartType, setChartType] = useState<"line" | "candles">("line");
   const [recentTrades, setRecentTrades] = useState<RecentTradeDTO[]>([]);
+  const [tracks, setTracks] = useState<any[]>([]);
+  const loadingRef = useRef(false);
   const { current, playing, playTrack, toggle } = usePlayer();
   const watchlist = useWatchlist();
+  const { coins: allCoins } = useCoins("marketCap");
   const txPreview = useMemo(() => {
     const sourcePoints = points.length ? points : coin ? [{
       ts: new Date().toISOString(),
@@ -79,39 +84,55 @@ export function CoinPreviewModal({
 
   useEffect(() => {
     if (!coin?.mint) return;
+    const selectedCoin = coin;
     let alive = true;
-    const load = () => fetch(`/api/coins/${coin.mint}/history?range=${range}`, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((j) => {
+    const load = async () => {
+      if (loadingRef.current || document.visibilityState === "hidden") return;
+      loadingRef.current = true;
+      try {
+        const r = await fetch(`/api/coins/${selectedCoin.mint}/history?range=${range}`, { cache: "no-store" });
+        const j = await readJson<{ candles?: PricePointDTO[]; trades?: RecentTradeDTO[] }>(r);
         if (alive) {
-          setPoints((j.candles?.length ? j.candles : coin?.price ? [{
+          setPoints((j?.candles?.length ? j.candles : selectedCoin.price ? [{
             ts: new Date().toISOString(),
-            open: coin.price,
-            high: coin.price,
-            low: coin.price,
-            close: coin.price,
+            open: selectedCoin.price,
+            high: selectedCoin.price,
+            low: selectedCoin.price,
+            close: selectedCoin.price,
             volume: 0,
           }] : []) as PricePointDTO[]);
-          setRecentTrades(j.trades ?? []);
+          setRecentTrades(j?.trades ?? []);
         }
-      })
-      .catch(() => {
+      } catch {
         if (alive) {
-          setPoints(coin?.price ? [{
+          setPoints(selectedCoin.price ? [{
             ts: new Date().toISOString(),
-            open: coin.price,
-            high: coin.price,
-            low: coin.price,
-            close: coin.price,
+            open: selectedCoin.price,
+            high: selectedCoin.price,
+            low: selectedCoin.price,
+            close: selectedCoin.price,
             volume: 0,
           }] : []);
           setRecentTrades([]);
         }
-      });
+      } finally {
+        loadingRef.current = false;
+      }
+    };
     load();
-    const i = setInterval(load, isFastRange(range) ? 1_000 : 6_000);
+    const i = setInterval(load, isFastRange(range) ? 5_000 : 15_000);
     return () => { alive = false; clearInterval(i); };
   }, [coin?.mint, range]);
+
+  useEffect(() => {
+    if (!coin?.artist_handle) { setTracks([]); return; }
+    let alive = true;
+    fetch(`/api/audius/tracks?handle=${encodeURIComponent(coin.artist_handle)}`, { cache: "no-store" })
+      .then((r) => r.ok ? readJson<{ tracks?: any[] }>(r) : { tracks: [] })
+      .then((j) => { if (alive) setTracks(j?.tracks ?? []); })
+      .catch(() => { if (alive) setTracks([]); });
+    return () => { alive = false; };
+  }, [coin?.artist_handle]);
 
   useEffect(() => {
     if (!coin) return;
@@ -134,15 +155,44 @@ export function CoinPreviewModal({
   const change = activeCoin.priceChange24hPercent ?? 0;
   const audioUrl = activeCoin.audius_track_id ? `https://api.audius.co/v1/tracks/${activeCoin.audius_track_id}/stream?app_name=songdaq` : null;
   const playerTrack: PlayerTrack | null = audioUrl ? {
-    id: String(coin.audius_track_id),
-    title: coin.audius_track_title ?? coin.name,
-    artist: coin.artist_name ?? coin.name,
-    artwork: coin.audius_track_artwork ?? coin.logo_uri ?? null,
+    id: String(activeCoin.audius_track_id),
+    title: activeCoin.audius_track_title ?? activeCoin.name,
+    artist: activeCoin.artist_name ?? activeCoin.name,
+    artwork: activeCoin.audius_track_artwork ?? activeCoin.logo_uri ?? null,
     streamUrl: audioUrl,
-    href: `/coin/${coin.mint}`,
+    href: `/coin/${activeCoin.mint}`,
   } : null;
   const isPlayingThis = !!playerTrack && current?.id === playerTrack.id && playing;
   const watched = watchlist.items.includes(coin.mint);
+  const visibleTracks = tracks.slice(0, 5);
+
+  function trackToPlayerTrack(track: any): PlayerTrack {
+    return {
+      id: `audius-track-${track.id}`,
+      title: track.title ?? "Untitled",
+      artist: track.user?.name ?? activeCoin.artist_name ?? activeCoin.name,
+      artwork: track.artwork ?? track.artwork_url ?? track.image ?? activeCoin.logo_uri ?? null,
+      streamUrl: `https://api.audius.co/v1/tracks/${track.id}/stream?app_name=songdaq`,
+      href: track.permalink ?? (activeCoin.artist_handle ? `https://audius.co/${activeCoin.artist_handle}` : undefined),
+    };
+  }
+
+  function linkedCoinForTrack(track: any) {
+    const title = String(track.title ?? "").trim().toLowerCase();
+    const trackId = String(track.id ?? "");
+    return allCoins.find((item) => {
+      if (item.audius_track_id && String(item.audius_track_id) === trackId) return true;
+      return !!title
+        && String(item.audius_track_title ?? "").trim().toLowerCase() === title
+        && String(item.artist_handle ?? "").trim().toLowerCase() === String(activeCoin.artist_handle ?? "").trim().toLowerCase();
+    });
+  }
+
+  function toggleTrack(track: any) {
+    const next = trackToPlayerTrack(track);
+    if (current?.id === next.id) toggle();
+    else playTrack(next);
+  }
 
   function toggleAudio() {
     if (!playerTrack) {
@@ -283,6 +333,24 @@ export function CoinPreviewModal({
             </div>
 
             <aside className="min-w-0 bg-panel2/60 p-4 sm:p-5 space-y-4">
+              <div className="rounded-2xl border border-edge bg-panel p-4">
+                <div className="flex items-start gap-3">
+                  <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border border-edge bg-panel2">
+                    <SafeImage src={coin.artist_avatar ?? coin.logo_uri} alt={coin.artist_name ?? coin.name} fill sizes="56px" fallback={coin.ticker} className="object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-widest font-black text-mute">Artist Profile</div>
+                    <div className="mt-1 text-sm font-black text-ink whitespace-normal break-words">{coin.artist_name ?? coin.name}</div>
+                    {coin.artist_handle ? <div className="mt-0.5 text-[11px] font-bold text-violet">@{coin.artist_handle}</div> : null}
+                  </div>
+                </div>
+                {coin.description ? (
+                  <p className="mt-3 text-xs leading-relaxed text-mute">{coin.description}</p>
+                ) : (
+                  <p className="mt-3 text-xs leading-relaxed text-mute">Artist profile, token market data, music preview, and linked song activity are shown here before you trade.</p>
+                )}
+              </div>
+
               <div className="grid grid-cols-2 gap-2">
                 <button className="btn-primary h-11 text-[10px] font-black uppercase tracking-widest" onClick={() => trade("BUY")}>Buy</button>
                 <button className="btn h-11 text-[10px] font-black uppercase tracking-widest" disabled={isOwner} onClick={() => trade("SELL")}>Sell</button>
@@ -302,6 +370,55 @@ export function CoinPreviewModal({
                   <Star size={13} fill={watched ? "currentColor" : "none"} />
                   {watched ? "Watching" : "Watch"}
                 </button>
+              </div>
+
+              <div className="rounded-2xl border border-edge bg-panel p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div className="text-[10px] uppercase tracking-widest font-black text-mute">Issuer Discography</div>
+                  <span className="text-[9px] uppercase tracking-widest font-black text-neon">{visibleTracks.length || 0} tracks</span>
+                </div>
+                <div className="space-y-2">
+                  {visibleTracks.length ? visibleTracks.map((track) => {
+                    const linked = linkedCoinForTrack(track);
+                    const player = trackToPlayerTrack(track);
+                    const isTrackPlaying = current?.id === player.id && playing;
+                    return (
+                      <div key={String(track.id)} className="rounded-xl border border-edge bg-panel2/70 p-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-edge bg-panel">
+                            <SafeImage src={player.artwork} alt={player.title} fill sizes="40px" fallback={coin.ticker} className="object-cover" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-xs font-black text-ink">{player.title}</div>
+                            <div className="mt-0.5 text-[10px] uppercase tracking-widest text-mute">{fmtNum(track.play_count ?? 0)} plays</div>
+                          </div>
+                          <span className={`shrink-0 rounded-md border px-2 py-1 text-[8px] font-black uppercase tracking-widest ${linked ? "border-neon/25 bg-neon/10 text-neon" : "border-edge bg-panel text-mute"}`}>
+                            {linked ? "Coin On" : "No Coin"}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button className="btn h-8 px-2.5 text-[9px] uppercase tracking-widest font-black" onClick={() => toggleTrack(track)}>
+                            {isTrackPlaying ? <Pause size={12} /> : <Play size={12} />}
+                            {isTrackPlaying ? "Pause" : "Play"}
+                          </button>
+                          {linked ? (
+                            <Link href={`/coin/${linked.mint}`} className="btn h-8 px-2.5 text-[9px] uppercase tracking-widest font-black">
+                              Open Coin
+                            </Link>
+                          ) : (
+                            <span className="inline-flex h-8 items-center rounded-lg border border-edge bg-panel px-2.5 text-[9px] uppercase tracking-widest font-black text-mute">
+                              No Coin Yet
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }) : (
+                    <div className="rounded-xl border border-edge bg-panel2/70 p-3 text-xs text-mute">
+                      No Audius discography loaded yet for this artist.
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="rounded-2xl border border-edge bg-panel p-4 space-y-3">
