@@ -63,6 +63,7 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
       }
       setOpen(false);
     } catch (e: any) {
+      await disconnectWallet(id).catch(() => {});
       reportWalletError("wallet_connect_failed", e, id, address).catch(() => {});
       setErr(e.message ?? String(e));
       console.info("SONG·DAQ wallet diagnostics", walletDiagnosticsSnapshot());

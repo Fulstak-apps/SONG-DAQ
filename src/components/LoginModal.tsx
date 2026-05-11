@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, useUI } from "@/lib/store";
-import { WALLETS, connectWallet, reportWalletError, walletDiagnosticsSnapshot, type WalletId } from "@/lib/wallet";
+import { WALLETS, connectWallet, disconnectWallet, reportWalletError, walletDiagnosticsSnapshot, type WalletId } from "@/lib/wallet";
 import { loginWithAudius } from "@/lib/audiusOAuth";
 import { safeJson } from "@/lib/safeJson";
 import { Music, TrendingUp, ShieldCheck, ChevronLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -110,6 +110,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         setStep("DONE");
       }
     } catch (e: any) {
+      await disconnectWallet(id).catch(() => {});
       reportWalletError("wallet_connect_failed", e, id, address).catch(() => {});
       setErr(e.message ?? String(e));
       console.info("SONG·DAQ wallet diagnostics", walletDiagnosticsSnapshot());

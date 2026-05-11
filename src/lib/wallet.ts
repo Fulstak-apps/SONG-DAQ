@@ -47,9 +47,7 @@ type SolanaProvider = {
   isBackpack?: boolean;
   providers?: SolanaProvider[];
   publicKey?: { toString(): string } | null;
-  isConnected?: boolean;
   connect: (options?: Record<string, unknown>) => Promise<{ publicKey?: { toString(): string } } | void>;
-  request?: (payload: { method: string; params?: Record<string, unknown> }) => Promise<{ publicKey?: { toString(): string } } | void>;
   disconnect?: () => Promise<void>;
   signAndSendTransaction?: (tx: Transaction | VersionedTransaction) => Promise<string | { signature: string }>;
   signTransaction?: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
@@ -71,9 +69,9 @@ function w(): SolWindow & Window {
 }
 
 export function getConnectedWalletId(): WalletId | null {
-  if (getCurrentWalletAddress("phantom")) return "phantom";
-  if (getCurrentWalletAddress("solflare")) return "solflare";
-  if (getCurrentWalletAddress("backpack")) return "backpack";
+  if (providerFor("phantom")) return "phantom";
+  if (providerFor("solflare")) return "solflare";
+  if (providerFor("backpack")) return "backpack";
   return null;
 }
 
@@ -109,8 +107,6 @@ export const WALLETS: WalletDescriptor[] = [
   },
 ];
 
-const activeConnects: Partial<Record<WalletId, Promise<ConnectResult>>> = {};
-
 function assertValidSolanaAddress(address: string | null | undefined, label: string) {
   if (!address) throw new Error(`${label} did not return a public key`);
   try {
@@ -136,39 +132,6 @@ async function withWalletTimeout<T>(promise: Promise<T>, label: string, timeoutM
 
 function walletLabel(id: WalletId) {
   return WALLETS.find((wallet) => wallet.id === id)?.label || "Wallet";
-}
-
-function wait(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function walletErrorMessage(error: unknown) {
-  const raw = error as any;
-  return raw?.message || raw?.error?.message || raw?.reason || String(error || "Unknown wallet error");
-}
-
-function walletErrorCode(error: unknown) {
-  const raw = error as any;
-  return raw?.code ?? raw?.error?.code ?? raw?.data?.code ?? null;
-}
-
-function normalizeWalletError(error: unknown, id: WalletId) {
-  const label = walletLabel(id);
-  const message = walletErrorMessage(error);
-  const code = walletErrorCode(error);
-  if (code === 4001 || /reject|denied|cancel/i.test(message)) {
-    return new Error(`${label} connection was cancelled. Open the wallet popup again when you are ready to connect.`);
-  }
-  if (/already processing|already pending|request pending|pending request/i.test(message)) {
-    return new Error(`${label} already has a connection request open. Close any wallet popup, unlock ${label}, then try again.`);
-  }
-  if (/unexpected|internal|unknown/i.test(message)) {
-    return new Error(`${label} returned an unexpected connection error. Close any wallet popup, unlock ${label}, make sure Solana is enabled in Phantom, refresh this page, and try again.`);
-  }
-  if (/blocked|malicious|unsafe|domain|review/i.test(message)) {
-    return new Error(`${label} blocked this domain/request. That usually means the dApp domain needs Phantom review or must be allowed in wallet settings before Phantom will connect.`);
-  }
-  return error instanceof Error ? error : new Error(message);
 }
 
 export function requestWalletBalanceRefresh(address?: string | null) {
@@ -218,7 +181,7 @@ export function walletDiagnosticsSnapshot() {
 
 export async function reportWalletError(errorType: string, error: unknown, walletId?: WalletId, walletAddress?: string | null) {
   if (typeof window === "undefined") return;
-  const message = walletErrorMessage(error);
+  const message = error instanceof Error ? error.message : String(error || "Unknown wallet error");
   const stack = error instanceof Error ? error.stack : undefined;
   try {
     await fetch("/api/error-log", {
@@ -229,7 +192,7 @@ export async function reportWalletError(errorType: string, error: unknown, walle
         walletAddress,
         page: window.location.href,
         message: `${walletId ? `${walletId}: ` : ""}${message}`,
-        stack: JSON.stringify({ stack, code: walletErrorCode(error), raw: error, diagnostics: walletDiagnosticsSnapshot() }, null, 2),
+        stack: JSON.stringify({ stack, diagnostics: walletDiagnosticsSnapshot() }, null, 2),
       }),
     });
   } catch {
@@ -318,23 +281,23 @@ async function connectProvider(provider: SolanaProvider, id: WalletId) {
   const existing = connectedPublicKey(null, provider);
   if (existing) return { publicKey: { toString: () => existing } };
 
-  const requestConnect = (options?: Record<string, unknown>) => withWalletTimeout(provider.connect(options), label);
-  const requestRpcConnect = () => provider.request
-    ? withWalletTimeout(provider.request({ method: "connect" }), label)
-    : requestConnect();
+  if (id === "phantom") {
+    try {
+      const trusted = await withWalletTimeout(provider.connect({ onlyIfTrusted: true }), label, 2_500);
+      if (connectedPublicKey(trusted, provider)) return trusted;
+    } catch {
+      /* Not trusted yet; fall through to the normal approval popup. */
+    }
+  }
 
   try {
-    return await requestConnect();
+    const options = id === "phantom" ? { onlyIfTrusted: false } : undefined;
+    return await withWalletTimeout(provider.connect(options), label);
   } catch (error) {
-    const message = walletErrorMessage(error);
-    const canRetryWithRpc = id === "phantom" && !/reject|denied|cancel|already processing|already pending|request pending|pending request|blocked|malicious|unsafe/i.test(message);
-    if (!canRetryWithRpc) throw normalizeWalletError(error, id);
-    await wait(350);
-    try {
-      return await requestRpcConnect();
-    } catch (retryError) {
-      throw normalizeWalletError(retryError, id);
-    }
+    const message = error instanceof Error ? error.message : String(error);
+    const canRetryWithoutOptions = id === "phantom" && /argument|option|parameter|unexpected|unsupported/i.test(message);
+    if (!canRetryWithoutOptions) throw error;
+    return await withWalletTimeout(provider.connect(), label);
   }
 }
 
@@ -342,25 +305,13 @@ function connectedPublicKey(result: unknown, provider: SolanaProvider) {
   return (result as any)?.publicKey?.toString?.() || provider.publicKey?.toString?.();
 }
 
-async function waitForConnectedPublicKey(result: unknown, provider: SolanaProvider, label: string) {
-  const immediate = connectedPublicKey(result, provider);
-  if (immediate) return immediate;
-  const startedAt = Date.now();
-  while (Date.now() - startedAt < 1_200) {
-    await new Promise((resolve) => setTimeout(resolve, 100));
-    const next = connectedPublicKey(result, provider);
-    if (next) return next;
-  }
-  throw new Error(`${label} approved the connection but did not return a public key. Unlock the wallet, refresh, and try again.`);
-}
-
-async function performConnectWallet(id: WalletId): Promise<ConnectResult> {
+export async function connectWallet(id: WalletId): Promise<ConnectResult> {
   switch (id) {
     case "phantom": {
       const p = await waitForProvider("phantom");
       if (!p) throw new Error("Phantom was not detected. Make sure the Phantom extension is installed, enabled, and allowed on this site, then refresh.");
       const r = await connectProvider(p, "phantom");
-      const publicKey = await waitForConnectedPublicKey(r, p, "Phantom");
+      const publicKey = connectedPublicKey(r, p);
       const address = assertValidSolanaAddress(publicKey, "Phantom");
       requestWalletBalanceRefresh(address);
       return { address, kind: "solana", provider: id };
@@ -369,7 +320,7 @@ async function performConnectWallet(id: WalletId): Promise<ConnectResult> {
       const p = await waitForProvider("solflare");
       if (!p) throw new Error("Solflare was not detected. Make sure the extension is installed, enabled, and allowed on this site, then refresh.");
       const r = await connectProvider(p, "solflare");
-      const address = assertValidSolanaAddress(await waitForConnectedPublicKey(r, p, "Solflare"), "Solflare");
+      const address = assertValidSolanaAddress(connectedPublicKey(r, p), "Solflare");
       requestWalletBalanceRefresh(address);
       return { address, kind: "solana", provider: id };
     }
@@ -377,25 +328,13 @@ async function performConnectWallet(id: WalletId): Promise<ConnectResult> {
       const p = await waitForProvider("backpack");
       if (!p) throw new Error("Backpack was not detected. Make sure the extension is installed, enabled, and allowed on this site, then refresh.");
       const r = await connectProvider(p, "backpack");
-      const publicKey = await waitForConnectedPublicKey(r, p, "Backpack");
+      const publicKey = connectedPublicKey(r, p);
       const address = assertValidSolanaAddress(publicKey, "Backpack");
       requestWalletBalanceRefresh(address);
       return { address, kind: "solana", provider: id };
     }
     default:
       throw new Error("Unknown wallet");
-  }
-}
-
-export async function connectWallet(id: WalletId): Promise<ConnectResult> {
-  const existing = activeConnects[id];
-  if (existing) return existing;
-  const task = performConnectWallet(id);
-  activeConnects[id] = task;
-  try {
-    return await task;
-  } finally {
-    delete activeConnects[id];
   }
 }
 
