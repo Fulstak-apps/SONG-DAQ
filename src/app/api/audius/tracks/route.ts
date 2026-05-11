@@ -5,10 +5,7 @@ import { fetchJson } from "@/lib/fetchTimeout";
 export const dynamic = "force-dynamic";
 
 const APP = process.env.NEXT_PUBLIC_AUDIUS_APP_NAME || "songdaq";
-const FALLBACK_HOSTS = [
-  "https://discoveryprovider.audius.co",
-  "https://discoveryprovider2.audius.co",
-];
+const API_BASE = "https://api.audius.co";
 
 function normalizeTrack(track: any) {
   const artwork = pickAudiusArtwork(track);
@@ -21,11 +18,7 @@ function normalizeTrack(track: any) {
 }
 
 async function hosts(): Promise<string[]> {
-  try {
-    const j = await fetchJson<{ data: string[] }>("https://api.audius.co", { next: { revalidate: 3600 } }, 4_000);
-    if (Array.isArray(j?.data) && j.data.length) return j.data;
-  } catch {}
-  return FALLBACK_HOSTS;
+  return [process.env.AUDIUS_DISCOVERY_HOST || API_BASE];
 }
 
 /**

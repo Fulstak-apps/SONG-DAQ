@@ -1,11 +1,9 @@
 /**
  * Audius / Open Audio Protocol integration.
  *
- * Audius runs a network of public discovery nodes; we either use the host
- * pinned via AUDIUS_DISCOVERY_HOST or fetch the bootstrap registry at
- * https://api.audius.co and pick a healthy host. The Open Audio Protocol
- * exposes the same shape (Audius is its reference implementation) so this
- * client transparently works against either.
+ * Audius is the fast application-layer path for Open Audio catalog data.
+ * Per the current agent notes, the public app should use the canonical
+ * https://api.audius.co gateway instead of deprecated discoveryprovider hosts.
  *
  * Docs: https://docs.audius.org / https://docs.openaudio.org
  */
@@ -15,9 +13,6 @@ const PINNED = process.env.AUDIUS_DISCOVERY_HOST;
 const FETCH_TIMEOUT_MS = 3_500;
 const FALLBACK_HOSTS = [
   "https://api.audius.co",
-  "https://discoveryprovider.audius.co",
-  "https://discoveryprovider2.audius.co",
-  "https://discoveryprovider3.audius.co",
 ];
 
 let cachedHost: string | null = null;

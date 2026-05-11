@@ -7,20 +7,12 @@ const APP = process.env.NEXT_PUBLIC_AUDIUS_APP_NAME || "songdaq";
 const API_KEY = process.env.NEXT_PUBLIC_AUDIUS_API_KEY || "";
 // Primary endpoint for OAuth token exchange and authenticated profile fetch.
 const API_BASE = "https://api.audius.co";
-const FALLBACK_HOSTS = [
-  "https://discoveryprovider.audius.co",
-  "https://discoveryprovider2.audius.co",
-  "https://discoveryprovider3.audius.co",
-];
 const TOKEN_TIMEOUT_MS = 6_500;
 const PROFILE_TIMEOUT_MS = 4_500;
 
 async function discoveryHosts(): Promise<string[]> {
   const pinned = process.env.AUDIUS_DISCOVERY_HOST;
-  if (pinned) return [pinned, ...FALLBACK_HOSTS.filter((h) => h !== pinned)];
-  // Keep OAuth fast. Discovery host lookup can be slow on Render and is not
-  // needed before the canonical API gateway has had a chance to respond.
-  return FALLBACK_HOSTS;
+  return pinned ? [pinned] : [API_BASE];
 }
 
 function shapeProfile(data: any) {
@@ -113,7 +105,7 @@ export async function POST(req: NextRequest) {
   const allHosts = Array.from(new Set([API_BASE, ...hosts].filter(Boolean)));
 
   // 1) Exchange auth code → access_token. Try api.audius.co first, then
-  //    discovery nodes as fallback.
+  //    the canonical Open Audio/Audius API gateway first.
   let tokens: any = null;
   let lastErr = "all hosts failed";
   for (const host of allHosts.slice(0, 3)) {
@@ -129,7 +121,7 @@ export async function POST(req: NextRequest) {
   const accessToken: string = tokens.access_token;
 
   // 2) Fetch profile. Per docs: GET /v1/me with Bearer token on api.audius.co.
-  //    Fall back to /v1/users/account on discovery nodes if that fails.
+  //    Fall back to /v1/users/account on the configured gateway if that fails.
   let data: any = null;
 
   // Primary: documented /v1/me endpoint

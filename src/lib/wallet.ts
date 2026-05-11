@@ -57,12 +57,32 @@ type SolanaProvider = {
   removeListener?: (event: string, handler: (...args: any[]) => void) => void;
 };
 
+type StandardWalletAccount = {
+  address?: string;
+  publicKey?: Uint8Array;
+  chains?: string[];
+};
+
+type StandardWalletConnectFeature = {
+  connect: (input?: { silent?: boolean }) => Promise<{ accounts?: StandardWalletAccount[] } | void>;
+};
+
+type StandardWallet = {
+  name?: string;
+  chains?: string[];
+  accounts?: StandardWalletAccount[];
+  features?: Record<string, unknown>;
+};
+
 interface SolWindow {
   solana?: SolanaProvider;
   phantom?: { solana?: SolanaProvider };
   solflare?: SolanaProvider;
   backpack?: SolanaProvider | { solana?: SolanaProvider };
 }
+
+let standardWalletListening = false;
+const standardWallets: StandardWallet[] = [];
 
 function w(): SolWindow & Window {
   return globalThis as any;
@@ -134,6 +154,19 @@ function walletLabel(id: WalletId) {
   return WALLETS.find((wallet) => wallet.id === id)?.label || "Wallet";
 }
 
+function normalizedErrorMessage(error: unknown) {
+  if (error instanceof Error) return error.message;
+  return String(error || "Unknown wallet error");
+}
+
+function walletHelpMessage(id: WalletId, error: unknown) {
+  const message = normalizedErrorMessage(error);
+  if (id === "phantom" && /unexpected error/i.test(message)) {
+    return "Phantom reported an unexpected extension error before sharing your public key. Open Phantom, unlock it, remove SONG·DAQ from Phantom's connected apps if it is listed, refresh the page, and try again.";
+  }
+  return message;
+}
+
 export function requestWalletBalanceRefresh(address?: string | null) {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent("songdaq:wallet-refresh", { detail: { address, ts: Date.now() } }));
@@ -181,7 +214,7 @@ export function walletDiagnosticsSnapshot() {
 
 export async function reportWalletError(errorType: string, error: unknown, walletId?: WalletId, walletAddress?: string | null) {
   if (typeof window === "undefined") return;
-  const message = error instanceof Error ? error.message : String(error || "Unknown wallet error");
+  const message = normalizedErrorMessage(error);
   const stack = error instanceof Error ? error.stack : undefined;
   try {
     await fetch("/api/error-log", {
@@ -192,7 +225,15 @@ export async function reportWalletError(errorType: string, error: unknown, walle
         walletAddress,
         page: window.location.href,
         message: `${walletId ? `${walletId}: ` : ""}${message}`,
-        stack: JSON.stringify({ stack, diagnostics: walletDiagnosticsSnapshot() }, null, 2),
+        stack: JSON.stringify({
+          stack,
+          diagnostics: walletDiagnosticsSnapshot(),
+          error: {
+            name: error instanceof Error ? error.name : undefined,
+            message,
+            code: (error as any)?.code,
+          },
+        }, null, 2),
       }),
     });
   } catch {
@@ -239,6 +280,55 @@ function allSolanaCandidates(): SolanaProvider[] {
     ...(Array.isArray(win.solana?.providers) ? win.solana.providers : []),
   ];
   return candidates.filter(isProviderLike);
+}
+
+function setupStandardWalletListener() {
+  if (typeof window === "undefined" || standardWalletListening) return;
+  standardWalletListening = true;
+  window.addEventListener("wallet-standard:register-wallet", ((event: CustomEvent) => {
+    event.detail?.register?.((wallet: StandardWallet) => {
+      if (!wallet || standardWallets.includes(wallet)) return;
+      standardWallets.push(wallet);
+    });
+  }) as EventListener);
+}
+
+function standardWalletMatches(id: WalletId, wallet: StandardWallet) {
+  const name = String(wallet.name || "").toLowerCase();
+  const chains = wallet.chains || wallet.accounts?.flatMap((account) => account.chains || []) || [];
+  const hasSolana = chains.some((chain) => String(chain).toLowerCase().includes("solana"));
+  if (!hasSolana && chains.length > 0) return false;
+  if (id === "phantom") return name.includes("phantom");
+  if (id === "solflare") return name.includes("solflare");
+  if (id === "backpack") return name.includes("backpack");
+  return false;
+}
+
+function connectFeature(wallet: StandardWallet): StandardWalletConnectFeature | null {
+  const feature = wallet.features?.["standard:connect"];
+  return feature && typeof (feature as StandardWalletConnectFeature).connect === "function"
+    ? (feature as StandardWalletConnectFeature)
+    : null;
+}
+
+async function waitForStandardWallet(id: WalletId, timeoutMs = 1_800): Promise<StandardWallet | null> {
+  if (typeof window === "undefined") return null;
+  setupStandardWalletListener();
+  window.dispatchEvent(new Event("wallet-standard:app-ready"));
+
+  const immediate = standardWallets.find((wallet) => standardWalletMatches(id, wallet) && connectFeature(wallet));
+  if (immediate) return immediate;
+
+  const startedAt = Date.now();
+  return await new Promise((resolve) => {
+    const interval = setInterval(() => {
+      const wallet = standardWallets.find((candidate) => standardWalletMatches(id, candidate) && connectFeature(candidate));
+      if (wallet || Date.now() - startedAt >= timeoutMs) {
+        clearInterval(interval);
+        resolve(wallet || null);
+      }
+    }, 100);
+  });
 }
 
 async function waitForProvider(id: WalletId, timeoutMs = 3_500): Promise<SolanaProvider | null> {
@@ -291,6 +381,16 @@ async function connectProvider(provider: SolanaProvider, id: WalletId) {
   }
 }
 
+async function connectStandardWallet(id: WalletId) {
+  const wallet = await waitForStandardWallet(id);
+  const feature = wallet ? connectFeature(wallet) : null;
+  if (!wallet || !feature) return null;
+  const result = await withWalletTimeout(feature.connect({ silent: false }), `${walletLabel(id)} Wallet Standard approval`);
+  const account = result?.accounts?.[0] || wallet.accounts?.[0] || null;
+  const address = account?.address || (account?.publicKey ? new PublicKey(account.publicKey).toBase58() : null);
+  return address ? { publicKey: { toString: () => address } } : null;
+}
+
 function connectedPublicKey(result: unknown, provider: SolanaProvider) {
   return (result as any)?.publicKey?.toString?.() || provider.publicKey?.toString?.();
 }
@@ -312,7 +412,13 @@ export async function connectWallet(id: WalletId): Promise<ConnectResult> {
     case "phantom": {
       const p = await waitForProvider("phantom");
       if (!p) throw new Error("Phantom was not detected. Make sure the Phantom extension is installed, enabled, and allowed on this site, then refresh.");
-      const r = await connectProvider(p, "phantom");
+      let r: unknown;
+      try {
+        r = await connectProvider(p, "phantom");
+      } catch (error) {
+        r = await connectStandardWallet("phantom").catch(() => null);
+        if (!r) throw new Error(walletHelpMessage("phantom", error));
+      }
       const publicKey = await waitForConnectedPublicKey(r, p, "Phantom");
       const address = assertValidSolanaAddress(publicKey, "Phantom");
       requestWalletBalanceRefresh(address);
@@ -321,7 +427,13 @@ export async function connectWallet(id: WalletId): Promise<ConnectResult> {
     case "solflare": {
       const p = await waitForProvider("solflare");
       if (!p) throw new Error("Solflare was not detected. Make sure the extension is installed, enabled, and allowed on this site, then refresh.");
-      const r = await connectProvider(p, "solflare");
+      let r: unknown;
+      try {
+        r = await connectProvider(p, "solflare");
+      } catch (error) {
+        r = await connectStandardWallet("solflare").catch(() => null);
+        if (!r) throw new Error(walletHelpMessage("solflare", error));
+      }
       const address = assertValidSolanaAddress(await waitForConnectedPublicKey(r, p, "Solflare"), "Solflare");
       requestWalletBalanceRefresh(address);
       return { address, kind: "solana", provider: id };
@@ -329,7 +441,13 @@ export async function connectWallet(id: WalletId): Promise<ConnectResult> {
     case "backpack": {
       const p = await waitForProvider("backpack");
       if (!p) throw new Error("Backpack was not detected. Make sure the extension is installed, enabled, and allowed on this site, then refresh.");
-      const r = await connectProvider(p, "backpack");
+      let r: unknown;
+      try {
+        r = await connectProvider(p, "backpack");
+      } catch (error) {
+        r = await connectStandardWallet("backpack").catch(() => null);
+        if (!r) throw new Error(walletHelpMessage("backpack", error));
+      }
       const publicKey = await waitForConnectedPublicKey(r, p, "Backpack");
       const address = assertValidSolanaAddress(publicKey, "Backpack");
       requestWalletBalanceRefresh(address);
