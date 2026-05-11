@@ -400,10 +400,10 @@ export default function DiscoveryEngine() {
               <AnimatePresence mode="wait">
                 <motion.h1
                   key={isArtist ? "artist" : heroIdx}
-                  initial={{ opacity: 0, y: 16, filter: "blur(8px)" }}
-                  animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                  exit={{ opacity: 0, y: -16, filter: "blur(8px)" }}
-                  transition={{ duration: 0.55, ease: [0.16, 1, 0.3, 1] }}
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -12 }}
+                  transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
                   className="absolute inset-0 flex flex-col justify-center text-[2.35rem] sm:text-5xl md:text-6xl font-black tracking-tight leading-[0.9]"
                 >
                   {isArtist ? (

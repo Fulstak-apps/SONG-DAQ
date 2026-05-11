@@ -77,7 +77,7 @@ export function AudiencePlaylist() {
                 {cover ? cover.title : "Open Audio Queue"}
               </div>
               <div className="text-[10px] uppercase tracking-widest text-mute truncate">
-                {cover ? cover.artist : `${queue.length || 0} tracks loaded`}
+                {cover ? cover.artist : loading ? "Loading tracks..." : `${queue.length || 0} tracks loaded`}
               </div>
             </div>
           </div>
@@ -203,7 +203,9 @@ export function AudiencePlaylist() {
             })}
           </div>
           <div className="px-5 py-3 border-t border-edge flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-widest font-bold text-mute">{queue.length || 0} tracks loaded</span>
+            <span className="text-[10px] uppercase tracking-widest font-bold text-mute">
+              {loading ? "Loading tracks..." : `${queue.length || 0} tracks loaded`}
+            </span>
             <Link href="/social" className="text-[10px] uppercase tracking-widest font-bold text-mute hover:text-ink transition">
               More signal →
             </Link>
