@@ -770,7 +770,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                         step={1000}
                         min={1000}
                         unit="Tokens"
-                        description={`Estimated full-supply value at the starting curve price: ${formatFiatEstimate(fullSupplyValueUsd, currency)}.`}
+                        description={`Total supply estimate: ${formatFiatEstimate(fullSupplyValueUsd, currency)}. If all coins were counted at the starting price, this would be the estimated value. The real market value can be much lower or higher once people start trading.`}
                       />
                       <Field
                         label="Initial Curve Price"
@@ -860,7 +860,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   <Row k="Asset Reference" v={pick?.title ?? "—"} />
                   <Row k="Protocol ID" v={`$${(pick?.title ?? "SONG").replace(/[^a-z0-9]/gi, "").slice(0, 8).toUpperCase()}`} />
                   <Row k="Settlement Gateway" v={distributor} />
-                  <Row k="Total Supply" v={`${fmtNum(supply)} tokens · ${formatFiatEstimate(fullSupplyValueUsd, currency)}`} help="This is a rough valuation using the current starting curve price. It is not guaranteed market value." />
+                  <Row k="Total supply estimate" v={`${fmtNum(supply)} tokens · ${formatFiatEstimate(fullSupplyValueUsd, currency)}`} help="If all coins were counted at the starting price, this would be the estimated value. The real market value can be much lower or higher once people start trading." />
                   <Row k="Issuance Yield" v={`${(royalty.holderShareBps/100).toFixed(0)}% to Holders`} color="text-neon" />
                   <Row k="Artist Vesting" v="50% target over 5 years" />
                   <div className="pt-3 border-t border-edge flex flex-wrap gap-2">
