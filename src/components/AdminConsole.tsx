@@ -362,6 +362,9 @@ export function AdminConsole() {
                 <SystemLine label="Treasury wallet" value={system.treasuryWallet ? short(String(system.treasuryWallet)) : "Missing"} ok={!!system.treasuryWallet} />
                 <SystemLine label="Jupiter" value={system.jupiterConfigured ? "Configured" : "Missing"} ok={!!system.jupiterConfigured} />
                 <SystemLine label="Payer secret" value={system.payerConfigured ? "Configured" : "Missing"} ok={!!system.payerConfigured} />
+                <SystemLine label="Phantom review" value={system.phantomReviewApproved ? "Approved" : system.phantomReviewSubmitted ? "Submitted" : "Not submitted"} ok={!!system.phantomReviewApproved} />
+                <SystemLine label="Royalty automation" value={system.royaltyAutomationAllowed ? "Enabled" : "Manual only"} ok={!!system.royaltyAutomationAllowed} />
+                <SystemLine label="Treasury automation" value={system.treasuryAutomationAllowed ? "Enabled" : "Manual only"} ok={!!system.treasuryAutomationAllowed} />
               </div>
               {system.databaseWarning && (
                 <div className="mt-4 rounded-2xl border border-amber/25 bg-amber/10 p-4 text-xs leading-relaxed text-ink/80">
@@ -453,6 +456,9 @@ export function AdminConsole() {
             <Panel title="Launch Notes" icon={<BellRing size={16} />} meta="What still needs setup">
               <ul className="space-y-2 text-sm text-ink/80 leading-relaxed">
                 <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />Confirm Audius redirect URLs and OAuth app settings.</li>
+                <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />After the live domain deploys, submit SONG·DAQ to Phantom/Blowfish review with token launch, liquidity, and swap examples.</li>
+                <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />Expect brand-new liquidity pools to wait for Jupiter indexing; the UI must show route waiting states instead of asking wallets to sign.</li>
+                <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />Keep royalty payout and holder reward automation manual until legal review and treasury automation audit are complete.</li>
                 <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />Set the split inbox provider to forward confirmations into your ops workflow.</li>
                 <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />Use this console to review high-risk tokens before they go live.</li>
                 <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />Keep a funded Solana payer wallet and treasury wallet available in Render env vars.</li>

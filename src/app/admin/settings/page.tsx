@@ -11,6 +11,8 @@ const flags = [
   ["ENABLE_AUTOMATED_LIQUIDITY", false],
   ["ENABLE_HOLDER_REWARDS", false],
   ["ENABLE_CLAIMABLE_REWARDS", false],
+  ["ENABLE_AUTOMATED_ROYALTY_PAYOUTS", false],
+  ["ENABLE_TREASURY_AUTOMATION", false],
 ] as const;
 
 function enabled(name: string, fallback: boolean) {
@@ -20,6 +22,12 @@ function enabled(name: string, fallback: boolean) {
 }
 
 export default function AdminSettingsPage() {
+  const phantomSubmitted = enabled("PHANTOM_REVIEW_SUBMITTED", false);
+  const phantomApproved = enabled("PHANTOM_REVIEW_APPROVED", false);
+  const legalApproved = enabled("LEGAL_REVIEW_APPROVED", false);
+  const auditApproved = enabled("TREASURY_AUTOMATION_AUDIT_APPROVED", false);
+  const payoutAutomation = enabled("ENABLE_AUTOMATED_ROYALTY_PAYOUTS", false) && legalApproved && auditApproved;
+  const treasuryAutomation = enabled("ENABLE_TREASURY_AUTOMATION", false) && auditApproved;
   return (
     <main className="space-y-6">
       <section className="panel-elevated p-6 md:p-10 space-y-4">
@@ -51,6 +59,31 @@ export default function AdminSettingsPage() {
           })}
         </div>
       </section>
+      <section className="grid gap-4 lg:grid-cols-2">
+        <section className="panel p-6 space-y-4">
+          <h2 className="text-2xl font-black text-ink">Wallet Trust Readiness</h2>
+          <p className="text-sm text-mute leading-relaxed">
+            Submit Phantom review only after the live Render/custom domain is deployed and `NEXT_PUBLIC_APP_URL` matches that domain exactly.
+          </p>
+          <Readiness label="Live app URL" value={process.env.NEXT_PUBLIC_APP_URL || process.env.RENDER_EXTERNAL_URL || "Missing"} ok={Boolean(process.env.NEXT_PUBLIC_APP_URL || process.env.RENDER_EXTERNAL_URL)} />
+          <Readiness label="Phantom review submitted" value={phantomSubmitted ? "Submitted" : "Not submitted"} ok={phantomSubmitted} />
+          <Readiness label="Phantom review approved" value={phantomApproved ? "Approved" : "Pending"} ok={phantomApproved} />
+          <Readiness label="Jupiter route policy" value="Do not ask wallet to sign until route exists" ok />
+          <div className="rounded-2xl border border-edge bg-panel2 p-4 text-sm text-mute leading-relaxed">
+            If Phantom still warns after deployment, send Phantom/Blowfish the live URL, a clean token-launch transaction, a liquidity transaction, metadata URL, and support contact.
+          </div>
+        </section>
+        <section className="panel p-6 space-y-4">
+          <h2 className="text-2xl font-black text-ink">Automation Locks</h2>
+          <p className="text-sm text-mute leading-relaxed">
+            Royalty payout, holder rewards, and treasury automation stay manual until legal review and treasury automation audit are both explicitly approved in env vars.
+          </p>
+          <Readiness label="Legal review" value={legalApproved ? "Approved" : "Required"} ok={legalApproved} />
+          <Readiness label="Treasury automation audit" value={auditApproved ? "Approved" : "Required"} ok={auditApproved} />
+          <Readiness label="Royalty payout automation" value={payoutAutomation ? "Enabled" : "Manual only"} ok={payoutAutomation} />
+          <Readiness label="Treasury automation" value={treasuryAutomation ? "Enabled" : "Manual only"} ok={treasuryAutomation} />
+        </section>
+      </section>
     </main>
   );
 }
@@ -60,6 +93,18 @@ function Setting({ label, value }: { label: string; value: string }) {
     <div className="panel p-5">
       <div className="text-[10px] uppercase tracking-widest font-black text-mute">{label}</div>
       <div className="mt-2 text-lg font-black text-ink break-words">{value}</div>
+    </div>
+  );
+}
+
+function Readiness({ label, value, ok }: { label: string; value: string; ok: boolean }) {
+  return (
+    <div className="flex items-start justify-between gap-3 rounded-2xl border border-edge bg-panel2 px-4 py-3">
+      <div className="min-w-0">
+        <div className="text-[10px] uppercase tracking-widest font-black text-mute">{label}</div>
+        <div className="mt-1 text-sm font-bold text-ink break-words">{value}</div>
+      </div>
+      <span className={`chip shrink-0 ${ok ? "text-neon border-neon/20 bg-neon/10" : "text-amber border-amber/20 bg-amber/10"}`}>{ok ? "OK" : "WAIT"}</span>
     </div>
   );
 }

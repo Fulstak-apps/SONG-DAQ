@@ -18,6 +18,13 @@ function isLocalDatabaseUrl(value = process.env.DATABASE_URL || "") {
 function systemStatus(databaseConnected = false) {
   const databaseUrl = process.env.DATABASE_URL || "";
   const databaseUrlLooksConfigured = hasDatabaseUrl(databaseUrl) && !isLocalDatabaseUrl(databaseUrl);
+  const envOn = (name: string) => ["1", "true", "yes", "on"].includes(String(process.env[name] || "").toLowerCase());
+  const phantomReviewSubmitted = envOn("PHANTOM_REVIEW_SUBMITTED");
+  const phantomReviewApproved = envOn("PHANTOM_REVIEW_APPROVED");
+  const legalReviewApproved = envOn("LEGAL_REVIEW_APPROVED");
+  const treasuryAuditApproved = envOn("TREASURY_AUTOMATION_AUDIT_APPROVED");
+  const royaltyAutomationAllowed = legalReviewApproved && treasuryAuditApproved && envOn("ENABLE_AUTOMATED_ROYALTY_PAYOUTS");
+  const treasuryAutomationAllowed = treasuryAuditApproved && envOn("ENABLE_TREASURY_AUTOMATION");
   return {
     readyForPublic: Boolean(
       hasProductionDatabaseUrl() &&
@@ -37,6 +44,15 @@ function systemStatus(databaseConnected = false) {
     databaseLocalFallback: hasDatabaseUrl(databaseUrl) && isLocalDatabaseUrl(databaseUrl),
     databaseProductionConfigured: hasProductionDatabaseUrl(databaseUrl),
     databaseConnected,
+    appUrl: process.env.NEXT_PUBLIC_APP_URL || process.env.RENDER_EXTERNAL_URL || null,
+    phantomReviewSubmitted,
+    phantomReviewApproved,
+    legalReviewApproved,
+    treasuryAuditApproved,
+    royaltyAutomationAllowed,
+    treasuryAutomationAllowed,
+    manualRoyaltyMode: !royaltyAutomationAllowed,
+    manualTreasuryMode: !treasuryAutomationAllowed,
   };
 }
 

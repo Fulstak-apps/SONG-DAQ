@@ -16,6 +16,16 @@ function statusFromAction(action?: string) {
   return "in_progress";
 }
 
+function envOn(name: string) {
+  return ["1", "true", "yes", "on"].includes(String(process.env[name] || "").toLowerCase());
+}
+
+function automationAllowed(kind: "royalty" | "treasury") {
+  const auditApproved = envOn("TREASURY_AUTOMATION_AUDIT_APPROVED");
+  if (kind === "treasury") return auditApproved && envOn("ENABLE_TREASURY_AUTOMATION");
+  return auditApproved && envOn("LEGAL_REVIEW_APPROVED") && envOn("ENABLE_AUTOMATED_ROYALTY_PAYOUTS");
+}
+
 async function assertAdmin(req: NextRequest, wallet?: string) {
   if (verifyAdminSession(req)) return "admin-session";
   if (!wallet) throw Object.assign(new Error("Admin login required"), { status: 401 });
@@ -66,6 +76,7 @@ export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => ({}));
   const mode = String(body.mode || appMode());
   const action = String(body.action || "submit_request");
+  const automated = Boolean(body.automated || body.executeOnchain || body.executeTreasury);
 
   if (action === "submit_request") {
     const coinId = body.coinId ? String(body.coinId) : undefined;
@@ -161,6 +172,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "record_payment") {
+      if (automated && !automationAllowed("royalty")) {
+        return NextResponse.json({ error: "Automated royalty payouts are locked. Use manual admin recording until legal review and treasury audit are approved." }, { status: 423 });
+      }
       if (!coinId) return NextResponse.json({ error: "coinId required" }, { status: 400 });
       const amount = Number(body.receivedAmountUsd);
       if (!Number.isFinite(amount) || amount <= 0) return NextResponse.json({ error: "receivedAmountUsd must be positive" }, { status: 400 });
@@ -197,6 +211,9 @@ export async function POST(req: NextRequest) {
     }
 
     if (action === "pool_contribution") {
+      if (automated && !automationAllowed("treasury")) {
+        return NextResponse.json({ error: "Treasury automation is locked. Record manual Royalty Pool contributions until the treasury automation audit is approved." }, { status: 423 });
+      }
       if (!coinId) return NextResponse.json({ error: "coinId required" }, { status: 400 });
       const amount = Number(body.amountUsd);
       if (!Number.isFinite(amount) || amount <= 0) return NextResponse.json({ error: "amountUsd must be positive" }, { status: 400 });

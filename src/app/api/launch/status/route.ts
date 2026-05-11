@@ -4,6 +4,10 @@ import { hasProductionDatabaseUrl } from "@/lib/appMode";
 
 export const dynamic = "force-dynamic";
 
+function envOn(name: string) {
+  return ["1", "true", "yes", "on"].includes(String(process.env[name] || "").toLowerCase());
+}
+
 export async function GET(req: NextRequest) {
   const treasuryWallet = process.env.TREASURY_WALLET || process.env.NEXT_PUBLIC_TREASURY_WALLET;
   const databaseUrl = process.env.DATABASE_URL || "";
@@ -19,6 +23,12 @@ export async function GET(req: NextRequest) {
   if (!treasuryWallet) missing.push("TREASURY_WALLET");
   if (!process.env.JUPITER_API_KEY) missing.push("JUPITER_API_KEY");
   const databaseConfigured = hasProductionDatabaseUrl(databaseUrl);
+  const phantomReviewSubmitted = envOn("PHANTOM_REVIEW_SUBMITTED");
+  const phantomReviewApproved = envOn("PHANTOM_REVIEW_APPROVED");
+  const legalReviewApproved = envOn("LEGAL_REVIEW_APPROVED");
+  const treasuryAuditApproved = envOn("TREASURY_AUTOMATION_AUDIT_APPROVED");
+  const royaltyAutomationAllowed = legalReviewApproved && treasuryAuditApproved && envOn("ENABLE_AUTOMATED_ROYALTY_PAYOUTS");
+  const treasuryAutomationAllowed = treasuryAuditApproved && envOn("ENABLE_TREASURY_AUTOMATION");
   const readyForPublic = missing.length === 0 && databaseConfigured && NETWORK === "mainnet-beta";
   return NextResponse.json({
     configured: Boolean(treasuryWallet),
@@ -29,6 +39,15 @@ export async function GET(req: NextRequest) {
     jupiterConfigured: Boolean(process.env.JUPITER_API_KEY),
     artistPaysLaunchFees: true,
     metadataConfigured: appUrlConfigured,
+    phantomReviewSubmitted,
+    phantomReviewApproved,
+    legalReviewApproved,
+    treasuryAuditApproved,
+    royaltyAutomationAllowed,
+    treasuryAutomationAllowed,
+    jupiterIndexingNote: "New pools can take time to index. SONG·DAQ should show route-waiting states instead of asking wallets to sign until Jupiter returns a live route.",
+    manualRoyaltyMode: !royaltyAutomationAllowed,
+    manualTreasuryMode: !treasuryAutomationAllowed,
     treasuryWallet,
     network: NETWORK,
     rpcUrl: RPC_URL,

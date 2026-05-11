@@ -115,6 +115,7 @@ export function SupportPage() {
           <p><strong className="text-ink">Automatic:</strong> the app can show coin pages, charts, Paper Mode, wallet state, portfolio records, submitted royalty requests, and admin dashboard data.</p>
           <p><strong className="text-ink">Manual:</strong> royalty verification, royalty payments received from distributors, Royalty Pool contributions, and any treasury movement are admin-reviewed for the MVP.</p>
           <p>This protects users because real royalty money and treasury actions should not move without human review yet.</p>
+          <p>Automated royalty payouts, holder rewards, and live treasury actions stay locked until SONG·DAQ has legal review and a treasury automation audit.</p>
         </SupportCard>
       </section>
 
@@ -131,6 +132,7 @@ export function SupportPage() {
         <SupportCard icon={<BarChart3 />} title="Advanced Chart">
           <p>The coin chart uses advanced market tools by default, including volume, liquidity, slippage, and deeper market data.</p>
           <p>The goal is to make every coin feel like a real trading screen while still keeping the labels clear for music fans.</p>
+          <p>When a new pool is created, Jupiter may need time to index the route. During that time, SONG·DAQ shows a route waiting state and will not ask your wallet to approve a swap.</p>
         </SupportCard>
       </section>
 

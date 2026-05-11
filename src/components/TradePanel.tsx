@@ -192,7 +192,7 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
         <Row k="Settlement Units" v={quote ? `${quote.tokens.toFixed(2)} UNITS` : "—"} />
         <Row k="Price Impact" v={`${slippagePct}%`} color={Number(slippagePct) > 2 ? "text-red" : "text-neon"} />
         <Row k="Spot Price" v={quote ? `${fmtSol(quote.newSpotPrice, 6)} SOL` : "—"} />
-        <Row k="Route" v={swapRouteReady ? "Jupiter live route" : quote?.routeError || "Waiting for liquidity"} color={swapRouteReady ? "text-neon" : "text-amber"} />
+        <Row k="Route" v={swapRouteReady ? "Jupiter live route" : quote?.routeError || "Waiting for Jupiter indexing"} color={swapRouteReady ? "text-neon" : "text-amber"} />
         <Row k="Wallet Approval" v="On-chain swap only" color="text-neon" />
       </div>
 
@@ -207,6 +207,11 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
 
         {err && <div className="text-red text-[10px] uppercase tracking-widest font-bold text-center bg-red/10 border border-red/20 py-2 rounded-lg">{err}</div>}
         {ok && <div className="text-neon text-[10px] uppercase tracking-widest font-bold text-center bg-neon/10 border border-neon/20 py-2 rounded-lg">{ok}</div>}
+        {!swapRouteReady && quote?.routeError && (
+          <div className="text-amber text-[10px] uppercase tracking-widest font-bold text-center bg-amber/10 border border-amber/20 py-2 rounded-lg leading-relaxed">
+            New pools can take time to appear in Jupiter. SONG·DAQ will not ask your wallet to sign until a live route exists.
+          </div>
+        )}
         {!address && <div className="text-mute text-[10px] uppercase tracking-widest font-bold text-center">Authorization required to transact.</div>}
       </div>
     </div>
