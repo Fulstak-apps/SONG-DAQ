@@ -4,7 +4,7 @@ import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession } from "@/lib/store";
 import { api } from "@/lib/api";
-import { fmtSol, fmtNum } from "@/lib/pricing";
+import { fmtNum } from "@/lib/pricing";
 import { spotPrice } from "@/lib/bondingCurve";
 import { computePerformance } from "@/lib/pricing";
 import {
@@ -170,6 +170,12 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const estimatedNetworkFeeUsd = solUsdRate > 0 ? estimatedNetworkFeeSol * solUsdRate : null;
   const creatorFirstBuyUsd = audioUsdRate > 0 ? liquidityPairAmount * audioUsdRate : null;
   const fiatAge = priceAgeText(fiatUpdatedAt);
+  const basePriceUsd = solUsdRate > 0 ? basePrice * solUsdRate : null;
+  const fullSupplyValueUsd = basePriceUsd != null ? supply * basePriceUsd : null;
+  const startingMarketCapUsd = impliedPriceUsd != null ? supply * impliedPriceUsd : null;
+  const estimatedPoolValueUsd = liquidityPairUsd != null ? liquidityPairUsd * 2 : null;
+  const artistCoinGraduationUsd = audioUsdRate > 0 ? 1_000_000 * audioUsdRate : null;
+  const artistCoinInitialMarketCapUsd = audioUsdRate > 0 ? 100_000 * audioUsdRate : null;
 
   function applyLaunchPreset(preset: typeof LAUNCH_PRESETS[number]) {
     setLaunchPreset(preset.id);
@@ -209,6 +215,10 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
     }
     return arr;
   }, [supply, basePrice, curveSlope, pick]);
+  const previewStartPrice = previewSeries[0]?.y ?? 0;
+  const previewEndPrice = previewSeries[previewSeries.length - 1]?.y ?? 0;
+  const previewStartUsd = solUsdRate > 0 ? previewStartPrice * solUsdRate : null;
+  const previewEndUsd = solUsdRate > 0 ? previewEndPrice * solUsdRate : null;
 
   useEffect(() => {
     if (launchKind !== "ARTIST") return;
@@ -715,6 +725,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                         <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
                           {LAUNCH_PRESETS.map((preset) => {
                             const active = launchPreset === preset.id;
+                            const presetUsd = solUsdRate > 0 ? preset.pairAmount * solUsdRate : null;
                             return (
                               <button
                                 type="button"
@@ -726,6 +737,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                               >
                                 <div className={`text-[10px] uppercase tracking-widest font-black ${active ? "text-neon" : "text-ink"}`}>{preset.title}</div>
                                 <div className="mt-1 font-mono text-[11px] font-black text-white">{preset.label}</div>
+                                <div className="mt-1 font-mono text-[10px] font-black text-neon">
+                                  {formatCryptoWithFiat(preset.pairAmount, "SOL", presetUsd, currency)}
+                                </div>
                                 <p className="mt-2 text-[10px] leading-relaxed text-mute">{preset.note}</p>
                               </button>
                             );
@@ -749,8 +763,25 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                           <LaunchMetric k="Wallet cap" v={`${(maxWalletBps / 100).toFixed(2)}%`} />
                         </div>
                       </div>
-                      <Field label="Total Issuance" value={supply} onChange={markCustom(setSupply)} step={1000} min={1000} unit="Tokens" />
-                      <Field label="Initial Curve Price" value={basePrice} onChange={markCustom(setBasePrice)} step={0.0001} min={0} unit="SOL" />
+                      <Field
+                        label="Total Issuance"
+                        value={supply}
+                        onChange={markCustom(setSupply)}
+                        step={1000}
+                        min={1000}
+                        unit="Tokens"
+                        description={`Estimated full-supply value at the starting curve price: ${formatFiatEstimate(fullSupplyValueUsd, currency)}.`}
+                      />
+                      <Field
+                        label="Initial Curve Price"
+                        value={basePrice}
+                        onChange={markCustom(setBasePrice)}
+                        step={0.0001}
+                        min={0}
+                        unit="SOL"
+                        help="This is the estimated starting price per song coin before trading demand moves the curve."
+                        description={`Starting price per coin: ${formatCryptoWithFiat(basePrice, "SOL", basePriceUsd, currency, 6)}.`}
+                      />
                       <Field label="Curve Momentum" value={curveSlope} onChange={markCustom(setCurveSlope)} step={0.0000001} min={0} unit="Slope" />
                       <Field label="Max Wallet Cap" value={maxWalletBps / 100} onChange={(n) => { setLaunchPreset("custom"); setMaxWalletBps(Math.round(n * 100)); }} step={0.25} min={0.1} unit="% of supply" />
                       <Field label="Artist Hold / Vesting Allocation" value={artistAllocationBps / 100} onChange={(n) => { setLaunchPreset("custom"); setArtistAllocationBps(Math.round(n * 100)); }} step={0.25} min={0} unit="% of supply" />
@@ -809,12 +840,15 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
                       <div className="text-[9px] uppercase tracking-widest font-bold text-mute">Launch Price</div>
-                      <div className="font-mono text-sm font-bold text-white">{fmtSol(previewSeries[0]?.y ?? 0, 6)} SOL</div>
+                      <div className="font-mono text-sm font-bold text-white">{formatCryptoWithFiat(previewStartPrice, "SOL", previewStartUsd, currency, 6)}</div>
                     </div>
                     <div className="space-y-1 text-right">
                       <div className="text-[9px] uppercase tracking-widest font-bold text-mute">Launch price</div>
-                      <div className="font-mono text-sm font-bold text-neon">{fmtSol(previewSeries[previewSeries.length - 1]?.y ?? 0, 6)} SOL</div>
+                      <div className="font-mono text-sm font-bold text-neon">{formatCryptoWithFiat(previewEndPrice, "SOL", previewEndUsd, currency, 6)}</div>
                     </div>
+                  </div>
+                  <div className="rounded-xl border border-edge bg-panel2 p-3 text-[10px] uppercase tracking-widest text-mute">
+                    {fiatAge}
                   </div>
                 </div>
               </div>
@@ -826,7 +860,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   <Row k="Asset Reference" v={pick?.title ?? "—"} />
                   <Row k="Protocol ID" v={`$${(pick?.title ?? "SONG").replace(/[^a-z0-9]/gi, "").slice(0, 8).toUpperCase()}`} />
                   <Row k="Settlement Gateway" v={distributor} />
-                  <Row k="Total Supply" v={fmtNum(supply)} />
+                  <Row k="Total Supply" v={`${fmtNum(supply)} tokens · ${formatFiatEstimate(fullSupplyValueUsd, currency)}`} help="This is a rough valuation using the current starting curve price. It is not guaranteed market value." />
                   <Row k="Issuance Yield" v={`${(royalty.holderShareBps/100).toFixed(0)}% to Holders`} color="text-neon" />
                   <Row k="Artist Vesting" v="50% target over 5 years" />
                   <div className="pt-3 border-t border-edge flex flex-wrap gap-2">
@@ -880,8 +914,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 <div className="grid gap-5 lg:grid-cols-2">
                   <LaunchMetric k="Public curve supply" v="25%" />
                   <LaunchMetric k="Quote asset" v="$AUDIO" tone="violet" />
-                  <LaunchMetric k="Initial market cap" v="100K AUDIO" />
-                  <LaunchMetric k="Graduation target" v="1M AUDIO" />
+                  <LaunchMetric k="Initial market cap" v={formatCryptoWithFiat(100_000, "AUDIO", artistCoinInitialMarketCapUsd, currency, 0)} />
+                  <LaunchMetric k="Graduation target" v={formatCryptoWithFiat(1_000_000, "AUDIO", artistCoinGraduationUsd, currency, 0)} />
                   <LaunchMetric k="Locked AMM liquidity" v="20%" />
                   <LaunchMetric k="Reward pool" v="5%" tone="violet" />
                   <Field
@@ -892,7 +926,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     min={0}
                     unit="$AUDIO"
                     help="Optional first buy means the artist buys a small amount of their own artist coin at launch using AUDIO. It is not required."
-                    description={`Leave this at 0 if you only want to create the public curve. ${formatFiatEstimate(creatorFirstBuyUsd, currency)}`}
+                    description={`Leave this at 0 if you only want to create the public curve. Optional first buy: ${formatCryptoWithFiat(liquidityPairAmount, "AUDIO", creatorFirstBuyUsd, currency)}.`}
                   />
                 </div>
               ) : (
@@ -905,7 +939,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     min={1}
                     unit="Tokens"
                     help="This is how many of the new song coins go into the public market. Fans buy from this pool instead of buying directly from the artist."
-                    description={`This is the song-coin side of liquidity. Pool value tracks the payment side: ${formatFiatEstimate(liquidityPairUsd, currency)}.`}
+                    description={`This is the song-coin side of liquidity. Estimated total starting pool value: ${formatFiatEstimate(estimatedPoolValueUsd, currency)}.`}
                   />
                   <Field
                     label={`Liquidity payment side (${liquidityPairAsset})`}
@@ -946,7 +980,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               )}
               <div className="panel p-5 bg-panel border-edge rounded-2xl space-y-3">
                 <Row k="Starting price" v={launchKind === "ARTIST" ? "Open Audio curve config" : `${impliedPrice.toFixed(8)} ${liquidityPairAsset} ${formatFiatEstimate(impliedPriceUsd, currency, 4)}`} color="text-neon" help="The starting price is estimated from how many song coins and how much payment coin you put into the market." />
+                <Row k="Starting market value" v={launchKind === "ARTIST" ? formatCryptoWithFiat(100_000, "AUDIO", artistCoinInitialMarketCapUsd, currency, 0) : formatFiatEstimate(startingMarketCapUsd, currency)} help="This is a rough estimate using the starting price and total supply. Real value can change after trading begins." />
                 <Row k="Launch liquidity" v={launchKind === "ARTIST" ? formatCryptoWithFiat(liquidityPairAmount, "AUDIO", creatorFirstBuyUsd, currency) : formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)} color="text-neon" help="This is the real-world estimate of the payment coin being added to the launch liquidity pool." />
+                {launchKind !== "ARTIST" && <Row k="Estimated pool value" v={formatFiatEstimate(estimatedPoolValueUsd, currency)} help="A liquidity pool has two sides. This estimate counts the payment side plus the song-coin side at the same starting value." />}
                 <Row k="Estimated network fee" v={formatCryptoWithFiat(estimatedNetworkFeeSol, "SOL", estimatedNetworkFeeUsd, currency)} help="Solana network fees move. This is an estimate, not a guaranteed final charge." />
                 <Row k="Expected price movement" v={launchKind === "ARTIST" ? "Curve quoted in AUDIO" : liquidityPairAmount >= 1 ? "Low/Medium" : "High"} color={launchKind === "ARTIST" || liquidityPairAmount >= 1 ? "text-neon" : "text-amber"} help="If the market is small, one buy or sell can move the price more. A deeper market usually moves less." />
                 <Row k="Market source" v={launchKind === "ARTIST" ? "Meteora Dynamic Bonding Curve" : "Public pool approval"} help="This tells you where fans will buy. The public pool or curve is the market, not a hidden artist wallet." />
