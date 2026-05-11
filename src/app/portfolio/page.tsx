@@ -90,6 +90,7 @@ export default function PortfolioPage() {
   const [portfolio, setPortfolio] = useState<any>(null);
   const [paperUsd, setPaperUsd] = useState({ sol: 0, audio: 0 });
   const [audioUsdPrice, setAudioUsdPrice] = useState(0);
+  const [solUsdPrice, setSolUsdPrice] = useState(0);
   const [coinIndex, setCoinIndex] = useState<Record<string, any>>({});
   const liveAudiusAudioBalance = useAudiusAudioBalance(audius?.handle);
 
@@ -142,6 +143,9 @@ export default function PortfolioPage() {
 
   useEffect(() => {
     let alive = true;
+    getSolPriceUsd()
+      .then((price) => { if (alive) setSolUsdPrice(Number(price || 0)); })
+      .catch(() => {});
     fetch("/api/coins?limit=100", { cache: "no-store" })
       .then((r) => readJson<any>(r))
       .then((j) => {
@@ -225,6 +229,18 @@ export default function PortfolioPage() {
   const royaltySol = portfolio?.summary?.royalty ?? 0;
   const artistValueUsd = artistTokens.reduce((sum, t) => sum + (t.valueUsd ?? 0), 0);
   const otherWalletValueUsd = otherWalletAssets.reduce((sum, t) => sum + (t.valueUsd ?? 0), 0);
+  const indexedAudioValueUsd = [
+    ...(tradingTokens.data?.tokens ?? []),
+    ...(audiusTokens.data?.tokens ?? []),
+  ].filter((t) => t.isAudio).reduce((sum, t) => sum + (t.valueUsd ?? 0), 0);
+  const indexedArtistValueUsd = [
+    ...(tradingTokens.data?.tokens ?? []),
+    ...(audiusTokens.data?.tokens ?? []),
+  ].filter((t) => t.isArtistCoin).reduce((sum, t) => sum + (t.valueUsd ?? 0), 0);
+  const audioValueTopUpUsd = Math.max(0, audioValueUsd - indexedAudioValueUsd);
+  const artistValueTopUpUsd = Math.max(0, artistValueUsd - indexedArtistValueUsd);
+  const songValueUsd = songValueSol * (solUsdPrice || (native.balance ? (native.usd ?? 0) / native.balance : 0));
+  const totalIndexedValueUsd = totalUsd + audioValueTopUpUsd + artistValueTopUpUsd + songValueUsd + cashUsd;
   const recentActivity = [
     ...(portfolio?.trades ?? []).map((t: any) => ({ ...t, kind: "Song", label: t.song?.symbol ?? "SONG", total: `${fmtSol(t.total, 4)} SOL` })),
     ...(portfolio?.coinTrades ?? []).map((t: any) => ({ ...t, kind: "Artist", label: t.ticker ?? "TOKEN", total: fmtUsd(t.totalUsd ?? 0) })),
@@ -374,7 +390,7 @@ export default function PortfolioPage() {
       </header>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-        <Metric label="Total Indexed Value" value={fmtUsd(totalUsd + cashUsd)} sub={paperMode ? "Wallet + paper cash" : "Wallet value"}/>
+        <Metric label="Total Indexed Value" value={fmtUsd(totalIndexedValueUsd)} sub={paperMode ? "Wallet + AUDIO + coins + paper cash" : "Wallet + AUDIO + all indexed coins"} />
         <Metric label="External SOL" value={externalAddress && native.balance != null ? `${fmtSol(native.balance, 4)} SOL` : "Connect"} sub={externalAddress ? (native.usd ? fmtUsd(native.usd) : "Solana balance") : "Connect external wallet"} />
         <Metric label="External USD" value={externalAddress && native.usd != null ? fmtUsd(native.usd) : "—"} sub={externalAddress ? "Native SOL value" : "Not connected"} />
         <Metric label="AUDIO" value={fmtNum(audioBalance)} sub={audioValueUsd ? fmtUsd(audioValueUsd) : "Audius token"} />
