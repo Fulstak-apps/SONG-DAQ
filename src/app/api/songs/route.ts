@@ -95,6 +95,9 @@ export async function POST(req: NextRequest) {
     pairAsset: String(liquidity?.pairAsset ?? "SOL").toUpperCase(),
     lockDays: Number(liquidity?.lockDays ?? 0),
   };
+  if (!["SOL", "USDC", "AUDIO"].includes(liq.pairAsset)) {
+    return NextResponse.json({ error: "Song Token launch liquidity must be paired with SOL, USDC, or AUDIO." }, { status: 422 });
+  }
   if (liq.tokenAmount <= 0 || liq.pairAmount <= 0 || liq.lockDays < 30) {
     return NextResponse.json({ error: "Liquidity is required before launch. This protects buyers and allows trading to start fairly." }, { status: 422 });
   }

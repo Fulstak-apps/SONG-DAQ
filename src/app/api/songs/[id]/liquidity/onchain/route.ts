@@ -41,7 +41,10 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
     const normalizedTokenAmount = Number(tokenAmount);
     const normalizedPairAmount = Number(pairAmount);
     const normalizedLockDays = Number(lockDays);
-    const normalizedPairAsset = String(pairAsset || "SOL").toUpperCase() as "SOL" | "USDC";
+    const normalizedPairAsset = String(pairAsset || "SOL").toUpperCase() as "SOL" | "USDC" | "AUDIO";
+    if (!["SOL", "USDC", "AUDIO"].includes(normalizedPairAsset)) {
+      return NextResponse.json({ error: "Song Token liquidity must be paired with SOL, USDC, or AUDIO." }, { status: 422 });
+    }
 
     if (!(normalizedTokenAmount > 0) || !(normalizedPairAmount > 0) || !Number.isFinite(normalizedLockDays) || normalizedLockDays < 30) {
       return NextResponse.json(

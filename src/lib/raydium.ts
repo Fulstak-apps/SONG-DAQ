@@ -5,6 +5,7 @@ import { NETWORK, RPC_URL } from "@/lib/solana";
 
 const SOL_MINT = "So11111111111111111111111111111111111111112";
 const USDC_MINT = "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v";
+const AUDIO_MINT = "9LzCMqDgTKYz9Drzqnpgee3SGa89up3a247ypMj2xrqM";
 
 function uiToRaw(amount: number, decimals: number): BN {
   const multiplier = 10n ** BigInt(decimals);
@@ -20,7 +21,7 @@ export async function buildCpmmLiquidityTransaction(params: {
   mintAddress: string;
   tokenAmount: number;
   pairAmount: number;
-  pairAsset: "SOL" | "USDC";
+  pairAsset: "SOL" | "USDC" | "AUDIO";
 }) {
   const connection = new Connection(RPC_URL, "confirmed");
   const raydium = await Raydium.load({
@@ -47,7 +48,9 @@ export async function buildCpmmLiquidityTransaction(params: {
   const pairMint =
     params.pairAsset === "SOL"
       ? { address: SOL_MINT, programId: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", decimals: 9 }
-      : { address: USDC_MINT, programId: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", decimals: 6 };
+      : params.pairAsset === "AUDIO"
+        ? { address: AUDIO_MINT, programId: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", decimals: 8 }
+        : { address: USDC_MINT, programId: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA", decimals: 6 };
 
   const mintA = new PublicKey(tokenMint.address);
   const mintB = new PublicKey(pairMint.address);

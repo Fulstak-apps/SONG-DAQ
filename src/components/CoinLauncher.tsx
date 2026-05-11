@@ -600,7 +600,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     </div>
                   )}
                   <div className="rounded-xl border border-violet/20 bg-violet/10 p-3 text-xs leading-relaxed text-violet/85">
-                    Audius-style artist coins use a 1B supply, 9 decimals, $AUDIO quote asset, Meteora bonding curve, and 50% creator vesting. Fans buy from the curve, not from a hidden artist wallet.
+                    {launchKind === "ARTIST"
+                      ? "Audius-style artist coins use a 1B supply, 9 decimals, $AUDIO quote asset, Meteora bonding curve, and 50% creator vesting. Fans buy from the curve, not from a hidden artist wallet."
+                      : "Song Tokens are tied to one Audius track. The artist launches a fixed-supply song coin, then opens trading by pairing reserved song coins with SOL, USDC, or AUDIO liquidity."}
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1">Settlement Distributor</label>
@@ -689,7 +691,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 <p className="mt-2 text-sm leading-relaxed text-neon/85">
                   {launchKind === "ARTIST"
                     ? "Fans buy Artist Coins from a Meteora Dynamic Bonding Curve quoted in $AUDIO. The artist allocation vests separately, so fans are buying from the public curve instead of a hidden artist wallet."
-                    : "Fans need a live market to buy. In the Audius-style model, the public allocation sits in a $AUDIO-paired bonding curve/pool while the artist allocation vests separately. This MVP uses explicit launch liquidity and blocks trading until that pool is verified."}
+                    : "Fans need a live market to buy. Song Tokens are connected to one Audius track, and the public allocation opens through an explicit SOL, USDC, or AUDIO liquidity pool. Trading stays blocked until that pool is verified."}
                 </p>
               </div>
               {launchKind === "ARTIST" ? (
@@ -711,6 +713,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <select value={liquidityPairAsset} onChange={(e) => setLiquidityPairAsset(e.target.value as PairAsset)} className="w-full bg-panel border border-edge rounded-xl px-4 py-3 text-sm text-ink">
                       <option value="SOL">SOL</option>
                       <option value="USDC">USDC</option>
+                      <option value="AUDIO">AUDIO</option>
                     </select>
                   </div>
                   <Field label="Liquidity Lockup" value={liquidityLockDays} onChange={setLiquidityLockDays} step={30} min={30} unit="Days" />
