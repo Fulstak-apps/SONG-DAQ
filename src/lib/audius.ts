@@ -12,7 +12,13 @@
 
 const APP_NAME = process.env.NEXT_PUBLIC_AUDIUS_APP_NAME || "songdaq";
 const PINNED = process.env.AUDIUS_DISCOVERY_HOST;
-const FETCH_TIMEOUT_MS = 5_000;
+const FETCH_TIMEOUT_MS = 3_500;
+const FALLBACK_HOSTS = [
+  "https://api.audius.co",
+  "https://discoveryprovider.audius.co",
+  "https://discoveryprovider2.audius.co",
+  "https://discoveryprovider3.audius.co",
+];
 
 let cachedHost: string | null = null;
 let cachedAt = 0;
@@ -21,36 +27,33 @@ const HOST_TTL_MS = 60 * 60 * 1000;
 async function discoverHost(): Promise<string> {
   if (PINNED) return PINNED;
   if (cachedHost && Date.now() - cachedAt < HOST_TTL_MS) return cachedHost;
-  try {
-    const ctrl = new AbortController();
-    const timeout = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
-    const res = await fetch("https://api.audius.co", { cache: "no-store", signal: ctrl.signal });
-    clearTimeout(timeout);
-    const json = (await res.json()) as { data: string[] };
-    if (!json?.data?.length) throw new Error("no audius hosts available");
-    cachedHost = json.data[Math.floor(Math.random() * json.data.length)];
-    cachedAt = Date.now();
-    return cachedHost!;
-  } catch {
-    return PINNED || cachedHost || "https://api.audius.co";
-  }
+  // The gateway is fast enough for UI requests and avoids a boot-time
+  // discovery lookup before every first Audius call on cold Render starts.
+  cachedHost = "https://api.audius.co";
+  cachedAt = Date.now();
+  return cachedHost;
 }
 
 async function audiusGet<T>(path: string): Promise<T> {
-  const host = await discoverHost();
-  const url = `${host}/v1${path}${path.includes("?") ? "&" : "?"}app_name=${APP_NAME}`;
-  const ctrl = new AbortController();
-  const timeout = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
-  try {
-    const res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
-    if (!res.ok) throw new Error(`audius ${path} ${res.status}`);
-    const json = (await res.json()) as { data: T };
-    return json.data;
-  } catch {
-    throw new Error(`audius unavailable for ${path}`);
-  } finally {
-    clearTimeout(timeout);
+  const primary = await discoverHost();
+  const hosts = Array.from(new Set([primary, ...(PINNED ? [] : FALLBACK_HOSTS)]));
+  for (const host of hosts.slice(0, 4)) {
+    const url = `${host}/v1${path}${path.includes("?") ? "&" : "?"}app_name=${APP_NAME}`;
+    const ctrl = new AbortController();
+    const timeout = setTimeout(() => ctrl.abort(), FETCH_TIMEOUT_MS);
+    try {
+      const res = await fetch(url, { cache: "no-store", signal: ctrl.signal });
+      const json = (await res.json().catch(() => ({}))) as { data?: T; error?: string };
+      if (res.ok && json?.data) return json.data;
+      if (json?.error && /rate limit/i.test(json.error)) continue;
+      if (!res.ok) continue;
+    } catch {
+      // Try next Audius gateway/provider.
+    } finally {
+      clearTimeout(timeout);
+    }
   }
+  throw new Error(`audius unavailable for ${path}`);
 }
 
 export interface AudiusUser {

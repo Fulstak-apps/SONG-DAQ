@@ -43,6 +43,7 @@ export function AudiusAutoShuffle() {
     if (booted.current || current) return;
     booted.current = true;
     let alive = true;
+    let timer: ReturnType<typeof setTimeout> | null = null;
 
     async function loadShuffle() {
       try {
@@ -58,8 +59,10 @@ export function AudiusAutoShuffle() {
       }
     }
 
-    loadShuffle();
-    return () => { alive = false; };
+    // Keep first paint and wallet/auth actions snappy; music can hydrate once
+    // the main app has had a moment to settle.
+    timer = setTimeout(loadShuffle, 2_500);
+    return () => { alive = false; if (timer) clearTimeout(timer); };
   }, [current, setQueue, setVolume]);
 
   return null;

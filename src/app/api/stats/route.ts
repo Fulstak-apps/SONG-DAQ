@@ -5,6 +5,9 @@ import { databaseReadiness } from "@/lib/appMode";
 
 export const dynamic = "force-dynamic";
 
+const STATS_CACHE_MS = 60_000;
+let statsCache: { at: number; data: Record<string, unknown> } | null = null;
+
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
   return new Promise((resolve) => {
     const id = setTimeout(() => resolve(fallback), ms);
@@ -20,10 +23,13 @@ function canUseDatabaseForStats() {
 }
 
 export async function GET() {
+  if (statsCache && Date.now() - statsCache.at < STATS_CACHE_MS) {
+    return NextResponse.json({ ...statsCache.data, cached: true });
+  }
   try {
-    const rawCoins = await withTimeout(listCoins(100), 3_000, []);
+    const rawCoins = await withTimeout(listCoins(60), 2_500, []);
     const coins = rawCoins.length
-      ? await withTimeout(hydrateArtists(rawCoins), 3_500, rawCoins)
+      ? await withTimeout(hydrateArtists(rawCoins), 4_800, rawCoins)
       : [];
     const liveSongs = canUseDatabaseForStats()
       ? await withTimeout(prisma.songToken.findMany({
@@ -46,7 +52,7 @@ export async function GET() {
 
     const songsTokenized = tokenizedIds.size;
 
-    return NextResponse.json({
+    const data = {
       tradingVolume,
       activeArtists: activeArtists.size,
       songsTokenized,
@@ -56,16 +62,20 @@ export async function GET() {
         ...(liveSongs.length ? ["SONG·DAQ live song tokens"] : []),
       ],
       databaseAvailable: canUseDatabaseForStats(),
-    });
+    };
+    statsCache = { at: Date.now(), data };
+    return NextResponse.json(data);
   } catch (e: any) {
     const fallbackCoins = await listCoins(100).catch(() => []);
     const fallbackArtists = new Set(fallbackCoins.map((c) => c.owner_id || c.ticker).filter(Boolean));
-    return NextResponse.json({
+    const data = {
       tradingVolume: fallbackCoins.reduce((sum, c) => sum + Number(c.v24hUSD ?? 0), 0),
       activeArtists: fallbackArtists.size,
       songsTokenized: fallbackCoins.length,
       updatedAt: new Date().toISOString(),
       error: e.message ?? "stats unavailable",
-    }, { status: 200 });
+    };
+    statsCache = { at: Date.now(), data };
+    return NextResponse.json(data, { status: 200 });
   }
 }

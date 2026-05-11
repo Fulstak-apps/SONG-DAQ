@@ -13,7 +13,9 @@ import { fetchJson } from "@/lib/fetchTimeout";
 const APP = process.env.NEXT_PUBLIC_AUDIUS_APP_NAME || "songdaq";
 export const AUDIO_MINT = "9LzCMqDgTKYz9Drzqnpgee3SGa89up3a247ypMj2xrqM";
 let coinCache: { at: number; data: AudiusCoin[] } | null = null;
+let hydratedCoinCache: { at: number; data: AudiusCoin[]; key: string } | null = null;
 const COIN_CACHE_MS = 60_000;
+const HYDRATED_COIN_CACHE_MS = 5 * 60_000;
 
 export interface AudiusCoin {
   name: string;
@@ -147,6 +149,15 @@ export async function getCoin(mint: string): Promise<AudiusCoin | null> {
  * PLAY SONG | BUY $TOKEN layout on the coin page and cards.
  */
 export async function hydrateArtists(coins: AudiusCoin[]): Promise<AudiusCoin[]> {
+  const key = coins.map((coin) => `${coin.mint}:${coin.owner_id}:${coin.logo_uri || ""}`).join("|");
+  if (
+    hydratedCoinCache &&
+    hydratedCoinCache.key === key &&
+    Date.now() - hydratedCoinCache.at < HYDRATED_COIN_CACHE_MS
+  ) {
+    return hydratedCoinCache.data;
+  }
+
   const hosts = await (async () => {
     try {
       const j = await fetchJson<{ data: string[] }>("https://api.audius.co", { next: { revalidate: 3600 } }, 4_000);
@@ -207,5 +218,6 @@ export async function hydrateArtists(coins: AudiusCoin[]): Promise<AudiusCoin[]>
       } catch { return baseCoin; }
     }),
   );
+  hydratedCoinCache = { at: Date.now(), data: out, key };
   return out;
 }

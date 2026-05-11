@@ -6,10 +6,32 @@ import { WALLETS, connectWallet, disconnectWallet, type WalletId } from "@/lib/w
 import { safeJson } from "@/lib/safeJson";
 import { Loader2, Wallet, LogOut, ExternalLink } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { useWalletDiscoveryVersion } from "@/lib/useWalletDiscovery";
 
 function shortAddr(a: string) {
   if (!a) return "";
   return a.length > 12 ? `${a.slice(0, 4)}…${a.slice(-4)}` : a;
+}
+
+function postAudiusLinkInBackground(body: unknown) {
+  const ctrl = new AbortController();
+  const timeout = window.setTimeout(() => ctrl.abort(), 2_000);
+  fetch("/api/audius/link", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+    signal: ctrl.signal,
+  })
+    .then((link) => safeJson(link).then((j) => ({ ok: link.ok, data: j })))
+    .then(({ ok, data }) => {
+      if (!ok || (data as any)?.linkPending) {
+        toast.info("Wallet connected", (data as any)?.error || "Artist profile will sync in the background.");
+      }
+    })
+    .catch(() => {
+      toast.info("Wallet connected", "Profile sync is still catching up, but your wallet is ready.");
+    })
+    .finally(() => window.clearTimeout(timeout));
 }
 
 export function WalletButton({ compact = false, connectOnly = false }: { compact?: boolean; connectOnly?: boolean }) {
@@ -19,6 +41,7 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
   const [busy, setBusy] = useState<WalletId | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  useWalletDiscoveryVersion();
   const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet";
   const hasExternalWallet = !!address && provider !== "audius";
 
@@ -31,25 +54,12 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
       const r = await connectWallet(id);
       setSession({ address: r.address, kind: r.kind, provider: r.provider });
       if (audius) {
-        const link = await fetch("/api/audius/link", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            wallet: r.address,
-            walletType: r.kind,
-            profile: audius,
-            role: userMode === "ARTIST" ? "ARTIST" : undefined,
-          }),
+        postAudiusLinkInBackground({
+          wallet: r.address,
+          walletType: r.kind,
+          profile: audius,
+          role: userMode === "ARTIST" ? "ARTIST" : undefined,
         });
-        if (!link.ok) {
-          const j = await safeJson(link);
-          toast.info("Wallet connected", (j as any).error || "Artist profile link is pending until the database is reachable.");
-        } else {
-          const j = await safeJson(link);
-          if ((j as any)?.linkPending) {
-            toast.info("Wallet connected", "Artist profile link is pending until the database is reachable.");
-          }
-        }
       }
       setOpen(false);
     } catch (e: any) {

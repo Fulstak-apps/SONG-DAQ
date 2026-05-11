@@ -7,6 +7,7 @@ import { useNativeBalance } from "@/components/WalletBalance";
 import { useSession } from "@/lib/store";
 import { fmtSol } from "@/lib/pricing";
 import { toast } from "@/lib/toast";
+import { useWalletDiscoveryVersion } from "@/lib/useWalletDiscovery";
 
 export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
   const { address, kind, provider, audius } = useSession();
@@ -15,8 +16,12 @@ export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
   const [health, setHealth] = useState<any>(null);
   const [busy, setBusy] = useState(false);
   const [reporting, setReporting] = useState(false);
+  const walletDiscoveryVersion = useWalletDiscoveryVersion();
 
-  const installed = useMemo(() => WALLETS.map((w) => ({ id: w.id, label: w.label, installed: w.installed() })), []);
+  const installed = useMemo(
+    () => WALLETS.map((w) => ({ id: w.id, label: w.label, installed: w.installed() })),
+    [walletDiscoveryVersion],
+  );
 
   async function loadHealth() {
     setBusy(true);

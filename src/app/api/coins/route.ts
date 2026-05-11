@@ -19,9 +19,9 @@ export async function GET(req: NextRequest) {
   const sort = req.nextUrl.searchParams.get("sort") ?? "marketCap";
   const limit = Number(req.nextUrl.searchParams.get("limit") ?? 60);
   try {
-    const coins = await timeout(listCoins(limit), 4_000, []);
+    const coins = await timeout(listCoins(limit), 3_000, []);
     const raw = coins.slice(0, limit);
-    const enriched = raw.length ? await timeout(hydrateArtists(raw), 3_500, raw) : [];
+    const enriched = raw.length ? await timeout(hydrateArtists(raw), 4_800, raw) : [];
     for (const c of enriched) {
       recordTick(c.mint, c.price ?? 0, c.v24hUSD ?? 0, (c as any).history24hPrice ?? 0);
     }

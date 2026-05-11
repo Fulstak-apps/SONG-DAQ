@@ -40,7 +40,7 @@ export default function AudiusCallback() {
       if (!codeVerifier) throw new Error("Missing Audius login verifier. Please return to SONG·DAQ and retry sign-in.");
 
       const ctrl = new AbortController();
-      const id = setTimeout(() => ctrl.abort(), 35_000);
+      const id = setTimeout(() => ctrl.abort(), 22_000);
       try {
         const r = await fetch("/api/audius/exchange", {
           method: "POST",
@@ -74,21 +74,19 @@ export default function AudiusCallback() {
       } catch {}
     }
 
-    async function linkAudiusWithTimeout(sol: string, profile: AudiusProfile) {
+    function linkAudiusInBackground(sol: string, profile: AudiusProfile) {
       const ctrl = new AbortController();
-      const id = setTimeout(() => ctrl.abort(), 4_000);
-      try {
-        await fetch("/api/audius/link", {
+      const id = setTimeout(() => ctrl.abort(), 2_000);
+      fetch("/api/audius/link", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ wallet: sol, walletType: "solana", profile, role: "ARTIST" }),
           signal: ctrl.signal,
-        });
-      } catch (error) {
+        })
+        .catch((error) => {
         console.warn("Audius link deferred", error);
-      } finally {
-        clearTimeout(id);
-      }
+        })
+        .finally(() => clearTimeout(id));
     }
 
     async function run() {
@@ -135,7 +133,7 @@ export default function AudiusCallback() {
         try {
           localStorage.setItem("audius-oauth-profile", JSON.stringify({ source: "audius-oauth", state, profile, ts: Date.now() }));
         } catch {}
-        if (linkWallet) await linkAudiusWithTimeout(linkWallet, profile);
+        if (linkWallet) linkAudiusInBackground(linkWallet, profile);
         cleanupOAuthStorage();
         setStatus("success");
         setMsg("Audius connected. Returning to SONG·DAQ...");

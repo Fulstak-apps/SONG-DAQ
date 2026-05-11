@@ -7,6 +7,16 @@ import { verifyAdminSession } from "@/lib/adminSession";
 
 export const dynamic = "force-dynamic";
 
+function withDashboardTimeout<T>(promise: Promise<T>, ms = 5_000): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const id = setTimeout(() => reject(new Error("Database dashboard query timed out")), ms);
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => clearTimeout(id));
+  });
+}
+
 function systemStatus(databaseConnected = false) {
   const databaseUrl = process.env.DATABASE_URL || "";
   const database = databaseReadiness(databaseUrl);
@@ -117,7 +127,7 @@ export async function GET(req: NextRequest) {
     errorLogs,
     adminLogs,
     statusCounts,
-  ] = await Promise.all([
+  ] = await withDashboardTimeout(Promise.all([
     prisma.report.findMany({
       orderBy: { createdAt: "desc" },
       take: 50,
@@ -198,7 +208,7 @@ export async function GET(req: NextRequest) {
       prisma.transaction.count({ where: { mode: "devnet" } }),
       prisma.errorLog.count({ where: { resolved: false } }),
     ]),
-  ]);
+  ]));
 
   const [
     openReports,

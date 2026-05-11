@@ -32,7 +32,7 @@ export interface AudiusProfile {
   wallets?: { sol: string | null; eth: string | null };
 }
 
-async function exchangeCodeForProfile(code: string, codeVerifier: string, redirectUri: string, timeoutMs = 30_000) {
+async function exchangeCodeForProfile(code: string, codeVerifier: string, redirectUri: string, timeoutMs = 22_000) {
   const ctrl = new AbortController();
   const timeout = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -230,7 +230,7 @@ export function loginWithAudius(): Promise<AudiusProfile> {
       settled = true; cleanup();
       try { popup.close(); } catch {}
       reject(new Error("Audius login timed out. Please retry, or use full-page sign-in if the popup keeps timing out."));
-    }, 75_000);
+    }, 45_000);
 
     // Fallback: poll localStorage in case postMessage was missed.
     pollTimer = setInterval(() => {

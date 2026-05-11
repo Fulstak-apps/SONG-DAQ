@@ -7,6 +7,7 @@ import { loginWithAudius } from "@/lib/audiusOAuth";
 import { safeJson } from "@/lib/safeJson";
 import { Music, TrendingUp, ShieldCheck, ChevronLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "@/lib/toast";
+import { useWalletDiscoveryVersion } from "@/lib/useWalletDiscovery";
 
 type Step = "ROLE" | "WALLET" | "AUDIUS" | "ARTIST_READY" | "DONE";
 type Role = "ARTIST" | "INVESTOR";
@@ -24,6 +25,21 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}
   }
 }
 
+function linkAudiusInBackground(body: unknown) {
+  fetchWithTimeout("/api/audius/link", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify(body),
+  }, 2_000)
+    .then((link) => safeJson(link).then((j) => ({ ok: link.ok, data: j })))
+    .then(({ ok, data }) => {
+      if (!ok || (data as any)?.linkPending) {
+        toast.info("Wallet connected", (data as any)?.error || "Artist profile will sync in the background.");
+      }
+    })
+    .catch(() => toast.info("Wallet connected", "Profile sync is still catching up, but your wallet is ready."));
+}
+
 export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { address, provider, audius, setSession } = useSession();
   const { setUserMode } = useUI();
@@ -31,6 +47,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const [step, setStep] = useState<Step>("ROLE");
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  useWalletDiscoveryVersion();
 
   // Reset on open
   useEffect(() => {
@@ -86,20 +103,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       const r = await connectWallet(id);
       setSession({ address: r.address, kind: r.kind, provider: r.provider });
       if (role === "ARTIST" && audius) {
-        const link = await fetchWithTimeout("/api/audius/link", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ wallet: r.address, walletType: r.kind, profile: audius, role: "ARTIST" }),
-        });
-        if (!link.ok) {
-          const j = await safeJson(link);
-          toast.info("Wallet connected", (j as any).error || "Artist profile link is pending until the database is reachable.");
-        } else {
-          const j = await safeJson(link);
-          if ((j as any)?.linkPending) {
-            toast.info("Wallet connected", "Artist profile link is pending until the database is reachable.");
-          }
-        }
+        linkAudiusInBackground({ wallet: r.address, walletType: r.kind, profile: audius, role: "ARTIST" });
         setUserMode("ARTIST");
         setStep("DONE");
       } else {
@@ -128,11 +132,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       setUserMode("ARTIST");
       setStep("ARTIST_READY");
       if (linkWallet) {
-        void fetchWithTimeout("/api/audius/link", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ wallet: linkWallet, walletType: "solana", profile, role: "ARTIST" }),
-        }, 4_000).catch(() => {});
+        linkAudiusInBackground({ wallet: linkWallet, walletType: "solana", profile, role: "ARTIST" });
       }
     } catch (e: any) {
       setErr(e.message ?? String(e));

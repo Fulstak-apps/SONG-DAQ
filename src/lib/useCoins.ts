@@ -35,7 +35,7 @@ function getEntry(sort: string): Entry {
 }
 
 async function fetchOnce(sort: string): Promise<AudiusCoin[]> {
-  const r = await fetch(`/api/coins?sort=${sort}`, { cache: "no-store" });
+  const r = await fetch(`/api/coins?sort=${sort}&limit=36`, { cache: "no-store" });
   const j = await readJson<{ coins?: AudiusCoin[] }>(r);
   if (!r.ok) throw new Error(j && "error" in j ? String((j as any).error) : `Coins request failed (${r.status})`);
   return j?.coins ?? [];

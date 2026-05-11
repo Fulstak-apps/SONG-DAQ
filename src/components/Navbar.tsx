@@ -188,11 +188,15 @@ export function Navbar() {
           <div className="ml-auto hidden lg:flex items-center justify-end gap-1.5 min-w-0">
               {audius ? <div className="shrink-0"><AudiusLoginButton compact /></div> : null}
               {(address || audius) ? <WalletBalance compact /> : null}
-              {audius && !hasSeparateExternalWallet ? <div className="hidden xl:block shrink-0"><WalletButton compact connectOnly /></div> : null}
               {(address || paperMode) ? <div className="hidden xl:block shrink-0"><RoleToggle /></div> : null}
           </div>
 
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+            {mounted && audius && !hasSeparateExternalWallet ? (
+              <div className="shrink-0">
+                <WalletButton compact connectOnly />
+              </div>
+            ) : null}
 
             {mounted && (address || audius) ? (
               <button

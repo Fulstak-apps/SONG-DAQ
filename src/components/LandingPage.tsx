@@ -153,7 +153,7 @@ export function LandingPage() {
         </div>
       </Section>
 
-      <div className="grid grid-cols-1 items-stretch gap-3 md:grid-cols-3 lg:grid-cols-6">
+      <div className="grid grid-cols-1 items-stretch gap-3 [grid-auto-rows:1fr] md:grid-cols-3 lg:grid-cols-6">
         <Section className="h-full" delay={0}><Step num={1} title="Upload" icon={<CloudUpload className="text-violet" size={24} />} desc="Upload your track to Audius." /></Section>
         <Section className="h-full" delay={0.05}><Step num={2} title="Distribute" icon={<Globe className="text-violet" size={24} />} desc="Release via DistroKid, TuneCore, etc." /></Section>
         <Section className="h-full" delay={0.1}><Step num={3} title="Tokenize" icon={<CircleDollarSign className="text-violet" size={24} />} desc="Create your song token. Set royalty share (min 10%)." active /></Section>
@@ -411,14 +411,14 @@ function Step({ num, title, icon, desc, active }: { num: number; title: string; 
   return (
     <Tooltip
       width={340}
-      triggerClassName="h-full w-full"
+      triggerClassName="flex h-full w-full items-stretch"
       content={<div><div className="font-black text-neon mb-1">{title}</div><p className="text-pure-white/70 text-xs leading-relaxed">{desc}</p></div>}
     >
-      <div className={`panel-elevated relative flex h-full min-h-[190px] flex-col items-center gap-3 p-5 text-center md:min-h-[210px] ${active ? "border-neon/20 shadow-neon-glow" : ""}`}>
-        <div className="text-[9px] font-black text-mute tracking-widest">{String(num).padStart(2, "0")}</div>
-        <div className="w-12 h-12 rounded-2xl bg-white/[0.03] border border-white/[0.06] flex items-center justify-center">{icon}</div>
-        <div className="text-xs font-black uppercase tracking-widest text-white/70">{title}</div>
-        <p className="text-[11px] text-mute leading-relaxed flex-1">{desc}</p>
+      <div className={`panel-elevated relative flex h-[190px] w-full flex-col items-center justify-start gap-3 p-5 text-center md:h-[215px] lg:h-[235px] ${active ? "border-neon/20 shadow-neon-glow" : ""}`}>
+        <div className="shrink-0 text-[9px] font-black text-mute tracking-widest">{String(num).padStart(2, "0")}</div>
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.03]">{icon}</div>
+        <div className="min-h-[2rem] shrink-0 text-xs font-black uppercase tracking-widest text-white/70 flex items-center justify-center">{title}</div>
+        <p className="flex flex-1 items-center text-[11px] text-mute leading-relaxed">{desc}</p>
       </div>
     </Tooltip>
   );

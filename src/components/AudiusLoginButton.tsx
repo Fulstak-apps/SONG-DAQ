@@ -40,11 +40,14 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
       setUserMode("ARTIST");
       setOpen(false);
       if (linkWallet) {
+        const ctrl = new AbortController();
+        const timeout = window.setTimeout(() => ctrl.abort(), 2_000);
         void fetch("/api/audius/link", {
           method: "POST",
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ profile, wallet: linkWallet, walletType: "solana", role: "ARTIST" }),
-        }).catch(() => {});
+          signal: ctrl.signal,
+        }).catch(() => {}).finally(() => window.clearTimeout(timeout));
       }
     } catch (e: any) {
       setErr(e.message ?? String(e));
