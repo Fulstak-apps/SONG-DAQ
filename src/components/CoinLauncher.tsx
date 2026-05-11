@@ -14,7 +14,7 @@ import {
 } from "@/lib/royaltyConfig";
 import { RoyaltyConfigEditor } from "./RoyaltyConfigEditor";
 import type { AudiusTrack } from "@/lib/audius";
-import { createArtistPaidSongMint, type WalletId } from "@/lib/wallet";
+import { createArtistPaidSongMint, getConnectedWalletId, sendSerializedTransaction, type WalletId } from "@/lib/wallet";
 import { Glossary } from "@/components/Tooltip";
 import { WalletButton } from "@/components/WalletButton";
 import { AlertTriangle, ChevronRight, ChevronLeft, Rocket, Music, Settings, BarChart3, ShieldCheck, CheckCircle2 } from "lucide-react";
@@ -54,6 +54,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
+  const [liquidityStage, setLiquidityStage] = useState<"idle" | "preparing" | "signing" | "confirming" | "live" | "failed">("idle");
+  const [liquidityMessage, setLiquidityMessage] = useState<string | null>(null);
   const [launchStatus, setLaunchStatus] = useState<{
     configured: boolean;
     readyForPublic?: boolean;
@@ -137,6 +139,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       return;
     }
     setBusy(true); setErr(null);
+    setLiquidityStage("idle");
+    setLiquidityMessage(null);
     try {
       if (audius) {
         const link = await fetch("/api/audius/link", {
@@ -191,6 +195,67 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         },
       });
       setResult(r);
+      setLiquidityStage("preparing");
+      setLiquidityMessage("Coin minted. Preparing the required launch liquidity transaction now.");
+
+      try {
+        const prep = await api<{
+          transaction: string;
+          poolId: string;
+          lpMint: string;
+          mintA: string;
+          mintB: string;
+          configId: string;
+        }>(`/api/songs/${r.song.id}/liquidity/onchain`, {
+          method: "POST",
+          json: {
+            wallet: externalWalletAddress,
+            tokenAmount: Number(liquidityTokenAmount),
+            pairAmount: Number(liquidityPairAmount),
+            pairAsset: liquidityPairAsset,
+            lockDays: Number(liquidityLockDays),
+          },
+        });
+
+        const walletId = getConnectedWalletId() || externalWalletProvider;
+        setLiquidityStage("signing");
+        setLiquidityMessage("Approve the second Phantom transaction to add the reserved coins and paired SOL/USDC into the launch pool.");
+        const liquidityTxSig = await sendSerializedTransaction(walletId as WalletId, prep.transaction);
+
+        setLiquidityStage("confirming");
+        setLiquidityMessage("Liquidity transaction sent. Verifying the pool before opening trading to fans.");
+        let live: any = null;
+        let lastLiquidityError: any = null;
+        for (let attempt = 0; attempt < 3; attempt++) {
+          try {
+            live = await api<any>(`/api/songs/${r.song.id}/liquidity`, {
+              method: "POST",
+              json: {
+                wallet: externalWalletAddress,
+                tokenAmount: Number(liquidityTokenAmount),
+                pairAmount: Number(liquidityPairAmount),
+                pairAsset: liquidityPairAsset,
+                lockDays: Number(liquidityLockDays),
+                liquidityTxSig,
+                poolId: prep.poolId,
+                lpMint: prep.lpMint,
+              },
+            });
+            break;
+          } catch (recordError: any) {
+            lastLiquidityError = recordError;
+            await new Promise((resolve) => setTimeout(resolve, 1600 + attempt * 1600));
+          }
+        }
+        if (!live) throw lastLiquidityError || new Error("Liquidity transaction was sent, but SONG·DAQ could not verify it yet.");
+
+        setLiquidityStage("live");
+        setLiquidityMessage("Launch liquidity is verified. Fans can now buy and sell this coin.");
+        setResult({ ...r, song: live.song || r.song, launch: { ...r.launch, liquidityTxSig, poolId: prep.poolId, lpMint: prep.lpMint, tradingStatus: "LIVE" } });
+      } catch (liquidityError: any) {
+        setLiquidityStage("failed");
+        setLiquidityMessage(liquidityError?.message || "Coin minted, but automatic liquidity setup did not finish. Open the token detail page and use Add Liquidity to make it live.");
+      }
       onLaunched?.();
     } catch (e: any) {
       setErr(e.message);
@@ -480,9 +545,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 <ShieldCheck size={14} className="text-neon" /> Step 04 — Add Liquidity Required
               </div>
               <div className="rounded-2xl border border-neon/20 bg-neon/8 p-5 text-neon">
-                <div className="text-[10px] uppercase tracking-widest font-black">Liquidity is required before launch</div>
+                <div className="text-[10px] uppercase tracking-widest font-black">Liquidity opens the coin for fans</div>
                 <p className="mt-2 text-sm leading-relaxed text-neon/85">
-                  Liquidity is required so fans can buy and sell this coin without the market being frozen.
+                  The coin supply lands in your wallet first for safety. During launch, SONG·DAQ will automatically ask for a second wallet approval that moves this reserved amount plus {liquidityPairAsset} into the trading pool.
                 </p>
               </div>
               <div className="grid gap-5 lg:grid-cols-2">
@@ -500,7 +565,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               <div className="panel p-5 bg-panel border-edge rounded-2xl space-y-3">
                 <Row k="Initial implied price" v={`${impliedPrice.toFixed(8)} ${liquidityPairAsset}`} color="text-neon" />
                 <Row k="Slippage estimate" v={liquidityPairAmount >= 1 ? "Low/Medium" : "High"} color={liquidityPairAmount >= 1 ? "text-neon" : "text-amber"} />
-                <Row k="Liquidity ownership" v="Protocol treasury reserve" />
+                <Row k="Liquidity source" v="Artist wallet, explicit second approval" />
                 <Row k="Lock status" v={`${liquidityLockDays} days required`} color="text-neon" />
               </div>
               <div className="grid gap-3 md:grid-cols-4">
@@ -530,12 +595,15 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   </div>
                   <div className="space-y-2">
                     <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Review Risk + Launch</h3>
-                    <p className="text-mute text-sm font-medium">Your connected artist wallet pays the mint and launch network fees. SONG·DAQ verifies the mint, then holds the Song Token in pending liquidity until a real trading route is connected.</p>
+                    <p className="text-mute text-sm font-medium">
+                      Your connected artist wallet signs two clear steps: first create the fixed-supply coin, then add the reserved coins plus {liquidityPairAsset} into launch liquidity. Fans can buy only after liquidity is verified.
+                    </p>
                   </div>
                   <div className="panel p-4 text-left space-y-2 bg-panel border-edge">
                     <Row k="Song" v={pick?.title ?? "Artist coin"} />
                     <Row k="Supply" v={fmtNum(supply)} />
                     <Row k="Liquidity" v={`${fmtNum(liquidityTokenAmount)} tokens + ${liquidityPairAmount} ${liquidityPairAsset}`} color="text-neon" />
+                    <Row k="Trading opens" v="After liquidity transaction verifies" color="text-neon" />
                     <Row k="Liquidity lock" v={`${liquidityLockDays} days`} />
                     <Row k="Artist allocation" v={`${(artistAllocationBps / 100).toFixed(2)}%`} />
                     <Row k="Max wallet cap" v={`${(maxWalletBps / 100).toFixed(2)}%`} />
@@ -547,10 +615,10 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   </label>
                   <label className="flex items-start gap-3 rounded-xl border border-edge bg-panel p-3 text-left text-xs text-mute">
                     <input type="checkbox" checked={riskAcknowledged} onChange={(e) => setRiskAcknowledged(e.target.checked)} className="mt-1" />
-                    <span>I understand that misleading buyers, fake claims, or removing liquidity may result in delisting.</span>
+                    <span>I understand that fans can potentially profit only if demand pushes the coin price higher, but profit is not guaranteed and prices can go down.</span>
                   </label>
                   <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-left text-xs leading-relaxed text-neon/85">
-                    Artist pays launch fees. The server will not spend SONG·DAQ treasury funds to create this mint.
+                    Artist pays launch fees. The first approval creates the coin in your wallet. The second approval adds the reserved launch liquidity that lets fans buy and sell.
                   </div>
                   <button
                     type="button"
@@ -558,7 +626,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     onClick={deploy}
                     disabled={launchStatus?.configured === false || !canLaunchReview || !ownershipConfirmed || !riskAcknowledged}
                   >
-                    SIGN AND MINT SONG TOKEN
+                    SIGN MINT + ADD LIQUIDITY
                   </button>
                 </div>
               )}
@@ -570,8 +638,12 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <div className="absolute inset-0 border-4 border-neon border-t-transparent rounded-full animate-spin" />
                   </div>
                   <div className="space-y-2">
-                    <div className="text-neon text-lg font-black tracking-tighter uppercase animate-pulse">Synchronizing Ledger…</div>
-                    <div className="text-mute text-[10px] uppercase tracking-widest font-bold">Waiting for artist wallet signature · verifying Solana mint</div>
+                    <div className="text-neon text-lg font-black tracking-tighter uppercase animate-pulse">
+                      {liquidityStage === "idle" ? "Synchronizing Ledger…" : "Setting Up Liquidity…"}
+                    </div>
+                    <div className="max-w-md text-mute text-[10px] uppercase tracking-widest font-bold leading-relaxed">
+                      {liquidityMessage || "Waiting for artist wallet signature · verifying Solana mint"}
+                    </div>
                   </div>
                 </div>
               )}
@@ -596,11 +668,25 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-xs leading-relaxed text-neon">
                       Wallet visibility metadata is attached on-chain. If Phantom still hides a brand-new token, open Hidden Tokens and mark it as Not Spam; the token is still in the wallet.
                     </div>
-                    <div className="rounded-xl border border-amber/20 bg-amber/10 p-3 text-xs leading-relaxed text-amber">
-                      Trading is pending until a verified liquidity pool or Jupiter route is connected. SONG·DAQ will not label this Song Token live before that.
+                    <div className={`rounded-xl border p-3 text-xs leading-relaxed ${
+                      liquidityStage === "live"
+                        ? "border-neon/20 bg-neon/10 text-neon"
+                        : liquidityStage === "failed"
+                          ? "border-amber/20 bg-amber/10 text-amber"
+                          : "border-violet/20 bg-violet/10 text-violet"
+                    }`}>
+                      <div className="mb-1 text-[10px] uppercase tracking-widest font-black">
+                        {liquidityStage === "live" ? "Liquidity live" : liquidityStage === "failed" ? "Liquidity still needed" : "Liquidity setup running"}
+                      </div>
+                      {liquidityMessage || "SONG·DAQ is preparing the launch liquidity step."}
+                    </div>
+                    <div className="rounded-xl border border-edge bg-panel p-3 text-left text-xs leading-relaxed text-mute">
+                      Fans buy from the liquidity pool, not from a hidden mint. The artist receives the full supply first, then the reserved portion is moved into the public trading pool with paired SOL/USDC.
                     </div>
                   </div>
-                  <a className="btn-primary block w-full py-4 text-sm font-black tracking-widest" href={`/song/${result.song?.id}`}>OPEN TOKEN DETAIL</a>
+                  <a className="btn-primary block w-full py-4 text-sm font-black tracking-widest" href={`/song/${result.song?.id}`}>
+                    {liquidityStage === "live" ? "OPEN LIVE TOKEN" : "OPEN TOKEN DETAIL"}
+                  </a>
                 </div>
               )}
             </motion.section>

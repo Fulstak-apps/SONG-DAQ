@@ -7,8 +7,8 @@ const artistSteps = [
   "Switch to Artist Mode.",
   "Choose a song or create an artist coin.",
   "Enter coin details, ticker, supply, and launch price.",
-  "Add launch liquidity so the coin can trade.",
-  "Review SOL and USD values, then confirm launch.",
+  "Choose how many coins are reserved for launch liquidity and how much SOL/USDC is paired with them.",
+  "Approve the mint transaction, then approve the automatic launch liquidity transaction.",
   "After launch, set up royalty splits if you want royalty verification.",
 ];
 
@@ -67,7 +67,7 @@ export function SupportPage() {
             The goal is simple: make music feel investable without making the app confusing. Normal users get clean charts, clear wallet prompts, SOL plus USD values, and plain-English explanations. Advanced users can open deeper chart tools when they want them.
           </p>
           <div className="rounded-2xl border border-neon/20 bg-neon/10 p-4 text-sm text-neon font-bold leading-relaxed">
-            Launch liquidity gets the coin live. Royalty money supports the coin after launch.
+            Launch works in two clear approvals: create the fixed-supply coin, then add launch liquidity. Fans buy from the liquidity pool, not from a hidden mint. Royalty money supports the coin after launch.
           </div>
         </div>
       </section>
@@ -91,9 +91,10 @@ export function SupportPage() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <SupportCard icon={<Landmark />} title="What Is Launch Liquidity?">
-          <p>Launch liquidity is required to make a song coin tradable. The artist adds coin tokens plus SOL or USDC to create the starting market and initial price.</p>
+          <p>Launch liquidity is required to make a song coin tradable. The artist receives the full fixed supply first, then SONG·DAQ asks the artist to approve a second transaction that moves the reserved launch coins plus SOL or USDC into the public trading pool.</p>
           <p>This is separate from royalties. A coin can launch without royalty verification, but it still needs liquidity to trade.</p>
-          <p>Think of launch liquidity like opening the first market for the coin. Without it, people can see the idea, but there is no real trading pool for buys and sells.</p>
+          <p>Think of launch liquidity like opening the first market for the coin. Without it, people can see the coin, but there is no real pool for buys and sells.</p>
+          <p>Once the pool is verified, fans can buy with SOL. Fans may profit if demand rises and they later sell higher, but profit is never guaranteed and prices can go down.</p>
         </SupportCard>
 
         <SupportCard icon={<FileCheck2 />} title="How Royalty Splits Work">

@@ -166,6 +166,11 @@ export default function ArtistPage() {
                         <Link className="px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-bold bg-panel2 border border-edge hover:bg-white/10 text-white hover:border-white/30 transition" href={`/song/${s.id}`}>
                           Open
                         </Link>
+                        {s.status === "PENDING_LIQUIDITY" && (
+                          <Link className="px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-bold bg-neon/10 border border-neon/20 hover:bg-neon/20 text-neon transition" href={`/song/${s.id}`}>
+                            Add Liquidity
+                          </Link>
+                        )}
                         <span className={`px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-bold border ${statusClass}`}>
                           {statusLabel}
                         </span>

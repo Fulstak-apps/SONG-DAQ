@@ -276,7 +276,7 @@ export async function POST(req: NextRequest) {
       metadataUri,
       paidBy: artistWallet,
       tradingStatus: "PENDING_LIQUIDITY",
-      message: "Song Token minted. Trading opens after a verified liquidity pool/route is connected.",
+      message: "Song Token minted. The artist owns the fixed supply first; trading opens after the reserved launch coins and paired SOL/USDC are added to a verified liquidity pool.",
     },
   });
 }

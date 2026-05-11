@@ -507,7 +507,7 @@ function PendingLiquidityPanel({ song, isOwner = false }: { song: any; isOwner?:
           <div className="text-[10px] uppercase tracking-widest font-black text-orange-500">{status}</div>
           <h3 className="mt-1 text-lg font-black tracking-tight text-white">Trading route not live yet</h3>
           <p className="mt-2 text-xs text-mute leading-relaxed">
-            This Song Token can be inspected on-chain, but SONG·DAQ will not enable buy or sell actions until a verified liquidity pool or Jupiter route is connected.
+            This Song Token can be inspected on-chain, but SONG·DAQ will not enable buy or sell actions until the artist adds the reserved coins plus SOL/USDC into a verified liquidity pool.
           </p>
         </div>
       </div>
@@ -524,7 +524,7 @@ function PendingLiquidityPanel({ song, isOwner = false }: { song: any; isOwner?:
       </div>
 
       <div className="rounded-xl border border-orange-500/20 bg-orange-500/10 p-3 text-[11px] leading-relaxed text-orange-100/90">
-        Liquidity is required so fans can buy and sell this token without the market being frozen. No off-chain fills or fake successful trades are recorded.
+        Fans buy from the liquidity pool, not directly from a hidden mint. The artist receives the fixed supply first, then the reserved launch portion must be paired with SOL/USDC before fans can trade.
       </div>
 
       {isOwner && (
@@ -540,10 +540,10 @@ function PendingLiquidityPanel({ song, isOwner = false }: { song: any; isOwner?:
 function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
   const { address } = useSession();
   const [open, setOpen] = useState(false);
-  const [tokenAmount, setTokenAmount] = useState("100000");
-  const [pairAmount, setPairAmount] = useState("1");
-  const [pairAsset, setPairAsset] = useState<"SOL" | "USDC">("SOL");
-  const [lockDays, setLockDays] = useState("180");
+  const [tokenAmount, setTokenAmount] = useState(String(song.liquidityTokenAmount || 100000));
+  const [pairAmount, setPairAmount] = useState(String(song.liquidityPairAmount || 1));
+  const [pairAsset, setPairAsset] = useState<"SOL" | "USDC">((song.liquidityPairAsset === "USDC" ? "USDC" : "SOL"));
+  const [lockDays, setLockDays] = useState(String(song.liquidityLockDays || 180));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
@@ -629,7 +629,7 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
             </label>
           </div>
           <div className="rounded-xl border border-edge bg-panel p-3 text-xs text-mute">
-            This updates the token’s launch liquidity record on the site and marks it live once the threshold is met.
+            This sends the reserved launch coins plus paired SOL/USDC into the public pool. Once the transaction is verified, SONG·DAQ marks the coin live so fans can buy and sell.
           </div>
           {err && <div className="rounded-xl border border-red/20 bg-red/10 p-3 text-xs text-red">{err}</div>}
           <button className="btn-primary w-full h-11 text-[10px] font-black uppercase tracking-widest disabled:opacity-50" disabled={busy} onClick={submit}>
