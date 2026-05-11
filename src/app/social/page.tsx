@@ -38,14 +38,30 @@ function normalizedImage(src?: string) {
   return src.replace(/([?&])(width|w|height|h)=\d+/gi, "").trim();
 }
 
-function IntelImage({ src, alt, variant }: { src?: string; alt: string; variant: "lead" | "wide" | "tall" | "normal" }) {
-  const [mode, setMode] = useState<"cover" | "contain">("cover");
+function IntelFallback({ story }: { story: NewsStory }) {
+  const initial = (story.source || story.category || "S").slice(0, 1).toUpperCase();
+  return (
+    <div className={`grid h-full w-full place-items-center ${
+      story.category === "MUSIC" ? "bg-[radial-gradient(circle_at_30%_20%,rgba(155,81,224,0.5),transparent_34%),linear-gradient(135deg,rgba(155,81,224,0.36),rgba(0,0,0,0.94))]"
+        : story.category === "TECH" ? "bg-[radial-gradient(circle_at_32%_18%,rgba(0,212,255,0.42),transparent_34%),linear-gradient(135deg,rgba(0,212,255,0.28),rgba(0,0,0,0.94))]"
+          : "bg-[radial-gradient(circle_at_32%_18%,rgba(212,255,0,0.34),transparent_34%),linear-gradient(135deg,rgba(212,255,0,0.2),rgba(0,0,0,0.94))]"
+    }`}>
+      <div className="grid h-16 w-16 place-items-center rounded-2xl border border-white/10 bg-black/30 font-mono text-2xl font-black text-white/70 shadow-depth">
+        {initial}
+      </div>
+    </div>
+  );
+}
 
-  if (!src) return null;
+function IntelImage({ src, alt, variant, story }: { src?: string; alt: string; variant: "lead" | "wide" | "tall" | "normal"; story: NewsStory }) {
+  const [mode, setMode] = useState<"cover" | "contain">("cover");
+  const [broken, setBroken] = useState(false);
+
+  if (!src || broken) return <IntelFallback story={story} />;
 
   return (
-    <div className={`relative h-full w-full ${mode === "contain" ? "p-3 md:p-4" : ""}`}>
-      <div className={`relative h-full w-full overflow-hidden ${mode === "contain" ? "grid place-items-center rounded-2xl border border-white/8 bg-black/20" : ""}`}>
+    <div className={`relative h-full w-full bg-panel2 ${mode === "contain" ? "p-2.5 md:p-3" : ""}`}>
+      <div className={`relative h-full w-full overflow-hidden ${mode === "contain" ? "grid place-items-center rounded-xl border border-white/8 bg-black/20" : ""}`}>
         <img
           src={src}
           alt={alt}
@@ -61,12 +77,10 @@ function IntelImage({ src, alt, variant }: { src?: string; alt: string; variant:
             const weakAspect = width > 0 && height > 0 && (width / height > 2.4 || width / height < 0.55);
             setMode(tooSmall || weakAspect ? "contain" : "cover");
           }}
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
+          onError={() => setBroken(true)}
           className={mode === "contain"
             ? "max-h-full max-w-full h-auto w-auto object-contain object-center opacity-95 transition duration-700"
-            : "h-full w-full object-cover object-center opacity-95 group-hover:scale-[1.02] transition duration-700"}
+            : "h-full w-full object-cover object-center opacity-95 group-hover:scale-[1.015] transition duration-700"}
         />
       </div>
     </div>
@@ -192,11 +206,7 @@ function StoryCard({ story, variant }: { story: NewsStory; variant: "lead" | "wi
       <div className={`relative overflow-hidden bg-panel2 border-b border-edge ${
         variant === "lead" ? "h-[56%]" : variant === "tall" ? "h-[62%]" : "h-[55%]"
       }`}>
-        {img ? (
-          <IntelImage src={img} alt={story.title} variant={variant} />
-        ) : (
-          <div className={`w-full h-full ${story.category === "MUSIC" ? "bg-[linear-gradient(135deg,rgba(155,81,224,0.55),rgba(0,0,0,0.92))]" : story.category === "TECH" ? "bg-[linear-gradient(135deg,rgba(0,212,255,0.42),rgba(0,0,0,0.92))]" : "bg-[linear-gradient(135deg,rgba(212,255,0,0.32),rgba(0,0,0,0.94))]"}`} />
-        )}
+        <IntelImage src={img} alt={story.title} variant={variant} story={story} />
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-pure-black/45 to-transparent pointer-events-none" />
       </div>
       <div className="relative flex-1 min-h-0 p-4 bg-panel">

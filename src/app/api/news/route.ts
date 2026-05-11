@@ -47,9 +47,23 @@ const FALLBACK_NEWS = [
   },
 ];
 
+function fieldUrl(value: any): string | undefined {
+  if (!value) return undefined;
+  if (typeof value === "string" && /^https?:\/\//i.test(value)) return value;
+  if (Array.isArray(value)) return value.map(fieldUrl).find(Boolean);
+  if (typeof value === "object") {
+    return value.$?.url || value.url || value.href || value._ || undefined;
+  }
+  return undefined;
+}
+
 function thumbnail(item: any): string | undefined {
-  const media = item["media:content"]?.$?.url || item["media:thumbnail"]?.$?.url;
-  const enclosure = item.enclosure?.url;
+  const media =
+    fieldUrl(item["media:content"]) ||
+    fieldUrl(item["media:thumbnail"]) ||
+    fieldUrl(item["itunes:image"]) ||
+    fieldUrl(item.image);
+  const enclosure = fieldUrl(item.enclosure);
   const content = item["content:encoded"] || item.content || item.summary || "";
   const img = typeof content === "string" ? content.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] : undefined;
   return media || enclosure || img || undefined;

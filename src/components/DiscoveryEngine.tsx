@@ -286,7 +286,7 @@ export default function DiscoveryEngine() {
   const heroPulse = useMemo(() => ({
     volume: networkStats.tradingVolume || coinTotals.vol + songTotals.vol,
     artists: networkStats.activeArtists || coins.length,
-    songs: networkStats.songsTokenized || songs.length,
+    songs: Math.max(networkStats.songsTokenized, songs.length, coins.length),
   }), [networkStats, coinTotals.vol, songTotals.vol, coins.length, songs.length]);
 
   // Filter by watchlist

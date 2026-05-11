@@ -50,7 +50,7 @@ export async function GET() {
     for (const s of liveSongs) tokenizedIds.add(s.audiusTrackId || s.mintAddress || s.artistName);
     for (const c of coins) tokenizedIds.add(c.audius_track_id || c.mint || c.ticker);
 
-    const songsTokenized = tokenizedIds.size;
+    const songsTokenized = Math.max(tokenizedIds.size, coins.length, liveSongs.length);
 
     const data = {
       tradingVolume,
@@ -71,7 +71,7 @@ export async function GET() {
     const data = {
       tradingVolume: fallbackCoins.reduce((sum, c) => sum + Number(c.v24hUSD ?? 0), 0),
       activeArtists: fallbackArtists.size,
-      songsTokenized: fallbackCoins.length,
+      songsTokenized: Math.max(fallbackCoins.length, 0),
       updatedAt: new Date().toISOString(),
       error: e.message ?? "stats unavailable",
     };

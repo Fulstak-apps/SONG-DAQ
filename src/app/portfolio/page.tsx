@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { ArrowUpRight, Eye, Music2, RefreshCw, Wallet, Radio, ShieldCheck } from "lucide-react";
 import { SafeImage } from "@/components/SafeImage";
-import { useNativeBalance } from "@/components/WalletBalance";
+import { useAudiusAudioBalance, useNativeBalance } from "@/components/WalletBalance";
 import { WalletButton } from "@/components/WalletButton";
 import { usePaperTrading, useSession, useUI } from "@/lib/store";
 import { fmtNum, fmtSol } from "@/lib/pricing";
@@ -89,7 +89,9 @@ export default function PortfolioPage() {
   const audiusTokens = useTokenHoldings(audius?.wallets?.sol, "full");
   const [portfolio, setPortfolio] = useState<any>(null);
   const [paperUsd, setPaperUsd] = useState({ sol: 0, audio: 0 });
+  const [audioUsdPrice, setAudioUsdPrice] = useState(0);
   const [coinIndex, setCoinIndex] = useState<Record<string, any>>({});
+  const liveAudiusAudioBalance = useAudiusAudioBalance(audius?.handle);
 
   useEffect(() => {
     if (!portfolioWallet) { setPortfolio(null); return; }
@@ -145,8 +147,13 @@ export default function PortfolioPage() {
       .then((j) => {
         if (!alive) return;
         const next: Record<string, any> = {};
-        for (const c of j?.coins ?? []) next[c.mint] = c;
+        let audioPrice = 0;
+        for (const c of j?.coins ?? []) {
+          next[c.mint] = c;
+          if (String(c.ticker).toUpperCase() === "AUDIO") audioPrice = Number(c.price ?? 0);
+        }
         setCoinIndex(next);
+        setAudioUsdPrice(audioPrice);
       })
       .catch(() => {});
     return () => { alive = false; };
@@ -195,11 +202,20 @@ export default function PortfolioPage() {
   }, [portfolio?.holdings]);
 
   const totalUsd = (native.usd ?? 0) + (tradingTokens.data?.totalUsd ?? 0) + (audiusTokens.data?.totalUsd ?? 0);
-  const audioBalance = (tradingTokens.data?.audioBalance ?? 0) + (audiusTokens.data?.audioBalance ?? 0);
+  const tradingAudioBalance = tradingTokens.data?.audioBalance ?? 0;
+  const audiusProfileAudioBalance = Math.max(
+    audiusTokens.data?.audioBalance ?? 0,
+    typeof liveAudiusAudioBalance === "number" ? liveAudiusAudioBalance : 0,
+    typeof audius?.audioBalance === "number" ? audius.audioBalance : 0,
+  );
+  const audioBalance = externalAddress && audius?.wallets?.sol && externalAddress === audius.wallets.sol
+    ? Math.max(tradingAudioBalance, audiusProfileAudioBalance)
+    : tradingAudioBalance + audiusProfileAudioBalance;
   const audioValueUsd = [
     ...(tradingTokens.data?.tokens ?? []),
     ...(audiusTokens.data?.tokens ?? []),
-  ].filter((t) => t.isAudio).reduce((sum, t) => sum + (t.valueUsd ?? 0), 0);
+  ].filter((t) => t.isAudio).reduce((sum, t) => sum + (t.valueUsd ?? 0), 0) ||
+    (audioBalance * audioUsdPrice);
   const cashUsd = paperMode
     ? paper.balances.cashUsd + (paper.balances.sol * paperUsd.sol) + (paper.balances.audio * paperUsd.audio)
     : 0;
