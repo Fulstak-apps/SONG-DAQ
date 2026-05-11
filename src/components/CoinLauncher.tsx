@@ -277,7 +277,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       });
       setResult(r);
       setLiquidityStage("preparing");
-      setLiquidityMessage("Coin created. Now SONG·DAQ is preparing the fan market so people can buy and sell it.");
+      setLiquidityMessage("Coin created. Now SONG·DAQ is preparing launch liquidity so fans can buy and sell it.");
 
       try {
         const prep = await api<{
@@ -300,11 +300,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
 
         const walletId = getConnectedWalletId() || externalWalletProvider;
         setLiquidityStage("signing");
-        setLiquidityMessage(`Approve the second wallet transaction. This puts reserved song coins plus ${liquidityPairAsset} into the public fan market pool.`);
+        setLiquidityMessage(`Approve the second wallet transaction. This adds liquidity by putting reserved song coins plus ${liquidityPairAsset} into the public pool.`);
         const liquidityTxSig = await sendSerializedTransaction(walletId as WalletId, prep.transaction);
 
         setLiquidityStage("confirming");
-        setLiquidityMessage("Market transaction sent. Verifying the public pool before opening trading to fans.");
+        setLiquidityMessage("Liquidity transaction sent. Verifying the public pool before opening trading to fans.");
         let live: any = null;
         let lastLiquidityError: any = null;
         for (let attempt = 0; attempt < 3; attempt++) {
@@ -331,11 +331,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         if (!live) throw lastLiquidityError || new Error("Liquidity transaction was sent, but SONG·DAQ could not verify it yet.");
 
         setLiquidityStage("live");
-        setLiquidityMessage("Fan market is live. Fans can now buy and sell this coin from the public pool.");
+        setLiquidityMessage("Launch liquidity is live. Fans can now buy and sell this coin from the public pool.");
         setResult({ ...r, song: live.song || r.song, launch: { ...r.launch, liquidityTxSig, poolId: prep.poolId, lpMint: prep.lpMint, tradingStatus: "LIVE" } });
       } catch (liquidityError: any) {
         setLiquidityStage("failed");
-        setLiquidityMessage(liquidityError?.message || "Coin was created, but the fan market still needs liquidity. Add liquidity means putting reserved song coins plus SOL, USDC, or AUDIO into the public pool so fans can buy and sell.");
+        setLiquidityMessage(liquidityError?.message || "Coin was created, but it still needs liquidity. Liquidity means putting reserved song coins plus SOL, USDC, or AUDIO into the public pool so fans can buy and sell.");
       }
       onLaunched?.();
     } catch (e: any) {
@@ -835,7 +835,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               className="space-y-6"
             >
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
-                <ShieldCheck size={14} className="text-neon" /> Step 04 — Open The Fan Market
+                <ShieldCheck size={14} className="text-neon" /> Step 04 — Add Liquidity
               </div>
               <div className="rounded-2xl border border-neon/20 bg-neon/8 p-5 text-neon">
                 <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-widest font-black">
@@ -853,8 +853,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               </div>
               <div className="grid gap-3 md:grid-cols-3">
                 <LiquidityExplainer
-                  title="What am I doing?"
-                  body="You are stocking the public market with song coins and a payment coin. That gives fans somewhere to buy and sell."
+                  title="What is liquidity?"
+                  body="Liquidity is the supply that makes trading possible. You add song coins and a payment coin so fans have a real pool to buy from and sell into."
                 />
                 <LiquidityExplainer
                   title="Why two sides?"
@@ -887,28 +887,28 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               ) : (
                 <div className="grid gap-5 lg:grid-cols-2">
                   <Field
-                    label="Song coins for fans"
+                    label="Liquidity song coins"
                     value={liquidityTokenAmount}
                     onChange={markCustom(setLiquidityTokenAmount)}
                     step={1000}
                     min={1}
                     unit="Tokens"
                     help="This is how many of the new song coins go into the public market. Fans buy from this pool instead of buying directly from the artist."
-                    description="Think of this as stocking the shelf with song coins for fans."
+                    description="This is the song-coin side of liquidity. Think of it as stocking the shelf for fans."
                   />
                   <Field
-                    label={`Money side of pool (${liquidityPairAsset})`}
+                    label={`Liquidity payment side (${liquidityPairAsset})`}
                     value={liquidityPairAmount}
                     onChange={markCustom(setLiquidityPairAmount)}
                     step={0.1}
                     min={0.01}
                     unit={liquidityPairAsset}
                     help={`This is the ${liquidityPairAsset} that sits next to the song coins. Together, the song coins plus ${liquidityPairAsset} create the first market price.`}
-                    description="This is the payment side of the market. Buyers trade against it."
+                    description="This is the payment side of liquidity. Buyers trade against it."
                   />
                   <div className="space-y-2">
                     <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold text-mute px-1">
-                      <span>Payment Coin</span>
+                      <span>Liquidity Payment Coin</span>
                       <InfoTooltip
                         side="bottom"
                         def="Pick what fans use to buy the song coin. SOL is the easiest for most Solana wallets. USDC is dollar-style. AUDIO connects to the Audius ecosystem, but routes can depend on wallet and pool support."
@@ -922,7 +922,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <p className="px-1 text-[11px] leading-relaxed text-mute">SOL is the recommended starting choice while wallet and routing support improves.</p>
                   </div>
                   <Field
-                    label="Market lock time"
+                    label="Liquidity lock time"
                     value={liquidityLockDays}
                     onChange={markCustom(setLiquidityLockDays)}
                     step={30}
@@ -947,7 +947,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               </div>
               {!liquidityValid && (
                 <div className="rounded-xl border border-red/20 bg-red/10 p-4 text-sm text-red">
-                  Add enough fan-market liquidity before launch. This gives buyers a real public pool to trade against.
+                  Add enough launch liquidity before launch. This gives buyers a real public pool to trade against.
                 </div>
               )}
             </motion.section>
