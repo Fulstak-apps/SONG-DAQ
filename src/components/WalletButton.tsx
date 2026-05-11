@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, useUI } from "@/lib/store";
-import { WALLETS, connectWallet, disconnectWallet, type WalletId } from "@/lib/wallet";
+import { WALLETS, connectWallet, disconnectWallet, reportWalletError, walletDiagnosticsSnapshot, type WalletId } from "@/lib/wallet";
 import { safeJson } from "@/lib/safeJson";
 import { Loader2, Wallet, LogOut, ExternalLink } from "lucide-react";
 import { toast } from "@/lib/toast";
@@ -64,7 +64,9 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
       setOpen(false);
     } catch (e: any) {
       await disconnectWallet(id).catch(() => {});
+      reportWalletError("wallet_connect_failed", e, id, address).catch(() => {});
       setErr(e.message ?? String(e));
+      console.info("SONG·DAQ wallet diagnostics", walletDiagnosticsSnapshot());
     } finally {
       setBusy(null);
     }

@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Bug, RefreshCw, Wallet } from "lucide-react";
-import { WALLETS } from "@/lib/wallet";
+import { WALLETS, walletDiagnosticsSnapshot } from "@/lib/wallet";
 import { useNativeBalance } from "@/components/WalletBalance";
 import { useSession } from "@/lib/store";
 import { fmtSol } from "@/lib/pricing";
@@ -49,7 +49,7 @@ export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
           `phantomApproved=${health?.walletTrust?.phantomReviewApproved ? "yes" : "no"}`,
           `db=${health?.database?.connected ? "connected" : "not_connected"}`,
         ].join(" | "),
-        stack: JSON.stringify({ installed, health }, null, 2),
+        stack: JSON.stringify({ installed, health, browserWallets: walletDiagnosticsSnapshot() }, null, 2),
       };
       await fetch("/api/error-log", {
         method: "POST",

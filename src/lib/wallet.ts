@@ -139,6 +139,67 @@ export function requestWalletBalanceRefresh(address?: string | null) {
   window.dispatchEvent(new CustomEvent("songdaq:wallet-refresh", { detail: { address, ts: Date.now() } }));
 }
 
+export function walletDiagnosticsSnapshot() {
+  if (typeof window === "undefined") return {};
+  const win = w() as any;
+  return {
+    href: window.location.href,
+    userAgent: navigator.userAgent,
+    phantom: {
+      hasWindowPhantom: !!win.phantom,
+      hasPhantomSolana: !!win.phantom?.solana,
+      hasPublicKey: !!win.phantom?.solana?.publicKey,
+      isPhantom: !!win.phantom?.solana?.isPhantom,
+    },
+    solana: {
+      exists: !!win.solana,
+      isPhantom: !!win.solana?.isPhantom,
+      isSolflare: !!win.solana?.isSolflare,
+      isBackpack: !!win.solana?.isBackpack,
+      hasPublicKey: !!win.solana?.publicKey,
+      providers: Array.isArray(win.solana?.providers)
+        ? win.solana.providers.map((provider: SolanaProvider) => ({
+            isPhantom: !!provider?.isPhantom,
+            isSolflare: !!provider?.isSolflare,
+            isBackpack: !!provider?.isBackpack,
+            hasPublicKey: !!provider?.publicKey,
+          }))
+        : [],
+    },
+    solflare: {
+      exists: !!win.solflare,
+      isSolflare: !!win.solflare?.isSolflare,
+      hasPublicKey: !!win.solflare?.publicKey,
+    },
+    backpack: {
+      exists: !!win.backpack,
+      isBackpack: !!((win.backpack?.solana ?? win.backpack)?.isBackpack),
+      hasPublicKey: !!((win.backpack?.solana ?? win.backpack)?.publicKey),
+    },
+  };
+}
+
+export async function reportWalletError(errorType: string, error: unknown, walletId?: WalletId, walletAddress?: string | null) {
+  if (typeof window === "undefined") return;
+  const message = error instanceof Error ? error.message : String(error || "Unknown wallet error");
+  const stack = error instanceof Error ? error.stack : undefined;
+  try {
+    await fetch("/api/error-log", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        errorType,
+        walletAddress,
+        page: window.location.href,
+        message: `${walletId ? `${walletId}: ` : ""}${message}`,
+        stack: JSON.stringify({ stack, diagnostics: walletDiagnosticsSnapshot() }, null, 2),
+      }),
+    });
+  } catch {
+    /* Reporting should never block wallet UX. */
+  }
+}
+
 function createMemoInstruction(message: string) {
   return new TransactionInstruction({
     keys: [],
@@ -217,6 +278,18 @@ async function waitForProvider(id: WalletId, timeoutMs = 3_500): Promise<SolanaP
 
 async function connectProvider(provider: SolanaProvider, id: WalletId) {
   const label = walletLabel(id);
+  const existing = connectedPublicKey(null, provider);
+  if (existing) return { publicKey: { toString: () => existing } };
+
+  if (id === "phantom") {
+    try {
+      const trusted = await withWalletTimeout(provider.connect({ onlyIfTrusted: true }), label, 2_500);
+      if (connectedPublicKey(trusted, provider)) return trusted;
+    } catch {
+      /* Not trusted yet; fall through to the normal approval popup. */
+    }
+  }
+
   try {
     const options = id === "phantom" ? { onlyIfTrusted: false } : undefined;
     return await withWalletTimeout(provider.connect(options), label);
