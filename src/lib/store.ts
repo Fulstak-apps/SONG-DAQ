@@ -347,7 +347,7 @@ export const usePlayer = create<PlayerState>()(
       queue: [],
       playing: false,
       userPaused: false,
-      volume: 0.05,
+      volume: 0.1,
       setQueue: (tracks, autoplay = false) => {
         const { current, queue, userPaused } = get();
         const sameQueue = queue.length === tracks.length && queue.every((t, i) => t.id === tracks[i]?.id);
@@ -391,13 +391,16 @@ export const usePlayer = create<PlayerState>()(
     }),
     {
       name: "songdaq-player",
-      version: 3,
+      version: 4,
       migrate: (persistedState: any, version) => {
         if (version < 2) {
-          return { ...persistedState, volume: 0.05 };
+          return { ...persistedState, volume: 0.1 };
         }
         if (version < 3) {
-          return { ...persistedState, volume: 0.05 };
+          return { ...persistedState, volume: 0.1 };
+        }
+        if (version < 4) {
+          return { ...persistedState, volume: 0.1 };
         }
         return persistedState;
       },
