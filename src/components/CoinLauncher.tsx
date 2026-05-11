@@ -151,7 +151,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       }
       const treasuryWallet = launchStatus?.treasuryWallet || process.env.NEXT_PUBLIC_TREASURY_WALLET;
       if (!treasuryWallet) throw new Error("TREASURY_WALLET is required before launch.");
-      const artistSupply = Math.max(0, Number(supply) - Number(liquidityTokenAmount));
+      const artistSupply = Math.max(0, Number(supply));
       const cleanTitle = String(pick.title ?? "Song Token").replace(/\s+/g, " ").trim();
       const cleanSymbol = cleanTitle.replace(/[^a-z0-9]/gi, "").slice(0, 10).toUpperCase() || "SONG";
       const metadataBaseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
@@ -486,7 +486,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 </p>
               </div>
               <div className="grid gap-5 lg:grid-cols-2">
-                <Field label="Token amount going into liquidity" value={liquidityTokenAmount} onChange={setLiquidityTokenAmount} step={1000} min={1} unit="Tokens" />
+                <Field label="Token amount reserved for liquidity" value={liquidityTokenAmount} onChange={setLiquidityTokenAmount} step={1000} min={1} unit="Tokens" />
                 <Field label={`Paired asset amount (${liquidityPairAsset})`} value={liquidityPairAmount} onChange={setLiquidityPairAmount} step={0.1} min={0.01} unit={liquidityPairAsset} />
                 <div className="space-y-2">
                   <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1">Paired Asset</label>
@@ -505,7 +505,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               </div>
               <div className="grid gap-3 md:grid-cols-4">
                 <LaunchMetric k="Pool depth" v={projectedDepth} />
-                <LaunchMetric k="Supply in pool" v={`${(launchLiquidityRatio * 100).toFixed(1)}%`} />
+                <LaunchMetric k="Reserve target" v={`${(launchLiquidityRatio * 100).toFixed(1)}%`} />
                 <LaunchMetric k="1 SOL impact" v={`${launchImpact.toFixed(2)}%`} tone={launchImpact > 5 ? "amber" : "neon"} />
                 <LaunchMetric k="Wallet cap" v={`${(maxWalletBps / 100).toFixed(2)}%`} />
               </div>

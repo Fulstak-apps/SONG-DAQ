@@ -21,9 +21,11 @@ import {
 import {
   MINT_SIZE,
   TOKEN_PROGRAM_ID,
+  AuthorityType,
   createAssociatedTokenAccountInstruction,
   createInitializeMintInstruction,
   createMintToInstruction,
+  createSetAuthorityInstruction,
   getAssociatedTokenAddress,
   getMinimumBalanceForRentExemptMint,
 } from "@solana/spl-token";
@@ -323,11 +325,9 @@ export async function createArtistPaidSongMint(
   if (currentWalletAddress !== payer.toBase58()) {
     throw new Error(`Connected wallet changed. Reconnect ${payer.toBase58().slice(0, 4)}...${payer.toBase58().slice(-4)} before launching.`);
   }
-  const treasury = new PublicKey(treasuryWallet);
   const mint = Keypair.generate();
   const lamports = await getMinimumBalanceForRentExemptMint(connection);
   const artistAta = await getAssociatedTokenAddress(mint.publicKey, payer);
-  const treasuryAta = await getAssociatedTokenAddress(mint.publicKey, treasury, true);
   const metadataUri = metadata?.baseUrl
     ? `${metadata.baseUrl.replace(/\/$/, "")}/api/token-metadata/${mint.publicKey.toBase58()}`
     : undefined;
@@ -357,9 +357,8 @@ export async function createArtistPaidSongMint(
       lamports,
       programId: TOKEN_PROGRAM_ID,
     }),
-    createInitializeMintInstruction(mint.publicKey, decimals, payer, payer),
+    createInitializeMintInstruction(mint.publicKey, decimals, payer, null),
     createAssociatedTokenAccountInstruction(payer, artistAta, payer, mint.publicKey),
-    createAssociatedTokenAccountInstruction(payer, treasuryAta, treasury, mint.publicKey),
   );
 
   if (metadataInstruction) tx.add(metadataInstruction.instruction);
@@ -367,9 +366,12 @@ export async function createArtistPaidSongMint(
   if (rawArtistSupply > 0n) {
     tx.add(createMintToInstruction(mint.publicKey, artistAta, payer, rawArtistSupply));
   }
-  if (rawTreasurySupply > 0n) {
-    tx.add(createMintToInstruction(mint.publicKey, treasuryAta, payer, rawTreasurySupply));
-  }
+
+  // Keep the first Phantom approval clean: all newly minted supply goes to the
+  // artist wallet, then mint authority is revoked in the same transaction.
+  // Liquidity reserve movement happens later through a separate, explicit
+  // liquidity action, which avoids looking like a hidden transfer to treasury.
+  tx.add(createSetAuthorityInstruction(mint.publicKey, payer, AuthorityType.MintTokens, null));
 
   tx.partialSign(mint);
 
@@ -391,7 +393,7 @@ export async function createArtistPaidSongMint(
   return {
     mint: mint.publicKey.toBase58(),
     tokenAccount: artistAta.toBase58(),
-    treasuryTokenAccount: treasuryAta.toBase58(),
+    treasuryTokenAccount: "",
     mintTx: sig,
     metadataAddress: metadataInstruction?.metadata.toBase58(),
     metadataUri,
@@ -445,7 +447,7 @@ function createMetadataInstruction({
     Buffer.from([0]), // creators: none
     Buffer.from([0]), // collection: none
     Buffer.from([0]), // uses: none
-    Buffer.from([1]), // isMutable
+    Buffer.from([0]), // isMutable
     Buffer.from([0]), // collectionDetails: none
   ]);
 

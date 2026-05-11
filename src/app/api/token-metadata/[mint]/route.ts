@@ -15,41 +15,67 @@ function validMint(mint: string) {
   return /^[1-9A-HJ-NP-Za-km-z]{32,44}$/.test(mint);
 }
 
+function fallbackMetadata(req: NextRequest, mint: string) {
+  return NextResponse.json(
+    {
+      name: "SONG·DAQ Song Token",
+      symbol: "SONG",
+      description: "SONG·DAQ token metadata is being indexed. This mint was created for a song-linked market token.",
+      image: `${appUrl(req)}/api/token-image/${mint}`,
+      external_url: `${appUrl(req)}/market`,
+      properties: {
+        category: "image",
+        files: [{ uri: `${appUrl(req)}/api/token-image/${mint}`, type: "image/svg+xml" }],
+      },
+      attributes: [
+        { trait_type: "Protocol", value: "SONG·DAQ" },
+        { trait_type: "Asset Type", value: "Song Token" },
+        { trait_type: "Status", value: "Indexing" },
+      ],
+    },
+    { headers: { "cache-control": "public, max-age=60, s-maxage=60" } },
+  );
+}
+
+function canUseDatabaseMetadata() {
+  const url = process.env.DATABASE_URL || "";
+  return !!url && !url.includes("db.ghktjraydijlsiotmmda.supabase.co:5432");
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const id = setTimeout(() => resolve(fallback), ms);
+    promise
+      .then((value) => resolve(value))
+      .catch(() => resolve(fallback))
+      .finally(() => clearTimeout(id));
+  });
+}
+
 export async function GET(req: NextRequest, { params }: { params: { mint: string } }) {
   const mint = params.mint;
   if (!validMint(mint)) {
     return NextResponse.json({ error: "invalid mint" }, { status: 400 });
   }
 
-  const song = await prisma.songToken.findUnique({
-    where: { mintAddress: mint },
-    include: {
-      artistWallet: {
-        select: {
-          audiusHandle: true,
-          audiusName: true,
-          audiusVerified: true,
-          wallet: true,
+  const song = canUseDatabaseMetadata()
+    ? await withTimeout(prisma.songToken.findUnique({
+        where: { mintAddress: mint },
+        include: {
+          artistWallet: {
+            select: {
+              audiusHandle: true,
+              audiusName: true,
+              audiusVerified: true,
+              wallet: true,
+            },
+          },
         },
-      },
-    },
-  });
+      }), 1_500, null).catch(() => null)
+    : null;
 
   if (!song) {
-    return NextResponse.json(
-      {
-        name: "SONG·DAQ Song Token",
-        symbol: "SONG",
-        description: "SONG·DAQ token metadata is being indexed. Refresh this token after launch verification completes.",
-        image: `${appUrl(req)}/api/token-image/${mint}`,
-        external_url: `${appUrl(req)}/market`,
-        attributes: [
-          { trait_type: "Protocol", value: "SONG·DAQ" },
-          { trait_type: "Status", value: "Indexing" },
-        ],
-      },
-      { headers: { "cache-control": "public, max-age=60, s-maxage=60" } },
-    );
+    return fallbackMetadata(req, mint);
   }
 
   const base = appUrl(req);
