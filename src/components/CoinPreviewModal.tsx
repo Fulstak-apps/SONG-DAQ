@@ -165,6 +165,9 @@ export function CoinPreviewModal({
   const isPlayingThis = !!playerTrack && current?.id === playerTrack.id && playing;
   const watched = watchlist.items.includes(coin.mint);
   const visibleTracks = tracks.slice(0, 5);
+  const linkedTrackCount = visibleTracks.filter((track) => !!linkedCoinForTrack(track)).length;
+  const activeSide = Number(coin.buy24h ?? 0) >= Number(coin.sell24h ?? 0) ? "Buy pressure" : "Sell pressure";
+  const royaltyStatus = (coin as any).splitsLocked ? "Royalty split locked" : "Royalty pending";
 
   function trackToPlayerTrack(track: any): PlayerTrack {
     return {
@@ -305,7 +308,7 @@ export function CoinPreviewModal({
                   </div>
                 </div>
               </div>
-              <div className="h-[300px] overflow-hidden rounded-2xl border border-edge bg-panel2/60 p-2 sm:h-[360px]">
+              <div className="h-[340px] overflow-hidden rounded-2xl border border-edge bg-panel2/60 p-2 sm:h-[360px]">
                 <PriceChart
                   points={chartPoints}
                   quote="USD"
@@ -330,6 +333,27 @@ export function CoinPreviewModal({
                 <Metric label="Markets" value={String((coin as any).numberMarkets ?? 1)} />
                 <Metric label="Royalty" value={(coin as any).splitsLocked ? "Locked" : "Pending"} accent={(coin as any).splitsLocked ? "text-neon" : "text-amber"} />
               </div>
+              <div className="mt-4 grid gap-3 md:grid-cols-3">
+                <InsightCard
+                  label="Why This Coin Exists"
+                  value={coin.audius_track_title || "Artist market coin"}
+                  body={coin.audius_track_title
+                    ? "This coin is connected to an Audius song signal, artist profile, and live Solana token market."
+                    : "This is an artist token. The artist's songs below show what already has a linked coin and what does not yet."}
+                />
+                <InsightCard
+                  label="Market Pulse"
+                  value={activeSide}
+                  body={`${fmtNum(coin.trade24h ?? 0)} trades today · ${fmtNum(coin.uniqueWallet24h ?? 0)} active wallets · ${fmtUsd(coin.v24hUSD ?? 0, 0)} volume.`}
+                />
+                <InsightCard
+                  label="Royalty Signal"
+                  value={royaltyStatus}
+                  body={(coin as any).splitsLocked
+                    ? "Royalty split status is marked locked for this token."
+                    : "Royalty verification is not locked yet, so treat royalty backing as unverified."}
+                />
+              </div>
             </div>
 
             <aside className="min-w-0 bg-panel2/60 p-4 sm:p-5 space-y-4">
@@ -349,6 +373,18 @@ export function CoinPreviewModal({
                 ) : (
                   <p className="mt-3 text-xs leading-relaxed text-mute">Artist profile, token market data, music preview, and linked song activity are shown here before you trade.</p>
                 )}
+              </div>
+
+              <div className="rounded-2xl border border-edge bg-panel p-4">
+                <div className="mb-3 text-[10px] uppercase tracking-widest font-black text-mute">Coin Snapshot</div>
+                <div className="grid gap-2">
+                  <SnapshotRow label="Token" value={`$${coin.ticker}`} />
+                  <SnapshotRow label="Artist" value={coin.artist_name ?? coin.name} />
+                  <SnapshotRow label="Linked songs" value={`${linkedTrackCount}/${visibleTracks.length || 0} shown`} />
+                  <SnapshotRow label="24h buys" value={fmtNum(coin.buy24h ?? 0)} />
+                  <SnapshotRow label="24h sells" value={fmtNum(coin.sell24h ?? 0)} />
+                  <SnapshotRow label="Wallets today" value={fmtNum(coin.uniqueWallet24h ?? 0)} />
+                </div>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -518,6 +554,25 @@ function Metric({ label, value, accent }: { label: string; value: string; accent
     <div className="rounded-xl border border-edge bg-panel p-3 min-w-0">
       <div className="text-[9px] uppercase tracking-widest text-mute font-black truncate">{label}</div>
       <div className={`mt-1 font-mono font-bold text-ink truncate ${accent ?? ""}`}>{value}</div>
+    </div>
+  );
+}
+
+function InsightCard({ label, value, body }: { label: string; value: string; body: string }) {
+  return (
+    <div className="rounded-xl border border-edge bg-panel p-3">
+      <div className="text-[9px] uppercase tracking-widest text-mute font-black">{label}</div>
+      <div className="mt-1 text-sm font-black text-ink break-words">{value}</div>
+      <p className="mt-2 text-[11px] leading-relaxed text-mute">{body}</p>
+    </div>
+  );
+}
+
+function SnapshotRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-xl border border-edge bg-panel2/70 px-3 py-2 text-xs">
+      <span className="text-[9px] uppercase tracking-widest text-mute font-black">{label}</span>
+      <span className="min-w-0 truncate text-right font-mono font-black text-ink">{value}</span>
     </div>
   );
 }

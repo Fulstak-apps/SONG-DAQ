@@ -1,13 +1,13 @@
 "use client";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Loader2 } from "lucide-react";
+import { Loader2, Pause, Play } from "lucide-react";
 import { SafeImage } from "./SafeImage";
 import { PriceChart, type PricePointDTO } from "./PriceChart";
 import { Glossary, WhyDidThisMove } from "./Tooltip";
 import { WalletButton } from "./WalletButton";
-import { usePaperTrading, useSession, useUI } from "@/lib/store";
+import { usePaperTrading, usePlayer, useSession, useUI, type PlayerTrack } from "@/lib/store";
 import { sendSerializedTransaction, type WalletId } from "@/lib/wallet";
 import { toast } from "@/lib/toast";
 import { fmtNum, fmtPct } from "@/lib/pricing";
@@ -15,6 +15,8 @@ import { getSolPriceUsd } from "@/lib/balance";
 import { CHART_RANGE_LABELS, CHART_RANGES, isFastRange, type ChartRange } from "@/lib/chartRanges";
 import type { AudiusCoin } from "@/lib/audiusCoins";
 import { calculateCoinRisk } from "@/lib/risk/calculateCoinRisk";
+import { readJson } from "@/lib/safeJson";
+import { useCoins } from "@/lib/useCoins";
 
 const SOL_MINT = "So11111111111111111111111111111111111111112";
 const SOL_DECIMALS = 9;
@@ -74,6 +76,8 @@ export function CoinTradeModal({
   const { address, kind, provider, audius } = useSession();
   const { openLoginModal } = useUI();
   const { enabled: paperMode, setEnabled: setPaperMode, record: recordPaperTrade } = usePaperTrading();
+  const { current, playing, playTrack, toggle } = usePlayer();
+  const { coins: allCoins } = useCoins("marketCap");
   const [side, setSide] = useState<"BUY" | "SELL">(initialSide);
   const [amount, setAmount] = useState(initialSide === "BUY" ? "10" : "100");
   const [slippageBps, setSlippageBps] = useState("100");
@@ -87,6 +91,8 @@ export function CoinTradeModal({
   const [chartType, setChartType] = useState<"line" | "candles">("line");
   const [riskAccepted, setRiskAccepted] = useState(false);
   const [settleUsd, setSettleUsd] = useState<Record<"SOL" | "AUDIO", number>>({ SOL: 0, AUDIO: 0 });
+  const [tracks, setTracks] = useState<any[]>([]);
+  const loadingRef = useRef(false);
 
   const canSignSolanaSwap = kind === "solana" && !!provider && provider !== "audius";
   const needsExternalWallet = !paperMode && !canSignSolanaSwap;
@@ -120,38 +126,53 @@ export function CoinTradeModal({
 
   useEffect(() => {
     if (!coin?.mint) return;
+    const selectedCoin = coin;
     let alive = true;
-    const load = () =>
-      fetch(`/api/coins/${coin.mint}/history?range=${range}`, { cache: "no-store" })
-        .then((r) => r.json())
-        .then((j) => {
+    const load = async () => {
+      if (loadingRef.current || document.visibilityState === "hidden") return;
+      loadingRef.current = true;
+      try {
+        const r = await fetch(`/api/coins/${selectedCoin.mint}/history?range=${range}`, { cache: "no-store" });
+        const j = await readJson<{ candles?: PricePointDTO[] }>(r);
           if (!alive) return;
-          setPoints((j.candles?.length ? j.candles : coin?.price ? [{
+          setPoints((j?.candles?.length ? j.candles : selectedCoin.price ? [{
             ts: new Date().toISOString(),
-            open: coin.price,
-            high: coin.price,
-            low: coin.price,
-            close: coin.price,
+            open: selectedCoin.price,
+            high: selectedCoin.price,
+            low: selectedCoin.price,
+            close: selectedCoin.price,
             volume: 0,
           }] : []) as PricePointDTO[]);
-        })
-        .catch(() => {
+      } catch {
           if (alive) {
-            setPoints(coin?.price ? [{
+            setPoints(selectedCoin.price ? [{
               ts: new Date().toISOString(),
-              open: coin.price,
-              high: coin.price,
-              low: coin.price,
-              close: coin.price,
+              open: selectedCoin.price,
+              high: selectedCoin.price,
+              low: selectedCoin.price,
+              close: selectedCoin.price,
               volume: 0,
             }] : []);
           }
-        });
+      } finally {
+        loadingRef.current = false;
+      }
+    };
     load();
     const fast = isFastRange(range);
-    const i = setInterval(load, fast ? 1_000 : 6_000);
+    const i = setInterval(load, fast ? 5_000 : 15_000);
     return () => { alive = false; clearInterval(i); };
   }, [coin?.mint, range]);
+
+  useEffect(() => {
+    if (!coin?.artist_handle) { setTracks([]); return; }
+    let alive = true;
+    fetch(`/api/audius/tracks?handle=${encodeURIComponent(coin.artist_handle)}`, { cache: "no-store" })
+      .then((r) => r.ok ? readJson<{ tracks?: any[] }>(r) : { tracks: [] })
+      .then((j) => { if (alive) setTracks(j?.tracks ?? []); })
+      .catch(() => { if (alive) setTracks([]); });
+    return () => { alive = false; };
+  }, [coin?.artist_handle]);
 
   const route = useMemo(() => {
     if (!coin) return null;
@@ -232,6 +253,45 @@ export function CoinTradeModal({
   const currencyTitle = settleUsd.SOL
     ? `${amount || 0} SOL is about ${fmtUsd(inputUsd, 2)} USD before fees.`
     : "SOL selected. USD estimate is loading.";
+  const visibleTracks = tracks.slice(0, 4);
+  const linkedTrackCount = visibleTracks.filter((track) => !!linkedCoinForTrack(track)).length;
+  const selectedSong = coin.audius_track_title || visibleTracks[0]?.title || "Artist token";
+  const marketPulse = Number(coin.buy24h ?? 0) >= Number(coin.sell24h ?? 0) ? "More buys than sells" : "More sells than buys";
+  const royaltyStatus = (coin as any).splitsLocked ? "Royalty split locked" : "Royalty not verified yet";
+
+  function trackArtwork(track: any) {
+    return track.artwork?.["480x480"] ?? track.artwork?.["150x150"] ?? track.artwork ?? track.artwork_url ?? track.image ?? coin?.logo_uri ?? null;
+  }
+
+  function trackToPlayerTrack(track: any): PlayerTrack {
+    const artistHandle = coin?.artist_handle;
+    return {
+      id: `audius-track-${track.id}`,
+      title: track.title ?? "Untitled",
+      artist: track.user?.name ?? coin?.artist_name ?? coin?.name ?? "Artist",
+      artwork: trackArtwork(track),
+      streamUrl: `https://api.audius.co/v1/tracks/${track.id}/stream?app_name=songdaq`,
+      href: track.permalink ?? (artistHandle ? `https://audius.co/${artistHandle}` : undefined),
+    };
+  }
+
+  function linkedCoinForTrack(track: any) {
+    const title = String(track.title ?? "").trim().toLowerCase();
+    const trackId = String(track.id ?? "");
+    const artistHandle = String(coin?.artist_handle ?? "").trim().toLowerCase();
+    return allCoins.find((item) => {
+      if (item.audius_track_id && String(item.audius_track_id) === trackId) return true;
+      return !!title
+        && String(item.audius_track_title ?? "").trim().toLowerCase() === title
+        && String(item.artist_handle ?? "").trim().toLowerCase() === artistHandle;
+    });
+  }
+
+  function playArtistTrack(track: any) {
+    const next = trackToPlayerTrack(track);
+    if (current?.id === next.id) toggle();
+    else playTrack(next);
+  }
 
   async function submit() {
     if (paperMode) {
@@ -343,17 +403,17 @@ export function CoinTradeModal({
               <SafeImage src={coin.logo_uri} fill sizes="48px" alt={coin.ticker} fallback={coin.ticker} className="object-cover" />
             </div>
             <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <div className="font-black text-xl tracking-tighter text-ink">${coin.ticker}</div>
-                <div className="text-[10px] text-mute truncate uppercase tracking-widest font-bold">{coin.artist_name ?? coin.name}</div>
+                <div className="min-w-0 text-[10px] text-mute whitespace-normal break-words uppercase tracking-widest font-bold">{coin.artist_name ?? coin.name}</div>
                 {isOwner && <span className="chip-violet text-[8px]">Your coin</span>}
               </div>
-              <div className="flex items-center gap-4 mt-1">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-1">
                 <span className="font-mono text-lg font-bold tracking-tight text-ink">{fmtUsd(coin.price ?? 0, 6)}</span>
                 <span className={`num text-sm font-bold tracking-wider ${change >= 0 ? "text-neon" : "text-red"}`}>
                   {change >= 0 ? "▲" : "▼"} {fmtPct(change)}
                 </span>
-                <div className="ml-auto flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
                   <WhyDidThisMove symbol={coin.ticker} change={change} />
                   <Link href={`/coin/${coin.mint}`} className="text-[10px] uppercase tracking-widest text-mute hover:text-ink transition flex items-center gap-1 font-bold">
                     Full view <span className="text-neon">→</span>
@@ -398,7 +458,20 @@ export function CoinTradeModal({
                   </div>
                 </div>
               </div>
-              <PriceChart points={chartPoints} quote="USD" height={280} chartType={chartType} live={isFastRange(range)} />
+              <div className="h-[340px] overflow-hidden rounded-2xl border border-edge bg-panel2/60 p-2 sm:h-[360px]">
+                <PriceChart
+                  points={chartPoints}
+                  quote="USD"
+                  height={340}
+                  chartType={chartType}
+                  live={isFastRange(range)}
+                  mode="advanced"
+                  showVolume
+                  showMA7={false}
+                  showMA25={false}
+                  variant="investing"
+                />
+              </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
                 <ChartStat k="MKT CAP" v={fmtUsd(coin.marketCap ?? 0, 0)} tooltip="Total market capitalization indexed by Audius." />
                 <ChartStat k="24H VOL" v={fmtUsd(coin.v24hUSD ?? 0, 0)} tooltip="24 hour trading volume." />
@@ -437,6 +510,30 @@ export function CoinTradeModal({
                   >
                     {paperMode ? "On" : "Off"}
                   </button>
+                </div>
+              </div>
+
+              <div className="rounded-xl border border-edge bg-panel p-3">
+                <div className="mb-3 flex items-start gap-3">
+                  <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-edge bg-panel2">
+                    <SafeImage src={coin.logo_uri} alt={coin.ticker} fill sizes="48px" fallback={coin.ticker} className="object-cover" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-widest font-black text-mute">What You Are Trading</div>
+                    <div className="mt-1 text-sm font-black text-ink break-words">${coin.ticker} · {coin.name}</div>
+                    <div className="mt-0.5 text-[11px] font-bold text-violet break-words">{coin.artist_name ?? "Unknown artist"}</div>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <TradeInfo label="Song" value={selectedSong} />
+                  <TradeInfo label="Price" value={fmtUsd(coin.price ?? 0, 6)} />
+                  <TradeInfo label="24h Move" value={`${change >= 0 ? "+" : ""}${fmtPct(change)}`} accent={change >= 0 ? "text-neon" : "text-red"} />
+                  <TradeInfo label="Market Cap" value={fmtUsd(coin.marketCap ?? 0, 0)} />
+                  <TradeInfo label="Liquidity" value={fmtUsd(coin.liquidity ?? 0, 0)} />
+                  <TradeInfo label="Holders" value={fmtNum(coin.holder ?? 0)} />
+                </div>
+                <div className="mt-3 rounded-xl border border-edge bg-panel2/70 p-3 text-[11px] leading-relaxed text-mute">
+                  <span className="font-black text-ink">{marketPulse}.</span> {fmtNum(coin.trade24h ?? 0)} trades today, {fmtNum(coin.uniqueWallet24h ?? 0)} active wallets, and {fmtUsd(coin.v24hUSD ?? 0, 0)} in 24h volume. {royaltyStatus}.
                 </div>
               </div>
 
@@ -480,6 +577,69 @@ export function CoinTradeModal({
                   </div>
                 </div>
               )}
+
+              <div className="rounded-xl border border-edge bg-panel p-3">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[10px] uppercase tracking-widest font-black text-ink">Artist Songs</div>
+                    <div className="mt-0.5 text-[10px] uppercase tracking-widest text-mute">
+                      {linkedTrackCount}/{visibleTracks.length || 0} shown have linked coins.
+                    </div>
+                  </div>
+                  <Link href={`/coin/${coin.mint}`} className="shrink-0 text-[9px] uppercase tracking-widest font-black text-neon hover:text-ink transition">
+                    Full coin →
+                  </Link>
+                </div>
+                <div className="space-y-2">
+                  {visibleTracks.length ? visibleTracks.map((track) => {
+                    const linkedCoin = linkedCoinForTrack(track);
+                    const player = trackToPlayerTrack(track);
+                    const isTrackPlaying = current?.id === player.id && playing;
+                    const linkedIsCurrent = linkedCoin?.mint === coin.mint;
+                    return (
+                      <div key={String(track.id ?? track.title)} className="rounded-xl border border-edge bg-panel2/70 p-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-edge bg-panel">
+                            <SafeImage src={player.artwork} alt={player.title} fill sizes="40px" fallback={coin.ticker} className="object-cover" />
+                          </div>
+                          <div className="min-w-0 flex-1">
+                            <div className="truncate text-xs font-black text-ink">{player.title}</div>
+                            <div className="mt-0.5 text-[9px] uppercase tracking-widest text-mute">{fmtNum(track.play_count ?? track.playCount ?? 0)} plays</div>
+                          </div>
+                          <span className={`shrink-0 rounded-md border px-2 py-1 text-[8px] font-black uppercase tracking-widest ${
+                            linkedIsCurrent
+                              ? "border-violet/30 bg-violet/10 text-violet"
+                              : linkedCoin
+                                ? "border-neon/25 bg-neon/10 text-neon"
+                                : "border-edge bg-panel text-mute"
+                          }`}>
+                            {linkedIsCurrent ? "This Coin" : linkedCoin ? "Coin On" : "No Coin"}
+                          </span>
+                        </div>
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <button type="button" className="btn h-8 px-2.5 text-[9px] uppercase tracking-widest font-black" onClick={() => playArtistTrack(track)}>
+                            {isTrackPlaying ? <Pause size={12} /> : <Play size={12} />}
+                            {isTrackPlaying ? "Pause" : "Play"}
+                          </button>
+                          {linkedCoin ? (
+                            <Link href={`/coin/${linkedCoin.mint}`} className="btn h-8 px-2.5 text-[9px] uppercase tracking-widest font-black">
+                              {linkedIsCurrent ? "Current Coin" : "Open Coin"}
+                            </Link>
+                          ) : (
+                            <span className="inline-flex h-8 items-center rounded-lg border border-edge bg-panel px-2.5 text-[9px] uppercase tracking-widest font-black text-mute">
+                              No Coin Yet
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  }) : (
+                    <div className="rounded-xl border border-edge bg-panel2/70 p-3 text-xs text-mute">
+                      {coin.artist_handle ? "Loading this artist's songs..." : "No Audius songs are attached to this artist yet."}
+                    </div>
+                  )}
+                </div>
+              </div>
 
               <label className="block">
                 <span className="label">
@@ -554,6 +714,11 @@ export function CoinTradeModal({
 
               <div className="rounded-xl bg-panel border border-edge p-4 space-y-2.5">
                 <OrderRow
+                  k={<Glossary term="Trading asset" def="The token or coin you are buying or selling. Check the artist, song, and token address before approving anything in your wallet.">Trading asset</Glossary>}
+                  v={`$${coin.ticker}`}
+                  highlight
+                />
+                <OrderRow
                   k={<Glossary term="Route" def="The path Jupiter uses on Solana to swap from one token into another. If no route exists, the token cannot be bought or sold through this button yet.">Route</Glossary>}
                   v={route ? `${route.inputTicker} → ${route.outputTicker}` : "—"}
                 />
@@ -577,6 +742,10 @@ export function CoinTradeModal({
                 <OrderRow
                   k={<Glossary term="Router" def="Jupiter searches Solana markets for a live route and builds the swap for your wallet to approve.">Router</Glossary>}
                   v="Jupiter · Solana"
+                />
+                <OrderRow
+                  k={<Glossary term="Token address" def="The Solana mint address for this token. Wallet approvals should match the token you intended to trade.">Token address</Glossary>}
+                  v={`${coin.mint.slice(0, 4)}…${coin.mint.slice(-4)}`}
                 />
               </div>
 
@@ -645,6 +814,15 @@ function ChartStat({ k, v, tooltip }: { k: string; v: string; tooltip: string })
         <Glossary term={k} def={tooltip} category="financial">{k}</Glossary>
       </div>
       <div className="num text-sm mt-1 text-ink font-bold">{v}</div>
+    </div>
+  );
+}
+
+function TradeInfo({ label, value, accent }: { label: string; value: string; accent?: string }) {
+  return (
+    <div className="min-w-0 rounded-xl border border-edge bg-panel2/70 p-2.5">
+      <div className="text-[8px] uppercase tracking-widest text-mute font-black">{label}</div>
+      <div className={`mt-1 truncate font-mono text-xs font-black text-ink ${accent ?? ""}`} title={value}>{value}</div>
     </div>
   );
 }
