@@ -1,6 +1,6 @@
 "use client";
 import { create } from "zustand";
-import { persist } from "zustand/middleware";
+import { createJSONStorage, persist } from "zustand/middleware";
 
 export type WalletKind = "solana";
 
@@ -27,7 +27,7 @@ export interface AudiusProfile {
   audioBalance?: number;
 }
 
-/* ── Session (wallet + Audius identity, intentionally not persisted) ── */
+/* ── Session (wallet + Audius identity, current browser tab only) ── */
 interface SessionState {
   address: string | null;
   kind: WalletKind | null;
@@ -39,24 +39,42 @@ interface SessionState {
 }
 
 export const useSession = create<SessionState>()(
-  (set) => ({
-    address: null,
-    kind: null,
-    provider: null,
-    audius: null,
-    setSession: (s) => set((prev) => {
-      const nextAddress = isPersistedSolanaAddress(s.address) ? s.address : s.address === null ? null : prev.address;
-      return {
-        ...prev,
-        ...s,
-        address: nextAddress,
-        kind: nextAddress ? "solana" : null,
-        provider: nextAddress ? (s.provider ?? prev.provider) : null,
-      };
+  persist(
+    (set) => ({
+      address: null,
+      kind: null,
+      provider: null,
+      audius: null,
+      setSession: (s) => set((prev) => {
+        const nextAddress = isPersistedSolanaAddress(s.address) ? s.address : s.address === null ? null : prev.address;
+        return {
+          ...prev,
+          ...s,
+          address: nextAddress,
+          kind: nextAddress ? "solana" : null,
+          provider: nextAddress ? (s.provider ?? prev.provider) : null,
+        };
+      }),
+      clear: () => set({ address: null, kind: null, provider: null, audius: null }),
+      clearAudius: () => set({ address: null, kind: null, provider: null, audius: null }),
     }),
-    clear: () => set({ address: null, kind: null, provider: null, audius: null }),
-    clearAudius: () => set({ address: null, kind: null, provider: null, audius: null }),
-  }),
+    {
+      name: "songdaq-session-tab",
+      storage: createJSONStorage(() => sessionStorage),
+      version: 1,
+      merge: (persisted, current) => {
+        const state = (persisted as any) ?? {};
+        const validWallet = state.kind === "solana" && isPersistedSolanaAddress(state.address);
+        return {
+          ...current,
+          ...state,
+          address: validWallet ? state.address : null,
+          kind: validWallet ? "solana" : null,
+          provider: validWallet ? state.provider : null,
+        };
+      },
+    },
+  ),
 );
 
 /* ── Ephemeral UI state (never persisted) ─────────────────────── */

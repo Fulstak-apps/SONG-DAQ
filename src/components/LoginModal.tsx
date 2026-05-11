@@ -32,8 +32,18 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
 
   // Reset on open
   useEffect(() => {
-    if (isOpen) { setRole(null); setStep("ROLE"); setErr(null); setBusy(null); }
-  }, [isOpen]);
+    if (!isOpen) return;
+    if (audius) {
+      setRole("ARTIST");
+      setStep("ARTIST_READY");
+      setUserMode("ARTIST");
+    } else {
+      setRole(null);
+      setStep("ROLE");
+    }
+    setErr(null);
+    setBusy(null);
+  }, [isOpen, audius, setUserMode]);
 
   // Auto-advance: investor + wallet → done
   useEffect(() => {

@@ -99,6 +99,14 @@ export function Navbar() {
   useEffect(() => {
     if (audius) setUserMode("ARTIST");
   }, [audius, setUserMode]);
+  useEffect(() => {
+    if (typeof window === "undefined" || !audius) return;
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("artistWallet") !== "1") return;
+    setUserMode("ARTIST");
+    openLoginModal();
+    router.replace(path || "/market", { scroll: false });
+  }, [audius, openLoginModal, path, router, setUserMode]);
 
   const isDarnellAudius = audius?.name?.trim().toLowerCase() === "darnell williams";
   const navItems = role === "ADMIN" || adminSession || isDarnellAudius ? [...NAV, { href: "/admin", label: "ADMIN", icon: "⚙" }] : NAV;

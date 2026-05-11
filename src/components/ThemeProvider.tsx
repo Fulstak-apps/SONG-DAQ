@@ -14,5 +14,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     }
   }, [theme]);
 
+  useEffect(() => {
+    try {
+      localStorage.removeItem("songdaq-session");
+    } catch {}
+  }, []);
+
   return <>{children}</>;
 }

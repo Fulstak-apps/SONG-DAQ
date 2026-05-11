@@ -137,7 +137,7 @@ export default function AudiusCallback() {
         setStatus("success");
         setMsg("Audius connected. Returning to SONG·DAQ...");
         setTimeout(() => {
-          window.location.replace("/market");
+          window.location.replace("/market?artistWallet=1");
         }, 700);
       } else {
         setStatus("success");
