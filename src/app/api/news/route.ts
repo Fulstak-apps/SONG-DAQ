@@ -61,6 +61,23 @@ const FALLBACK_NEWS = [
   },
 ];
 
+function cleanText(value: any, fallback = "") {
+  return String(value || fallback)
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCharCode(parseInt(code, 16)))
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;|&ldquo;|&rdquo;/g, "\"")
+    .replace(/&#39;|&apos;|&lsquo;|&rsquo;/g, "'")
+    .replace(/&mdash;|&ndash;/g, "-")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/\s*[|•·-]\s*(Pitchfork|Billboard|Music Business Worldwide|Hypebot|TechCrunch|The Verge|WIRED|Ars Technica|VentureBeat|AI News|Google News)$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 function fieldUrl(value: any): string | undefined {
   if (!value) return undefined;
   if (typeof value === "string" && /^https?:\/\//i.test(value)) return value;
@@ -75,11 +92,16 @@ function thumbnail(item: any): string | undefined {
   const media =
     fieldUrl(item["media:content"]) ||
     fieldUrl(item["media:thumbnail"]) ||
+    fieldUrl(item["media:group"]?.["media:content"]) ||
+    fieldUrl(item["media:group"]?.["media:thumbnail"]) ||
     fieldUrl(item["itunes:image"]) ||
-    fieldUrl(item.image);
+    fieldUrl(item.image) ||
+    fieldUrl(item.thumbnail);
   const enclosure = fieldUrl(item.enclosure);
   const content = item["content:encoded"] || item.content || item.summary || "";
-  const img = typeof content === "string" ? content.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1] : undefined;
+  const img = typeof content === "string"
+    ? content.match(/<img[^>]+(?:src|data-src|data-lazy-src)=["']([^"']+)["']/i)?.[1]
+    : undefined;
   return media || enclosure || img || undefined;
 }
 
@@ -115,11 +137,11 @@ export async function GET() {
       const data = await parser.parseString(xml);
       return data.items.slice(0, 10).map((item) => ({
           id: item.guid || item.link || Math.random().toString(),
-          title: item.title || "No Title",
+          title: cleanText(item.title, "No Title"),
           link: item.link || "#",
           pubDate: item.pubDate || new Date().toISOString(),
           author: item.creator || item.author,
-          contentSnippet: item.contentSnippet,
+          contentSnippet: cleanText(item.contentSnippet || item.summary || item.content, ""),
           source: feed.source,
           category: autoCategory(item, feed.category),
           thumbnail: thumbnail(item),
@@ -136,9 +158,14 @@ export async function GET() {
   unique.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
   const buckets: NewsCategory[] = ["MUSIC", "TECH", "AI", "TRENDING"];
+  const visualFirst = (items: any[]) => [...items].sort((a, b) => {
+    const imageDelta = Number(Boolean(b.thumbnail)) - Number(Boolean(a.thumbnail));
+    if (imageDelta) return imageDelta;
+    return new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime();
+  });
   const balanced = [
-    ...buckets.flatMap((category) => unique.filter((story) => story.category === category).slice(0, 10)),
-    ...unique,
+    ...buckets.flatMap((category) => visualFirst(unique.filter((story) => story.category === category)).slice(0, 10)),
+    ...visualFirst(unique),
   ];
   const deduped = Array.from(new Map(balanced.map((story) => [story.link || story.title, story])).values());
   const news = deduped.length ? deduped.slice(0, 48) : FALLBACK_NEWS;

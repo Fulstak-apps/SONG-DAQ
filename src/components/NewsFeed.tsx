@@ -20,6 +20,23 @@ const CAT_STYLE: Record<string, string> = {
   AI: "text-gold border-gold/20 bg-gold/5",
 };
 
+function cleanNewsText(value: string) {
+  return String(value || "")
+    .replace(/<[^>]*>/g, " ")
+    .replace(/&#x([0-9a-f]+);/gi, (_, code) => String.fromCharCode(parseInt(code, 16)))
+    .replace(/&#(\d+);/g, (_, code) => String.fromCharCode(Number(code)))
+    .replace(/&amp;/g, "&")
+    .replace(/&quot;|&ldquo;|&rdquo;/g, "\"")
+    .replace(/&#39;|&apos;|&lsquo;|&rsquo;/g, "'")
+    .replace(/&mdash;|&ndash;/g, "-")
+    .replace(/&nbsp;/g, " ")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/[�]+/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function NewsFeed() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -110,7 +127,7 @@ export function NewsFeed() {
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-[13px] font-semibold leading-snug text-ink hover:text-neon transition tracking-tight break-words line-clamp-2 md:line-clamp-3">{item.title}</div>
+                    <div className="text-[13px] font-semibold leading-snug text-ink hover:text-neon transition tracking-tight break-words line-clamp-3">{cleanNewsText(item.title)}</div>
                     <div className="flex items-center gap-2 mt-1.5 text-[9px] text-mute uppercase tracking-widest font-bold">
                       <span className="max-w-[150px] truncate">{item.source}</span>
                       <span className="opacity-30">·</span>
@@ -118,8 +135,8 @@ export function NewsFeed() {
                     </div>
                   </div>
                   {item.thumbnail && (
-                    <div className="w-10 h-10 shrink-0 rounded-md overflow-hidden border border-edge shadow-sm">
-                      <img src={item.thumbnail} alt="" className="w-full h-full object-cover" />
+                    <div className="w-10 h-10 shrink-0 rounded-md overflow-hidden border border-edge shadow-sm bg-black/30">
+                      <img src={item.thumbnail} alt="" className="w-full h-full object-contain" />
                     </div>
                   )}
                 </a>
