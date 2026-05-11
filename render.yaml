@@ -38,6 +38,18 @@ services:
         value: "false"
       - key: ENABLE_CLAIMABLE_REWARDS
         value: "false"
+      - key: ENABLE_AUTOMATED_ROYALTY_PAYOUTS
+        value: "false"
+      - key: ENABLE_TREASURY_AUTOMATION
+        value: "false"
+      - key: LEGAL_REVIEW_APPROVED
+        value: "false"
+      - key: TREASURY_AUTOMATION_AUDIT_APPROVED
+        value: "false"
+      - key: PHANTOM_REVIEW_SUBMITTED
+        value: "false"
+      - key: PHANTOM_REVIEW_APPROVED
+        value: "false"
       - key: NEXT_PUBLIC_AUDIUS_API_KEY
         sync: false
       - key: TREASURY_WALLET

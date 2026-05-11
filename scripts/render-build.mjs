@@ -56,10 +56,22 @@ function deployMigrations() {
 
 const databaseUrl = process.env.DATABASE_URL || "";
 const hasPostgres = /^postgres(ql)?:\/\//i.test(databaseUrl);
+const usesSupabaseDirectHost = (() => {
+  try {
+    const url = new URL(databaseUrl);
+    return /^db\.[a-z0-9-]+\.supabase\.co$/i.test(url.hostname) && (url.port === "5432" || url.port === "");
+  } catch {
+    return false;
+  }
+})();
 
 run("npx", ["prisma", "generate"]);
 
-if (hasPostgres) {
+if (usesSupabaseDirectHost) {
+  console.warn("\nDATABASE_URL is a Supabase direct :5432 host.");
+  console.warn("Render may not be able to reach that endpoint. Use Supabase's pooler URL for production.");
+  console.warn("Skipping migrate deploy so the build can finish, but /api/health will report the DB as not production-ready.");
+} else if (hasPostgres) {
   deployMigrations();
 } else {
   console.warn("\nSkipping Prisma migrate deploy because DATABASE_URL is not a Postgres URL.");

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { NETWORK, RPC_URL } from "@/lib/solana";
-import { hasProductionDatabaseUrl } from "@/lib/appMode";
+import { databaseReadiness } from "@/lib/appMode";
 
 export const dynamic = "force-dynamic";
 
@@ -14,22 +14,22 @@ export async function GET(req: NextRequest) {
   const origin = req.nextUrl.origin;
   const localAppUrl = origin.startsWith("http://localhost") || origin.startsWith("http://127.0.0.1");
   const appUrlConfigured = Boolean(process.env.NEXT_PUBLIC_APP_URL || process.env.RENDER_EXTERNAL_URL || localAppUrl);
+  const database = databaseReadiness(databaseUrl);
   const missing: string[] = [];
-  if (!hasProductionDatabaseUrl(databaseUrl)) missing.push("DATABASE_URL");
+  if (!database.productionReady) missing.push("DATABASE_URL");
   if (!process.env.NEXT_PUBLIC_SOLANA_NETWORK) missing.push("NEXT_PUBLIC_SOLANA_NETWORK");
   if (!process.env.NEXT_PUBLIC_SOLANA_RPC) missing.push("NEXT_PUBLIC_SOLANA_RPC");
   if (!process.env.NEXT_PUBLIC_AUDIUS_API_KEY) missing.push("NEXT_PUBLIC_AUDIUS_API_KEY");
   if (!appUrlConfigured) missing.push("NEXT_PUBLIC_APP_URL");
   if (!treasuryWallet) missing.push("TREASURY_WALLET");
   if (!process.env.JUPITER_API_KEY) missing.push("JUPITER_API_KEY");
-  const databaseConfigured = hasProductionDatabaseUrl(databaseUrl);
   const phantomReviewSubmitted = envOn("PHANTOM_REVIEW_SUBMITTED");
   const phantomReviewApproved = envOn("PHANTOM_REVIEW_APPROVED");
   const legalReviewApproved = envOn("LEGAL_REVIEW_APPROVED");
   const treasuryAuditApproved = envOn("TREASURY_AUTOMATION_AUDIT_APPROVED");
   const royaltyAutomationAllowed = legalReviewApproved && treasuryAuditApproved && envOn("ENABLE_AUTOMATED_ROYALTY_PAYOUTS");
   const treasuryAutomationAllowed = treasuryAuditApproved && envOn("ENABLE_TREASURY_AUTOMATION");
-  const readyForPublic = missing.length === 0 && databaseConfigured && NETWORK === "mainnet-beta";
+  const readyForPublic = missing.length === 0 && database.productionReady && NETWORK === "mainnet-beta";
   return NextResponse.json({
     configured: Boolean(treasuryWallet),
     readyForPublic,
@@ -51,6 +51,9 @@ export async function GET(req: NextRequest) {
     treasuryWallet,
     network: NETWORK,
     rpcUrl: RPC_URL,
-    databaseConfigured,
+    databaseConfigured: database.configured,
+    databaseProductionConfigured: database.productionReady,
+    databaseWarning: database.warning,
+    databaseRecommendation: database.recommendation,
   });
 }

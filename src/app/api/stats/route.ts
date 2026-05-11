@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { listCoins, hydrateArtists } from "@/lib/audiusCoins";
 import { prisma } from "@/lib/db";
-import { hasProductionDatabaseUrl } from "@/lib/appMode";
+import { databaseReadiness } from "@/lib/appMode";
 
 export const dynamic = "force-dynamic";
 
@@ -16,13 +16,7 @@ function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T
 }
 
 function canUseDatabaseForStats() {
-  const url = process.env.DATABASE_URL || "";
-  if (!hasProductionDatabaseUrl(url)) return false;
-  // Render often cannot reach Supabase's direct IPv6 database host on :5432.
-  // Use the pooler URL for production DB stats; until then, keep public stats
-  // fast and correct from the live Audius coin feed instead of blocking pages.
-  if (url.includes("db.ghktjraydijlsiotmmda.supabase.co:5432")) return false;
-  return true;
+  return databaseReadiness().productionReady;
 }
 
 export async function GET() {

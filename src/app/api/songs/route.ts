@@ -7,11 +7,21 @@ import { spotPrice } from "@/lib/bondingCurve";
 import { validateRoyalty, DEFAULT_ROYALTY } from "@/lib/royaltyConfig";
 import { assertAudiusTrackOwnership, AuthError } from "@/lib/auth";
 import { moderateCoinText } from "@/lib/risk/contentModeration";
+import { databaseReadiness } from "@/lib/appMode";
 import { PublicKey } from "@solana/web3.js";
 
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
+  const database = databaseReadiness();
+  if (!database.productionReady) {
+    return NextResponse.json({
+      songs: [],
+      databaseStatus: "unavailable",
+      databaseWarning: database.warning,
+      databaseRecommendation: database.recommendation,
+    });
+  }
   const sp = req.nextUrl.searchParams;
   const sort = sp.get("sort") ?? "trending";
   const segment = sp.get("segment"); // rising | viral | liquidity | volatility | new
@@ -49,6 +59,13 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const database = databaseReadiness();
+  if (!database.productionReady) {
+    return NextResponse.json(
+      { error: "Coin launch is locked until the production database is reachable.", recommendation: database.recommendation },
+      { status: 503 },
+    );
+  }
   const body = await req.json();
   const {
     audiusTrackId,

@@ -11,6 +11,7 @@ const routes = [
   "/coin/ZDaUDL4XFdEct7UgeztrFQAptsvh4ZdhyZDZ1RpxYAK",
   "/api/coins?sort=quality",
   "/api/launch/status",
+  "/api/health",
 ];
 
 const failures = [];

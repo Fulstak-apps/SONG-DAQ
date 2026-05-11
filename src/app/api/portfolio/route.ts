@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { fetchJson } from "@/lib/fetchTimeout";
+import { databaseReadiness } from "@/lib/appMode";
 
 export const dynamic = "force-dynamic";
 
@@ -31,6 +32,15 @@ export async function GET(req: NextRequest) {
   });
 
   let databaseUnavailable = false;
+  const database = databaseReadiness();
+  if (!database.productionReady) {
+    return NextResponse.json({
+      ...emptyPortfolio("unavailable"),
+      databaseWarning: database.warning,
+      databaseRecommendation: database.recommendation,
+    });
+  }
+
   const user = await prisma.user.findUnique({
     where: { wallet },
     include: {

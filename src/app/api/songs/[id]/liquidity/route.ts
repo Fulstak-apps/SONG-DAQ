@@ -3,11 +3,19 @@ import { prisma } from "@/lib/db";
 import { requireArtist, AuthError } from "@/lib/auth";
 import { getConnection, isValidPubkey } from "@/lib/solana";
 import { canMarkLive, riskLevelForLiquidity, validateLaunchLiquidity } from "@/lib/launchState";
+import { databaseReadiness } from "@/lib/appMode";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
   try {
+    const database = databaseReadiness();
+    if (!database.productionReady) {
+      return NextResponse.json(
+        { error: "Liquidity verification is locked until the production database is reachable.", recommendation: database.recommendation },
+        { status: 503 },
+      );
+    }
     const body = await req.json().catch(() => ({}));
     const {
       wallet,

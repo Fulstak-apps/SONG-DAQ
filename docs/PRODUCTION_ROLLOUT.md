@@ -107,6 +107,21 @@ JUPITER_API_KEY="optional_but_recommended"
 
 Render should provide a real Postgres `DATABASE_URL`. A local `file:` URL is treated as development-only and will keep the app out of public-ready status.
 
+For Supabase on Render, use the Supabase connection pooler URL, not the direct
+`db.<project>.supabase.co:5432` host. The direct host can be unreachable from
+Render and will make wallet/profile/admin routes look broken even when the app
+code is healthy. Confirm the live environment by opening:
+
+```text
+https://your-live-domain/api/health
+```
+
+The health response should show:
+
+- `database.productionReady: true`
+- `database.connected: true`
+- `missing: []`
+
 ### Required services
 
 - production database

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
+import { databaseReadiness } from "@/lib/appMode";
 
 export const dynamic = "force-dynamic";
 
@@ -43,8 +44,7 @@ function fallbackMetadata(req: NextRequest, mint: string) {
 }
 
 function canUseDatabaseMetadata() {
-  const url = process.env.DATABASE_URL || "";
-  return !!url && !url.includes("db.ghktjraydijlsiotmmda.supabase.co:5432");
+  return databaseReadiness().productionReady;
 }
 
 function withTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {

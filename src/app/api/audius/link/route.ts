@@ -2,12 +2,12 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getOrCreateUser } from "@/lib/userResolver";
 import { isAdminAudiusProfile } from "@/lib/adminIdentity";
+import { databaseReadiness } from "@/lib/appMode";
 
 export const dynamic = "force-dynamic";
 
 function shouldSkipDatabaseLink() {
-  const url = process.env.DATABASE_URL || "";
-  return url.includes("db.ghktjraydijlsiotmmda.supabase.co:5432");
+  return !databaseReadiness().productionReady;
 }
 
 function pendingLinkResponse(wallet: string, walletType: string, profile: any, nextRole?: string) {

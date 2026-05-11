@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { fetchJson } from "@/lib/fetchTimeout";
 import { getConnection } from "@/lib/solana";
+import { databaseReadiness } from "@/lib/appMode";
 import {
   quoteBuyByTokens,
   quoteBuyBySol,
@@ -103,6 +104,13 @@ async function liveQuote(song: any, side: string, tokens?: number, solIn?: numbe
 
 /** POST /api/trade — execute a buy or sell against the bonding curve. */
 export async function POST(req: NextRequest) {
+  const database = databaseReadiness();
+  if (!database.productionReady) {
+    return NextResponse.json(
+      { error: "Trading is locked until the production database is reachable.", recommendation: database.recommendation },
+      { status: 503 },
+    );
+  }
   const body = await req.json();
   const {
     songId,
@@ -189,6 +197,13 @@ export async function POST(req: NextRequest) {
 
 /** GET /api/trade?songId=...&side=...&tokens=... — preview a quote. */
 export async function GET(req: NextRequest) {
+  const database = databaseReadiness();
+  if (!database.productionReady) {
+    return NextResponse.json(
+      { error: "Trading is locked until the production database is reachable.", recommendation: database.recommendation, swapRouteReady: false },
+      { status: 503 },
+    );
+  }
   const sp = req.nextUrl.searchParams;
   const songId = sp.get("songId");
   const side = (sp.get("side") || "BUY").toUpperCase();

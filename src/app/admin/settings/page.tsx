@@ -1,4 +1,4 @@
-import { appMode, ROYALTY_EMAIL, SUPPORT_EMAIL } from "@/lib/appMode";
+import { appMode, databaseReadiness, ROYALTY_EMAIL, SUPPORT_EMAIL } from "@/lib/appMode";
 
 const flags = [
   ["ENABLE_ROYALTY_REQUESTS", true],
@@ -28,6 +28,7 @@ export default function AdminSettingsPage() {
   const auditApproved = enabled("TREASURY_AUTOMATION_AUDIT_APPROVED", false);
   const payoutAutomation = enabled("ENABLE_AUTOMATED_ROYALTY_PAYOUTS", false) && legalApproved && auditApproved;
   const treasuryAutomation = enabled("ENABLE_TREASURY_AUTOMATION", false) && auditApproved;
+  const database = databaseReadiness();
   return (
     <main className="space-y-6">
       <section className="panel-elevated p-6 md:p-10 space-y-4">
@@ -60,6 +61,19 @@ export default function AdminSettingsPage() {
         </div>
       </section>
       <section className="grid gap-4 lg:grid-cols-2">
+        <section className="panel p-6 space-y-4">
+          <h2 className="text-2xl font-black text-ink">Production Database</h2>
+          <p className="text-sm text-mute leading-relaxed">
+            Render should use a production Postgres URL that it can actually reach. If you are using Supabase, prefer the pooler connection string instead of the direct `db.project.supabase.co:5432` host.
+          </p>
+          <Readiness label="DATABASE_URL configured" value={database.configured ? "Configured" : "Missing"} ok={database.configured} />
+          <Readiness label="Render-ready DB URL" value={database.productionReady ? "Production ready" : "Needs pooler/live URL"} ok={database.productionReady} />
+          {database.warning && (
+            <div className="rounded-2xl border border-amber/20 bg-amber/10 p-4 text-sm text-amber leading-relaxed">
+              {database.warning} {database.recommendation}
+            </div>
+          )}
+        </section>
         <section className="panel p-6 space-y-4">
           <h2 className="text-2xl font-black text-ink">Wallet Trust Readiness</h2>
           <p className="text-sm text-mute leading-relaxed">

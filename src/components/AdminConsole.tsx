@@ -369,9 +369,8 @@ export function AdminConsole() {
               {system.databaseWarning && (
                 <div className="mt-4 rounded-2xl border border-amber/25 bg-amber/10 p-4 text-xs leading-relaxed text-ink/80">
                   <div className="mb-1 text-[10px] font-black uppercase tracking-[0.22em] text-amber">Database Setup</div>
-                  {system.databaseConfigured
-                    ? "A database URL is set, but the admin API could not reach it from this environment. Render may still work if its DATABASE_URL points to the live Postgres instance."
-                    : "This local workspace does not have DATABASE_URL set, so the admin console is showing a safe empty dashboard. Add the Render Postgres DATABASE_URL locally to show real admin data here."}
+                  {system.databaseWarning}
+                  {system.databaseRecommendation ? ` ${system.databaseRecommendation}` : ""}
                 </div>
               )}
             </Panel>

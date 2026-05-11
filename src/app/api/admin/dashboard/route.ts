@@ -1,23 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { NETWORK, RPC_URL } from "@/lib/solana";
-import { hasProductionDatabaseUrl } from "@/lib/appMode";
+import { databaseReadiness } from "@/lib/appMode";
 import { requireAdmin } from "@/lib/auth";
 import { verifyAdminSession } from "@/lib/adminSession";
 
 export const dynamic = "force-dynamic";
 
-function hasDatabaseUrl(value = process.env.DATABASE_URL || "") {
-  return /^postgres(ql)?:\/\//i.test(value);
-}
-
-function isLocalDatabaseUrl(value = process.env.DATABASE_URL || "") {
-  return value.includes("127.0.0.1") || value.includes("localhost");
-}
-
 function systemStatus(databaseConnected = false) {
   const databaseUrl = process.env.DATABASE_URL || "";
-  const databaseUrlLooksConfigured = hasDatabaseUrl(databaseUrl) && !isLocalDatabaseUrl(databaseUrl);
+  const database = databaseReadiness(databaseUrl);
   const envOn = (name: string) => ["1", "true", "yes", "on"].includes(String(process.env[name] || "").toLowerCase());
   const phantomReviewSubmitted = envOn("PHANTOM_REVIEW_SUBMITTED");
   const phantomReviewApproved = envOn("PHANTOM_REVIEW_APPROVED");
@@ -27,7 +19,7 @@ function systemStatus(databaseConnected = false) {
   const treasuryAutomationAllowed = treasuryAuditApproved && envOn("ENABLE_TREASURY_AUTOMATION");
   return {
     readyForPublic: Boolean(
-      hasProductionDatabaseUrl() &&
+      database.productionReady &&
         process.env.NEXT_PUBLIC_SOLANA_NETWORK === "mainnet-beta" &&
         process.env.NEXT_PUBLIC_SOLANA_RPC &&
         process.env.NEXT_PUBLIC_AUDIUS_API_KEY &&
@@ -40,9 +32,11 @@ function systemStatus(databaseConnected = false) {
     payerConfigured: Boolean(process.env.SOLANA_PAYER_SECRET),
     jupiterConfigured: Boolean(process.env.JUPITER_API_KEY),
     audiusConfigured: Boolean(process.env.NEXT_PUBLIC_AUDIUS_API_KEY),
-    databaseConfigured: databaseUrlLooksConfigured,
-    databaseLocalFallback: hasDatabaseUrl(databaseUrl) && isLocalDatabaseUrl(databaseUrl),
-    databaseProductionConfigured: hasProductionDatabaseUrl(databaseUrl),
+    databaseConfigured: database.configured,
+    databaseLocalFallback: Boolean(database.warning?.includes("local database")),
+    databaseProductionConfigured: database.productionReady,
+    databaseWarning: database.warning,
+    databaseRecommendation: database.recommendation,
     databaseConnected,
     appUrl: process.env.NEXT_PUBLIC_APP_URL || process.env.RENDER_EXTERNAL_URL || null,
     phantomReviewSubmitted,
