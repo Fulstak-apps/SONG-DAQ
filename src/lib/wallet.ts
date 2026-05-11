@@ -38,10 +38,26 @@ export interface ConnectResult {
   provider: WalletId;
 }
 
+type SolanaProvider = {
+  isPhantom?: boolean;
+  isSolflare?: boolean;
+  isBackpack?: boolean;
+  publicKey?: { toString(): string } | null;
+  connect: (options?: Record<string, unknown>) => Promise<{ publicKey?: { toString(): string } } | void>;
+  disconnect?: () => Promise<void>;
+  signAndSendTransaction?: (tx: Transaction | VersionedTransaction) => Promise<string | { signature: string }>;
+  signTransaction?: <T extends Transaction | VersionedTransaction>(tx: T) => Promise<T>;
+  signMessage?: (message: Uint8Array, display?: string) => Promise<{ signature?: Uint8Array | number[] }>;
+  on?: (event: string, handler: (...args: any[]) => void) => void;
+  off?: (event: string, handler: (...args: any[]) => void) => void;
+  removeListener?: (event: string, handler: (...args: any[]) => void) => void;
+};
+
 interface SolWindow {
-  solana?: { isPhantom?: boolean; publicKey?: { toString(): string }; connect: () => Promise<{ publicKey: { toString(): string } }>; disconnect?: () => Promise<void>; on?: (event: string, handler: (...args: any[]) => void) => void; off?: (event: string, handler: (...args: any[]) => void) => void; removeListener?: (event: string, handler: (...args: any[]) => void) => void };
-  solflare?: { isSolflare?: boolean; connect: () => Promise<void>; publicKey?: { toString(): string }; disconnect?: () => Promise<void>; on?: (event: string, handler: (...args: any[]) => void) => void; off?: (event: string, handler: (...args: any[]) => void) => void; removeListener?: (event: string, handler: (...args: any[]) => void) => void };
-  backpack?: { isBackpack?: boolean; publicKey?: { toString(): string }; connect: () => Promise<{ publicKey: { toString(): string } }>; disconnect?: () => Promise<void>; on?: (event: string, handler: (...args: any[]) => void) => void; off?: (event: string, handler: (...args: any[]) => void) => void; removeListener?: (event: string, handler: (...args: any[]) => void) => void };
+  solana?: SolanaProvider;
+  phantom?: { solana?: SolanaProvider };
+  solflare?: SolanaProvider;
+  backpack?: SolanaProvider | { solana?: SolanaProvider };
 }
 
 function w(): SolWindow & Window {
@@ -49,9 +65,9 @@ function w(): SolWindow & Window {
 }
 
 export function getConnectedWalletId(): WalletId | null {
-  if (w().solana?.isPhantom) return "phantom";
-  if (w().solflare?.isSolflare) return "solflare";
-  if (w().backpack?.isBackpack) return "backpack";
+  if (providerFor("phantom")) return "phantom";
+  if (providerFor("solflare")) return "solflare";
+  if (providerFor("backpack")) return "backpack";
   return null;
 }
 
@@ -68,21 +84,21 @@ export const WALLETS: WalletDescriptor[] = [
     id: "phantom",
     label: "Phantom",
     kind: "solana",
-    installed: () => !!w().solana?.isPhantom,
+    installed: () => !!providerFor("phantom"),
     installUrl: "https://phantom.app/download",
   },
   {
     id: "solflare",
     label: "Solflare",
     kind: "solana",
-    installed: () => !!w().solflare?.isSolflare,
+    installed: () => !!providerFor("solflare"),
     installUrl: "https://solflare.com/download",
   },
   {
     id: "backpack",
     label: "Backpack",
     kind: "solana",
-    installed: () => !!w().backpack?.isBackpack,
+    installed: () => !!providerFor("backpack"),
     installUrl: "https://backpack.app/download",
   },
 ];
@@ -113,23 +129,25 @@ async function withWalletTimeout<T>(promise: Promise<T>, label: string, timeoutM
 export async function connectWallet(id: WalletId): Promise<ConnectResult> {
   switch (id) {
     case "phantom": {
-      const p = w().solana;
-      if (!p?.isPhantom) throw new Error("Phantom not installed");
-      const r = await withWalletTimeout(p.connect(), "Phantom");
-      return { address: assertValidSolanaAddress(r.publicKey?.toString(), "Phantom"), kind: "solana", provider: id };
+      const p = providerFor("phantom");
+      if (!p) throw new Error("Phantom not installed");
+      const r = await withWalletTimeout(p.connect({ onlyIfTrusted: false }), "Phantom");
+      const publicKey = (r as any)?.publicKey?.toString?.() || p.publicKey?.toString?.();
+      return { address: assertValidSolanaAddress(publicKey, "Phantom"), kind: "solana", provider: id };
     }
     case "solflare": {
-      const p = w().solflare;
-      if (!p?.isSolflare) throw new Error("Solflare not installed");
-      await withWalletTimeout(p.connect(), "Solflare");
-      const pk = assertValidSolanaAddress(p.publicKey?.toString(), "Solflare");
+      const p = providerFor("solflare");
+      if (!p) throw new Error("Solflare not installed");
+      const r = await withWalletTimeout(p.connect(), "Solflare");
+      const pk = assertValidSolanaAddress((r as any)?.publicKey?.toString?.() || p.publicKey?.toString(), "Solflare");
       return { address: pk, kind: "solana", provider: id };
     }
     case "backpack": {
-      const p = w().backpack;
-      if (!p?.isBackpack) throw new Error("Backpack not installed");
+      const p = providerFor("backpack");
+      if (!p) throw new Error("Backpack not installed");
       const r = await withWalletTimeout(p.connect(), "Backpack");
-      return { address: assertValidSolanaAddress(r.publicKey?.toString(), "Backpack"), kind: "solana", provider: id };
+      const publicKey = (r as any)?.publicKey?.toString?.() || p.publicKey?.toString?.();
+      return { address: assertValidSolanaAddress(publicKey, "Backpack"), kind: "solana", provider: id };
     }
     default:
       throw new Error("Unknown wallet");
@@ -139,18 +157,34 @@ export async function connectWallet(id: WalletId): Promise<ConnectResult> {
 export async function disconnectWallet(id: WalletId | null): Promise<void> {
   if (!id) return;
   try {
-    if (id === "phantom") await w().solana?.disconnect?.();
-    if (id === "solflare") await w().solflare?.disconnect?.();
-    if (id === "backpack") await w().backpack?.disconnect?.();
+    await providerFor(id)?.disconnect?.();
   } catch {
     /* ignore */
   }
 }
 
-function providerFor(id: WalletId): any {
-  if (id === "phantom") return w().solana;
-  if (id === "solflare") return w().solflare;
-  if (id === "backpack") return w().backpack;
+function providerFor(id: WalletId): SolanaProvider | null {
+  const win = w();
+  if (id === "phantom") {
+    const direct = win.phantom?.solana;
+    if (direct?.isPhantom) return direct;
+    const solana = win.solana;
+    if (solana?.isPhantom) return solana;
+    return null;
+  }
+  if (id === "solflare") {
+    const solflare = win.solflare;
+    if (solflare?.isSolflare) return solflare;
+    return null;
+  }
+  if (id === "backpack") {
+    const backpack = win.backpack as any;
+    const nested = backpack?.solana ?? backpack;
+    if (nested?.isBackpack) return nested;
+    const solana = win.solana;
+    if (solana?.isBackpack) return solana;
+    return null;
+  }
   return null;
 }
 
@@ -204,20 +238,20 @@ export async function signMessage(id: WalletId, message: string, address: string
   const enc = new TextEncoder().encode(message);
   switch (id) {
     case "phantom": {
-      const p = w().solana;
-      if (!p?.isPhantom) throw new Error("Phantom not found");
+      const p = providerFor("phantom");
+      if (!p) throw new Error("Phantom not found");
       const r = await (p as any).signMessage(enc, "utf8");
       return r.signature ? Buffer.from(r.signature).toString("hex") : "";
     }
     case "solflare": {
-      const p = w().solflare;
-      if (!p?.isSolflare) throw new Error("Solflare not found");
+      const p = providerFor("solflare");
+      if (!p) throw new Error("Solflare not found");
       const r = await (p as any).signMessage(enc, "utf8");
       return r.signature ? Buffer.from(r.signature).toString("hex") : "";
     }
     case "backpack": {
-      const p = w().backpack;
-      if (!p?.isBackpack) throw new Error("Backpack not found");
+      const p = providerFor("backpack");
+      if (!p) throw new Error("Backpack not found");
       const r = await (p as any).signMessage(enc);
       return r.signature ? Buffer.from(r.signature).toString("hex") : "";
     }

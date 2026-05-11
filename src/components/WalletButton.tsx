@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, useUI } from "@/lib/store";
 import { WALLETS, connectWallet, disconnectWallet, type WalletId } from "@/lib/wallet";
+import { safeJson } from "@/lib/safeJson";
 import { Loader2, Wallet, LogOut, ExternalLink } from "lucide-react";
 
 function shortAddr(a: string) {
@@ -39,8 +40,8 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
           }),
         });
         if (!link.ok) {
-          const j = await link.json().catch(() => ({}));
-          throw new Error(j.error || "External wallet connected, but SONG·DAQ could not link it to your Audius artist account.");
+          const j = await safeJson(link);
+          throw new Error((j as any).error || "External wallet connected, but SONG·DAQ could not link it to your Audius artist account.");
         }
       }
       setSession({ address: r.address, kind: r.kind, provider: r.provider });
