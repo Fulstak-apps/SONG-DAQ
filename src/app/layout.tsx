@@ -11,6 +11,7 @@ import { LocalTimeToggle } from "@/components/LocalTimeToggle";
 import { HiddenAdminAccess } from "@/components/HiddenAdminAccess";
 import { PaperModeFrame } from "@/components/PaperModeFrame";
 import { AudiusAutoShuffle } from "@/components/AudiusAutoShuffle";
+import { PaperFallbackGate } from "@/components/LiveTradingStatusBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -59,6 +60,9 @@ export default function RootLayout({
                 <Link href="/faq" className="rounded-xl border border-edge bg-white/[0.04] px-3 py-2 text-ink hover:border-neon/30 hover:text-neon transition">
                   Support
                 </Link>
+                <Link href="/how-it-works" className="rounded-xl border border-edge bg-white/[0.04] px-3 py-2 text-ink hover:border-neon/30 hover:text-neon transition">
+                  How It Works
+                </Link>
                 <span>Solana Powered</span>
                 <span className="text-mute">·</span>
                 <span>On-Chain Verified</span>
@@ -72,6 +76,7 @@ export default function RootLayout({
           <CommandPalette />
           <HiddenAdminAccess />
           <PaperModeFrame />
+          <PaperFallbackGate />
           <AudiusAutoShuffle />
           <GlobalPlayer />
         </ThemeProvider>

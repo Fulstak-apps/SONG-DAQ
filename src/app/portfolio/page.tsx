@@ -10,6 +10,7 @@ import { usePaperTrading, useSession, useUI } from "@/lib/store";
 import { fmtNum, fmtSol } from "@/lib/pricing";
 import { getSolPriceUsd } from "@/lib/balance";
 import { readJson } from "@/lib/safeJson";
+import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 
 interface TokenRow {
   mint: string;
@@ -371,6 +372,8 @@ export default function PortfolioPage() {
         <Metric label="Concentration" value={`${concentration}%`} sub="Lower is broader" />
         <Metric label="Risk Focus" value={artistTokens.length || songTokens.length ? "Active" : "Idle"} sub="Review liquidity and trust badges" />
       </section>
+
+      <WalletDiagnostics compact />
 
       <section className="grid grid-cols-1 xl:grid-cols-[1.25fr_0.75fr] gap-4">
         <div className="space-y-4">

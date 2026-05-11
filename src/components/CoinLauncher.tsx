@@ -17,6 +17,9 @@ import type { AudiusTrack } from "@/lib/audius";
 import { createArtistPaidSongMint, getConnectedWalletId, sendSerializedTransaction, type WalletId } from "@/lib/wallet";
 import { Glossary } from "@/components/Tooltip";
 import { WalletButton } from "@/components/WalletButton";
+import { LiveTradingStatusBanner } from "@/components/LiveTradingStatusBanner";
+import { WalletDiagnostics } from "@/components/WalletDiagnostics";
+import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
 import { AlertTriangle, ChevronRight, ChevronLeft, Rocket, Music, Settings, BarChart3, ShieldCheck, CheckCircle2 } from "lucide-react";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
@@ -379,6 +382,17 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         </div>
       )}
 
+      <LiveTradingStatusBanner compact />
+      <LaunchReadinessChecklist
+        walletConnected={!!externalWalletAddress}
+        artistVerified={!!audius?.userId}
+        metadataReady={!!(process.env.NEXT_PUBLIC_APP_URL || typeof window !== "undefined")}
+        liquidityReady={liquidityValid}
+        phantomReady={!walletTransactionsPaused}
+        tokenTrustReady={!allocationRisk && ownershipConfirmed && riskAcknowledged}
+      />
+      <WhyFansCanBuy compact />
+
       <div className="relative z-10 min-h-[360px] sm:min-h-[460px]">
         <AnimatePresence mode="wait">
           {step === 1 && (
@@ -715,6 +729,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
           )}
         </AnimatePresence>
       </div>
+      <WalletDiagnostics compact />
 
       <footer className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-6 sm:pt-8 border-t border-edge relative z-10">
         <button
@@ -801,6 +816,46 @@ function LaunchMetric({ k, v, tone = "neon" }: { k: string; v: string; tone?: "n
       <div className="text-[9px] uppercase tracking-widest font-black text-mute">{k}</div>
       <div className={`mt-2 font-mono text-sm font-black ${tone === "amber" ? "text-amber" : "text-neon"}`}>{v}</div>
     </div>
+  );
+}
+
+function LaunchReadinessChecklist({
+  walletConnected,
+  artistVerified,
+  metadataReady,
+  liquidityReady,
+  phantomReady,
+  tokenTrustReady,
+}: {
+  walletConnected: boolean;
+  artistVerified: boolean;
+  metadataReady: boolean;
+  liquidityReady: boolean;
+  phantomReady: boolean;
+  tokenTrustReady: boolean;
+}) {
+  const items = [
+    ["Wallet connected", walletConnected, "External Solana wallet is needed for real launch signing."],
+    ["Audius artist verified", artistVerified, "Audius identity links the coin to the real artist account."],
+    ["Metadata ready", metadataReady, "Name, symbol, image, description, and token traits are prepared."],
+    ["Liquidity ready", liquidityReady, "Public market liquidity is required before fans can buy."],
+    ["Phantom review", phantomReady, "Live wallet signing stays paused until the domain is trusted."],
+    ["Token trust", tokenTrustReady, "Ownership, risk, vesting, and cap checks are accepted."],
+  ] as const;
+  return (
+    <section className="relative z-10 rounded-2xl border border-edge bg-panel p-4">
+      <div className="text-[10px] uppercase tracking-widest font-black text-ink">Open Audio launch checklist</div>
+      <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+        {items.map(([label, ok, hint]) => (
+          <div key={label} className="rounded-xl border border-edge bg-panel2 p-3">
+            <div className={`text-[10px] uppercase tracking-widest font-black ${ok ? "text-neon" : "text-amber"}`}>
+              {ok ? "Ready" : "Waiting"} · {label}
+            </div>
+            <div className="mt-1 text-xs leading-relaxed text-mute">{hint}</div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }
 

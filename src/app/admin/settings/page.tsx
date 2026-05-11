@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { appMode, databaseReadiness, ROYALTY_EMAIL, SUPPORT_EMAIL } from "@/lib/appMode";
 
 const flags = [
@@ -83,6 +84,9 @@ export default function AdminSettingsPage() {
           <Readiness label="Phantom review submitted" value={phantomSubmitted ? "Submitted" : "Not submitted"} ok={phantomSubmitted} />
           <Readiness label="Phantom review approved" value={phantomApproved ? "Approved" : "Pending"} ok={phantomApproved} />
           <Readiness label="Jupiter route policy" value="Do not ask wallet to sign until route exists" ok />
+          <Link href="/admin/phantom" className="btn-primary h-11 px-4 text-[10px] uppercase tracking-widest font-black">
+            Open Phantom review page
+          </Link>
           <div className="rounded-2xl border border-edge bg-panel2 p-4 text-sm text-mute leading-relaxed">
             If Phantom still warns after deployment, send Phantom/Blowfish the live URL, a clean token-launch transaction, a liquidity transaction, metadata URL, and support contact.
           </div>
@@ -96,6 +100,17 @@ export default function AdminSettingsPage() {
           <Readiness label="Treasury automation audit" value={auditApproved ? "Approved" : "Required"} ok={auditApproved} />
           <Readiness label="Royalty payout automation" value={payoutAutomation ? "Enabled" : "Manual only"} ok={payoutAutomation} />
           <Readiness label="Treasury automation" value={treasuryAutomation ? "Enabled" : "Manual only"} ok={treasuryAutomation} />
+        </section>
+        <section className="panel p-6 space-y-4">
+          <h2 className="text-2xl font-black text-ink">Admin Review Checklist</h2>
+          <p className="text-sm text-mute leading-relaxed">
+            Use this before marking an artist or royalty split verified. Verification should be boring, documented, and repeatable.
+          </p>
+          <Readiness label="Artist identity" value="Audius account, name, handle, and wallet match" ok />
+          <Readiness label="Song ownership" value="Track belongs to the signed-in Audius artist" ok />
+          <Readiness label="Royalty split invite" value="Distributor invite received at admin@song-daq.com" ok={false} />
+          <Readiness label="Coin match" value="Song title, ISRC/UPC, symbol, wallet, and distributor match request" ok={false} />
+          <Readiness label="Public label" value="Only then mark Royalty Verified" ok={false} />
         </section>
       </section>
     </main>

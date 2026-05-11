@@ -6,7 +6,7 @@ import { NETWORK, RPC_URL } from "@/lib/solana";
 export const dynamic = "force-dynamic";
 
 function envOn(name: string) {
-  return ["1", "true", "yes", "on"].includes(String(process.env[name] || "").toLowerCase());
+  return ["1", "true", "yes", "on"].includes(String(process.env[name] || process.env[`NEXT_PUBLIC_${name}`] || "").toLowerCase());
 }
 
 async function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {

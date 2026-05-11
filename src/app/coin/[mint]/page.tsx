@@ -1,17 +1,15 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence } from "framer-motion";
+import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { SafeImage } from "@/components/SafeImage";
 import { Sparkline } from "@/components/Sparkline";
 import { usePlayer, useSession, type PlayerTrack } from "@/lib/store";
-import { CoinTradeModal } from "@/components/CoinTradeModal";
 import { MarketSafetyPanel, RiskBadge } from "@/components/RiskBadge";
 import { ReportModal } from "@/components/ReportModal";
 import { PriceChart, type PricePointDTO } from "@/components/PriceChart";
-import { TradeFeed } from "@/components/TradeFeed";
-import { MarketIntelligenceGrid } from "@/components/MarketIntelligence";
 import { useCoinWatchlist, useRecentCoins } from "@/lib/coinWatchlist";
 import { ChartSkeleton } from "@/components/Skeleton";
 import { useCoins } from "@/lib/useCoins";
@@ -19,6 +17,15 @@ import { fmtNum, fmtPct } from "@/lib/pricing";
 import type { AudiusCoin } from "@/lib/audiusCoins";
 import { Glossary, InfoTooltip } from "@/components/Tooltip";
 import { readJson } from "@/lib/safeJson";
+import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
+import { WalletDiagnostics } from "@/components/WalletDiagnostics";
+
+const CoinTradeModal = dynamic(() => import("@/components/CoinTradeModal").then((m) => m.CoinTradeModal), { ssr: false });
+const TradeFeed = dynamic(() => import("@/components/TradeFeed").then((m) => m.TradeFeed), { ssr: false });
+const MarketIntelligenceGrid = dynamic(() => import("@/components/MarketIntelligence").then((m) => m.MarketIntelligenceGrid), {
+  ssr: false,
+  loading: () => <ChartSkeleton height={220} />,
+});
 
 import { CHART_RANGE_LABELS, CHART_RANGES, CHART_RANGE_MS, isFastRange, type ChartRange } from "@/lib/chartRanges";
 
@@ -155,7 +162,15 @@ export default function CoinPage() {
     return base.slice(0, 25);
   }, [search, watchlistCoins, allCoins]);
 
-  if (err) return <div className="panel p-10 text-center text-red uppercase tracking-widest font-bold shadow-2xl">{err}</div>;
+  if (err) return (
+    <div className="panel p-10 text-center shadow-2xl space-y-4">
+      <div className="text-red uppercase tracking-widest font-bold">{err}</div>
+      <p className="mx-auto max-w-md text-xs leading-relaxed text-mute">
+        This can happen when Render is waking up, Supabase is slow, or the coin index is retrying. The app keeps live signing disabled until data is available.
+      </p>
+      <button onClick={load} className="btn-primary h-11 px-5 text-[10px] uppercase tracking-widest font-black">Retry</button>
+    </div>
+  );
   if (!coin) {
     return (
       <div className="grid grid-cols-1 lg:grid-cols-[280px_1fr] gap-6">
@@ -229,7 +244,7 @@ export default function CoinPage() {
           coin={coin}
           side={tradeSide}
           onClose={() => setTradeSide(null)}
-          onDone={() => setTradeSide(null)}
+          onDone={() => { setTradeSide(null); load(); }}
         />
       )}
     </AnimatePresence>
@@ -762,6 +777,9 @@ export default function CoinPage() {
           </section>
         )}
 
+        <WhyFansCanBuy />
+        <WalletDiagnostics compact />
+
         {/* News-style "tracks by artist" cards */}
         {!!tracks.length && (
           <section>
@@ -902,6 +920,20 @@ export default function CoinPage() {
           </div>
         </section>
 
+        <section className="panel p-5 shadow-xl space-y-4">
+          <div className="text-[10px] uppercase tracking-widest font-bold text-mute">Launch readiness dashboard</div>
+          <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+            <TrustCheck label="Mint" value={coin.mint ? shortMint(coin.mint) : "Missing"} ok={!!coin.mint} />
+            <TrustCheck label="Metadata" value={coin.logo_uri || coin.name ? "Attached" : "Fallback"} ok={!!(coin.logo_uri || coin.name)} />
+            <TrustCheck label="Pool / Liquidity" value={Number(coin.liquidity ?? 0) > 0 ? fmtUsd(coin.liquidity ?? 0, 0) : "Waiting"} ok={Number(coin.liquidity ?? 0) > 0} />
+            <TrustCheck label="Artist" value={coin.artist_name || "Unknown"} ok={Boolean(coin.artist_name)} />
+            <TrustCheck label="Royalty" value={String((coin as any).royalty_status ?? (coin as any).royaltyVerificationStatus ?? "Not submitted")} ok={String((coin as any).royalty_status ?? (coin as any).royaltyVerificationStatus ?? "").toLowerCase().includes("verified")} />
+            <TrustCheck label="Risk" value={String((coin as any).riskLevel ?? "Review")} ok={String((coin as any).riskLevel ?? "").toLowerCase() === "low"} />
+            <TrustCheck label="Trading" value={Number(coin.liquidity ?? 0) > 0 ? "Market route expected" : "Paused"} ok={Number(coin.liquidity ?? 0) > 0} />
+            <TrustCheck label="Fan model" value="Public curve/pool" ok />
+          </div>
+        </section>
+
         <RoyaltyTransparency coin={coin as any} />
 
         <section>
@@ -909,9 +941,6 @@ export default function CoinPage() {
         </section>
       </div>
 
-      {tradeSide && (
-        <CoinTradeModal coin={coin} side={tradeSide} onClose={() => setTradeSide(null)} onDone={load} />
-      )}
       {reportOpen && <ReportModal mint={coin.mint} onClose={() => setReportOpen(false)} />}
     </div>
   );
@@ -998,6 +1027,17 @@ function KVrow({ k, v, accent }: { k: string; v: string; accent?: "gain" | "lose
     <div className="flex items-center justify-between group">
       <span className="text-[10px] uppercase tracking-widest font-bold text-mute group-hover:text-white transition">{k}</span>
       <span className={`num text-xs font-bold tracking-wider ${accent === "gain" ? "gain drop-shadow-[0_0_5px_rgba(0,229,114,0.3)]" : accent === "lose" ? "lose drop-shadow-[0_0_5px_rgba(255,51,102,0.3)]" : "text-white"}`}>{v}</span>
+    </div>
+  );
+}
+
+function TrustCheck({ label, value, ok }: { label: string; value: string; ok: boolean }) {
+  return (
+    <div className="rounded-xl border border-edge bg-panel2 p-3">
+      <div className={`text-[9px] uppercase tracking-widest font-black ${ok ? "text-neon" : "text-amber"}`}>
+        {ok ? "Ready" : "Review"} · {label}
+      </div>
+      <div className="mt-1 text-sm font-bold text-ink break-words">{value}</div>
     </div>
   );
 }

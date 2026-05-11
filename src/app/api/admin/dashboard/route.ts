@@ -12,7 +12,7 @@ function systemStatus(databaseConnected = false) {
   const database = databaseReadiness(databaseUrl);
   const envOn = (name: string) => ["1", "true", "yes", "on"].includes(String(process.env[name] || "").toLowerCase());
   const phantomReviewSubmitted = envOn("PHANTOM_REVIEW_SUBMITTED");
-  const phantomReviewApproved = envOn("PHANTOM_REVIEW_APPROVED");
+  const phantomReviewApproved = envOn("PHANTOM_REVIEW_APPROVED") || envOn("NEXT_PUBLIC_PHANTOM_REVIEW_APPROVED");
   const legalReviewApproved = envOn("LEGAL_REVIEW_APPROVED");
   const treasuryAuditApproved = envOn("TREASURY_AUTOMATION_AUDIT_APPROVED");
   const royaltyAutomationAllowed = legalReviewApproved && treasuryAuditApproved && envOn("ENABLE_AUTOMATED_ROYALTY_PAYOUTS");

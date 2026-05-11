@@ -5,6 +5,8 @@ import { api } from "@/lib/api";
 import { getConnectedWalletId, sendSerializedTransaction } from "@/lib/wallet";
 import { fmtSol } from "@/lib/pricing";
 import { Glossary } from "@/components/Tooltip";
+import { LiveTradingStatusBanner } from "@/components/LiveTradingStatusBanner";
+import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
 
 export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void }) {
   const { address, kind, provider } = useSession();
@@ -101,6 +103,8 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
   return (
     <div className="panel p-6 space-y-6 relative overflow-hidden shadow-2xl">
       <div className="absolute top-0 right-0 w-32 h-32 bg-neon/5 rounded-full blur-3xl pointer-events-none" />
+      <LiveTradingStatusBanner compact />
+      <WhyFansCanBuy compact />
       
       <div className="flex p-1 bg-white/[0.055] rounded-xl border border-edge relative z-10">
         <button
