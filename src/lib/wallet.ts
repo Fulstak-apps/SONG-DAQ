@@ -281,23 +281,13 @@ async function connectProvider(provider: SolanaProvider, id: WalletId) {
   const existing = connectedPublicKey(null, provider);
   if (existing) return { publicKey: { toString: () => existing } };
 
-  if (id === "phantom") {
-    try {
-      const trusted = await withWalletTimeout(provider.connect({ onlyIfTrusted: true }), label, 2_500);
-      if (connectedPublicKey(trusted, provider)) return trusted;
-    } catch {
-      /* Not trusted yet; fall through to the normal approval popup. */
-    }
-  }
-
   try {
-    const options = id === "phantom" ? { onlyIfTrusted: false } : undefined;
-    return await withWalletTimeout(provider.connect(options), label);
+    return await withWalletTimeout(provider.connect(), label);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    const canRetryWithoutOptions = id === "phantom" && /argument|option|parameter|unexpected|unsupported/i.test(message);
-    if (!canRetryWithoutOptions) throw error;
-    return await withWalletTimeout(provider.connect(), label);
+    const canRetryWithExplicitApproval = id === "phantom" && /argument|option|parameter|unsupported/i.test(message);
+    if (!canRetryWithExplicitApproval) throw error;
+    return await withWalletTimeout(provider.connect({ onlyIfTrusted: false }), label);
   }
 }
 
