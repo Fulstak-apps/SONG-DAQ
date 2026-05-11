@@ -1,0 +1,74 @@
+"use client";
+import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { usePaperTrading, useSession, useUI } from "@/lib/store";
+
+export function RoleToggle() {
+  const { address } = useSession();
+  const { userMode, setUserMode } = useUI();
+  const { enabled: paperMode } = usePaperTrading();
+  const [me, setMe] = useState<any>(null);
+
+  async function load() {
+    if (!address) return setMe(null);
+    const r = await fetch(`/api/me?wallet=${address}`).then((r) => r.json()).catch(() => ({}));
+    setMe(r.user);
+    if (r.user?.preferredMode) setUserMode(r.user.preferredMode);
+  }
+  useEffect(() => { load(); const i = setInterval(load, 6000); return () => clearInterval(i); }, [address]);
+
+  const artistCapable = me?.role === "ARTIST" || me?.role === "ADMIN";
+  if (!paperMode && (!me || !artistCapable)) return null;
+
+  async function set(mode: "ARTIST" | "INVESTOR") {
+    setUserMode(mode);
+    if (paperMode) return;
+    const r = await fetch("/api/me/mode", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ wallet: address, mode }),
+    });
+    if (r.ok) load();
+  }
+
+  const mode = ((paperMode ? userMode : me?.preferredMode) || "INVESTOR") as "ARTIST" | "INVESTOR";
+  const investorActive = mode === "INVESTOR";
+  const artistActive = mode === "ARTIST";
+
+  return (
+    <div className="hidden md:flex items-center bg-white/[0.055] border border-edge rounded-xl p-0.5 text-[10px] font-black uppercase tracking-widest" title={paperMode ? "Paper trading mode lets you preview either role locally." : "Artist accounts include investor access. Investor-only accounts cannot switch into Artist mode."}>
+      <button
+        className={`relative px-3 py-1.5 rounded-lg transition-all duration-300 ${
+          investorActive ? "text-ink" : "text-mute hover:text-ink"
+        }`}
+        onClick={() => set("INVESTOR")}
+      >
+        {investorActive && (
+          <motion.div
+            layoutId="role-pill"
+            className="absolute inset-0 bg-neon/15 border border-neon/35 rounded-lg shadow-[0_0_16px_rgba(0,229,114,0.18)]"
+            style={{ zIndex: -1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          />
+        )}
+        <span className={investorActive ? "text-neon" : ""}>Investor</span>
+      </button>
+      <button
+        className={`relative px-3 py-1.5 rounded-lg transition-all duration-300 ${
+          artistActive ? "text-ink" : "text-mute hover:text-ink"
+        }`}
+        onClick={() => set("ARTIST")}
+      >
+        {artistActive && (
+          <motion.div
+            layoutId="role-pill"
+            className="absolute inset-0 bg-violet/15 border border-violet/35 rounded-lg shadow-[0_0_16px_rgba(155,81,224,0.18)]"
+            style={{ zIndex: -1 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+          />
+        )}
+        <span className={artistActive ? "text-violet" : ""}>Artist</span>
+      </button>
+    </div>
+  );
+}

@@ -1,0 +1,132 @@
+import { NextRequest, NextResponse } from "next/server";
+import { prisma } from "@/lib/db";
+import { requireArtist, AuthError } from "@/lib/auth";
+import { getConnection, isValidPubkey } from "@/lib/solana";
+import { canMarkLive, riskLevelForLiquidity, validateLaunchLiquidity } from "@/lib/launchState";
+
+export const dynamic = "force-dynamic";
+
+export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
+  try {
+    const body = await req.json().catch(() => ({}));
+    const {
+      wallet,
+      tokenAmount = 0,
+      pairAmount = 0,
+      pairAsset = "SOL",
+      lockDays = 30,
+      liquidityTxSig,
+      poolId,
+      lpMint,
+    } = body ?? {};
+
+    if (!wallet) return NextResponse.json({ error: "wallet required" }, { status: 400 });
+    if (!isValidPubkey(String(wallet))) return NextResponse.json({ error: "invalid wallet" }, { status: 422 });
+
+    const artist = await requireArtist(String(wallet));
+    const song = await prisma.songToken.findFirst({
+      where: {
+        OR: [{ id: ctx.params.id }, { symbol: ctx.params.id.toUpperCase() }, { audiusTrackId: ctx.params.id }],
+      },
+      include: { artistWallet: { select: { wallet: true } } },
+    });
+
+    if (!song) return NextResponse.json({ error: "not found" }, { status: 404 });
+    if (song.artistWallet.wallet !== artist.user.wallet) {
+      return NextResponse.json({ error: "Only the launching artist can add liquidity to this token" }, { status: 403 });
+    }
+
+    const normalized = validateLaunchLiquidity({ tokenAmount, pairAmount, lockDays, pairAsset });
+    if (!normalized.ok) {
+      return NextResponse.json(
+        { error: "Liquidity is required before launch. This protects buyers and allows trading to start fairly.", details: normalized.errors },
+        { status: 422 },
+      );
+    }
+    if (!liquidityTxSig || !poolId) {
+      return NextResponse.json(
+        { error: "A confirmed liquidity transaction and pool address are required before a song token can go live." },
+        { status: 422 },
+      );
+    }
+
+    const conn = getConnection();
+    const status = await conn.getSignatureStatus(String(liquidityTxSig), { searchTransactionHistory: true });
+    const confirmation = status.value?.confirmationStatus;
+    const confirmed = !!status.value && !status.value.err && (confirmation === "confirmed" || confirmation === "finalized");
+    const liveCheck = canMarkLive({
+      tokenAmount: normalized.tokenAmount,
+      pairAmount: normalized.pairAmount,
+      pairAsset: normalized.pairAsset,
+      lockDays: normalized.lockDays,
+      liquidityTxSig: String(liquidityTxSig),
+      poolId: String(poolId),
+      confirmed,
+    });
+    if (!liveCheck.ok) {
+      await prisma.songToken.update({
+        where: { id: song.id },
+        data: { status: "VERIFYING_LIQUIDITY" },
+      }).catch(() => {});
+      return NextResponse.json({ error: "Liquidity is not confirmed yet.", details: liveCheck.errors }, { status: 409 });
+    }
+
+    const updated = await prisma.songToken.update({
+      where: { id: song.id },
+      data: {
+        liquidityTokenAmount: normalized.tokenAmount,
+        liquidityPairAmount: normalized.pairAmount,
+        liquidityPairAsset: normalized.pairAsset,
+        liquidityLockDays: normalized.lockDays,
+        liquidityLocked: true,
+        liquidityHealth: liveCheck.health,
+        status: "LIVE",
+        riskLevel: riskLevelForLiquidity(liveCheck.health),
+      },
+    });
+
+    await prisma.marketEvent.create({
+      data: {
+        songId: song.id,
+        kind: "LIQUIDITY",
+        payload: JSON.stringify({
+          liquidity: {
+            tokenAmount: normalized.tokenAmount,
+            pairAmount: normalized.pairAmount,
+            pairAsset: normalized.pairAsset,
+            lockDays: normalized.lockDays,
+            liquidityTxSig: liquidityTxSig ? String(liquidityTxSig) : null,
+            poolId: poolId ? String(poolId) : null,
+            lpMint: lpMint ? String(lpMint) : null,
+          },
+          wallet,
+        }),
+      },
+    });
+    await prisma.transaction.create({
+      data: {
+        mode: song.mode || "live",
+        isSimulated: Boolean(song.isSimulated),
+        transactionSignature: String(liquidityTxSig),
+        userId: artist.user.id,
+        walletAddress: String(wallet),
+        coinId: song.id,
+        action: "Add Launch Liquidity",
+        solAmount: normalized.pairAsset === "SOL" ? normalized.pairAmount : undefined,
+        tokenAmount: normalized.tokenAmount,
+        status: "confirmed",
+      },
+    }).catch(() => {});
+
+    return NextResponse.json({
+      song: updated,
+      message: "Liquidity added. This Song Token is now marked live in the app.",
+    });
+  } catch (err) {
+    if (err instanceof AuthError) {
+      return NextResponse.json({ error: err.message }, { status: err.status });
+    }
+    const message = err instanceof Error ? err.message : "Failed to add liquidity";
+    return NextResponse.json({ error: message }, { status: 500 });
+  }
+}

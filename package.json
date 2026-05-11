@@ -1,0 +1,55 @@
+{
+  "name": "song-daq",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Song-daq — Decentralized Audio Quotient. Stock market for songs on Solana.",
+  "engines": {
+    "node": "20.x"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev",
+    "prisma:seed": "tsx prisma/seed.ts",
+    "anchor:build": "cd anchor && anchor build",
+    "anchor:deploy": "cd anchor && anchor deploy --provider.cluster devnet"
+  },
+  "dependencies": {
+    "@coral-xyz/anchor": "^0.30.1",
+    "@prisma/client": "^5.22.0",
+    "@raydium-io/raydium-sdk-v2": "^0.2.43-alpha",
+    "@solana/spl-token": "^0.4.14",
+    "@solana/web3.js": "^1.95.4",
+    "bn.js": "^5.2.3",
+    "bs58": "^6.0.0",
+    "clsx": "^2.1.1",
+    "date-fns": "^4.1.0",
+    "framer-motion": "^11.11.17",
+    "ioredis": "^5.4.1",
+    "lucide-react": "^1.12.0",
+    "next": "^14.2.35",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "recharts": "^2.13.3",
+    "rss-parser": "^3.13.0",
+    "tailwind-merge": "^2.5.4",
+    "zustand": "^5.0.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "autoprefixer": "^10.4.20",
+    "eslint": "^8.57.0",
+    "eslint-config-next": "^14.2.35",
+    "postcss": "^8.5.14",
+    "prisma": "^5.22.0",
+    "tailwindcss": "^3.4.14",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}

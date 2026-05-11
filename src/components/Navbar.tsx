@@ -1,0 +1,253 @@
+"use client";
+import Link from "next/link";
+import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
+import { Sun, Moon, Volume2, VolumeX, Search } from "lucide-react";
+import { WalletBalance } from "./WalletBalance";
+import { AudiusLoginButton } from "./AudiusLoginButton";
+import { RoleToggle } from "./RoleToggle";
+import { LoginModal } from "./LoginModal";
+import { WalletButton } from "./WalletButton";
+import { usePaperTrading, useSession, useUI, usePrestige, useAlerts } from "@/lib/store";
+import { getCurrentWalletAddress, subscribeWalletChanges, type WalletId } from "@/lib/wallet";
+
+type NavItem = { href: string; label: string; icon: string; reqArtistMode?: boolean };
+
+const NAV: NavItem[] = [
+  { href: "/market", label: "MARKET", icon: "◉" },
+  { href: "/portfolio", label: "PORTFOLIO", icon: "◧" },
+  { href: "/artist", label: "LAUNCH TOKEN", reqArtistMode: true, icon: "♫" },
+  { href: "/social", label: "INTEL", icon: "📡" },
+  { href: "/faq", label: "SUPPORT", icon: "?" },
+];
+
+const TIER_COLORS: Record<string, string> = {
+  newcomer: "text-mute",
+  bronze: "text-bronze",
+  silver: "text-silver",
+  gold: "text-gold",
+  platinum: "text-platinum",
+  diamond: "text-cyan",
+};
+
+export function Navbar() {
+  const path = usePathname();
+  const { address, provider, audius, setSession } = useSession();
+  const { loginModalOpen, openLoginModal, closeLoginModal, userMode, setUserMode, theme, setTheme, soundEnabled, toggleSound } = useUI();
+  const { enabled: paperMode, setEnabled: setPaperMode } = usePaperTrading();
+  const { tier } = usePrestige();
+  const { alerts } = useAlerts();
+  const [mounted, setMounted] = useState(false);
+  const [role, setRole] = useState<string | null>(null);
+  const [adminSession, setAdminSession] = useState(false);
+  useEffect(() => setMounted(true), []);
+  useEffect(() => {
+    if (!address) {
+      setRole(null);
+      return;
+    }
+    let alive = true;
+    fetch(`/api/me?wallet=${encodeURIComponent(address)}`, { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => {
+        if (alive) setRole(j?.user?.role ?? null);
+      })
+      .catch(() => {
+        if (alive) setRole(null);
+      });
+    return () => { alive = false; };
+  }, [address]);
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/admin/session", { cache: "no-store" })
+      .then((r) => r.json())
+      .then((j) => { if (alive) setAdminSession(!!j.authenticated); })
+      .catch(() => { if (alive) setAdminSession(false); });
+    const onFocus = () => {
+      fetch("/api/admin/session", { cache: "no-store" })
+        .then((r) => r.json())
+        .then((j) => setAdminSession(!!j.authenticated))
+        .catch(() => setAdminSession(false));
+    };
+    window.addEventListener("focus", onFocus);
+    return () => { alive = false; window.removeEventListener("focus", onFocus); };
+  }, []);
+  useEffect(() => {
+    if (!provider || provider === "audius") return;
+    const walletId = provider as WalletId;
+    const syncAddress = (nextAddress: string | null) => {
+      if (nextAddress) {
+        setSession({ address: nextAddress, kind: "solana", provider: walletId });
+        return;
+      }
+      if (audius?.wallets?.sol) {
+        setSession({ address: audius.wallets.sol, kind: "solana", provider: "audius" });
+        return;
+      }
+      setSession({ address: null, kind: null, provider: null });
+    };
+
+    const currentAddress = getCurrentWalletAddress(walletId);
+    if (currentAddress && currentAddress !== address) syncAddress(currentAddress);
+    return subscribeWalletChanges(walletId, syncAddress);
+  }, [address, provider, audius?.wallets?.sol, setSession]);
+
+  const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
+  const unreadAlerts = alerts.filter(a => a.triggered && !a.triggered).length;
+  useEffect(() => {
+    if (audius) setUserMode("ARTIST");
+  }, [audius, setUserMode]);
+
+  const isDarnellAudius = audius?.name?.trim().toLowerCase() === "darnell williams";
+  const navItems = role === "ADMIN" || adminSession || isDarnellAudius ? [...NAV, { href: "/admin", label: "ADMIN", icon: "⚙" }] : NAV;
+  const hasSeparateExternalWallet = !!(address && provider !== "audius");
+
+  return (
+    <header className="sticky top-0 z-40 border-b border-edge transition-colors duration-500">
+      {/* Glass background with premium blur */}
+      <div className="absolute inset-0 bg-bg/92 backdrop-blur-2xl" />
+      {/* Top highlight line */}
+      <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
+      
+      <div className="max-w-[1440px] mx-auto px-2 sm:px-3 lg:px-4 relative">
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2 lg:gap-2.5 h-14">
+          {/* Logo */}
+          <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group shrink-0 mr-0.5 sm:mr-1">
+            <div className="relative">
+              <span className="w-2 h-2 rounded-full bg-neon block shadow-[0_0_8px_rgba(0,229,114,0.6)] animate-pulseDot" />
+              <span className="absolute inset-0 w-2 h-2 rounded-full bg-neon animate-pulseRing" />
+            </div>
+            <span className="font-mono font-black tracking-tight text-white text-sm sm:text-base">
+              SONG<span className="text-neon">·</span>DAQ
+            </span>
+            {/* Prestige badge */}
+            {mounted && address && tier !== "newcomer" && (
+              <motion.span
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                className={`hidden 2xl:inline-flex text-[8px] font-black uppercase tracking-widest ${TIER_COLORS[tier] || "text-mute"} bg-white/8 px-1.5 py-0.5 rounded border border-edge`}
+              >
+                {tier}
+              </motion.span>
+            )}
+          </Link>
+
+          <nav className="hidden md:flex min-w-0 items-center gap-0.5 overflow-x-auto no-scrollbar">
+            {navItems.map((n) => {
+              if (n.reqArtistMode && userMode !== "ARTIST") return null;
+              const active = path === n.href || (n.href !== "/" && path.startsWith(n.href));
+              return (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  className={`relative shrink-0 px-1.5 lg:px-2 py-2 rounded-xl text-[8px] lg:text-[9px] xl:text-[10px] font-bold tracking-widest transition-all duration-300 ${
+                    active
+                      ? "text-ink"
+                      : "text-mute hover:text-ink"
+                  }`}
+                >
+                  {active && (
+                    <motion.div
+                      layoutId="nav-active-pill"
+                      className="absolute inset-0 bg-white/[0.08] border border-edge rounded-xl shadow-sm"
+                      style={{ zIndex: -1 }}
+                      transition={{ type: "spring", stiffness: 350, damping: 30 }}
+                    />
+                  )}
+                  {n.label}
+                </Link>
+              );
+            })}
+            {paperMode && (
+              <span className="ml-1 inline-flex shrink-0 items-center rounded-full border border-neon/25 bg-neon/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-neon">
+                Demo Paper Trading
+              </span>
+            )}
+          </nav>
+
+          <div className="ml-auto hidden lg:flex items-center justify-end gap-1 min-w-0">
+              {audius ? <div className="shrink-0"><AudiusLoginButton compact /></div> : null}
+              {(address || audius) ? <WalletBalance compact /> : null}
+              {audius && !hasSeparateExternalWallet ? <div className="hidden xl:block shrink-0"><WalletButton compact connectOnly /></div> : null}
+              {(address || paperMode) ? <div className="hidden xl:block shrink-0"><RoleToggle /></div> : null}
+          </div>
+
+          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+
+            {mounted && (address || audius) ? (
+              <button
+                onClick={toggleSound}
+                className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/[0.055] border border-edge text-mute hover:text-ink hover:bg-white/[0.09] transition-all"
+                title={soundEnabled ? "Mute" : "Unmute"}
+              >
+                {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
+              </button>
+            ) : (
+              <button 
+                className="btn-primary px-3 sm:px-5 py-2 text-[10px] font-black tracking-widest shadow-neon-glow"
+                onClick={openLoginModal}
+              >
+                <span className="relative z-10">CONNECT</span>
+              </button>
+            )}
+
+            <button
+              onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
+              className="hidden lg:flex w-8 h-8 items-center justify-center rounded-xl bg-white/[0.055] border border-edge text-mute hover:text-ink hover:bg-white/[0.09] transition shrink-0"
+              title="Search assets"
+            >
+              <Search size={13} />
+            </button>
+
+            <button
+              onClick={() => setPaperMode(!paperMode)}
+              className={`h-8 rounded-xl border px-2.5 text-[9px] font-black uppercase tracking-widest transition-all shrink-0 ${
+                paperMode
+                  ? "border-neon/40 bg-neon text-[#020403] shadow-[0_0_18px_rgba(0,229,114,0.22)]"
+                  : "border-neon/20 bg-neon/10 text-neon hover:bg-neon/15"
+              }`}
+              title={paperMode ? "Paper Trade / Demo mode is on. No money moves." : "Turn on Paper Trade / Demo mode"}
+            >
+              Paper
+            </button>
+
+            <button
+              onClick={toggleTheme}
+              className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/[0.055] border border-edge text-mute hover:text-ink hover:bg-white/[0.09] transition-all"
+              title="Toggle theme"
+            >
+              {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+            </button>
+          </div>
+        </div>
+        <nav className="md:hidden -mx-1 flex items-center gap-1 overflow-x-auto no-scrollbar border-t border-edge/70 px-1 pb-2 pt-1">
+          {navItems.map((n) => {
+            if (n.reqArtistMode && userMode !== "ARTIST") return null;
+            const active = path === n.href || (n.href !== "/" && path.startsWith(n.href));
+            return (
+              <Link
+                key={n.href}
+                href={n.href}
+                className={`shrink-0 rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-widest transition ${
+                  active
+                    ? "border-neon/25 bg-neon/10 text-neon"
+                    : "border-edge bg-white/[0.045] text-mute hover:text-ink"
+                }`}
+              >
+                {n.label}
+              </Link>
+            );
+          })}
+          {paperMode && (
+            <span className="shrink-0 rounded-xl border border-neon/25 bg-neon/10 px-3 py-2 text-[8px] font-black uppercase tracking-widest text-neon">
+              Demo Paper Trading
+            </span>
+          )}
+        </nav>
+      </div>
+
+      <LoginModal isOpen={loginModalOpen} onClose={closeLoginModal} />
+    </header>
+  );
+}

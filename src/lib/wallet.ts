@@ -1,0 +1,434 @@
+"use client";
+
+/**
+ * Solana wallet detector. Talks to injected providers directly so we
+ * stay framework-agnostic while keeping SONG·DAQ settlement Solana-only.
+ *
+ *   Solana: Phantom, Solflare, Backpack
+ */
+
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  SYSVAR_RENT_PUBKEY,
+  SystemProgram,
+  TransactionInstruction,
+  Transaction,
+  VersionedTransaction,
+  clusterApiUrl,
+} from "@solana/web3.js";
+import {
+  MINT_SIZE,
+  TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountInstruction,
+  createInitializeMintInstruction,
+  createMintToInstruction,
+  getAssociatedTokenAddress,
+  getMinimumBalanceForRentExemptMint,
+} from "@solana/spl-token";
+
+const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
+
+export type WalletId = "phantom" | "solflare" | "backpack";
+
+export interface ConnectResult {
+  address: string;
+  kind: "solana";
+  provider: WalletId;
+}
+
+interface SolWindow {
+  solana?: { isPhantom?: boolean; publicKey?: { toString(): string }; connect: () => Promise<{ publicKey: { toString(): string } }>; disconnect?: () => Promise<void>; on?: (event: string, handler: (...args: any[]) => void) => void; off?: (event: string, handler: (...args: any[]) => void) => void; removeListener?: (event: string, handler: (...args: any[]) => void) => void };
+  solflare?: { isSolflare?: boolean; connect: () => Promise<void>; publicKey?: { toString(): string }; disconnect?: () => Promise<void>; on?: (event: string, handler: (...args: any[]) => void) => void; off?: (event: string, handler: (...args: any[]) => void) => void; removeListener?: (event: string, handler: (...args: any[]) => void) => void };
+  backpack?: { isBackpack?: boolean; publicKey?: { toString(): string }; connect: () => Promise<{ publicKey: { toString(): string } }>; disconnect?: () => Promise<void>; on?: (event: string, handler: (...args: any[]) => void) => void; off?: (event: string, handler: (...args: any[]) => void) => void; removeListener?: (event: string, handler: (...args: any[]) => void) => void };
+}
+
+function w(): SolWindow & Window {
+  return globalThis as any;
+}
+
+export function getConnectedWalletId(): WalletId | null {
+  if (w().solana?.isPhantom) return "phantom";
+  if (w().solflare?.isSolflare) return "solflare";
+  if (w().backpack?.isBackpack) return "backpack";
+  return null;
+}
+
+export interface WalletDescriptor {
+  id: WalletId;
+  label: string;
+  kind: "solana";
+  installed: () => boolean;
+  installUrl: string;
+}
+
+export const WALLETS: WalletDescriptor[] = [
+  {
+    id: "phantom",
+    label: "Phantom",
+    kind: "solana",
+    installed: () => !!w().solana?.isPhantom,
+    installUrl: "https://phantom.app/download",
+  },
+  {
+    id: "solflare",
+    label: "Solflare",
+    kind: "solana",
+    installed: () => !!w().solflare?.isSolflare,
+    installUrl: "https://solflare.com/download",
+  },
+  {
+    id: "backpack",
+    label: "Backpack",
+    kind: "solana",
+    installed: () => !!w().backpack?.isBackpack,
+    installUrl: "https://backpack.app/download",
+  },
+];
+
+function assertValidSolanaAddress(address: string | null | undefined, label: string) {
+  if (!address) throw new Error(`${label} did not return a public key`);
+  try {
+    return new PublicKey(address).toBase58();
+  } catch {
+    throw new Error(`${label} returned an invalid Solana address`);
+  }
+}
+
+async function withWalletTimeout<T>(promise: Promise<T>, label: string, timeoutMs = 25_000): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | null = null;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(`${label} did not respond. Unlock the wallet and try again.`)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
+}
+
+export async function connectWallet(id: WalletId): Promise<ConnectResult> {
+  switch (id) {
+    case "phantom": {
+      const p = w().solana;
+      if (!p?.isPhantom) throw new Error("Phantom not installed");
+      const r = await withWalletTimeout(p.connect(), "Phantom");
+      return { address: assertValidSolanaAddress(r.publicKey?.toString(), "Phantom"), kind: "solana", provider: id };
+    }
+    case "solflare": {
+      const p = w().solflare;
+      if (!p?.isSolflare) throw new Error("Solflare not installed");
+      await withWalletTimeout(p.connect(), "Solflare");
+      const pk = assertValidSolanaAddress(p.publicKey?.toString(), "Solflare");
+      return { address: pk, kind: "solana", provider: id };
+    }
+    case "backpack": {
+      const p = w().backpack;
+      if (!p?.isBackpack) throw new Error("Backpack not installed");
+      const r = await withWalletTimeout(p.connect(), "Backpack");
+      return { address: assertValidSolanaAddress(r.publicKey?.toString(), "Backpack"), kind: "solana", provider: id };
+    }
+    default:
+      throw new Error("Unknown wallet");
+  }
+}
+
+export async function disconnectWallet(id: WalletId | null): Promise<void> {
+  if (!id) return;
+  try {
+    if (id === "phantom") await w().solana?.disconnect?.();
+    if (id === "solflare") await w().solflare?.disconnect?.();
+    if (id === "backpack") await w().backpack?.disconnect?.();
+  } catch {
+    /* ignore */
+  }
+}
+
+function providerFor(id: WalletId): any {
+  if (id === "phantom") return w().solana;
+  if (id === "solflare") return w().solflare;
+  if (id === "backpack") return w().backpack;
+  return null;
+}
+
+export function getCurrentWalletAddress(id: WalletId): string | null {
+  const provider = providerFor(id);
+  const raw = provider?.publicKey?.toString?.();
+  if (!raw) return null;
+  try {
+    return new PublicKey(raw).toBase58();
+  } catch {
+    return null;
+  }
+}
+
+export function subscribeWalletChanges(
+  id: WalletId,
+  onAddress: (address: string | null) => void,
+): () => void {
+  const provider = providerFor(id);
+  if (!provider?.on) return () => {};
+
+  const emitCurrent = (value?: any) => {
+    const raw = value?.toString?.() || provider.publicKey?.toString?.() || null;
+    if (!raw) {
+      onAddress(null);
+      return;
+    }
+    try {
+      onAddress(new PublicKey(raw).toBase58());
+    } catch {
+      onAddress(null);
+    }
+  };
+  const onAccountChanged = (publicKey: any) => emitCurrent(publicKey);
+  const onConnect = (publicKey: any) => emitCurrent(publicKey);
+  const onDisconnect = () => onAddress(null);
+
+  provider.on("accountChanged", onAccountChanged);
+  provider.on("connect", onConnect);
+  provider.on("disconnect", onDisconnect);
+
+  return () => {
+    const off = provider.off || provider.removeListener;
+    off?.call(provider, "accountChanged", onAccountChanged);
+    off?.call(provider, "connect", onConnect);
+    off?.call(provider, "disconnect", onDisconnect);
+  };
+}
+
+export async function signMessage(id: WalletId, message: string, address: string): Promise<string> {
+  const enc = new TextEncoder().encode(message);
+  switch (id) {
+    case "phantom": {
+      const p = w().solana;
+      if (!p?.isPhantom) throw new Error("Phantom not found");
+      const r = await (p as any).signMessage(enc, "utf8");
+      return r.signature ? Buffer.from(r.signature).toString("hex") : "";
+    }
+    case "solflare": {
+      const p = w().solflare;
+      if (!p?.isSolflare) throw new Error("Solflare not found");
+      const r = await (p as any).signMessage(enc, "utf8");
+      return r.signature ? Buffer.from(r.signature).toString("hex") : "";
+    }
+    case "backpack": {
+      const p = w().backpack;
+      if (!p?.isBackpack) throw new Error("Backpack not found");
+      const r = await (p as any).signMessage(enc);
+      return r.signature ? Buffer.from(r.signature).toString("hex") : "";
+    }
+    default:
+      throw new Error("Unknown wallet");
+  }
+}
+
+export async function sendSerializedTransaction(id: WalletId, base64Transaction: string): Promise<string> {
+  const provider = providerFor(id);
+  if (!provider) throw new Error("Solana wallet not found");
+
+  const bytes = Uint8Array.from(atob(base64Transaction), (c) => c.charCodeAt(0));
+  const tx = VersionedTransaction.deserialize(bytes);
+
+  if (provider.signAndSendTransaction) {
+    const result = await provider.signAndSendTransaction(tx);
+    return typeof result === "string" ? result : result.signature;
+  }
+
+  if (!provider.signTransaction) {
+    throw new Error("Wallet does not support transaction signing");
+  }
+
+  const signed = await provider.signTransaction(tx);
+  const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC || clusterApiUrl("mainnet-beta");
+  const connection = new Connection(rpc, "confirmed");
+  const sig = await connection.sendRawTransaction(signed.serialize(), {
+    skipPreflight: false,
+    maxRetries: 3,
+  });
+  await connection.confirmTransaction(sig, "confirmed").catch(() => {});
+  return sig;
+}
+
+export async function createArtistPaidSongMint(
+  id: WalletId,
+  {
+    artistWallet,
+    treasuryWallet,
+    artistSupply,
+    treasurySupply,
+    metadata,
+    decimals = 6,
+  }: {
+    artistWallet: string;
+    treasuryWallet: string;
+    artistSupply: number;
+    treasurySupply: number;
+    metadata?: {
+      name: string;
+      symbol: string;
+      baseUrl: string;
+    };
+    decimals?: number;
+  },
+): Promise<{ mint: string; tokenAccount: string; treasuryTokenAccount: string; mintTx: string; metadataAddress?: string; metadataUri?: string }> {
+  const provider = providerFor(id);
+  if (!provider) throw new Error("Solana wallet not found");
+
+  const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC || clusterApiUrl("mainnet-beta");
+  const connection = new Connection(rpc, "confirmed");
+  const payer = new PublicKey(artistWallet);
+  const currentWallet = provider.publicKey?.toString?.();
+  const currentWalletAddress = currentWallet ? assertValidSolanaAddress(currentWallet, "Connected wallet") : null;
+  if (!currentWalletAddress) {
+    throw new Error("External wallet is not connected. Reconnect Phantom, Solflare, or Backpack and try launching again.");
+  }
+  if (currentWalletAddress !== payer.toBase58()) {
+    throw new Error(`Connected wallet changed. Reconnect ${payer.toBase58().slice(0, 4)}...${payer.toBase58().slice(-4)} before launching.`);
+  }
+  const treasury = new PublicKey(treasuryWallet);
+  const mint = Keypair.generate();
+  const lamports = await getMinimumBalanceForRentExemptMint(connection);
+  const artistAta = await getAssociatedTokenAddress(mint.publicKey, payer);
+  const treasuryAta = await getAssociatedTokenAddress(mint.publicKey, treasury, true);
+  const metadataUri = metadata?.baseUrl
+    ? `${metadata.baseUrl.replace(/\/$/, "")}/api/token-metadata/${mint.publicKey.toBase58()}`
+    : undefined;
+  const metadataInstruction = metadata && metadataUri
+    ? createMetadataInstruction({
+        mint: mint.publicKey,
+        mintAuthority: payer,
+        payer,
+        updateAuthority: payer,
+        name: metadata.name,
+        symbol: metadata.symbol,
+        uri: metadataUri,
+      })
+    : null;
+  const rawArtistSupply = BigInt(Math.trunc(Math.max(0, artistSupply))) * 10n ** BigInt(decimals);
+  const rawTreasurySupply = BigInt(Math.trunc(Math.max(0, treasurySupply))) * 10n ** BigInt(decimals);
+  const latest = await connection.getLatestBlockhash("confirmed");
+
+  const tx = new Transaction({
+    feePayer: payer,
+    recentBlockhash: latest.blockhash,
+  }).add(
+    SystemProgram.createAccount({
+      fromPubkey: payer,
+      newAccountPubkey: mint.publicKey,
+      space: MINT_SIZE,
+      lamports,
+      programId: TOKEN_PROGRAM_ID,
+    }),
+    createInitializeMintInstruction(mint.publicKey, decimals, payer, payer),
+    createAssociatedTokenAccountInstruction(payer, artistAta, payer, mint.publicKey),
+    createAssociatedTokenAccountInstruction(payer, treasuryAta, treasury, mint.publicKey),
+  );
+
+  if (metadataInstruction) tx.add(metadataInstruction.instruction);
+
+  if (rawArtistSupply > 0n) {
+    tx.add(createMintToInstruction(mint.publicKey, artistAta, payer, rawArtistSupply));
+  }
+  if (rawTreasurySupply > 0n) {
+    tx.add(createMintToInstruction(mint.publicKey, treasuryAta, payer, rawTreasurySupply));
+  }
+
+  tx.partialSign(mint);
+
+  let sig: string;
+  if (provider.signAndSendTransaction) {
+    const result = await provider.signAndSendTransaction(tx);
+    sig = typeof result === "string" ? result : result.signature;
+  } else if (provider.signTransaction) {
+    const signed = await provider.signTransaction(tx);
+    sig = await connection.sendRawTransaction(signed.serialize(), {
+      skipPreflight: false,
+      maxRetries: 3,
+    });
+  } else {
+    throw new Error("Wallet does not support transaction signing");
+  }
+
+  await connection.confirmTransaction({ signature: sig, ...latest }, "confirmed");
+  return {
+    mint: mint.publicKey.toBase58(),
+    tokenAccount: artistAta.toBase58(),
+    treasuryTokenAccount: treasuryAta.toBase58(),
+    mintTx: sig,
+    metadataAddress: metadataInstruction?.metadata.toBase58(),
+    metadataUri,
+  };
+}
+
+function writeString(value: string) {
+  const bytes = new TextEncoder().encode(value);
+  const len = Buffer.alloc(4);
+  len.writeUInt32LE(bytes.length, 0);
+  return Buffer.concat([len, Buffer.from(bytes)]);
+}
+
+function createMetadataInstruction({
+  mint,
+  mintAuthority,
+  payer,
+  updateAuthority,
+  name,
+  symbol,
+  uri,
+}: {
+  mint: PublicKey;
+  mintAuthority: PublicKey;
+  payer: PublicKey;
+  updateAuthority: PublicKey;
+  name: string;
+  symbol: string;
+  uri: string;
+}) {
+  const [metadata] = PublicKey.findProgramAddressSync(
+    [
+      Buffer.from("metadata"),
+      TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+      mint.toBuffer(),
+    ],
+    TOKEN_METADATA_PROGRAM_ID,
+  );
+  const safeName = name.trim().slice(0, 32) || "SONG·DAQ Token";
+  const safeSymbol = symbol.replace(/^\$/, "").trim().slice(0, 10).toUpperCase() || "SONG";
+  const safeUri = uri.trim().slice(0, 200);
+
+  // Metaplex CreateMetadataAccountV3 instruction. This creates the on-chain
+  // pointer wallets and explorers use to identify a mint as a legitimate token.
+  const data = Buffer.concat([
+    Buffer.from([33]),
+    writeString(safeName),
+    writeString(safeSymbol),
+    writeString(safeUri),
+    Buffer.from([0, 0]), // sellerFeeBasisPoints
+    Buffer.from([0]), // creators: none
+    Buffer.from([0]), // collection: none
+    Buffer.from([0]), // uses: none
+    Buffer.from([1]), // isMutable
+    Buffer.from([0]), // collectionDetails: none
+  ]);
+
+  return {
+    metadata,
+    instruction: new TransactionInstruction({
+      programId: TOKEN_METADATA_PROGRAM_ID,
+      keys: [
+        { pubkey: metadata, isSigner: false, isWritable: true },
+        { pubkey: mint, isSigner: false, isWritable: false },
+        { pubkey: mintAuthority, isSigner: true, isWritable: false },
+        { pubkey: payer, isSigner: true, isWritable: true },
+        { pubkey: updateAuthority, isSigner: true, isWritable: false },
+        { pubkey: SystemProgram.programId, isSigner: false, isWritable: false },
+        { pubkey: SYSVAR_RENT_PUBKEY, isSigner: false, isWritable: false },
+      ],
+      data,
+    }),
+  };
+}

@@ -1,0 +1,46 @@
+services:
+  - type: web
+    name: song-daq
+    env: node
+    plan: free
+    buildCommand: npm ci && node scripts/render-build.mjs
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: NEXT_PUBLIC_SOLANA_NETWORK
+        sync: false
+      - key: NEXT_PUBLIC_SOLANA_RPC
+        sync: false
+      - key: NEXT_PUBLIC_AUDIUS_APP_NAME
+        value: songdaq
+      - key: NEXT_PUBLIC_APP_URL
+        value: https://song-daq.onrender.com
+      - key: APP_MODE
+        value: live
+      - key: ENABLE_ROYALTY_REQUESTS
+        value: "true"
+      - key: ENABLE_ADMIN_DASHBOARD
+        value: "true"
+      - key: ENABLE_MANUAL_ROYALTY_RECORDING
+        value: "true"
+      - key: ENABLE_ROYALTY_ENGINE
+        value: "true"
+      - key: ENABLE_ROYALTY_POOL_CONTRIBUTIONS
+        value: "true"
+      - key: ENABLE_PAPER_MODE
+        value: "true"
+      - key: ENABLE_AUTOMATED_BUYBACKS
+        value: "false"
+      - key: ENABLE_AUTOMATED_LIQUIDITY
+        value: "false"
+      - key: ENABLE_HOLDER_REWARDS
+        value: "false"
+      - key: ENABLE_CLAIMABLE_REWARDS
+        value: "false"
+      - key: NEXT_PUBLIC_AUDIUS_API_KEY
+        sync: false
+      - key: TREASURY_WALLET
+        sync: false
+      - key: JUPITER_API_KEY
+        sync: false
