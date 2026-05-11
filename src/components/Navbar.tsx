@@ -149,20 +149,22 @@ export function Navbar() {
                   href={n.href}
                   prefetch={false}
                   onClick={navigate(n.href)}
-                  className={`relative shrink-0 px-1.5 lg:px-2 py-2 rounded-xl text-[8px] lg:text-[9px] xl:text-[10px] font-bold tracking-widest transition-all duration-300 ${
+                  aria-current={active ? "page" : undefined}
+                  className={`relative shrink-0 px-2 lg:px-2.5 py-2 rounded-xl text-[8px] lg:text-[9px] xl:text-[10px] font-black tracking-widest transition-all duration-300 ${
                     active
-                      ? "text-ink"
-                      : "text-mute hover:text-ink"
+                      ? "text-neon shadow-[0_0_18px_rgba(0,229,114,0.16)]"
+                      : "text-mute hover:text-ink hover:bg-white/[0.045]"
                   }`}
                 >
                   {active && (
                     <motion.div
                       layoutId="nav-active-pill"
-                      className="absolute inset-0 bg-white/[0.08] border border-edge rounded-xl shadow-sm"
+                      className="absolute inset-0 rounded-xl border border-neon/35 bg-neon/12 shadow-[inset_0_0_14px_rgba(0,229,114,0.08)]"
                       style={{ zIndex: -1 }}
                       transition={{ type: "spring", stiffness: 350, damping: 30 }}
                     />
                   )}
+                  {active && <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.8)]" />}
                   {n.label}
                 </Link>
               );
@@ -239,9 +241,10 @@ export function Navbar() {
                 href={n.href}
                 prefetch={false}
                 onClick={navigate(n.href)}
+                aria-current={active ? "page" : undefined}
                 className={`shrink-0 rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-widest transition ${
                   active
-                    ? "border-neon/25 bg-neon/10 text-neon"
+                    ? "border-neon/45 bg-neon/15 text-neon shadow-[0_0_16px_rgba(0,229,114,0.16)]"
                     : "border-edge bg-white/[0.045] text-mute hover:text-ink"
                 }`}
               >
