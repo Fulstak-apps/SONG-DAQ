@@ -57,6 +57,51 @@ export interface AudiusCoin {
   audius_play_count?: number;
 }
 
+function firstString(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return null;
+}
+
+function pickImage(input: any) {
+  return firstString(
+    input?.logo_uri,
+    input?.logoUri,
+    input?.logoURI,
+    input?.image,
+    input?.image_url,
+    input?.artworkUrl,
+    input?.artwork_url,
+    input?.artist_avatar,
+    input?.profilePicture?.["1000x1000"],
+    input?.profilePicture?.["480x480"],
+    input?.profilePicture?.["150x150"],
+    input?.profile_picture?.["1000x1000"],
+    input?.profile_picture?.["480x480"],
+    input?.profile_picture?.["150x150"],
+  );
+}
+
+function pickTrackArtwork(track: any) {
+  return firstString(
+    track?.artwork?.["1000x1000"],
+    track?.artwork?.["480x480"],
+    track?.artwork?.["150x150"],
+    track?.artwork?.url,
+    track?.artwork_url,
+    track?.image,
+  );
+}
+
+function normalizeCoin(c: AudiusCoin): AudiusCoin {
+  const image = pickImage(c);
+  return {
+    ...c,
+    logo_uri: image ?? c.logo_uri,
+  };
+}
+
 export function isAudiusCompanyCoin(input: Partial<AudiusCoin> & Record<string, any> | null | undefined) {
   if (!input) return false;
   const ticker = String(input.ticker ?? "").toUpperCase();
@@ -79,7 +124,7 @@ export async function listCoins(limit = 100): Promise<AudiusCoin[]> {
         { next: { revalidate: 60 } },
         2_500,
       );
-      const data = json.data ?? [];
+      const data = (json.data ?? []).map(normalizeCoin);
       if (data.length) coinCache = { at: Date.now(), data };
       return data;
     } catch (e) {
@@ -111,25 +156,26 @@ export async function hydrateArtists(coins: AudiusCoin[]): Promise<AudiusCoin[]>
   const host = hosts[0];
   const out = await Promise.all(
     coins.map(async (c) => {
-      if (!c.owner_id) return c;
+      const baseCoin = normalizeCoin(c);
+      if (!baseCoin.owner_id) return baseCoin;
       try {
         // Fetch user profile + their top tracks in parallel.
         const [userResult, tracksResult] = await Promise.allSettled([
           fetchJson<any>(
-            `${host}/v1/users/${encodeURIComponent(c.owner_id)}?app_name=${APP}`,
+            `${host}/v1/users/${encodeURIComponent(baseCoin.owner_id)}?app_name=${APP}`,
             { next: { revalidate: 600 } },
             4_500,
           ),
           fetchJson<any>(
-            `${host}/v1/users/${encodeURIComponent(c.owner_id)}/tracks?app_name=${APP}&limit=5&sort=plays`,
+            `${host}/v1/users/${encodeURIComponent(baseCoin.owner_id)}/tracks?app_name=${APP}&limit=5&sort=plays`,
             { next: { revalidate: 600 } },
             4_500,
           ),
         ]);
-        if (userResult.status !== "fulfilled") return c;
+        if (userResult.status !== "fulfilled") return baseCoin;
         const uj = userResult.value;
         const u = uj?.data;
-        if (!u) return c;
+        if (!u) return baseCoin;
 
         // Pick the top track (highest play count).
         let topTrack: any = null;
@@ -142,26 +188,23 @@ export async function hydrateArtists(coins: AudiusCoin[]): Promise<AudiusCoin[]>
         }
 
         const handle = u.handle as string | undefined;
+        const artistAvatar = pickImage(u);
+        const trackArtwork = pickTrackArtwork(topTrack);
         return {
-          ...c,
+          ...baseCoin,
+          logo_uri: baseCoin.logo_uri || artistAvatar || trackArtwork || undefined,
           artist_handle: handle,
           artist_name: u.name,
-          artist_avatar:
-            u.profilePicture?.["480x480"] ||
-            u.profilePicture?.["150x150"] ||
-            null,
+          artist_avatar: artistAvatar,
           ...(topTrack && handle ? {
             audius_track_id: String(topTrack.id),
             audius_track_title: topTrack.title,
             audius_track_url: `https://audius.co/${handle}/${topTrack.permalink ?? topTrack.id}`,
-            audius_track_artwork:
-              topTrack.artwork?.["480x480"] ??
-              topTrack.artwork?.["150x150"] ??
-              null,
+            audius_track_artwork: trackArtwork,
             audius_play_count: topTrack.play_count ?? 0,
           } : {}),
         };
-      } catch { return c; }
+      } catch { return baseCoin; }
     }),
   );
   return out;

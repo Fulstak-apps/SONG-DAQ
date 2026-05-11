@@ -189,7 +189,14 @@ export const usePaperTrading = create<PaperTradeState>()(
       }),
       getHolding: (mint) => get().holdings[mint] ?? null,
     }),
-    { name: "songdaq-paper-trading" },
+    {
+      name: "songdaq-paper-trading",
+      version: 2,
+      migrate: (persisted) => ({
+        ...(persisted as any),
+        enabled: false,
+      }),
+    },
   ),
 );
 

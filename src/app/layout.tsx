@@ -11,7 +11,6 @@ import { LocalTimeToggle } from "@/components/LocalTimeToggle";
 import { HiddenAdminAccess } from "@/components/HiddenAdminAccess";
 import { PaperModeFrame } from "@/components/PaperModeFrame";
 import { AudiusAutoShuffle } from "@/components/AudiusAutoShuffle";
-import { PaperFallbackGate } from "@/components/LiveTradingStatusBanner";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -76,7 +75,6 @@ export default function RootLayout({
           <CommandPalette />
           <HiddenAdminAccess />
           <PaperModeFrame />
-          <PaperFallbackGate />
           <AudiusAutoShuffle />
           <GlobalPlayer />
         </ThemeProvider>

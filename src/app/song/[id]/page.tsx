@@ -51,6 +51,9 @@ export default function SongTradingPage() {
   }, [id]);
 
   useEffect(() => { load(); const i = setInterval(load, 4_000); return () => clearInterval(i); }, [load]);
+  useEffect(() => {
+    setRange("LIVE");
+  }, [id]);
 
   useEffect(() => {
     if (!address) return;
@@ -219,7 +222,7 @@ export default function SongTradingPage() {
             {/* Chart */}
             <div className="flex-1 p-4 relative z-10">
               <div className="w-full h-full min-h-[300px]">
-                <PriceChart points={filtered} />
+                <PriceChart points={filtered} live={range === "LIVE"} mode="advanced" showVolume showMA7={false} showMA25={false} />
               </div>
             </div>
 
@@ -349,7 +352,7 @@ export default function SongTradingPage() {
             </div>
           </div>
           <div className="relative z-10 h-[280px] sm:h-[380px]">
-            <PriceChart points={filtered} mode="advanced" showVolume showMA7={false} showMA25={false} />
+            <PriceChart points={filtered} live={range === "LIVE"} mode="advanced" showVolume showMA7={false} showMA25={false} />
           </div>
         </div>
 

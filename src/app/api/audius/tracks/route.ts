@@ -9,6 +9,26 @@ const FALLBACK_HOSTS = [
   "https://discoveryprovider2.audius.co",
 ];
 
+function pickArtwork(track: any) {
+  return track?.artwork?.["1000x1000"] ||
+    track?.artwork?.["480x480"] ||
+    track?.artwork?.["150x150"] ||
+    track?.artwork?.url ||
+    track?.artwork_url ||
+    track?.image ||
+    null;
+}
+
+function normalizeTrack(track: any) {
+  const artwork = pickArtwork(track);
+  return {
+    ...track,
+    artworkUrl: artwork,
+    artwork_url: track?.artwork_url || artwork,
+    image: track?.image || artwork,
+  };
+}
+
 async function hosts(): Promise<string[]> {
   try {
     const j = await fetchJson<{ data: string[] }>("https://api.audius.co", { next: { revalidate: 3600 } }, 4_000);
@@ -42,7 +62,7 @@ export async function GET(req: NextRequest) {
         4_500,
       ).catch(() => null);
       if (!tj) continue;
-      return NextResponse.json({ tracks: tj?.data ?? [] });
+      return NextResponse.json({ tracks: (tj?.data ?? []).map(normalizeTrack) });
     } catch { /* try next host */ }
   }
   return NextResponse.json({ tracks: [] });

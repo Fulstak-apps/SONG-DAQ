@@ -30,6 +30,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const { address, kind, provider, audius } = useSession();
   const externalWalletAddress = kind === "solana" && provider && provider !== "audius" ? address : null;
   const externalWalletProvider = provider && provider !== "audius" ? provider : null;
+  const audiusWalletAddress = audius?.wallets?.sol ?? null;
+  const launchIdentityWallet = externalWalletAddress || audiusWalletAddress;
   const [step, setStep] = useState<Step>(1);
   const [launchKind, setLaunchKind] = useState<LaunchKind>("SONG");
 
@@ -370,8 +372,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   }
 
   async function importOpenAudioArtistCoin() {
-    if (!externalWalletAddress) {
-      setErr("Connect your external Solana wallet first so SONG·DAQ can attach the imported Artist Coin to the right artist account.");
+    if (!launchIdentityWallet) {
+      setErr("Connect an external Solana wallet or sign in with an Audius account that exposes an Audius Solana wallet first.");
       return;
     }
     const mint = importMint.trim();
@@ -387,7 +389,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         const link = await fetch("/api/audius/link", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ wallet: externalWalletAddress, walletType: "solana", profile: audius, role: "ARTIST" }),
+          body: JSON.stringify({ wallet: launchIdentityWallet, walletType: "solana", profile: audius, role: "ARTIST" }),
         });
         if (!link.ok) {
           const j = await link.json().catch(() => ({}));
@@ -397,7 +399,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       const imported = await api<any>("/api/open-audio/artist-coins/import", {
         method: "POST",
         json: {
-          wallet: externalWalletAddress,
+          wallet: launchIdentityWallet,
           mint,
           artistName: audius?.name || audius?.handle,
           symbol: audius?.handle || audius?.name,
@@ -426,7 +428,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
     );
   }
 
-  if (!externalWalletAddress) {
+  if (!launchIdentityWallet) {
     return (
       <div className="panel p-5 sm:p-10 text-center space-y-5 bg-panel2 border-dashed border-edge">
         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl border border-neon/25 bg-neon/10 text-neon">
@@ -526,9 +528,27 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         </div>
       )}
 
+      {!externalWalletAddress && audiusWalletAddress && (
+        <div className="relative z-10 rounded-xl border border-violet/25 bg-violet/10 px-4 py-3 text-violet flex items-start gap-3">
+          <ShieldCheck size={16} className="mt-0.5 shrink-0" />
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-widest font-black">Audius wallet recognized</div>
+            <div className="mt-1 text-xs leading-relaxed text-violet/85">
+              SONG·DAQ can use your Audius wallet for artist identity, imported Audius/Open Audio coins, and coin setup records. A live Solana mint still needs an external wallet signature until Open Audio exposes an in-app signing bridge for third-party apps.
+            </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <span className="rounded-xl border border-violet/25 bg-panel px-3 py-2 font-mono text-[10px] text-ink">
+                {audiusWalletAddress.slice(0, 6)}…{audiusWalletAddress.slice(-4)}
+              </span>
+              <WalletButton compact connectOnly />
+            </div>
+          </div>
+        </div>
+      )}
+
       <LiveTradingStatusBanner compact />
       <LaunchReadinessChecklist
-        walletConnected={!!externalWalletAddress}
+        walletConnected={!!launchIdentityWallet}
         artistVerified={!!audius?.userId}
         metadataReady={!!(process.env.NEXT_PUBLIC_APP_URL || typeof window !== "undefined")}
         liquidityReady={liquidityValid}
@@ -561,7 +581,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <div className="text-xs text-mute">@{audius.handle}</div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] uppercase tracking-widest font-bold">
-                      <div className="rounded-xl border border-edge bg-panel2 p-3 text-mute">External wallet <span className="block font-mono text-ink normal-case tracking-normal truncate">{externalWalletAddress.slice(0, 6)}…{externalWalletAddress.slice(-4)}</span></div>
+                      <div className="rounded-xl border border-edge bg-panel2 p-3 text-mute">{externalWalletAddress ? "External wallet" : "Audius wallet"} <span className="block font-mono text-ink normal-case tracking-normal truncate">{launchIdentityWallet.slice(0, 6)}…{launchIdentityWallet.slice(-4)}</span></div>
                       <div className="rounded-xl border border-edge bg-panel2 p-3 text-mute">Audio <span className="block text-amber">Unavailable until song attached</span></div>
                     </div>
                     <div className="rounded-2xl border border-violet/25 bg-violet/10 p-4">
@@ -839,7 +859,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   <div className="space-y-2 text-center">
                     <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Review Risk + Launch</h3>
                     <p className="text-mute text-sm font-medium">
-                      {launchKind === "ARTIST"
+                      {!externalWalletAddress
+                        ? "Your Audius wallet is recognized for identity and setup. Connect Phantom, Solflare, or Backpack when you are ready to sign the live Solana mint transaction."
+                        : launchKind === "ARTIST"
                         ? "Your connected artist wallet signs the Open Audio Artist Coin launch. The coin is paired against $AUDIO on a Meteora bonding curve so fans buy from the public market."
                         : "Your connected artist wallet signs a clear launch flow. The coin is not tradable until the public curve/pool has verified liquidity, so fans can buy from the market instead of from the artist directly."}
                     </p>
@@ -909,9 +931,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     type="button"
                     className="btn-primary w-full py-4 text-sm font-black tracking-widest shadow-[0_0_30px_rgba(0,229,114,0.3)] disabled:opacity-50 disabled:grayscale"
                     onClick={deploy}
-                    disabled={launchStatus?.configured === false || walletTransactionsPaused || !canLaunchReview || !ownershipConfirmed || !riskAcknowledged}
+                    disabled={!externalWalletAddress || launchStatus?.configured === false || walletTransactionsPaused || !canLaunchReview || !ownershipConfirmed || !riskAcknowledged}
                   >
-                    {walletTransactionsPaused ? "PHANTOM REVIEW REQUIRED" : launchKind === "ARTIST" ? "SIGN AUDIO ARTIST COIN LAUNCH" : "SIGN MINT + ADD LIQUIDITY"}
+                    {!externalWalletAddress ? "CONNECT EXTERNAL WALLET TO SIGN" : walletTransactionsPaused ? "PHANTOM REVIEW REQUIRED" : launchKind === "ARTIST" ? "SIGN AUDIO ARTIST COIN LAUNCH" : "SIGN MINT + ADD LIQUIDITY"}
                   </button>
                 </div>
               )}

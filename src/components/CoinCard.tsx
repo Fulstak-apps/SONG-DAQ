@@ -51,6 +51,7 @@ export function CoinCard({
   const sparkUp = spark.length >= 2 ? spark[spark.length - 1] >= spark[0] : change >= 0;
   const sparkColor = sparkUp ? "#00E572" : "#FF3366";
   const tier = getTier(c.marketCap ?? 0);
+  const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || null;
 
   const trackTitle = c.audius_track_title ?? null;
   const audioUrl = c.audius_track_id ? `https://api.audius.co/v1/tracks/${c.audius_track_id}/stream?app_name=songdaq` : null;
@@ -58,7 +59,7 @@ export function CoinCard({
     id: String(c.audius_track_id),
     title: c.audius_track_title ?? c.name,
     artist: c.artist_name ?? c.name,
-    artwork: c.audius_track_artwork ?? c.logo_uri ?? null,
+    artwork: c.audius_track_artwork ?? artwork,
     streamUrl: audioUrl,
     href: `/coin/${c.mint}`,
   }) : null, [audioUrl, c]);
@@ -90,7 +91,7 @@ export function CoinCard({
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
           <div className="relative w-12 h-12 rounded-xl overflow-hidden border border-edge bg-panel2 shadow-depth shrink-0">
-            <SafeImage src={c.logo_uri} alt={c.ticker} fill sizes="48px" className="object-cover" fallback={c.ticker} />
+            <SafeImage src={artwork} alt={c.ticker} fill sizes="48px" className="object-cover" fallback={c.ticker} />
             <div className="absolute inset-0 bg-gradient-to-tr from-black/30 via-transparent to-white/5 pointer-events-none" />
           </div>
           <div className="min-w-0">
@@ -227,6 +228,7 @@ export function CoinListRow({
   const watchlist = useWatchlist();
   const change = c.priceChange24hPercent ?? 0;
   const tier = getTier(c.marketCap ?? 0);
+  const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || null;
 
   return (
     <motion.div
@@ -245,7 +247,7 @@ export function CoinListRow({
       </button>
       
       <div className="relative w-9 h-9 rounded-lg overflow-hidden border border-edge shrink-0 bg-panel2">
-        <SafeImage src={c.logo_uri} alt={c.ticker} fill sizes="36px" className="object-cover" fallback={c.ticker} />
+        <SafeImage src={artwork} alt={c.ticker} fill sizes="36px" className="object-cover" fallback={c.ticker} />
       </div>
       <div className="min-w-[160px] flex-1">
         <div className="flex items-center gap-2">
