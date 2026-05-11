@@ -133,6 +133,11 @@ function walletLabel(id: WalletId) {
   return WALLETS.find((wallet) => wallet.id === id)?.label || "Wallet";
 }
 
+export function requestWalletBalanceRefresh(address?: string | null) {
+  if (typeof window === "undefined") return;
+  window.dispatchEvent(new CustomEvent("songdaq:wallet-refresh", { detail: { address, ts: Date.now() } }));
+}
+
 function createMemoInstruction(message: string) {
   return new TransactionInstruction({
     keys: [],
@@ -156,21 +161,26 @@ export async function connectWallet(id: WalletId): Promise<ConnectResult> {
       if (!p) throw new Error("Phantom not installed");
       const r = await withWalletTimeout(p.connect({ onlyIfTrusted: false }), "Phantom");
       const publicKey = (r as any)?.publicKey?.toString?.() || p.publicKey?.toString?.();
-      return { address: assertValidSolanaAddress(publicKey, "Phantom"), kind: "solana", provider: id };
+      const address = assertValidSolanaAddress(publicKey, "Phantom");
+      requestWalletBalanceRefresh(address);
+      return { address, kind: "solana", provider: id };
     }
     case "solflare": {
       const p = providerFor("solflare");
       if (!p) throw new Error("Solflare not installed");
       const r = await withWalletTimeout(p.connect(), "Solflare");
-      const pk = assertValidSolanaAddress((r as any)?.publicKey?.toString?.() || p.publicKey?.toString(), "Solflare");
-      return { address: pk, kind: "solana", provider: id };
+      const address = assertValidSolanaAddress((r as any)?.publicKey?.toString?.() || p.publicKey?.toString(), "Solflare");
+      requestWalletBalanceRefresh(address);
+      return { address, kind: "solana", provider: id };
     }
     case "backpack": {
       const p = providerFor("backpack");
       if (!p) throw new Error("Backpack not installed");
       const r = await withWalletTimeout(p.connect(), "Backpack");
       const publicKey = (r as any)?.publicKey?.toString?.() || p.publicKey?.toString?.();
-      return { address: assertValidSolanaAddress(publicKey, "Backpack"), kind: "solana", provider: id };
+      const address = assertValidSolanaAddress(publicKey, "Backpack");
+      requestWalletBalanceRefresh(address);
+      return { address, kind: "solana", provider: id };
     }
     default:
       throw new Error("Unknown wallet");
@@ -184,6 +194,7 @@ export async function disconnectWallet(id: WalletId | null): Promise<void> {
   } catch {
     /* ignore */
   }
+  requestWalletBalanceRefresh();
 }
 
 function providerFor(id: WalletId): SolanaProvider | null {
@@ -297,7 +308,10 @@ export async function sendSerializedTransaction(id: WalletId, base64Transaction:
       `${walletLabel(id)} transaction approval`,
       45_000,
     );
-    return typeof result === "string" ? result : result.signature;
+    const sig = typeof result === "string" ? result : result.signature;
+    requestWalletBalanceRefresh(provider.publicKey?.toString?.());
+    setTimeout(() => requestWalletBalanceRefresh(provider.publicKey?.toString?.()), 6_000);
+    return sig;
   }
 
   if (!provider.signTransaction) {
@@ -316,6 +330,8 @@ export async function sendSerializedTransaction(id: WalletId, base64Transaction:
     maxRetries: 3,
   });
   await connection.confirmTransaction(sig, "confirmed").catch(() => {});
+  requestWalletBalanceRefresh(provider.publicKey?.toString?.());
+  setTimeout(() => requestWalletBalanceRefresh(provider.publicKey?.toString?.()), 6_000);
   return sig;
 }
 
@@ -433,6 +449,8 @@ export async function createArtistPaidSongMint(
   }
 
   await connection.confirmTransaction({ signature: sig, ...latest }, "confirmed");
+  requestWalletBalanceRefresh(artistWallet);
+  setTimeout(() => requestWalletBalanceRefresh(artistWallet), 6_000);
   return {
     mint: mint.publicKey.toBase58(),
     tokenAccount: artistAta.toBase58(),

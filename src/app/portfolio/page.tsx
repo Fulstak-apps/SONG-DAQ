@@ -54,7 +54,10 @@ function useTokenHoldings(address: string | null | undefined, mode: "summary" | 
   useEffect(() => {
     if (!address) { setData(null); return; }
     let alive = true;
+    let inFlight = false;
     const load = async () => {
+      if (inFlight || document.visibilityState === "hidden") return;
+      inFlight = true;
       setLoading(true);
       try {
         const r = await fetch(`/api/wallet/tokens?address=${encodeURIComponent(address)}&mode=${mode}`, { cache: "no-store" });
@@ -63,12 +66,28 @@ function useTokenHoldings(address: string | null | undefined, mode: "summary" | 
       } catch {
         /* keep last good value */
       } finally {
+        inFlight = false;
         if (alive) setLoading(false);
       }
     };
     load();
-    const i = setInterval(load, mode === "full" ? 60_000 : 25_000);
-    return () => { alive = false; clearInterval(i); };
+    const onFocus = () => load();
+    const onVisible = () => { if (document.visibilityState === "visible") load(); };
+    const onRefresh = (event: Event) => {
+      const detail = (event as CustomEvent<{ address?: string | null }>).detail;
+      if (!detail?.address || detail.address === address) load();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("songdaq:wallet-refresh", onRefresh);
+    const i = setInterval(load, mode === "full" ? 10_000 : 12_000);
+    return () => {
+      alive = false;
+      clearInterval(i);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("songdaq:wallet-refresh", onRefresh);
+    };
   }, [address, mode, nonce]);
   return { data, loading, refresh: () => setNonce((n) => n + 1) };
 }
@@ -94,7 +113,10 @@ export default function PortfolioPage() {
   useEffect(() => {
     if (!portfolioWallet) { setPortfolio(null); return; }
     let alive = true;
+    let inFlight = false;
     const load = async () => {
+      if (inFlight || document.visibilityState === "hidden") return;
+      inFlight = true;
       const params = new URLSearchParams({ wallet: portfolioWallet });
       if (audius?.userId) params.set("audiusUserId", audius.userId);
       if (audius?.wallets?.sol) params.set("audiusSolWallet", audius.wallets.sol);
@@ -105,11 +127,28 @@ export default function PortfolioPage() {
         if (alive && r.ok) setPortfolio(j);
       } catch {
         /* keep last */
+      } finally {
+        inFlight = false;
       }
     };
     load();
-    const i = setInterval(load, 15_000);
-    return () => { alive = false; clearInterval(i); };
+    const onFocus = () => load();
+    const onVisible = () => { if (document.visibilityState === "visible") load(); };
+    const onRefresh = (event: Event) => {
+      const detail = (event as CustomEvent<{ address?: string | null }>).detail;
+      if (!detail?.address || detail.address === portfolioWallet) load();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("songdaq:wallet-refresh", onRefresh);
+    const i = setInterval(load, 6_000);
+    return () => {
+      alive = false;
+      clearInterval(i);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("songdaq:wallet-refresh", onRefresh);
+    };
   }, [portfolioWallet, audius?.userId, audius?.wallets?.sol, audius?.wallets?.eth]);
 
   useEffect(() => {

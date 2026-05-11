@@ -65,7 +65,10 @@ export function useNativeBalance(address: string | null | undefined, kind: "sola
       return;
     }
     let alive = true;
+    let loading = false;
     const load = async () => {
+      if (loading || document.visibilityState === "hidden") return;
+      loading = true;
       try {
         setS((prev) => ({
           ...prev,
@@ -94,11 +97,28 @@ export function useNativeBalance(address: string | null | undefined, kind: "sola
           address,
           error: err instanceof Error ? err.message : "Could not load wallet balance",
         }));
+      } finally {
+        loading = false;
       }
     };
     load();
-    const i = setInterval(load, 25_000);
-    return () => { alive = false; clearInterval(i); };
+    const onFocus = () => load();
+    const onVisible = () => { if (document.visibilityState === "visible") load(); };
+    const onRefresh = (event: Event) => {
+      const detail = (event as CustomEvent<{ address?: string | null }>).detail;
+      if (!detail?.address || detail.address === address) load();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("songdaq:wallet-refresh", onRefresh);
+    const i = setInterval(load, 5_000);
+    return () => {
+      alive = false;
+      clearInterval(i);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("songdaq:wallet-refresh", onRefresh);
+    };
   }, [address, kind]);
   return s;
 }
@@ -108,17 +128,36 @@ function useTokenHoldings(address: string | null | undefined, mode: "summary" | 
   useEffect(() => {
     if (!address) { setH(null); return; }
     let alive = true;
+    let loading = false;
     const load = async () => {
+      if (loading || document.visibilityState === "hidden") return;
+      loading = true;
       try {
         const r = await fetch(`/api/wallet/tokens?address=${encodeURIComponent(address)}&mode=${mode}`, { cache: "no-store" });
         if (!r.ok) return;
         const j = await r.json();
         if (alive) setH(j);
       } catch { /* ignore */ }
+      finally { loading = false; }
     };
     load();
-    const i = setInterval(load, mode === "summary" ? 60_000 : 30_000);
-    return () => { alive = false; clearInterval(i); };
+    const onFocus = () => load();
+    const onVisible = () => { if (document.visibilityState === "visible") load(); };
+    const onRefresh = (event: Event) => {
+      const detail = (event as CustomEvent<{ address?: string | null }>).detail;
+      if (!detail?.address || detail.address === address) load();
+    };
+    window.addEventListener("focus", onFocus);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("songdaq:wallet-refresh", onRefresh);
+    const i = setInterval(load, mode === "summary" ? 12_000 : 10_000);
+    return () => {
+      alive = false;
+      clearInterval(i);
+      window.removeEventListener("focus", onFocus);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("songdaq:wallet-refresh", onRefresh);
+    };
   }, [address, mode]);
   return h;
 }
