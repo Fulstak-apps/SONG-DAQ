@@ -21,6 +21,7 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
+    "@meteora-ag/dynamic-bonding-curve-sdk": "^1.5.7",
     "@prisma/client": "^5.22.0",
     "@raydium-io/raydium-sdk-v2": "^0.2.43-alpha",
     "@solana/spl-token": "^0.4.14",
