@@ -45,6 +45,7 @@ type SolanaProvider = {
   isPhantom?: boolean;
   isSolflare?: boolean;
   isBackpack?: boolean;
+  providers?: SolanaProvider[];
   publicKey?: { toString(): string } | null;
   connect: (options?: Record<string, unknown>) => Promise<{ publicKey?: { toString(): string } } | void>;
   disconnect?: () => Promise<void>;
@@ -154,30 +155,107 @@ export function assertLiveWalletTransactionsAllowed() {
   return;
 }
 
+function isProviderLike(provider: unknown): provider is SolanaProvider {
+  return !!provider && typeof (provider as SolanaProvider).connect === "function";
+}
+
+function providerMatches(id: WalletId, provider: unknown): provider is SolanaProvider {
+  if (!isProviderLike(provider)) return false;
+  if (id === "phantom") return !!provider.isPhantom;
+  if (id === "solflare") return !!provider.isSolflare;
+  if (id === "backpack") return !!provider.isBackpack;
+  return false;
+}
+
+function allSolanaCandidates(): SolanaProvider[] {
+  const win = w() as any;
+  const candidates: unknown[] = [
+    win.phantom?.solana,
+    win.solflare,
+    win.backpack?.solana,
+    win.backpack,
+    win.solana,
+    ...(Array.isArray(win.solana?.providers) ? win.solana.providers : []),
+  ];
+  return candidates.filter(isProviderLike);
+}
+
+async function waitForProvider(id: WalletId, timeoutMs = 3_500): Promise<SolanaProvider | null> {
+  const immediate = providerFor(id);
+  if (immediate) return immediate;
+  if (typeof window === "undefined") return null;
+
+  window.dispatchEvent(new Event("wallet-standard:app-ready"));
+  window.dispatchEvent(new Event("solana#initialized"));
+  window.dispatchEvent(new Event("phantom#initialized"));
+
+  const startedAt = Date.now();
+  return await new Promise((resolve) => {
+    let settled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const finish = (provider: SolanaProvider | null) => {
+      if (settled) return;
+      settled = true;
+      if (timer) clearTimeout(timer);
+      if (interval) clearInterval(interval);
+      events.forEach((event) => window.removeEventListener(event, check));
+      resolve(provider);
+    };
+    const check = () => {
+      const provider = providerFor(id);
+      if (provider) finish(provider);
+      if (Date.now() - startedAt >= timeoutMs) finish(null);
+    };
+    const events = ["phantom#initialized", "solana#initialized", "wallet-standard:register-wallet", "wallet-standard:app-ready"];
+    events.forEach((event) => window.addEventListener(event, check));
+    interval = setInterval(check, 150);
+    timer = setTimeout(() => finish(null), timeoutMs);
+    check();
+  });
+}
+
+async function connectProvider(provider: SolanaProvider, id: WalletId) {
+  const label = walletLabel(id);
+  try {
+    const options = id === "phantom" ? { onlyIfTrusted: false } : undefined;
+    return await withWalletTimeout(provider.connect(options), label);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    const canRetryWithoutOptions = id === "phantom" && /argument|option|parameter|unexpected|unsupported/i.test(message);
+    if (!canRetryWithoutOptions) throw error;
+    return await withWalletTimeout(provider.connect(), label);
+  }
+}
+
+function connectedPublicKey(result: unknown, provider: SolanaProvider) {
+  return (result as any)?.publicKey?.toString?.() || provider.publicKey?.toString?.();
+}
+
 export async function connectWallet(id: WalletId): Promise<ConnectResult> {
   switch (id) {
     case "phantom": {
-      const p = providerFor("phantom");
-      if (!p) throw new Error("Phantom not installed");
-      const r = await withWalletTimeout(p.connect({ onlyIfTrusted: false }), "Phantom");
-      const publicKey = (r as any)?.publicKey?.toString?.() || p.publicKey?.toString?.();
+      const p = await waitForProvider("phantom");
+      if (!p) throw new Error("Phantom was not detected. Make sure the Phantom extension is installed, enabled, and allowed on this site, then refresh.");
+      const r = await connectProvider(p, "phantom");
+      const publicKey = connectedPublicKey(r, p);
       const address = assertValidSolanaAddress(publicKey, "Phantom");
       requestWalletBalanceRefresh(address);
       return { address, kind: "solana", provider: id };
     }
     case "solflare": {
-      const p = providerFor("solflare");
-      if (!p) throw new Error("Solflare not installed");
-      const r = await withWalletTimeout(p.connect(), "Solflare");
-      const address = assertValidSolanaAddress((r as any)?.publicKey?.toString?.() || p.publicKey?.toString(), "Solflare");
+      const p = await waitForProvider("solflare");
+      if (!p) throw new Error("Solflare was not detected. Make sure the extension is installed, enabled, and allowed on this site, then refresh.");
+      const r = await connectProvider(p, "solflare");
+      const address = assertValidSolanaAddress(connectedPublicKey(r, p), "Solflare");
       requestWalletBalanceRefresh(address);
       return { address, kind: "solana", provider: id };
     }
     case "backpack": {
-      const p = providerFor("backpack");
-      if (!p) throw new Error("Backpack not installed");
-      const r = await withWalletTimeout(p.connect(), "Backpack");
-      const publicKey = (r as any)?.publicKey?.toString?.() || p.publicKey?.toString?.();
+      const p = await waitForProvider("backpack");
+      if (!p) throw new Error("Backpack was not detected. Make sure the extension is installed, enabled, and allowed on this site, then refresh.");
+      const r = await connectProvider(p, "backpack");
+      const publicKey = connectedPublicKey(r, p);
       const address = assertValidSolanaAddress(publicKey, "Backpack");
       requestWalletBalanceRefresh(address);
       return { address, kind: "solana", provider: id };
@@ -201,22 +279,24 @@ function providerFor(id: WalletId): SolanaProvider | null {
   const win = w();
   if (id === "phantom") {
     const direct = win.phantom?.solana;
-    if (direct) return direct;
-    const solana = win.solana;
-    if (solana?.isPhantom) return solana;
+    if (isProviderLike(direct)) return direct;
+    const match = allSolanaCandidates().find((provider) => providerMatches("phantom", provider));
+    if (match) return match;
     return null;
   }
   if (id === "solflare") {
     const solflare = win.solflare;
-    if (solflare?.isSolflare) return solflare;
+    if (isProviderLike(solflare) && solflare.isSolflare) return solflare;
+    const match = allSolanaCandidates().find((provider) => providerMatches("solflare", provider));
+    if (match) return match;
     return null;
   }
   if (id === "backpack") {
     const backpack = win.backpack as any;
     const nested = backpack?.solana ?? backpack;
-    if (nested?.isBackpack) return nested;
-    const solana = win.solana;
-    if (solana?.isBackpack) return solana;
+    if (isProviderLike(nested) && nested.isBackpack) return nested;
+    const match = allSolanaCandidates().find((provider) => providerMatches("backpack", provider));
+    if (match) return match;
     return null;
   }
   return null;
