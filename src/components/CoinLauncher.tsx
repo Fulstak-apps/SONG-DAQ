@@ -58,6 +58,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [result, setResult] = useState<any>(null);
+  const [importMint, setImportMint] = useState("");
+  const [importBusy, setImportBusy] = useState(false);
+  const [importMessage, setImportMessage] = useState<string | null>(null);
   const [liquidityStage, setLiquidityStage] = useState<"idle" | "preparing" | "signing" | "confirming" | "live" | "failed">("idle");
   const [liquidityMessage, setLiquidityMessage] = useState<string | null>(null);
   const [launchStatus, setLaunchStatus] = useState<{
@@ -366,6 +369,55 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
     }
   }
 
+  async function importOpenAudioArtistCoin() {
+    if (!externalWalletAddress) {
+      setErr("Connect your external Solana wallet first so SONG·DAQ can attach the imported Artist Coin to the right artist account.");
+      return;
+    }
+    const mint = importMint.trim();
+    if (!mint) {
+      setErr("Paste the official Audius/Open Audio Artist Coin mint address first.");
+      return;
+    }
+    setImportBusy(true);
+    setErr(null);
+    setImportMessage("Checking the Audius coin list and preparing the SONG·DAQ market page.");
+    try {
+      if (audius) {
+        const link = await fetch("/api/audius/link", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ wallet: externalWalletAddress, walletType: "solana", profile: audius, role: "ARTIST" }),
+        });
+        if (!link.ok) {
+          const j = await link.json().catch(() => ({}));
+          console.warn("Could not persist Audius wallet link before Artist Coin import", j.error);
+        }
+      }
+      const imported = await api<any>("/api/open-audio/artist-coins/import", {
+        method: "POST",
+        json: {
+          wallet: externalWalletAddress,
+          mint,
+          artistName: audius?.name || audius?.handle,
+          symbol: audius?.handle || audius?.name,
+          audiusUrl: audius?.handle ? `https://audius.co/${audius.handle}` : undefined,
+        },
+      });
+      setResult(imported);
+      setLiquidityStage("live");
+      setLiquidityMessage("Imported from Audius/Open Audio. SONG·DAQ now has the coin page, trading context, portfolio record, royalty setup, and admin tracking.");
+      setImportMessage("Imported. Open the token detail page to manage the SONG·DAQ side.");
+      setStep(5);
+      onLaunched?.();
+    } catch (e: any) {
+      setErr(e?.message || "Could not import this Audius Artist Coin.");
+      setImportMessage(null);
+    } finally {
+      setImportBusy(false);
+    }
+  }
+
   if (!audius) {
     return (
       <div className="panel p-5 sm:p-10 text-center text-mute uppercase tracking-widest font-bold text-xs bg-panel2 border-dashed border-edge">
@@ -505,12 +557,46 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   <div className="min-w-0 space-y-3">
                     <div>
                       <div className="text-[10px] uppercase tracking-widest font-black text-mute">Audius Artist Profile</div>
-                      <div className="mt-1 text-2xl font-black text-ink truncate">{audius.name || audius.handle}</div>
+                      <div className="mt-1 text-2xl font-black text-ink whitespace-normal break-words">{audius.name || audius.handle}</div>
                       <div className="text-xs text-mute">@{audius.handle}</div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] uppercase tracking-widest font-bold">
                       <div className="rounded-xl border border-edge bg-panel2 p-3 text-mute">External wallet <span className="block font-mono text-ink normal-case tracking-normal truncate">{externalWalletAddress.slice(0, 6)}…{externalWalletAddress.slice(-4)}</span></div>
                       <div className="rounded-xl border border-edge bg-panel2 p-3 text-mute">Audio <span className="block text-amber">Unavailable until song attached</span></div>
+                    </div>
+                    <div className="rounded-2xl border border-violet/25 bg-violet/10 p-4">
+                      <div className="text-[10px] uppercase tracking-widest font-black text-violet">Option C: launch on Audius, run everything else on SONG·DAQ</div>
+                      <p className="mt-2 text-xs leading-relaxed text-violet/85">
+                        Until SONG·DAQ receives the official Open Audio Artist Coin launch config and Phantom review clears, launch the Artist Coin on Audius first. Paste the official mint here, and SONG·DAQ will build the coin page, chart, portfolio, royalty setup, admin tracking, and trading context around it.
+                      </p>
+                      <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
+                        <input
+                          value={importMint}
+                          onChange={(e) => setImportMint(e.target.value)}
+                          placeholder="Paste Audius Artist Coin mint address"
+                          className="min-w-0 rounded-xl border border-edge bg-panel px-3 py-3 font-mono text-xs text-ink outline-none transition focus:border-violet"
+                        />
+                        <button
+                          type="button"
+                          onClick={importOpenAudioArtistCoin}
+                          disabled={importBusy || !importMint.trim()}
+                          className="rounded-xl border border-violet/30 bg-violet/15 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-violet transition hover:bg-violet/25 disabled:cursor-not-allowed disabled:opacity-40"
+                        >
+                          {importBusy ? "Importing" : "Import"}
+                        </button>
+                      </div>
+                      <div className="mt-3 flex flex-wrap items-center gap-2">
+                        <a
+                          href="https://audius.co/clubs"
+                          target="_blank"
+                          rel="noreferrer"
+                          className="rounded-full border border-edge bg-panel px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-ink transition hover:border-violet/40 hover:text-violet"
+                        >
+                          Open Audius Coins
+                        </a>
+                        <span className="text-[10px] leading-relaxed text-mute">Official launch stays on Audius. SONG·DAQ imports the public mint after it exists.</span>
+                      </div>
+                      {importMessage && <div className="mt-3 text-xs font-bold text-neon">{importMessage}</div>}
                     </div>
                   </div>
                 </div>
@@ -856,7 +942,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   </div>
                   <div className="space-y-2">
                     <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Asset Verified</h3>
-                    <div className="text-mute text-sm font-medium">Successfully minted {result.song?.symbol} on Solana.</div>
+                    <div className="text-mute text-sm font-medium">
+                      {result.launch?.mintTx === "Imported from Audius/Open Audio"
+                        ? `Successfully imported ${result.song?.symbol} into SONG·DAQ.`
+                        : `Successfully minted ${result.song?.symbol} on Solana.`}
+                    </div>
                     <div className="text-mute font-mono text-[10px] break-all">{result.song?.mintAddress}</div>
                     {result.launch?.metadataUri && (
                       <div className="text-mute font-mono text-[10px] break-all">Metadata: {result.launch.metadataUri}</div>
