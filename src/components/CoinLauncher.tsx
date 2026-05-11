@@ -24,6 +24,53 @@ import { ChevronRight, ChevronLeft, Rocket, Music, Settings, BarChart3, ShieldCh
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
 type LaunchKind = "SONG" | "ARTIST";
 type PairAsset = "SOL" | "USDC" | "AUDIO";
+type LaunchPresetId = "fan" | "balanced" | "premium" | "custom";
+
+const LAUNCH_PRESETS: Array<{
+  id: Exclude<LaunchPresetId, "custom">;
+  title: string;
+  label: string;
+  artistBps: number;
+  liquidityBps: number;
+  maxWalletBps: number;
+  pairAmount: number;
+  lockDays: number;
+  note: string;
+}> = [
+  {
+    id: "fan",
+    title: "Fan First",
+    label: "30% artist / 45% liquidity",
+    artistBps: 3000,
+    liquidityBps: 4500,
+    maxWalletBps: 200,
+    pairAmount: 0.5,
+    lockDays: 180,
+    note: "Best for testing a new song with more supply in the public market.",
+  },
+  {
+    id: "balanced",
+    title: "Balanced",
+    label: "40% artist / 35% liquidity",
+    artistBps: 4000,
+    liquidityBps: 3500,
+    maxWalletBps: 200,
+    pairAmount: 1,
+    lockDays: 365,
+    note: "Recommended default: artist keeps a meaningful stake while fans get real market depth.",
+  },
+  {
+    id: "premium",
+    title: "Premium Launch",
+    label: "50% artist / 30% liquidity",
+    artistBps: 5000,
+    liquidityBps: 3000,
+    maxWalletBps: 100,
+    pairAmount: 3,
+    lockDays: 365,
+    note: "Stronger launch liquidity and tighter wallet cap for a more serious release.",
+  },
+];
 
 export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const { address, kind, provider, audius } = useSession();
@@ -48,6 +95,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const [royalty, setRoyalty] = useState<RoyaltyConfig>(DEFAULT_ROYALTY);
   const [maxWalletBps, setMaxWalletBps] = useState(200);
   const [artistAllocationBps, setArtistAllocationBps] = useState(5000);
+  const [launchPreset, setLaunchPreset] = useState<LaunchPresetId>("balanced");
   const [liquidityTokenAmount, setLiquidityTokenAmount] = useState(500_000_000);
   const [liquidityPairAmount, setLiquidityPairAmount] = useState(1);
   const [liquidityPairAsset, setLiquidityPairAsset] = useState<PairAsset>("SOL");
@@ -108,8 +156,26 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const canLaunchReview = canStep3 && liquidityValid && !allocationRisk;
   const impliedPrice = liquidityPairAmount / Math.max(liquidityTokenAmount, 1);
   const launchLiquidityRatio = liquidityTokenAmount / Math.max(supply, 1);
+  const reserveBps = Math.max(0, 10_000 - artistAllocationBps - Math.round(launchLiquidityRatio * 10_000));
   const projectedDepth = liquidityPairAmount >= 5 ? "Institutional" : liquidityPairAmount >= 1 ? "Healthy" : "Thin";
   const launchImpact = liquidityPairAmount > 0 ? Math.min(25, (1 / liquidityPairAmount) * 2.5) : 25;
+
+  function applyLaunchPreset(preset: typeof LAUNCH_PRESETS[number]) {
+    setLaunchPreset(preset.id);
+    setArtistAllocationBps(preset.artistBps);
+    setMaxWalletBps(preset.maxWalletBps);
+    setLiquidityTokenAmount(Math.round(supply * (preset.liquidityBps / 10_000)));
+    setLiquidityPairAmount(preset.pairAmount);
+    setLiquidityLockDays(preset.lockDays);
+    if (liquidityPairAsset === "AUDIO") setLiquidityPairAsset("SOL");
+  }
+
+  function markCustom<T extends number>(setter: (value: T) => void) {
+    return (value: T) => {
+      setLaunchPreset("custom");
+      setter(value);
+    };
+  }
 
   const previewSeries = useMemo(() => {
     const arr: { x: number; y: number }[] = [];
@@ -135,6 +201,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
 
   useEffect(() => {
     if (launchKind !== "ARTIST") return;
+    setLaunchPreset("balanced");
     setSupply(1_000_000_000);
     setBasePrice(0);
     setCurveSlope(0);
@@ -624,11 +691,58 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     </div>
                   ) : (
                     <>
-                      <Field label="Total Issuance" value={supply} onChange={setSupply} step={1000} min={1000} unit="Tokens" />
-                      <Field label="Initial Curve Price" value={basePrice} onChange={setBasePrice} step={0.0001} min={0} unit="SOL" />
-                      <Field label="Curve Momentum" value={curveSlope} onChange={setCurveSlope} step={0.0000001} min={0} unit="Slope" />
-                      <Field label="Max Wallet Cap" value={maxWalletBps / 100} onChange={(n) => setMaxWalletBps(Math.round(n * 100))} step={0.25} min={0.1} unit="% of supply" />
-                      <Field label="Artist Vesting Allocation" value={artistAllocationBps / 100} onChange={(n) => setArtistAllocationBps(Math.round(n * 100))} step={0.25} min={0} unit="% of supply" />
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between gap-3 px-1">
+                          <div>
+                            <div className="text-[10px] uppercase tracking-widest font-black text-mute">Automatic Launch Settings</div>
+                            <div className="mt-1 text-xs text-mute">Choose how much the artist holds, how much opens the market, and how tight the wallet cap is.</div>
+                          </div>
+                          <span className="hidden sm:inline-flex rounded-full border border-edge bg-panel px-2.5 py-1 text-[8px] uppercase tracking-widest font-black text-mute">
+                            {launchPreset === "custom" ? "Custom" : "Preset"}
+                          </span>
+                        </div>
+                        <div className="grid gap-2 md:grid-cols-2 xl:grid-cols-4">
+                          {LAUNCH_PRESETS.map((preset) => {
+                            const active = launchPreset === preset.id;
+                            return (
+                              <button
+                                type="button"
+                                key={preset.id}
+                                onClick={() => applyLaunchPreset(preset)}
+                                className={`rounded-2xl border p-3 text-left transition active:scale-[0.99] ${
+                                  active ? "border-neon/35 bg-neon/10 shadow-[0_0_18px_rgba(0,229,114,0.12)]" : "border-edge bg-panel hover:border-white/20 hover:bg-panel2"
+                                }`}
+                              >
+                                <div className={`text-[10px] uppercase tracking-widest font-black ${active ? "text-neon" : "text-ink"}`}>{preset.title}</div>
+                                <div className="mt-1 font-mono text-[11px] font-black text-white">{preset.label}</div>
+                                <p className="mt-2 text-[10px] leading-relaxed text-mute">{preset.note}</p>
+                              </button>
+                            );
+                          })}
+                          <button
+                            type="button"
+                            onClick={() => setLaunchPreset("custom")}
+                            className={`rounded-2xl border p-3 text-left transition active:scale-[0.99] ${
+                              launchPreset === "custom" ? "border-violet/40 bg-violet/10 text-violet" : "border-edge bg-panel hover:border-white/20 hover:bg-panel2"
+                            }`}
+                          >
+                            <div className="text-[10px] uppercase tracking-widest font-black">Custom</div>
+                            <div className="mt-1 font-mono text-[11px] font-black text-white">Manual tokenomics</div>
+                            <p className="mt-2 text-[10px] leading-relaxed text-mute">Fine-tune every number yourself.</p>
+                          </button>
+                        </div>
+                        <div className="grid gap-2 md:grid-cols-4">
+                          <LaunchMetric k="Artist holds" v={`${(artistAllocationBps / 100).toFixed(0)}%`} tone="violet" />
+                          <LaunchMetric k="Liquidity / public" v={`${(launchLiquidityRatio * 100).toFixed(0)}%`} tone="neon" />
+                          <LaunchMetric k="Reserve" v={`${(reserveBps / 100).toFixed(0)}%`} />
+                          <LaunchMetric k="Wallet cap" v={`${(maxWalletBps / 100).toFixed(2)}%`} />
+                        </div>
+                      </div>
+                      <Field label="Total Issuance" value={supply} onChange={markCustom(setSupply)} step={1000} min={1000} unit="Tokens" />
+                      <Field label="Initial Curve Price" value={basePrice} onChange={markCustom(setBasePrice)} step={0.0001} min={0} unit="SOL" />
+                      <Field label="Curve Momentum" value={curveSlope} onChange={markCustom(setCurveSlope)} step={0.0000001} min={0} unit="Slope" />
+                      <Field label="Max Wallet Cap" value={maxWalletBps / 100} onChange={(n) => { setLaunchPreset("custom"); setMaxWalletBps(Math.round(n * 100)); }} step={0.25} min={0.1} unit="% of supply" />
+                      <Field label="Artist Hold / Vesting Allocation" value={artistAllocationBps / 100} onChange={(n) => { setLaunchPreset("custom"); setArtistAllocationBps(Math.round(n * 100)); }} step={0.25} min={0} unit="% of supply" />
                     </>
                   )}
                   {allocationRisk && (
@@ -739,21 +853,21 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   <LaunchMetric k="Graduation target" v="1M AUDIO" />
                   <LaunchMetric k="Locked AMM liquidity" v="20%" />
                   <LaunchMetric k="Reward pool" v="5%" tone="violet" />
-                  <Field label="Optional creator first buy" value={liquidityPairAmount} onChange={setLiquidityPairAmount} step={1} min={0} unit="$AUDIO" />
+                  <Field label="Optional creator first buy" value={liquidityPairAmount} onChange={markCustom(setLiquidityPairAmount)} step={1} min={0} unit="$AUDIO" />
                 </div>
               ) : (
                 <div className="grid gap-5 lg:grid-cols-2">
-                  <Field label="Token amount reserved for liquidity" value={liquidityTokenAmount} onChange={setLiquidityTokenAmount} step={1000} min={1} unit="Tokens" />
-                  <Field label={`Paired asset amount (${liquidityPairAsset})`} value={liquidityPairAmount} onChange={setLiquidityPairAmount} step={0.1} min={0.01} unit={liquidityPairAsset} />
+                  <Field label="Token amount reserved for liquidity" value={liquidityTokenAmount} onChange={markCustom(setLiquidityTokenAmount)} step={1000} min={1} unit="Tokens" />
+                  <Field label={`Paired asset amount (${liquidityPairAsset})`} value={liquidityPairAmount} onChange={markCustom(setLiquidityPairAmount)} step={0.1} min={0.01} unit={liquidityPairAsset} />
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1">Paired Asset</label>
-                    <select value={liquidityPairAsset} onChange={(e) => setLiquidityPairAsset(e.target.value as PairAsset)} className="w-full bg-panel border border-edge rounded-xl px-4 py-3 text-sm text-ink">
+                    <select value={liquidityPairAsset} onChange={(e) => { setLaunchPreset("custom"); setLiquidityPairAsset(e.target.value as PairAsset); }} className="w-full bg-panel border border-edge rounded-xl px-4 py-3 text-sm text-ink">
                       <option value="SOL">SOL</option>
                       <option value="USDC">USDC</option>
                       <option value="AUDIO">AUDIO</option>
                     </select>
                   </div>
-                  <Field label="Liquidity Lockup" value={liquidityLockDays} onChange={setLiquidityLockDays} step={30} min={30} unit="Days" />
+                  <Field label="Liquidity Lockup" value={liquidityLockDays} onChange={markCustom(setLiquidityLockDays)} step={30} min={30} unit="Days" />
                 </div>
               )}
               <div className="panel p-5 bg-panel border-edge rounded-2xl space-y-3">
