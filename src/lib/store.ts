@@ -27,7 +27,7 @@ export interface AudiusProfile {
   audioBalance?: number;
 }
 
-/* ── Persisted session (wallet + audius identity) ─────────────── */
+/* ── Session (wallet + Audius identity, intentionally not persisted) ── */
 interface SessionState {
   address: string | null;
   kind: WalletKind | null;
@@ -39,32 +39,24 @@ interface SessionState {
 }
 
 export const useSession = create<SessionState>()(
-  persist(
-    (set) => ({
-      address: null,
-      kind: null,
-      provider: null,
-      audius: null,
-      setSession: (s) => set((prev) => ({ ...prev, ...s })),
-      clear: () => set({ address: null, kind: null, provider: null, audius: null }),
-      clearAudius: () => set({ address: null, kind: null, provider: null, audius: null }),
+  (set) => ({
+    address: null,
+    kind: null,
+    provider: null,
+    audius: null,
+    setSession: (s) => set((prev) => {
+      const nextAddress = isPersistedSolanaAddress(s.address) ? s.address : s.address === null ? null : prev.address;
+      return {
+        ...prev,
+        ...s,
+        address: nextAddress,
+        kind: nextAddress ? "solana" : null,
+        provider: nextAddress ? (s.provider ?? prev.provider) : null,
+      };
     }),
-    {
-      name: "songdaq-session",
-      version: 2,
-      merge: (persisted, current) => {
-        const state = (persisted as any) ?? {};
-        const validWallet = state.kind === "solana" && isPersistedSolanaAddress(state.address);
-        return {
-          ...current,
-          ...state,
-          address: validWallet ? state.address : null,
-          kind: validWallet ? "solana" : null,
-          provider: validWallet ? state.provider : null,
-        };
-      },
-    },
-  ),
+    clear: () => set({ address: null, kind: null, provider: null, audius: null }),
+    clearAudius: () => set({ address: null, kind: null, provider: null, audius: null }),
+  }),
 );
 
 /* ── Ephemeral UI state (never persisted) ─────────────────────── */

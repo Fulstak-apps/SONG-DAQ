@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { useState, useEffect } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Sun, Moon, Volume2, VolumeX, Search } from "lucide-react";
 import { WalletBalance } from "./WalletBalance";
@@ -33,6 +33,7 @@ const TIER_COLORS: Record<string, string> = {
 
 export function Navbar() {
   const path = usePathname();
+  const router = useRouter();
   const { address, provider, audius, setSession } = useSession();
   const { loginModalOpen, openLoginModal, closeLoginModal, userMode, setUserMode, theme, setTheme, soundEnabled, toggleSound } = useUI();
   const { enabled: paperMode, setEnabled: setPaperMode } = usePaperTrading();
@@ -102,6 +103,11 @@ export function Navbar() {
   const isDarnellAudius = audius?.name?.trim().toLowerCase() === "darnell williams";
   const navItems = role === "ADMIN" || adminSession || isDarnellAudius ? [...NAV, { href: "/admin", label: "ADMIN", icon: "⚙" }] : NAV;
   const hasSeparateExternalWallet = !!(address && provider !== "audius");
+  const navigate = (href: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
+    event.preventDefault();
+    router.push(href);
+  };
 
   return (
     <header className="sticky top-0 z-40 border-b border-edge transition-colors duration-500">
@@ -141,6 +147,8 @@ export function Navbar() {
                 <Link
                   key={n.href}
                   href={n.href}
+                  prefetch={false}
+                  onClick={navigate(n.href)}
                   className={`relative shrink-0 px-1.5 lg:px-2 py-2 rounded-xl text-[8px] lg:text-[9px] xl:text-[10px] font-bold tracking-widest transition-all duration-300 ${
                     active
                       ? "text-ink"
@@ -229,6 +237,8 @@ export function Navbar() {
               <Link
                 key={n.href}
                 href={n.href}
+                prefetch={false}
+                onClick={navigate(n.href)}
                 className={`shrink-0 rounded-xl border px-3 py-2 text-[9px] font-black uppercase tracking-widest transition ${
                   active
                     ? "border-neon/25 bg-neon/10 text-neon"
