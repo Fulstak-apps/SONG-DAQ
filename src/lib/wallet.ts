@@ -107,6 +107,8 @@ export const WALLETS: WalletDescriptor[] = [
   },
 ];
 
+const activeConnects: Partial<Record<WalletId, Promise<ConnectResult>>> = {};
+
 function assertValidSolanaAddress(address: string | null | undefined, label: string) {
   if (!address) throw new Error(`${label} did not return a public key`);
   try {
@@ -132,6 +134,36 @@ async function withWalletTimeout<T>(promise: Promise<T>, label: string, timeoutM
 
 function walletLabel(id: WalletId) {
   return WALLETS.find((wallet) => wallet.id === id)?.label || "Wallet";
+}
+
+function wait(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function walletErrorMessage(error: unknown) {
+  const raw = error as any;
+  return raw?.message || raw?.error?.message || raw?.reason || String(error || "Unknown wallet error");
+}
+
+function walletErrorCode(error: unknown) {
+  const raw = error as any;
+  return raw?.code ?? raw?.error?.code ?? raw?.data?.code ?? null;
+}
+
+function normalizeWalletError(error: unknown, id: WalletId) {
+  const label = walletLabel(id);
+  const message = walletErrorMessage(error);
+  const code = walletErrorCode(error);
+  if (code === 4001 || /reject|denied|cancel/i.test(message)) {
+    return new Error(`${label} connection was cancelled. Open the wallet popup again when you are ready to connect.`);
+  }
+  if (/already processing|already pending|request pending|pending request/i.test(message)) {
+    return new Error(`${label} already has a connection request open. Close any wallet popup, unlock ${label}, then try again.`);
+  }
+  if (/unexpected|internal|unknown/i.test(message)) {
+    return new Error(`${label} returned an unexpected connection error. Close any wallet popup, unlock ${label}, refresh this page, and try again.`);
+  }
+  return error instanceof Error ? error : new Error(message);
 }
 
 export function requestWalletBalanceRefresh(address?: string | null) {
@@ -181,7 +213,7 @@ export function walletDiagnosticsSnapshot() {
 
 export async function reportWalletError(errorType: string, error: unknown, walletId?: WalletId, walletAddress?: string | null) {
   if (typeof window === "undefined") return;
-  const message = error instanceof Error ? error.message : String(error || "Unknown wallet error");
+  const message = walletErrorMessage(error);
   const stack = error instanceof Error ? error.stack : undefined;
   try {
     await fetch("/api/error-log", {
@@ -192,7 +224,7 @@ export async function reportWalletError(errorType: string, error: unknown, walle
         walletAddress,
         page: window.location.href,
         message: `${walletId ? `${walletId}: ` : ""}${message}`,
-        stack: JSON.stringify({ stack, diagnostics: walletDiagnosticsSnapshot() }, null, 2),
+        stack: JSON.stringify({ stack, code: walletErrorCode(error), raw: error, diagnostics: walletDiagnosticsSnapshot() }, null, 2),
       }),
     });
   } catch {
@@ -281,13 +313,23 @@ async function connectProvider(provider: SolanaProvider, id: WalletId) {
   const existing = connectedPublicKey(null, provider);
   if (existing) return { publicKey: { toString: () => existing } };
 
+  const requestConnect = (options?: Record<string, unknown>) => withWalletTimeout(provider.connect(options), label);
+
   try {
-    return await withWalletTimeout(provider.connect(), label);
+    if (id === "phantom") {
+      return await requestConnect({ onlyIfTrusted: false });
+    }
+    return await requestConnect();
   } catch (error) {
-    const message = error instanceof Error ? error.message : String(error);
-    const canRetryWithOptions = id === "phantom" && /argument|option|parameter|unexpected|unsupported/i.test(message);
-    if (!canRetryWithOptions) throw error;
-    return await withWalletTimeout(provider.connect({ onlyIfTrusted: false }), label);
+    const message = walletErrorMessage(error);
+    const canRetryWithoutOptions = id === "phantom" && !/reject|denied|cancel|already processing|already pending|request pending|pending request/i.test(message) && /argument|option|parameter|unexpected|unsupported|internal|unknown/i.test(message);
+    if (!canRetryWithoutOptions) throw normalizeWalletError(error, id);
+    await wait(350);
+    try {
+      return await requestConnect();
+    } catch (retryError) {
+      throw normalizeWalletError(retryError, id);
+    }
   }
 }
 
@@ -307,7 +349,7 @@ async function waitForConnectedPublicKey(result: unknown, provider: SolanaProvid
   throw new Error(`${label} approved the connection but did not return a public key. Unlock the wallet, refresh, and try again.`);
 }
 
-export async function connectWallet(id: WalletId): Promise<ConnectResult> {
+async function performConnectWallet(id: WalletId): Promise<ConnectResult> {
   switch (id) {
     case "phantom": {
       const p = await waitForProvider("phantom");
@@ -337,6 +379,18 @@ export async function connectWallet(id: WalletId): Promise<ConnectResult> {
     }
     default:
       throw new Error("Unknown wallet");
+  }
+}
+
+export async function connectWallet(id: WalletId): Promise<ConnectResult> {
+  const existing = activeConnects[id];
+  if (existing) return existing;
+  const task = performConnectWallet(id);
+  activeConnects[id] = task;
+  try {
+    return await task;
+  } finally {
+    delete activeConnects[id];
   }
 }
 
