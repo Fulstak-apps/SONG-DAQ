@@ -5,6 +5,7 @@ import { useSession, useUI } from "@/lib/store";
 import { WALLETS, connectWallet, disconnectWallet, type WalletId } from "@/lib/wallet";
 import { safeJson } from "@/lib/safeJson";
 import { Loader2, Wallet, LogOut, ExternalLink } from "lucide-react";
+import { toast } from "@/lib/toast";
 
 function shortAddr(a: string) {
   if (!a) return "";
@@ -28,6 +29,7 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
     setErr(null);
     try {
       const r = await connectWallet(id);
+      setSession({ address: r.address, kind: r.kind, provider: r.provider });
       if (audius) {
         const link = await fetch("/api/audius/link", {
           method: "POST",
@@ -41,10 +43,14 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
         });
         if (!link.ok) {
           const j = await safeJson(link);
-          throw new Error((j as any).error || "External wallet connected, but SONG·DAQ could not link it to your Audius artist account.");
+          toast.info("Wallet connected", (j as any).error || "Artist profile link is pending until the database is reachable.");
+        } else {
+          const j = await safeJson(link);
+          if ((j as any)?.linkPending) {
+            toast.info("Wallet connected", "Artist profile link is pending until the database is reachable.");
+          }
         }
       }
-      setSession({ address: r.address, kind: r.kind, provider: r.provider });
       setOpen(false);
     } catch (e: any) {
       await disconnectWallet(id).catch(() => {});

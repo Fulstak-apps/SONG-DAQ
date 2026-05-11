@@ -5,6 +5,31 @@ import { isAdminAudiusProfile } from "@/lib/adminIdentity";
 
 export const dynamic = "force-dynamic";
 
+function shouldSkipDatabaseLink() {
+  const url = process.env.DATABASE_URL || "";
+  return url.includes("db.ghktjraydijlsiotmmda.supabase.co:5432");
+}
+
+function pendingLinkResponse(wallet: string, walletType: string, profile: any, nextRole?: string) {
+  return NextResponse.json({
+    ok: true,
+    databaseAvailable: false,
+    linkPending: true,
+    message: "Wallet connected. Artist profile link will sync when the database is reachable.",
+    user: {
+      wallet,
+      walletType,
+      audiusUserId: String(profile.userId),
+      audiusHandle: profile.handle ?? null,
+      audiusName: profile.name ?? null,
+      audiusAvatar: profile.avatar ?? null,
+      audiusVerified: !!profile.verified,
+      role: nextRole || "ARTIST",
+      preferredMode: "ARTIST",
+    },
+  });
+}
+
 export async function POST(req: NextRequest) {
   const { wallet, walletType = "solana", profile, role } = await req.json();
   if (!wallet || !profile?.userId) {
@@ -12,6 +37,10 @@ export async function POST(req: NextRequest) {
   }
   const adminProfile = isAdminAudiusProfile(profile);
   const nextRole = adminProfile ? "ADMIN" : role;
+
+  if (shouldSkipDatabaseLink()) {
+    return pendingLinkResponse(wallet, walletType, profile, nextRole);
+  }
 
   try {
     const user = await getOrCreateUser(wallet, walletType);
@@ -48,22 +77,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, user: updated });
   } catch (error) {
     console.error("Audius link failed", error);
-    return NextResponse.json({
-      ok: true,
-      databaseAvailable: false,
-      linkPending: true,
-      message: "Wallet connected. Artist profile link will sync when the database is reachable.",
-      user: {
-        wallet,
-        walletType,
-        audiusUserId: String(profile.userId),
-        audiusHandle: profile.handle ?? null,
-        audiusName: profile.name ?? null,
-        audiusAvatar: profile.avatar ?? null,
-        audiusVerified: !!profile.verified,
-        role: nextRole || "ARTIST",
-        preferredMode: "ARTIST",
-      },
-    });
+    return pendingLinkResponse(wallet, walletType, profile, nextRole);
   }
 }

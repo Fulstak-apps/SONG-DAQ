@@ -6,6 +6,7 @@ import { WALLETS, connectWallet, disconnectWallet, type WalletId } from "@/lib/w
 import { redirectToAudiusLogin } from "@/lib/audiusOAuth";
 import { safeJson } from "@/lib/safeJson";
 import { Music, TrendingUp, ShieldCheck, ChevronLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
+import { toast } from "@/lib/toast";
 
 type Step = "ROLE" | "WALLET" | "AUDIUS" | "ARTIST_READY" | "DONE";
 type Role = "ARTIST" | "INVESTOR";
@@ -83,6 +84,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     setErr(null);
     try {
       const r = await connectWallet(id);
+      setSession({ address: r.address, kind: r.kind, provider: r.provider });
       if (role === "ARTIST" && audius) {
         const link = await fetchWithTimeout("/api/audius/link", {
           method: "POST",
@@ -91,13 +93,17 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
         });
         if (!link.ok) {
           const j = await safeJson(link);
-          throw new Error((j as any).error || "Could not link external wallet to your artist account.");
+          toast.info("Wallet connected", (j as any).error || "Artist profile link is pending until the database is reachable.");
+        } else {
+          const j = await safeJson(link);
+          if ((j as any)?.linkPending) {
+            toast.info("Wallet connected", "Artist profile link is pending until the database is reachable.");
+          }
         }
-        setSession({ address: r.address, kind: r.kind, provider: r.provider });
         setUserMode("ARTIST");
         setStep("DONE");
       } else {
-        setSession({ address: r.address, kind: r.kind, provider: r.provider });
+        setStep("DONE");
       }
     } catch (e: any) {
       await disconnectWallet(id).catch(() => {});

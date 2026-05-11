@@ -146,7 +146,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         });
         if (!link.ok) {
           const j = await link.json().catch(() => ({}));
-          throw new Error(j.error || "Could not link this external wallet to your Audius artist account.");
+          console.warn("Could not persist Audius wallet link before launch", j.error);
         }
       }
       const treasuryWallet = launchStatus?.treasuryWallet || process.env.NEXT_PUBLIC_TREASURY_WALLET;

@@ -167,7 +167,7 @@ function providerFor(id: WalletId): SolanaProvider | null {
   const win = w();
   if (id === "phantom") {
     const direct = win.phantom?.solana;
-    if (direct?.isPhantom) return direct;
+    if (direct) return direct;
     const solana = win.solana;
     if (solana?.isPhantom) return solana;
     return null;
