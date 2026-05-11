@@ -500,13 +500,13 @@ export function PriceChart({
           </div>
 
           <div
-            className="absolute -translate-x-1/2 rounded-full border border-white/15 bg-black/55 px-2 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-[#58d64f] backdrop-blur-sm"
+            className="absolute hidden -translate-x-1/2 rounded-full border border-white/15 bg-black/55 px-2 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-[#58d64f] backdrop-blur-sm sm:block"
             style={{ left: `${Math.min(78, xPctFor(highPoint.t))}%`, top: `${Math.max(6, yPctFor(highPoint.displayHigh) - 7)}%` }}
           >
             High {fmtPrice(highPoint.displayHigh)}
           </div>
           <div
-            className="absolute -translate-x-1/2 rounded-full border border-white/15 bg-black/55 px-2 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-white/70 backdrop-blur-sm"
+            className="absolute hidden -translate-x-1/2 rounded-full border border-white/15 bg-black/55 px-2 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-white/70 backdrop-blur-sm sm:block"
             style={{ left: `${Math.min(78, xPctFor(lowPoint.t))}%`, top: `${Math.min(88, yPctFor(lowPoint.displayLow) + 4)}%` }}
           >
             Low {fmtPrice(lowPoint.displayLow)}

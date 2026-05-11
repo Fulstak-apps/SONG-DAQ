@@ -42,12 +42,12 @@ export default function RootLayout({
         <ThemeProvider>
           <Navbar />
           <MarketTicker />
-          <main className="max-w-[1440px] mx-auto px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8 relative">
+          <main className="mx-auto w-full max-w-[1680px] px-3 py-4 sm:px-4 sm:py-6 md:px-6 md:py-8 2xl:px-8 relative">
             {/* Ambient page glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] bg-gradient-to-b from-neon/5 to-transparent pointer-events-none rounded-full blur-3xl" />
             {children}
           </main>
-          <footer className="max-w-[1440px] mx-auto px-3 sm:px-4 md:px-6 pt-10 md:pt-16 pb-28 relative z-10">
+          <footer className="mx-auto w-full max-w-[1680px] px-3 pt-10 sm:px-4 md:px-6 md:pt-16 2xl:px-8 pb-28 relative z-10">
             <div className="border-t border-edge pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-neon shadow-[0_0_6px_rgba(0,229,114,0.5)] animate-pulseDot" />

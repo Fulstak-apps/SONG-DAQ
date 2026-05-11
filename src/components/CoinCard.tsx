@@ -79,7 +79,7 @@ export function CoinCard({
     <motion.div
       whileHover={{ y: -4 }}
       transition={{ type: "spring", stiffness: 400, damping: 25 }}
-      className={`panel panel-hover p-5 flex flex-col gap-4 w-full h-[360px] text-left cursor-pointer relative overflow-hidden grain ${tier.glow}`}
+      className={`panel panel-hover flex min-h-[360px] w-full flex-col gap-4 p-4 text-left cursor-pointer relative overflow-hidden grain sm:p-5 xl:min-h-[372px] ${tier.glow}`}
       onClick={() => onOpen ? onOpen(c) : router.push(`/coin/${c.mint}`)}
     >
       {/* Ambient glow */}
@@ -94,8 +94,8 @@ export function CoinCard({
             <div className="absolute inset-0 bg-gradient-to-tr from-black/30 via-transparent to-white/5 pointer-events-none" />
           </div>
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-base text-ink tracking-tight truncate">${c.ticker}</span>
+            <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+              <span className="font-bold text-base text-ink tracking-tight break-words">${c.ticker}</span>
               {tier.label && (
                 <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border ${tier.color}`}>
                   {tier.label}
@@ -108,7 +108,7 @@ export function CoinCard({
               )}
               <RiskBadge coin={c as any} compact />
             </div>
-            <div className="text-[10px] text-mute truncate uppercase tracking-widest font-bold mt-0.5">
+            <div className="text-[10px] text-mute line-clamp-2 uppercase tracking-widest font-bold mt-0.5">
               {c.artist_name ? <>{c.artist_name}{c.artist_handle ? ` · @${c.artist_handle}` : ""}</> : c.name}
             </div>
           </div>

@@ -230,7 +230,7 @@ export function CoinPreviewModal({
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 12, scale: 0.96 }}
           transition={{ type: "spring", stiffness: 360, damping: 30 }}
-          className="w-full max-w-full sm:w-[1040px] max-h-[calc(100dvh-1rem)] sm:max-h-[92vh] overflow-y-auto overscroll-contain rounded-2xl sm:rounded-3xl border border-edge bg-panel text-ink shadow-[0_24px_90px_rgba(0,0,0,0.62)] grain"
+          className="w-full max-w-full sm:w-[min(1220px,calc(100vw-2rem))] max-h-[calc(100dvh-1rem)] sm:max-h-[92vh] overflow-y-auto overscroll-contain rounded-2xl sm:rounded-3xl border border-edge bg-panel text-ink shadow-[0_24px_90px_rgba(0,0,0,0.62)] grain"
           onClick={(e) => e.stopPropagation()}
           onWheel={(e) => e.stopPropagation()}
         >
@@ -273,7 +273,7 @@ export function CoinPreviewModal({
             </button>
           </header>
 
-          <section className="relative grid gap-0 lg:grid-cols-[minmax(0,1fr)_360px]">
+          <section className="relative grid gap-0 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]">
             <div className="min-w-0 border-b border-edge p-4 sm:p-5 lg:border-b-0 lg:border-r">
                 <div className="mb-3 flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
                 <div className="text-[10px] uppercase tracking-widest font-black text-mute">
@@ -308,7 +308,7 @@ export function CoinPreviewModal({
                   </div>
                 </div>
               </div>
-              <div className="h-[340px] overflow-hidden rounded-2xl border border-edge bg-panel2/60 p-2 sm:h-[360px]">
+              <div className="h-[320px] overflow-hidden rounded-2xl border border-edge bg-panel2/60 p-2 sm:h-[360px] lg:h-[390px]">
                 <PriceChart
                   points={chartPoints}
                   quote="USD"

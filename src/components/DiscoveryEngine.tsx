@@ -61,7 +61,7 @@ function Segmented<T extends string>({
             <button
               key={o.id}
               onClick={() => onChange(o.id)}
-              className={`relative z-10 flex-1 sm:flex-none min-w-[116px] px-3 sm:px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 shrink-0 whitespace-nowrap ${
+            className={`relative z-10 flex-1 sm:flex-none min-w-[92px] sm:min-w-[116px] px-3 sm:px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 shrink-0 whitespace-nowrap ${
                 active ? "text-ink" : "text-mute hover:text-ink"
               }`}
             >
@@ -388,7 +388,7 @@ export default function DiscoveryEngine() {
   return (
     <div className="space-y-5">
       {/* ─── Hero Section ──────────────────────────────────── */}
-      <section className="relative rounded-2xl md:rounded-3xl overflow-hidden panel-elevated p-5 sm:p-7 md:p-14 flex flex-col md:flex-row gap-5 md:gap-8 items-center justify-between grain">
+      <section className="relative rounded-2xl md:rounded-3xl overflow-hidden panel-elevated p-5 sm:p-7 md:p-12 2xl:p-14 flex flex-col md:flex-row gap-5 md:gap-8 2xl:gap-12 items-center justify-between grain">
         {/* Ambient lighting */}
         <div className="orb orb-neon w-[500px] h-[500px] -top-40 -right-40 opacity-40" />
         <div className="orb orb-violet w-[400px] h-[400px] -bottom-40 -left-40 opacity-30" style={{ animationDelay: "-10s" }} />
@@ -446,7 +446,7 @@ export default function DiscoveryEngine() {
           </div>
         </div>
 
-        <div className="hidden lg:block relative z-10 w-[286px] shrink-0">
+        <div className="hidden lg:block relative z-10 w-[286px] xl:w-[340px] 2xl:w-[380px] shrink-0">
           <div className="panel p-5 rounded-[28px] border border-edge bg-panel2/70 backdrop-blur-3xl grain overflow-hidden relative">
             <div className="absolute inset-x-0 bottom-0 h-16 wave-line opacity-20" />
             <div className="absolute -right-14 -top-14 h-32 w-32 rounded-full bg-neon/10 blur-3xl" />
@@ -680,7 +680,7 @@ export default function DiscoveryEngine() {
               key="coins-list"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="grid xl:grid-cols-[1fr_420px] gap-3"
+              className="grid xl:grid-cols-[minmax(0,1fr)_420px] 2xl:grid-cols-[minmax(0,1fr)_480px] gap-3 2xl:gap-4"
             >
               <div className="min-w-0 flex flex-col gap-1">
                 <div className="hidden md:flex px-6 py-2 items-center gap-4 text-[9px] font-black uppercase tracking-[0.2em] text-mute border-b border-edge">
@@ -710,7 +710,7 @@ export default function DiscoveryEngine() {
               key="coins-grid"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"
+              className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 2xl:gap-4"
             >
               {filteredCoins.map((c, i) => (
                 <motion.div
@@ -728,7 +728,7 @@ export default function DiscoveryEngine() {
                 </motion.div>
               ))}
               {!filteredCoins.length && (
-                <div className="md:col-span-2 xl:col-span-3 panel-elevated p-12 text-center grain">
+                <div className="md:col-span-2 xl:col-span-3 2xl:col-span-4 panel-elevated p-12 text-center grain">
                   {showWatchlistOnly ? (
                     <>
                       <Star size={32} className="text-mute mx-auto mb-3" />
@@ -770,7 +770,7 @@ export default function DiscoveryEngine() {
             key="songs-grid"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3"
+            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 2xl:gap-4"
           >
             {filteredSongs.map((s, i) => (
               <motion.div

@@ -84,7 +84,7 @@ export function GlobalPlayer() {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 border-t border-edge bg-bg/95 backdrop-blur-2xl px-4 py-3 shadow-[0_-20px_60px_rgba(0,0,0,0.35)]">
-      <div className="max-w-[1440px] mx-auto flex items-center gap-3">
+      <div className="mx-auto flex w-full max-w-[1680px] items-center gap-3">
         <div className="relative w-11 h-11 rounded-lg overflow-hidden border border-edge bg-panel2 shrink-0">
           <SafeImage src={current.artwork} alt={current.title} fill sizes="44px" fallback={current.title} className="object-cover" />
         </div>

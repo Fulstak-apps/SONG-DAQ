@@ -83,6 +83,7 @@ html, body {
   font-family: var(--font-sans);
   transition: background-color 0.4s var(--ease-out-expo), color 0.3s var(--ease);
   overflow-x: hidden;
+  scroll-behavior: smooth;
 }
 
 *, *::before, *::after {
@@ -91,6 +92,21 @@ html, body {
 
 img, video, canvas, svg {
   max-width: 100%;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (min-width: 1536px) {
+  .panel,
+  .panel-elevated {
+    border-radius: 1.35rem;
+  }
 }
 
 @media (max-width: 640px) {
@@ -105,6 +121,21 @@ img, video, canvas, svg {
   .intel-drift {
     animation: none !important;
     transform: none !important;
+  }
+
+  .panel-hover:hover {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
   }
 }
 

@@ -91,7 +91,7 @@ export function MarketTicker() {
         {doubled.map((t, i) => {
           if (t.kind === "coin") {
             return (
-              <Link key={`c${i}`} href={t.href} className="mx-0.5 flex w-[196px] sm:w-[268px] shrink-0 items-center gap-1 overflow-hidden rounded-lg px-2 text-[10px] transition hover:bg-white/[0.05] sm:gap-1.5 sm:px-2.5 sm:text-[11px] group">
+              <Link key={`c${i}`} href={t.href} className="mx-0.5 flex w-[188px] sm:w-[248px] shrink-0 items-center gap-1 overflow-hidden rounded-lg px-2 text-[10px] transition hover:bg-white/[0.05] sm:gap-1.5 sm:px-2.5 sm:text-[11px] group">
                 <span className="font-mono font-black text-ink group-hover:text-neon transition truncate max-w-[76px] sm:max-w-[110px]">${t.symbol}</span>
                 <span className="num font-bold text-ink shrink-0 tabular-nums">{fmtUsd(t.priceUsd)}</span>
                 <span className={`num font-black tracking-wider shrink-0 ${t.change >= 0 ? "text-neon animate-pulse" : "text-red"}`}>
@@ -111,7 +111,7 @@ export function MarketTicker() {
             <Cmp
               key={`n${i}`}
               {...props}
-              className="mx-0.5 flex w-[270px] max-w-[calc(100vw-2rem)] shrink-0 items-center gap-1 overflow-hidden rounded-lg px-2 text-[10px] transition hover:bg-white/[0.05] sm:w-[390px] sm:gap-1.5 sm:px-2.5 sm:text-[11px] group"
+              className="mx-0.5 flex w-[260px] max-w-[calc(100vw-2rem)] shrink-0 items-center gap-1 overflow-hidden rounded-lg px-2 text-[10px] transition hover:bg-white/[0.05] sm:w-[340px] lg:w-[380px] sm:gap-1.5 sm:px-2.5 sm:text-[11px] group"
             >
               <span className={`shrink-0 rounded border px-1.5 py-0.5 font-mono text-[8px] font-black uppercase tracking-widest ${CAT_COLOR[t.category] ?? "text-mute border-edge bg-panel"}`}>
                 {t.category}
