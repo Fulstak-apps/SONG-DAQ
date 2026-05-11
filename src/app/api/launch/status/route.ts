@@ -24,12 +24,13 @@ export async function GET(req: NextRequest) {
   if (!treasuryWallet) missing.push("TREASURY_WALLET");
   if (!process.env.JUPITER_API_KEY) missing.push("JUPITER_API_KEY");
   const phantomReviewSubmitted = envOn("PHANTOM_REVIEW_SUBMITTED");
-  const phantomReviewApproved = envOn("PHANTOM_REVIEW_APPROVED");
+  const phantomReviewApproved = envOn("PHANTOM_REVIEW_APPROVED") || envOn("NEXT_PUBLIC_PHANTOM_REVIEW_APPROVED");
   const legalReviewApproved = envOn("LEGAL_REVIEW_APPROVED");
   const treasuryAuditApproved = envOn("TREASURY_AUTOMATION_AUDIT_APPROVED");
   const royaltyAutomationAllowed = legalReviewApproved && treasuryAuditApproved && envOn("ENABLE_AUTOMATED_ROYALTY_PAYOUTS");
   const treasuryAutomationAllowed = treasuryAuditApproved && envOn("ENABLE_TREASURY_AUTOMATION");
   const readyForPublic = missing.length === 0 && database.productionReady && NETWORK === "mainnet-beta";
+  const walletTransactionsEnabled = localAppUrl || NETWORK !== "mainnet-beta" || phantomReviewApproved;
   return NextResponse.json({
     configured: Boolean(treasuryWallet),
     readyForPublic,
@@ -41,6 +42,8 @@ export async function GET(req: NextRequest) {
     metadataConfigured: appUrlConfigured,
     phantomReviewSubmitted,
     phantomReviewApproved,
+    phantomReviewRequired: NETWORK === "mainnet-beta" && !phantomReviewApproved,
+    walletTransactionsEnabled,
     legalReviewApproved,
     treasuryAuditApproved,
     royaltyAutomationAllowed,

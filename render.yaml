@@ -50,6 +50,8 @@ services:
         value: "false"
       - key: PHANTOM_REVIEW_APPROVED
         value: "false"
+      - key: NEXT_PUBLIC_PHANTOM_REVIEW_APPROVED
+        value: "false"
       - key: NEXT_PUBLIC_AUDIUS_API_KEY
         sync: false
       - key: TREASURY_WALLET

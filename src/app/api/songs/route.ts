@@ -71,15 +71,15 @@ export async function POST(req: NextRequest) {
     audiusTrackId,
     artistWallet,
     walletType = "solana",
-    supply = 1_000_000,
+    supply = 1_000_000_000,
     basePrice = 0.001,
     curveSlope = 0.0000005,
     royalty,
     symbol,
     distributor,
     liquidity,
-    maxWalletBps = 500,
-    artistAllocationBps = 2000,
+    maxWalletBps = 200,
+    artistAllocationBps = 5000,
     ownershipConfirmed = false,
     riskAcknowledged = false,
     clientMint,
@@ -101,8 +101,8 @@ export async function POST(req: NextRequest) {
   if (Number(maxWalletBps) <= 0 || Number(maxWalletBps) > 1000) {
     return NextResponse.json({ error: "Max wallet cap must be between 0.01% and 10%." }, { status: 422 });
   }
-  if (Number(artistAllocationBps) > 2500) {
-    return NextResponse.json({ error: "Artist allocation is too high. Reduce it to 25% or lower." }, { status: 422 });
+  if (Number(artistAllocationBps) > 5000) {
+    return NextResponse.json({ error: "Artist vesting allocation is too high. Audius-style launches should keep artist allocation at or below 50%." }, { status: 422 });
   }
   const treasury = process.env.TREASURY_WALLET || process.env.NEXT_PUBLIC_TREASURY_WALLET;
   if (!treasury) return NextResponse.json({ error: "TREASURY_WALLET is required to lock launch liquidity" }, { status: 503 });
@@ -270,6 +270,7 @@ export async function POST(req: NextRequest) {
           stableMetadataUri: true,
           source: "SONG·DAQ + Audius",
           phantomMayStillHideNewTokens: true,
+          openAudioModel: "Audius-style artist coins use a public $AUDIO market curve and creator vesting. SONG·DAQ blocks live trading until verified liquidity exists.",
         },
       }),
     },
@@ -293,7 +294,7 @@ export async function POST(req: NextRequest) {
       metadataUri,
       paidBy: artistWallet,
       tradingStatus: "PENDING_LIQUIDITY",
-      message: "Song Token minted. The artist owns the fixed supply first; trading opens after the reserved launch coins and paired SOL/USDC are added to a verified liquidity pool.",
+      message: "Song Token minted. Fans buy from the public market curve/pool, not from the artist directly. Trading opens only after verified liquidity is active.",
     },
   });
 }

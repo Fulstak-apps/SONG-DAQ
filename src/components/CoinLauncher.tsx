@@ -36,14 +36,14 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const [trackErr, setTrackErr] = useState<string | null>(null);
 
   // Step 2: tokenomics
-  const [supply, setSupply] = useState(1_000_000);
+  const [supply, setSupply] = useState(1_000_000_000);
   const [basePrice, setBasePrice] = useState(0.001);
   const [curveSlope, setCurveSlope] = useState(0.0000005);
   const [distributor, setDistributor] = useState<string>("");
   const [royalty, setRoyalty] = useState<RoyaltyConfig>(DEFAULT_ROYALTY);
-  const [maxWalletBps, setMaxWalletBps] = useState(500);
-  const [artistAllocationBps, setArtistAllocationBps] = useState(2000);
-  const [liquidityTokenAmount, setLiquidityTokenAmount] = useState(100_000);
+  const [maxWalletBps, setMaxWalletBps] = useState(200);
+  const [artistAllocationBps, setArtistAllocationBps] = useState(5000);
+  const [liquidityTokenAmount, setLiquidityTokenAmount] = useState(500_000_000);
   const [liquidityPairAmount, setLiquidityPairAmount] = useState(1);
   const [liquidityPairAsset, setLiquidityPairAsset] = useState<"SOL" | "USDC">("SOL");
   const [liquidityLockDays, setLiquidityLockDays] = useState(180);
@@ -64,6 +64,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
     treasuryConfigured?: boolean;
     jupiterConfigured?: boolean;
     artistPaysLaunchFees?: boolean;
+    phantomReviewRequired?: boolean;
+    walletTransactionsEnabled?: boolean;
     treasuryWallet?: string;
     network: string;
     rpcUrl: string;
@@ -94,7 +96,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const canStep2 = launchKind === "ARTIST" ? true : !!pick;
   const canStep3 = canStep2 && royaltyValid && supply >= 1_000 && basePrice > 0 && curveSlope >= 0 && (launchKind === "ARTIST" || !!distributor);
   const liquidityValid = liquidityTokenAmount > 0 && liquidityPairAmount > 0 && liquidityLockDays >= 30;
-  const allocationRisk = artistAllocationBps > 2500 || maxWalletBps > 1000;
+  const allocationRisk = artistAllocationBps > 5000 || maxWalletBps > 1000;
+  const walletTransactionsPaused = launchStatus?.walletTransactionsEnabled === false;
   const canLaunchReview = canStep3 && liquidityValid && !allocationRisk;
   const impliedPrice = liquidityPairAmount / Math.max(liquidityTokenAmount, 1);
   const launchLiquidityRatio = liquidityTokenAmount / Math.max(supply, 1);
@@ -129,13 +132,17 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       return;
     }
     if (launchKind === "ARTIST") {
-      setErr("Artist Token launch is ready for wallet testing, but direct artist-token minting must be configured through the Open Audio/Audius artist-token program. No fake Artist Token was created.");
+      setErr("Artist Coin launch must use the Open Audio/Audius artist-coin path: a $AUDIO-paired bonding curve, creator vesting, and reward pool. SONG·DAQ will not mint a fake artist coin until that launchpad integration is approved.");
       return;
     }
     if (!pick) return;
     if (launchStatus && !launchStatus.readyForPublic) {
       const missing = launchStatus.missing?.length ? launchStatus.missing.join(", ") : "Production launch configuration";
       setErr(`${missing} is required before this can reserve real launch liquidity on Solana.`);
+      return;
+    }
+    if (walletTransactionsPaused) {
+      setErr("Live wallet signing is paused while SONG·DAQ completes Phantom/Blowfish review. This prevents Phantom from showing the scary blocked-request screen. Use Paper Mode or launch locally/devnet until the live domain is approved.");
       return;
     }
     setBusy(true); setErr(null);
@@ -360,6 +367,18 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         </div>
       )}
 
+      {walletTransactionsPaused && (
+        <div className="relative z-10 rounded-xl border border-red/25 bg-red/10 px-4 py-3 text-red flex items-start gap-3">
+          <AlertTriangle size={16} className="mt-0.5 shrink-0" />
+          <div className="min-w-0">
+            <div className="text-[10px] uppercase tracking-widest font-black">Live wallet signing paused</div>
+            <div className="mt-1 text-xs leading-relaxed text-red/80">
+              Phantom is blocking the live domain until SONG·DAQ passes Phantom/Blowfish review. We stop live launch signing here so users do not see a malicious-request wallet screen.
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="relative z-10 min-h-[360px] sm:min-h-[460px]">
         <AnimatePresence mode="wait">
           {step === 1 && (
@@ -453,15 +472,18 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 </div>
                 <div className="space-y-4">
                   <Field label="Total Issuance" value={supply} onChange={setSupply} step={1000} min={1000} unit="Tokens" />
-                  <Field label="Initial Valuation" value={basePrice} onChange={setBasePrice} step={0.0001} min={0} unit="SOL" />
-                  <Field label="Growth Coefficient" value={curveSlope} onChange={setCurveSlope} step={0.0000001} min={0} unit="Slope" />
+                  <Field label="Initial Curve Price" value={basePrice} onChange={setBasePrice} step={0.0001} min={0} unit="SOL" />
+                  <Field label="Curve Momentum" value={curveSlope} onChange={setCurveSlope} step={0.0000001} min={0} unit="Slope" />
                   <Field label="Max Wallet Cap" value={maxWalletBps / 100} onChange={(n) => setMaxWalletBps(Math.round(n * 100))} step={0.25} min={0.1} unit="% of supply" />
-                  <Field label="Artist Allocation" value={artistAllocationBps / 100} onChange={(n) => setArtistAllocationBps(Math.round(n * 100))} step={0.25} min={0} unit="% of supply" />
+                  <Field label="Artist Vesting Allocation" value={artistAllocationBps / 100} onChange={(n) => setArtistAllocationBps(Math.round(n * 100))} step={0.25} min={0} unit="% of supply" />
                   {allocationRisk && (
                     <div className="rounded-xl border border-amber/20 bg-amber/10 p-3 text-xs text-amber">
-                      Artist allocation or max wallet cap looks risky. Keep artist allocation at or below 25% and max wallet cap at or below 10%.
+                      This does not match the Audius-style model. Keep artist vesting at or below 50% and max wallet cap at or below 10%.
                     </div>
                   )}
+                  <div className="rounded-xl border border-violet/20 bg-violet/10 p-3 text-xs leading-relaxed text-violet/85">
+                    Audius-style artist coins use a 1B supply, public bonding-curve market, and creator vesting. Fans buy from the curve/pool, not from a hidden artist wallet.
+                  </div>
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1">Settlement Distributor</label>
                     <select
@@ -524,7 +546,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   <Row k="Settlement Gateway" v={distributor} />
                   <Row k="Total Supply" v={fmtNum(supply)} />
                   <Row k="Issuance Yield" v={`${(royalty.holderShareBps/100).toFixed(0)}% to Holders`} color="text-neon" />
-                  <Row k="Vesting Schedule" v="365 Day Linear" />
+                  <Row k="Artist Vesting" v="50% target over 5 years" />
                   <div className="pt-3 border-t border-edge flex flex-wrap gap-2">
                     {royalty.streamingEnabled && <Tag label="Streaming Active" />}
                     {royalty.tradingFeesEnabled && <Tag label="Trading Fees Active" />}
@@ -547,7 +569,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               <div className="rounded-2xl border border-neon/20 bg-neon/8 p-5 text-neon">
                 <div className="text-[10px] uppercase tracking-widest font-black">Liquidity opens the coin for fans</div>
                 <p className="mt-2 text-sm leading-relaxed text-neon/85">
-                  The coin supply lands in your wallet first for safety. During launch, SONG·DAQ will automatically ask for a second wallet approval that moves this reserved amount plus {liquidityPairAsset} into the trading pool.
+                  Fans need a live market to buy. In the Audius-style model, the public allocation sits in a $AUDIO-paired bonding curve/pool while the artist allocation vests separately. This MVP uses explicit launch liquidity and blocks trading until that pool is verified.
                 </p>
               </div>
               <div className="grid gap-5 lg:grid-cols-2">
@@ -565,7 +587,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               <div className="panel p-5 bg-panel border-edge rounded-2xl space-y-3">
                 <Row k="Initial implied price" v={`${impliedPrice.toFixed(8)} ${liquidityPairAsset}`} color="text-neon" />
                 <Row k="Slippage estimate" v={liquidityPairAmount >= 1 ? "Low/Medium" : "High"} color={liquidityPairAmount >= 1 ? "text-neon" : "text-amber"} />
-                <Row k="Liquidity source" v="Artist wallet, explicit second approval" />
+                <Row k="Liquidity source" v="Public curve / explicit pool approval" />
                 <Row k="Lock status" v={`${liquidityLockDays} days required`} color="text-neon" />
               </div>
               <div className="grid gap-3 md:grid-cols-4">
@@ -596,7 +618,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   <div className="space-y-2">
                     <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Review Risk + Launch</h3>
                     <p className="text-mute text-sm font-medium">
-                      Your connected artist wallet signs two clear steps: first create the fixed-supply coin, then add the reserved coins plus {liquidityPairAsset} into launch liquidity. Fans can buy only after liquidity is verified.
+                      Your connected artist wallet signs a clear launch flow. The coin is not tradable until the public curve/pool has verified liquidity, so fans can buy from the market instead of from the artist directly.
                     </p>
                   </div>
                   <div className="panel p-4 text-left space-y-2 bg-panel border-edge">
@@ -618,15 +640,15 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <span>I understand that fans can potentially profit only if demand pushes the coin price higher, but profit is not guaranteed and prices can go down.</span>
                   </label>
                   <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-left text-xs leading-relaxed text-neon/85">
-                    Artist pays launch fees. The first approval creates the coin in your wallet. The second approval adds the reserved launch liquidity that lets fans buy and sell.
+                    Audius-style launches use a public market curve plus artist vesting. SONG·DAQ will only enable live trading once liquidity is verified and Phantom/domain review is clear.
                   </div>
                   <button
                     type="button"
                     className="btn-primary w-full py-4 text-sm font-black tracking-widest shadow-[0_0_30px_rgba(0,229,114,0.3)] disabled:opacity-50 disabled:grayscale"
                     onClick={deploy}
-                    disabled={launchStatus?.configured === false || !canLaunchReview || !ownershipConfirmed || !riskAcknowledged}
+                    disabled={launchStatus?.configured === false || walletTransactionsPaused || !canLaunchReview || !ownershipConfirmed || !riskAcknowledged}
                   >
-                    SIGN MINT + ADD LIQUIDITY
+                    {walletTransactionsPaused ? "PHANTOM REVIEW REQUIRED" : "SIGN MINT + ADD LIQUIDITY"}
                   </button>
                 </div>
               )}

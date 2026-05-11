@@ -31,6 +31,8 @@ import {
 } from "@solana/spl-token";
 
 const TOKEN_METADATA_PROGRAM_ID = new PublicKey("metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s");
+const PHANTOM_REVIEW_MESSAGE =
+  "Live wallet transactions are paused while SONG·DAQ completes Phantom/Blowfish domain review. You can still connect your wallet, browse, and use Paper Mode. After Phantom approves song-daq.onrender.com, live launch and trade signing will be enabled.";
 
 export type WalletId = "phantom" | "solflare" | "backpack";
 
@@ -126,6 +128,24 @@ async function withWalletTimeout<T>(promise: Promise<T>, label: string, timeoutM
   } finally {
     if (timer) clearTimeout(timer);
   }
+}
+
+function envOn(value: unknown) {
+  return ["1", "true", "yes", "on"].includes(String(value || "").toLowerCase());
+}
+
+function isRenderProductionHost() {
+  if (typeof window === "undefined") return false;
+  const host = window.location.hostname.toLowerCase();
+  return host === "song-daq.onrender.com";
+}
+
+export function liveWalletTransactionsAllowed() {
+  return !isRenderProductionHost() || envOn(process.env.NEXT_PUBLIC_PHANTOM_REVIEW_APPROVED);
+}
+
+export function assertLiveWalletTransactionsAllowed() {
+  if (!liveWalletTransactionsAllowed()) throw new Error(PHANTOM_REVIEW_MESSAGE);
 }
 
 export async function connectWallet(id: WalletId): Promise<ConnectResult> {
@@ -263,6 +283,7 @@ export async function signMessage(id: WalletId, message: string, address: string
 }
 
 export async function sendSerializedTransaction(id: WalletId, base64Transaction: string): Promise<string> {
+  assertLiveWalletTransactionsAllowed();
   const provider = providerFor(id);
   if (!provider) throw new Error("Solana wallet not found");
 
@@ -311,6 +332,7 @@ export async function createArtistPaidSongMint(
     decimals?: number;
   },
 ): Promise<{ mint: string; tokenAccount: string; treasuryTokenAccount: string; mintTx: string; metadataAddress?: string; metadataUri?: string }> {
+  assertLiveWalletTransactionsAllowed();
   const provider = providerFor(id);
   if (!provider) throw new Error("Solana wallet not found");
 

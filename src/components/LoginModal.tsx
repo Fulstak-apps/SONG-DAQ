@@ -3,7 +3,7 @@ import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, useUI } from "@/lib/store";
 import { WALLETS, connectWallet, disconnectWallet, type WalletId } from "@/lib/wallet";
-import { redirectToAudiusLogin } from "@/lib/audiusOAuth";
+import { loginWithAudius } from "@/lib/audiusOAuth";
 import { safeJson } from "@/lib/safeJson";
 import { Music, TrendingUp, ShieldCheck, ChevronLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "@/lib/toast";
@@ -25,7 +25,7 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}
 }
 
 export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
-  const { address, audius, setSession } = useSession();
+  const { address, provider, audius, setSession } = useSession();
   const { setUserMode } = useUI();
   const [role, setRole] = useState<Role | null>(null);
   const [step, setStep] = useState<Step>("ROLE");
@@ -117,15 +117,27 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     setBusy("audius");
     setErr(null);
     try {
-      await redirectToAudiusLogin();
+      const profile = await loginWithAudius();
+      const solWallet = profile.wallets?.sol || null;
+      setSession({
+        audius: profile,
+        address: solWallet,
+        kind: solWallet ? "solana" : null,
+        provider: solWallet ? "audius" : null,
+      });
+      setUserMode("ARTIST");
+      setStep("ARTIST_READY");
+      void fetchWithTimeout("/api/audius/link", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ wallet: solWallet, walletType: solWallet ? "solana" : null, profile, role: "ARTIST" }),
+      }, 2_500).catch(() => {});
     } catch (e: any) {
       setErr(e.message ?? String(e));
-      setBusy(null);
     } finally {
-      // On success the browser navigates to Audius, so leave the loading state
-      // visible until the page changes.
+      setBusy(null);
     }
-  }, []);
+  }, [setSession, setUserMode]);
 
   if (!isOpen) return null;
 
@@ -263,7 +275,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                         </div>
                       </div>
                       <div className="mt-3 text-[10px] uppercase tracking-widest font-bold text-mute">
-                        Trading wallet: <span className="font-mono text-ink">{address ? `${address.slice(0, 6)}…${address.slice(-4)}` : "External wallet optional"}</span>
+                        External trading wallet: <span className="font-mono text-ink">{address && provider !== "audius" ? `${address.slice(0, 6)}…${address.slice(-4)}` : "Connect Phantom, Solflare, or Backpack before live launch/trading"}</span>
                       </div>
                     </div>
                   )}

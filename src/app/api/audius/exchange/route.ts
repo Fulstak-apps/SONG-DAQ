@@ -12,16 +12,14 @@ const FALLBACK_HOSTS = [
   "https://discoveryprovider2.audius.co",
   "https://discoveryprovider3.audius.co",
 ];
-const TOKEN_TIMEOUT_MS = 7_000;
-const PROFILE_TIMEOUT_MS = 3_500;
+const TOKEN_TIMEOUT_MS = 5_000;
+const PROFILE_TIMEOUT_MS = 2_500;
 
 async function discoveryHosts(): Promise<string[]> {
   const pinned = process.env.AUDIUS_DISCOVERY_HOST;
   if (pinned) return [pinned, ...FALLBACK_HOSTS.filter((h) => h !== pinned)];
-  try {
-    const j = await fetchJson<{ data: string[] }>("https://api.audius.co", { cache: "no-store" }, 2_000);
-    if (Array.isArray(j?.data) && j.data.length) return j.data;
-  } catch {}
+  // Keep OAuth fast. Discovery host lookup can be slow on Render and is not
+  // needed before the canonical API gateway has had a chance to respond.
   return FALLBACK_HOSTS;
 }
 

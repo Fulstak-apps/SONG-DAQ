@@ -1,13 +1,15 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { redirectToAudiusLogin } from "@/lib/audiusOAuth";
+import { loginWithAudius } from "@/lib/audiusOAuth";
 import { useSession } from "@/lib/store";
+import { useUI } from "@/lib/store";
 import { SafeImage } from "./SafeImage";
 import { ShieldCheck, Loader2, X } from "lucide-react";
 
 export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
-  const { audius, clear } = useSession();
+  const { audius, clear, setSession } = useSession();
+  const setUserMode = useUI((s) => s.setUserMode);
   const [busy, setBusy] = useState<"oauth" | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
@@ -27,12 +29,25 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
   async function loginOAuth() {
     setBusy("oauth"); setErr(null);
     try {
-      await redirectToAudiusLogin();
+      const profile = await loginWithAudius();
+      const solWallet = profile.wallets?.sol || null;
+      setSession({
+        audius: profile,
+        address: solWallet,
+        kind: solWallet ? "solana" : null,
+        provider: solWallet ? "audius" : null,
+      });
+      setUserMode("ARTIST");
+      setOpen(false);
+      void fetch("/api/audius/link", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ profile, wallet: solWallet }),
+      }).catch(() => {});
     } catch (e: any) {
       setErr(e.message ?? String(e));
-      setBusy(null);
     } finally {
-      // On success the browser navigates to Audius.
+      setBusy(null);
     }
   }
 
