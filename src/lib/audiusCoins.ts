@@ -72,18 +72,17 @@ export async function listCoins(limit = 100): Promise<AudiusCoin[]> {
     return coinCache.data.slice(0, capped);
   }
 
-  let lastError: unknown;
-  for (let attempt = 0; attempt < 3; attempt += 1) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
     try {
       const json = await fetchJson<{ data: AudiusCoin[] }>(
         `https://api.audius.co/v1/coins?app_name=${APP}&limit=${capped}`,
         { next: { revalidate: 60 } },
+        2_500,
       );
       const data = json.data ?? [];
       if (data.length) coinCache = { at: Date.now(), data };
       return data;
     } catch (e) {
-      lastError = e;
       await new Promise((resolve) => setTimeout(resolve, 250 * (attempt + 1)));
     }
   }

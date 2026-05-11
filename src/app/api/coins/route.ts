@@ -5,12 +5,23 @@ import { calculateCoinRisk } from "@/lib/risk/calculateCoinRisk";
 
 export const dynamic = "force-dynamic";
 
+function timeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return new Promise((resolve) => {
+    const id = setTimeout(() => resolve(fallback), ms);
+    promise
+      .then((value) => resolve(value))
+      .catch(() => resolve(fallback))
+      .finally(() => clearTimeout(id));
+  });
+}
+
 export async function GET(req: NextRequest) {
   const sort = req.nextUrl.searchParams.get("sort") ?? "marketCap";
   const limit = Number(req.nextUrl.searchParams.get("limit") ?? 60);
   try {
-    const coins = await listCoins(limit);
-    const enriched = await hydrateArtists(coins.slice(0, limit));
+    const coins = await timeout(listCoins(limit), 4_000, []);
+    const raw = coins.slice(0, limit);
+    const enriched = raw.length ? await timeout(hydrateArtists(raw), 3_500, raw) : [];
     for (const c of enriched) {
       recordTick(c.mint, c.price ?? 0, c.v24hUSD ?? 0, (c as any).history24hPrice ?? 0);
     }
