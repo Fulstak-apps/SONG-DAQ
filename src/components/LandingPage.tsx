@@ -43,6 +43,7 @@ export function LandingPage() {
 
   const [heroIdx, setHeroIdx] = useState(0);
   const [stats, setStats] = useState({ tradingVolume: 0, activeArtists: 0, songsTokenized: 0 });
+  const [statsLoaded, setStatsLoaded] = useState(false);
   const HERO_TEXT = [
     { a: "Insurance and", b: "liquidity.", color: "text-gradient-neon" },
     { a: "100% verified", b: "on-chain.", color: "text-gradient-violet" },
@@ -63,8 +64,8 @@ export function LandingPage() {
         tradingVolume: Number(j.tradingVolume ?? 0),
         activeArtists: Number(j.activeArtists ?? 0),
         songsTokenized: Number(j.songsTokenized ?? 0),
-      }); })
-      .catch(() => {});
+      }); if (alive) setStatsLoaded(true); })
+      .catch(() => { if (alive) setStatsLoaded(false); });
     load();
     const i = setInterval(load, 60_000);
     return () => { alive = false; clearInterval(i); };
@@ -136,11 +137,23 @@ export function LandingPage() {
             transition={{ delay: 0.7, duration: 0.6 }}
             className="flex items-center justify-center gap-8 md:gap-12 pt-8"
           >
-            <LiveStat label="Trading Volume" value={fmtStatUsd(stats.tradingVolume)} />
-            <div className="w-px h-8 bg-white/[0.06]" />
-            <LiveStat label="Active Artists" value={fmtStat(stats.activeArtists)} />
-            <div className="w-px h-8 bg-white/[0.06] hidden sm:block" />
-            <LiveStat label="Songs Tokenized" value={fmtStat(stats.songsTokenized)} className="hidden sm:block" />
+            {!statsLoaded ? (
+              <>
+                <LiveStatSkeleton label="Trading Volume" />
+                <div className="w-px h-8 bg-white/[0.06]" />
+                <LiveStatSkeleton label="Active Artists" />
+                <div className="w-px h-8 bg-white/[0.06] hidden sm:block" />
+                <LiveStatSkeleton label="Songs Tokenized" className="hidden sm:block" />
+              </>
+            ) : (
+              <>
+                <LiveStat label="Trading Volume" value={fmtStatUsd(stats.tradingVolume)} />
+                <div className="w-px h-8 bg-white/[0.06]" />
+                <LiveStat label="Active Artists" value={fmtStat(stats.activeArtists)} />
+                <div className="w-px h-8 bg-white/[0.06] hidden sm:block" />
+                <LiveStat label="Songs Tokenized" value={fmtStat(stats.songsTokenized)} className="hidden sm:block" />
+              </>
+            )}
           </motion.div>
         </div>
       </section>
@@ -403,6 +416,15 @@ function LiveStat({ label, value, className = "" }: { label: string; value: stri
     <div className={`text-center ${className}`}>
       <div className="text-xl md:text-2xl font-black font-mono text-white tracking-tight">{value}</div>
       <div className="text-[9px] uppercase tracking-[0.2em] font-bold text-mute mt-1">{label}</div>
+    </div>
+  );
+}
+
+function LiveStatSkeleton({ label, className = "" }: { label: string; className?: string }) {
+  return (
+    <div className={`text-center ${className}`}>
+      <div className="mx-auto h-7 w-24 rounded-lg skeleton" />
+      <div className="text-[9px] uppercase tracking-[0.2em] font-bold text-mute mt-2">{label}</div>
     </div>
   );
 }

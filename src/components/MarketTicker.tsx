@@ -12,7 +12,7 @@ interface CoinTick {
 }
 interface NewsTick {
   kind: "news";
-  category: "TECH" | "MUSIC" | "TRENDING";
+  category: "TECH" | "MUSIC" | "AI" | "TRENDING";
   title: string;
   link: string;
   source: string;
@@ -29,6 +29,7 @@ function fmtUsd(n: number) {
 const CAT_COLOR: Record<string, string> = {
   TECH: "text-cyan bg-cyan/5 border-cyan/15",
   MUSIC: "text-violet bg-violet/5 border-violet/15",
+  AI: "text-gold bg-gold/5 border-gold/15",
   TRENDING: "text-neon bg-neon/5 border-neon/15",
 };
 

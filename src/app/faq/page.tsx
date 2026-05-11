@@ -1,5 +1,5 @@
-import { SupportPage } from "@/components/SupportPage";
+import { LandingPage } from "@/components/LandingPage";
 
 export default function FAQPage() {
-  return <SupportPage />;
+  return <LandingPage />;
 }

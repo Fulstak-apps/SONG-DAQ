@@ -2,6 +2,7 @@ import Parser from "rss-parser";
 import { fetchText } from "@/lib/fetchTimeout";
 
 const parser = new Parser();
+type NewsCategory = "MUSIC" | "TECH" | "AI" | "TRENDING";
 
 export interface NewsStory {
   id: string;
@@ -11,15 +12,17 @@ export interface NewsStory {
   author?: string;
   contentSnippet?: string;
   source: string;
-  category: "MUSIC" | "TECH" | "TRENDING";
+  category: NewsCategory;
   thumbnail?: string;
 }
 
 const FEEDS = [
-  { url: "https://pitchfork.com/rss/news/", source: "Pitchfork", category: "MUSIC" as const },
-  { url: "https://www.billboard.com/feed/", source: "Billboard", category: "MUSIC" as const },
-  { url: "https://techcrunch.com/feed/", source: "TechCrunch", category: "TECH" as const },
-  { url: "https://www.theverge.com/rss/index.xml", source: "The Verge", category: "TECH" as const },
+  { url: "https://pitchfork.com/rss/news/", source: "Pitchfork", category: "MUSIC" as NewsCategory },
+  { url: "https://www.billboard.com/feed/", source: "Billboard", category: "MUSIC" as NewsCategory },
+  { url: "https://www.musicbusinessworldwide.com/feed/", source: "Music Business Worldwide", category: "MUSIC" as NewsCategory },
+  { url: "https://techcrunch.com/feed/", source: "TechCrunch", category: "TECH" as NewsCategory },
+  { url: "https://www.theverge.com/rss/index.xml", source: "The Verge", category: "TECH" as NewsCategory },
+  { url: "https://venturebeat.com/category/ai/feed/", source: "VentureBeat AI", category: "AI" as NewsCategory },
 ];
 
 export async function getNews(): Promise<NewsStory[]> {

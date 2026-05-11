@@ -9,7 +9,7 @@ interface NewsItem {
   link: string;
   pubDate: string;
   source: string;
-  category: "MUSIC" | "TECH" | "TRENDING";
+  category: "MUSIC" | "TECH" | "AI" | "TRENDING";
   thumbnail?: string;
 }
 
@@ -17,6 +17,7 @@ const CAT_STYLE: Record<string, string> = {
   MUSIC: "text-violet border-violet/20 bg-violet/5",
   TRENDING: "text-neon border-neon/20 bg-neon/5",
   TECH: "text-cyan border-cyan/20 bg-cyan/5",
+  AI: "text-gold border-gold/20 bg-gold/5",
 };
 
 export function NewsFeed() {

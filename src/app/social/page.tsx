@@ -12,16 +12,17 @@ interface NewsStory {
   author?: string;
   contentSnippet?: string;
   source: string;
-  category: "MUSIC" | "TECH" | "TRENDING";
+  category: "MUSIC" | "TECH" | "AI" | "TRENDING";
   thumbnail?: string;
 }
 
-const FILTERS = ["ALL", "MUSIC", "TECH", "TRENDING"] as const;
+const FILTERS = ["ALL", "MUSIC", "TECH", "AI", "TRENDING"] as const;
 type Filter = typeof FILTERS[number];
 
 const badge: Record<NewsStory["category"], string> = {
   MUSIC: "bg-violet/10 text-violet border-violet/20",
   TECH: "bg-cyan/10 text-cyan border-cyan/20",
+  AI: "bg-gold/10 text-gold border-gold/20",
   TRENDING: "bg-neon/10 text-neon border-neon/20",
 };
 
@@ -44,7 +45,8 @@ function IntelFallback({ story }: { story: NewsStory }) {
     <div className={`grid h-full w-full place-items-center ${
       story.category === "MUSIC" ? "bg-[radial-gradient(circle_at_30%_20%,rgba(155,81,224,0.5),transparent_34%),linear-gradient(135deg,rgba(155,81,224,0.36),rgba(0,0,0,0.94))]"
         : story.category === "TECH" ? "bg-[radial-gradient(circle_at_32%_18%,rgba(0,212,255,0.42),transparent_34%),linear-gradient(135deg,rgba(0,212,255,0.28),rgba(0,0,0,0.94))]"
-          : "bg-[radial-gradient(circle_at_32%_18%,rgba(212,255,0,0.34),transparent_34%),linear-gradient(135deg,rgba(212,255,0,0.2),rgba(0,0,0,0.94))]"
+          : story.category === "AI" ? "bg-[radial-gradient(circle_at_34%_18%,rgba(255,207,92,0.44),transparent_34%),linear-gradient(135deg,rgba(255,207,92,0.25),rgba(0,0,0,0.94))]"
+            : "bg-[radial-gradient(circle_at_32%_18%,rgba(212,255,0,0.34),transparent_34%),linear-gradient(135deg,rgba(212,255,0,0.2),rgba(0,0,0,0.94))]"
     }`}>
       <div className="grid h-16 w-16 place-items-center rounded-2xl border border-white/10 bg-black/30 font-mono text-2xl font-black text-white/70 shadow-depth">
         {initial}
@@ -129,9 +131,9 @@ export default function SocialPage() {
       <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
           <div className="text-[10px] uppercase tracking-[0.3em] font-black text-mute mb-2">Intel</div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-gradient-hero">Music x Tech Radar</h1>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-gradient-hero">Music x Tech x AI Radar</h1>
           <p className="text-mute text-sm mt-2 max-w-2xl">
-            Live music, technology, and worldwide trending signals from real news feeds.
+            Live music industry, technology, AI, and worldwide trending signals from real news feeds.
           </p>
         </div>
         <div className="flex max-w-full bg-panel border border-edge rounded-xl p-1 overflow-x-auto no-scrollbar">

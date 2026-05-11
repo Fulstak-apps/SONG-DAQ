@@ -143,6 +143,17 @@ function HeroPulseRow({ label, value, accent = "text-ink" }: { label: string; va
   );
 }
 
+function HeroPulseLoadingRow({ label }: { label: string }) {
+  return (
+    <div className="rounded-2xl border border-edge bg-white/[0.045] px-4 py-3">
+      <div className="flex items-center justify-between gap-4">
+        <span className="min-w-0 text-[10px] uppercase tracking-[0.2em] font-black text-mute truncate">{label}</span>
+        <span className="h-5 w-20 rounded-lg skeleton" />
+      </div>
+    </div>
+  );
+}
+
 function MarketPrimer({ onConnect }: { onConnect: () => void }) {
   const cards = [
     {
@@ -203,7 +214,7 @@ export default function DiscoveryEngine() {
   const [trade, setTrade] = useState<{ side: "BUY" | "SELL"; coin: AudiusCoin } | null>(null);
   const [preview, setPreview] = useState<AudiusCoin | null>(null);
   const [me, setMe] = useState<any>(null);
-  const [view, setView] = useState<ViewMode>("list");
+  const [view, setView] = useState<ViewMode>("grid");
   const [showWatchlistOnly, setShowWatchlistOnly] = useState(false);
   const [marketFilter, setMarketFilter] = useState<MarketFilter>("all");
   const [artistQuery, setArtistQuery] = useState("");
@@ -211,6 +222,7 @@ export default function DiscoveryEngine() {
   const [artistSearching, setArtistSearching] = useState(false);
   const [heroIdx, setHeroIdx] = useState(0);
   const [networkStats, setNetworkStats] = useState({ tradingVolume: 0, activeArtists: 0, songsTokenized: 0 });
+  const [networkStatsLoaded, setNetworkStatsLoaded] = useState(false);
   const heroText = [
     { a: "Insurance and", b: "liquidity.", color: "text-gradient-neon" },
     { a: "100% verified", b: "on-chain.", color: "text-gradient-violet" },
@@ -238,8 +250,9 @@ export default function DiscoveryEngine() {
           activeArtists: Number(j.activeArtists ?? 0),
           songsTokenized: Number(j.songsTokenized ?? 0),
         });
+        setNetworkStatsLoaded(true);
       })
-      .catch(() => {});
+      .catch(() => { if (alive) setNetworkStatsLoaded(false); });
     load();
     const i = setInterval(load, 60_000);
     return () => { alive = false; clearInterval(i); };
@@ -284,10 +297,10 @@ export default function DiscoveryEngine() {
   }, [songs]);
 
   const heroPulse = useMemo(() => ({
-    volume: networkStats.tradingVolume || coinTotals.vol + songTotals.vol,
-    artists: networkStats.activeArtists || coins.length,
-    songs: Math.max(networkStats.songsTokenized, songs.length, coins.length),
-  }), [networkStats, coinTotals.vol, songTotals.vol, coins.length, songs.length]);
+    volume: networkStatsLoaded ? networkStats.tradingVolume : coinTotals.vol + songTotals.vol,
+    artists: networkStatsLoaded ? networkStats.activeArtists : coins.length,
+    songs: networkStatsLoaded ? Math.max(networkStats.songsTokenized, songs.length, coins.length) : Math.max(songs.length, coins.length),
+  }), [networkStatsLoaded, networkStats, coinTotals.vol, songTotals.vol, coins.length, songs.length]);
 
   // Filter by watchlist
   const filteredCoins = useMemo(() => {
@@ -460,9 +473,22 @@ export default function DiscoveryEngine() {
               </span>
             </div>
             <div className="relative mt-5 grid gap-3">
-              <HeroPulseRow label="Volume" value={fmtUsdCompact(heroPulse.volume)} accent="text-neon" />
-              <HeroPulseRow label="Active Artists" value={fmtStatCompact(heroPulse.artists)} />
-              <HeroPulseRow label="Songs Tokenized" value={fmtStatCompact(heroPulse.songs)} accent="text-cyan" />
+              {!networkStatsLoaded ? (
+                <>
+                  <div className="rounded-2xl border border-edge bg-neon/8 px-4 py-3 text-[10px] uppercase tracking-[0.2em] font-black text-neon">
+                    <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-neon animate-pulseDot" /> Loading market data…</span>
+                  </div>
+                  <HeroPulseLoadingRow label="Volume" />
+                  <HeroPulseLoadingRow label="Active Artists" />
+                  <HeroPulseLoadingRow label="Songs Tokenized" />
+                </>
+              ) : (
+                <>
+                  <HeroPulseRow label="Volume" value={fmtUsdCompact(heroPulse.volume)} accent="text-neon" />
+                  <HeroPulseRow label="Active Artists" value={fmtStatCompact(heroPulse.artists)} />
+                  <HeroPulseRow label="Songs Tokenized" value={fmtStatCompact(heroPulse.songs)} accent="text-cyan" />
+                </>
+              )}
             </div>
             <div className="relative mt-4 flex items-center justify-between gap-3 text-[9px] uppercase tracking-[0.18em] font-black text-mute">
               <span>Audius synced</span>
