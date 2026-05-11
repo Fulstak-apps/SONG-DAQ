@@ -12,12 +12,14 @@ const FALLBACK_HOSTS = [
   "https://discoveryprovider2.audius.co",
   "https://discoveryprovider3.audius.co",
 ];
+const TOKEN_TIMEOUT_MS = 7_000;
+const PROFILE_TIMEOUT_MS = 3_500;
 
 async function discoveryHosts(): Promise<string[]> {
   const pinned = process.env.AUDIUS_DISCOVERY_HOST;
   if (pinned) return [pinned, ...FALLBACK_HOSTS.filter((h) => h !== pinned)];
   try {
-    const j = await fetchJson<{ data: string[] }>("https://api.audius.co", { cache: "no-store" }, 3_000);
+    const j = await fetchJson<{ data: string[] }>("https://api.audius.co", { cache: "no-store" }, 2_000);
     if (Array.isArray(j?.data) && j.data.length) return j.data;
   } catch {}
   return FALLBACK_HOSTS;
@@ -70,7 +72,7 @@ async function tryExchange(host: string, code: string, codeVerifier: string, red
   for (const a of attempts) {
     try {
       const ctrl = new AbortController();
-      const id = setTimeout(() => ctrl.abort(), 15_000);
+      const id = setTimeout(() => ctrl.abort(), TOKEN_TIMEOUT_MS);
       const r = await fetch(url, { method: "POST", headers: a.headers, body: a.body, cache: "no-store", signal: ctrl.signal });
       clearTimeout(id);
       if (r.ok) {
@@ -84,7 +86,7 @@ async function tryExchange(host: string, code: string, codeVerifier: string, red
       if (r.status >= 500) return { ok: false as const, ...lastErr };
     } catch (e: any) {
       const text = e?.name === "AbortError"
-        ? `Audius token server timed out after 15 seconds at ${host}`
+        ? `Audius token server timed out after ${Math.round(TOKEN_TIMEOUT_MS / 1000)} seconds at ${host}`
         : e?.message ?? String(e);
       lastErr = { status: 0, text };
       return { ok: false as const, ...lastErr };
@@ -116,7 +118,7 @@ export async function POST(req: NextRequest) {
   //    discovery nodes as fallback.
   let tokens: any = null;
   let lastErr = "all hosts failed";
-  for (const host of allHosts.slice(0, 3)) {
+  for (const host of allHosts.slice(0, 2)) {
     const r = await tryExchange(host, String(code), String(codeVerifier), String(redirectUri));
     if (r.ok) { tokens = r.tokens; break; }
     lastErr = `(${r.status}) ${r.text}`;
@@ -140,7 +142,7 @@ export async function POST(req: NextRequest) {
     const j = await fetchJson<any>(meUrl.toString(), {
       cache: "no-store",
       headers: { authorization: `Bearer ${accessToken}` },
-    }, 5_000).catch((e) => {
+    }, PROFILE_TIMEOUT_MS).catch((e) => {
       console.error("Audius /v1/me failed", e);
       return null;
     });
@@ -152,7 +154,7 @@ export async function POST(req: NextRequest) {
 
   // Fallback: /v1/users/account on discovery nodes
   if (!data) {
-    for (const host of hosts.slice(0, 4)) {
+    for (const host of hosts.slice(0, 2)) {
       try {
         const accountUrl = new URL(`${host}/v1/users/account`);
         accountUrl.searchParams.set("app_name", APP);
@@ -160,7 +162,7 @@ export async function POST(req: NextRequest) {
         const j = await fetchJson<any>(accountUrl.toString(), {
           cache: "no-store",
           headers: { authorization: `Bearer ${accessToken}` },
-        }, 4_500).catch(() => null);
+        }, PROFILE_TIMEOUT_MS).catch(() => null);
         if (j) {
           data = j?.data ?? j;
           if (data?.userId || data?.id || data?.handle) break;
@@ -172,12 +174,12 @@ export async function POST(req: NextRequest) {
 
   // Fallback: /v1/users/verify_token
   if (!data) {
-    for (const host of allHosts.slice(0, 4)) {
+    for (const host of allHosts.slice(0, 2)) {
       try {
         const j = await fetchJson<any>(
           `${host}/v1/users/verify_token?token=${encodeURIComponent(accessToken)}&app_name=${APP}&api_key=${encodeURIComponent(API_KEY)}`,
           { cache: "no-store" },
-          4_500,
+          PROFILE_TIMEOUT_MS,
         ).catch(() => null);
         if (j?.data) { data = j.data; break; }
       } catch {}
@@ -193,11 +195,11 @@ export async function POST(req: NextRequest) {
         const decoded = JSON.parse(Buffer.from(padded, "base64").toString("utf8"));
         const id = decoded?.userId ?? decoded?.sub;
         if (id) {
-          for (const host of allHosts.slice(0, 4)) {
+          for (const host of allHosts.slice(0, 2)) {
             const userUrl = new URL(`${host}/v1/users/${encodeURIComponent(String(id))}`);
             userUrl.searchParams.set("app_name", APP);
             userUrl.searchParams.set("api_key", API_KEY);
-            const j = await fetchJson<any>(userUrl.toString(), { cache: "no-store" }, 4_500).catch(() => null);
+            const j = await fetchJson<any>(userUrl.toString(), { cache: "no-store" }, PROFILE_TIMEOUT_MS).catch(() => null);
             if (j?.data) { data = j.data; break; }
           }
         }

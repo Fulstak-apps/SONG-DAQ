@@ -32,6 +32,29 @@ export interface AudiusProfile {
   wallets?: { sol: string | null; eth: string | null };
 }
 
+async function exchangeCodeForProfile(code: string, codeVerifier: string, redirectUri: string, timeoutMs = 18_000) {
+  const ctrl = new AbortController();
+  const timeout = setTimeout(() => ctrl.abort(), timeoutMs);
+  try {
+    const r = await fetch("/api/audius/exchange", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ code, codeVerifier, redirectUri }),
+      signal: ctrl.signal,
+    });
+    const j = await readJsonResponse(r);
+    if (!r.ok || !j.ok) throw new Error(j.error || "Audius token exchange failed");
+    return j.profile as AudiusProfile;
+  } catch (e: any) {
+    if (e?.name === "AbortError") {
+      throw new Error("Audius sign-in is taking too long. Please retry in a moment.");
+    }
+    throw e;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 async function readJsonResponse(res: Response) {
   const text = await res.text().catch(() => "");
   if (!text.trim()) {
@@ -169,15 +192,9 @@ export function loginWithAudius(): Promise<AudiusProfile> {
       }
       settled = true; cleanup();
       try {
-        const r = await fetch("/api/audius/exchange", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ code, codeVerifier, redirectUri: redirect }),
-        });
-        const j = await readJsonResponse(r);
-        if (!r.ok || !j.ok) throw new Error(j.error || "Audius token exchange failed");
+        const profile = await exchangeCodeForProfile(code, codeVerifier, redirect);
         try { popup.close(); } catch {}
-        resolve(j.profile as AudiusProfile);
+        resolve(profile);
       } catch (e: any) {
         try {
           const raw = localStorage.getItem("audius-oauth-profile");
@@ -213,7 +230,7 @@ export function loginWithAudius(): Promise<AudiusProfile> {
       settled = true; cleanup();
       try { popup.close(); } catch {}
       reject(new Error("Audius login timed out. Make sure the callback URL is registered in Audius, then retry."));
-    }, 90_000);
+    }, 45_000);
 
     // Fallback: poll localStorage in case postMessage was missed.
     pollTimer = setInterval(() => {

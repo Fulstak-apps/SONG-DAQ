@@ -5,6 +5,16 @@ import { useSession, useUI, type AudiusProfile } from "@/lib/store";
 
 type Status = "loading" | "success" | "error";
 
+async function readExchangeJson(res: Response) {
+  const text = await res.text().catch(() => "");
+  if (!text.trim()) return {};
+  try {
+    return JSON.parse(text);
+  } catch {
+    throw new Error(`Audius returned an unreadable response (${res.status}). Please retry sign-in.`);
+  }
+}
+
 /**
  * OAuth 2.0 PKCE callback. Audius redirects here with `?code=...&state=...`
  * (or `?error=...`). We forward the values to the opener via postMessage AND
@@ -29,14 +39,26 @@ export default function AudiusCallback() {
       const redirectUri = sessionStorage.getItem("audius-pkce-redirect") || localStorage.getItem("audius-pkce-redirect") || `${window.location.origin}/audius/callback`;
       if (!codeVerifier) throw new Error("Missing Audius login verifier. Please return to SONG·DAQ and retry sign-in.");
 
-      const r = await fetch("/api/audius/exchange", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ code, codeVerifier, redirectUri }),
-      });
-      const j = await r.json().catch(() => ({}));
-      if (!r.ok || !j.ok || !j.profile) throw new Error(j.error || "Audius token exchange failed.");
-      return j.profile as AudiusProfile;
+      const ctrl = new AbortController();
+      const id = setTimeout(() => ctrl.abort(), 18_000);
+      try {
+        const r = await fetch("/api/audius/exchange", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ code, codeVerifier, redirectUri }),
+          signal: ctrl.signal,
+        });
+        const j = await readExchangeJson(r);
+        if (!r.ok || !j.ok || !j.profile) throw new Error(j.error || "Audius token exchange failed.");
+        return j.profile as AudiusProfile;
+      } catch (e: any) {
+        if (e?.name === "AbortError") {
+          throw new Error("Audius sign-in is taking too long. Please retry in a moment.");
+        }
+        throw e;
+      } finally {
+        clearTimeout(id);
+      }
     }
 
     function cleanupOAuthStorage() {
