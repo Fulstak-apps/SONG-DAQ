@@ -15,7 +15,7 @@ import {
 import { RoyaltyConfigEditor } from "./RoyaltyConfigEditor";
 import type { AudiusTrack } from "@/lib/audius";
 import { createArtistPaidSongMint, getConnectedWalletId, sendSerializedTransaction, type WalletId } from "@/lib/wallet";
-import { Glossary } from "@/components/Tooltip";
+import { Glossary, InfoTooltip } from "@/components/Tooltip";
 import { WalletButton } from "@/components/WalletButton";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
@@ -277,7 +277,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       });
       setResult(r);
       setLiquidityStage("preparing");
-      setLiquidityMessage("Coin minted. Preparing the required launch liquidity transaction now.");
+      setLiquidityMessage("Coin created. Now SONG·DAQ is preparing the fan market so people can buy and sell it.");
 
       try {
         const prep = await api<{
@@ -300,11 +300,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
 
         const walletId = getConnectedWalletId() || externalWalletProvider;
         setLiquidityStage("signing");
-        setLiquidityMessage("Approve the second Phantom transaction to add the reserved coins and paired SOL/USDC into the launch pool.");
+        setLiquidityMessage(`Approve the second wallet transaction. This puts reserved song coins plus ${liquidityPairAsset} into the public fan market pool.`);
         const liquidityTxSig = await sendSerializedTransaction(walletId as WalletId, prep.transaction);
 
         setLiquidityStage("confirming");
-        setLiquidityMessage("Liquidity transaction sent. Verifying the pool before opening trading to fans.");
+        setLiquidityMessage("Market transaction sent. Verifying the public pool before opening trading to fans.");
         let live: any = null;
         let lastLiquidityError: any = null;
         for (let attempt = 0; attempt < 3; attempt++) {
@@ -331,11 +331,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         if (!live) throw lastLiquidityError || new Error("Liquidity transaction was sent, but SONG·DAQ could not verify it yet.");
 
         setLiquidityStage("live");
-        setLiquidityMessage("Launch liquidity is verified. Fans can now buy and sell this coin.");
+        setLiquidityMessage("Fan market is live. Fans can now buy and sell this coin from the public pool.");
         setResult({ ...r, song: live.song || r.song, launch: { ...r.launch, liquidityTxSig, poolId: prep.poolId, lpMint: prep.lpMint, tradingStatus: "LIVE" } });
       } catch (liquidityError: any) {
         setLiquidityStage("failed");
-        setLiquidityMessage(liquidityError?.message || "Coin minted, but automatic liquidity setup did not finish. Open the token detail page and use Add Liquidity to make it live.");
+        setLiquidityMessage(liquidityError?.message || "Coin was created, but the fan market still needs liquidity. Add liquidity means putting reserved song coins plus SOL, USDC, or AUDIO into the public pool so fans can buy and sell.");
       }
       onLaunched?.();
     } catch (e: any) {
@@ -835,15 +835,35 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               className="space-y-6"
             >
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
-                <ShieldCheck size={14} className="text-neon" /> Step 04 — Add Liquidity Required
+                <ShieldCheck size={14} className="text-neon" /> Step 04 — Open The Fan Market
               </div>
               <div className="rounded-2xl border border-neon/20 bg-neon/8 p-5 text-neon">
-                <div className="text-[10px] uppercase tracking-widest font-black">{launchKind === "ARTIST" ? "Open Audio bonding curve opens the coin for fans" : "Liquidity opens the coin for fans"}</div>
+                <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-widest font-black">
+                  <span>{launchKind === "ARTIST" ? "Open Audio bonding curve opens the coin for fans" : "Liquidity opens the coin for fans"}</span>
+                  <InfoTooltip
+                    side="bottom"
+                    def="Liquidity is the public market supply. You put song coins and a payment coin like SOL, USDC, or AUDIO into a pool. Fans buy from that pool instead of buying directly from the artist."
+                  />
+                </div>
                 <p className="mt-2 text-sm leading-relaxed text-neon/85">
                   {launchKind === "ARTIST"
-                    ? "Fans buy Artist Coins from a Meteora Dynamic Bonding Curve quoted in $AUDIO. The artist allocation vests separately, so fans are buying from the public curve instead of a hidden artist wallet."
-                    : "Fans need a live market to buy. Song Tokens are connected to one Audius track, and the public allocation opens through an explicit SOL, USDC, or AUDIO liquidity pool."}
+                    ? "Fans buy Artist Coins from a public curve quoted in $AUDIO. The artist's share is separate, so fans are buying from the market instead of a hidden artist wallet."
+                    : "Your song coin can exist on-chain before fans can trade it. This step opens the public market by pairing reserved song coins with SOL, USDC, or AUDIO."}
                 </p>
+              </div>
+              <div className="grid gap-3 md:grid-cols-3">
+                <LiquidityExplainer
+                  title="What am I doing?"
+                  body="You are stocking the public market with song coins and a payment coin. That gives fans somewhere to buy and sell."
+                />
+                <LiquidityExplainer
+                  title="Why two sides?"
+                  body="Song coins are what fans receive. SOL, USDC, or AUDIO is what fans pay with. The mix creates the starting price."
+                />
+                <LiquidityExplainer
+                  title="Why it matters"
+                  body="Without liquidity, the coin can exist but trading feels stuck. More liquidity usually makes buying and selling smoother, but it does not guarantee profit."
+                />
               </div>
               {launchKind === "ARTIST" ? (
                 <div className="grid gap-5 lg:grid-cols-2">
@@ -853,28 +873,71 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   <LaunchMetric k="Graduation target" v="1M AUDIO" />
                   <LaunchMetric k="Locked AMM liquidity" v="20%" />
                   <LaunchMetric k="Reward pool" v="5%" tone="violet" />
-                  <Field label="Optional creator first buy" value={liquidityPairAmount} onChange={markCustom(setLiquidityPairAmount)} step={1} min={0} unit="$AUDIO" />
+                  <Field
+                    label="Optional creator first buy"
+                    value={liquidityPairAmount}
+                    onChange={markCustom(setLiquidityPairAmount)}
+                    step={1}
+                    min={0}
+                    unit="$AUDIO"
+                    help="Optional first buy means the artist buys a small amount of their own artist coin at launch using AUDIO. It is not required."
+                    description="Leave this at 0 if you only want to create the public curve."
+                  />
                 </div>
               ) : (
                 <div className="grid gap-5 lg:grid-cols-2">
-                  <Field label="Token amount reserved for liquidity" value={liquidityTokenAmount} onChange={markCustom(setLiquidityTokenAmount)} step={1000} min={1} unit="Tokens" />
-                  <Field label={`Paired asset amount (${liquidityPairAsset})`} value={liquidityPairAmount} onChange={markCustom(setLiquidityPairAmount)} step={0.1} min={0.01} unit={liquidityPairAsset} />
+                  <Field
+                    label="Song coins for fans"
+                    value={liquidityTokenAmount}
+                    onChange={markCustom(setLiquidityTokenAmount)}
+                    step={1000}
+                    min={1}
+                    unit="Tokens"
+                    help="This is how many of the new song coins go into the public market. Fans buy from this pool instead of buying directly from the artist."
+                    description="Think of this as stocking the shelf with song coins for fans."
+                  />
+                  <Field
+                    label={`Money side of pool (${liquidityPairAsset})`}
+                    value={liquidityPairAmount}
+                    onChange={markCustom(setLiquidityPairAmount)}
+                    step={0.1}
+                    min={0.01}
+                    unit={liquidityPairAsset}
+                    help={`This is the ${liquidityPairAsset} that sits next to the song coins. Together, the song coins plus ${liquidityPairAsset} create the first market price.`}
+                    description="This is the payment side of the market. Buyers trade against it."
+                  />
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1">Paired Asset</label>
+                    <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold text-mute px-1">
+                      <span>Payment Coin</span>
+                      <InfoTooltip
+                        side="bottom"
+                        def="Pick what fans use to buy the song coin. SOL is the easiest for most Solana wallets. USDC is dollar-style. AUDIO connects to the Audius ecosystem, but routes can depend on wallet and pool support."
+                      />
+                    </label>
                     <select value={liquidityPairAsset} onChange={(e) => { setLaunchPreset("custom"); setLiquidityPairAsset(e.target.value as PairAsset); }} className="w-full bg-panel border border-edge rounded-xl px-4 py-3 text-sm text-ink">
                       <option value="SOL">SOL</option>
                       <option value="USDC">USDC</option>
                       <option value="AUDIO">AUDIO</option>
                     </select>
+                    <p className="px-1 text-[11px] leading-relaxed text-mute">SOL is the recommended starting choice while wallet and routing support improves.</p>
                   </div>
-                  <Field label="Liquidity Lockup" value={liquidityLockDays} onChange={markCustom(setLiquidityLockDays)} step={30} min={30} unit="Days" />
+                  <Field
+                    label="Market lock time"
+                    value={liquidityLockDays}
+                    onChange={markCustom(setLiquidityLockDays)}
+                    step={30}
+                    min={30}
+                    unit="Days"
+                    help="This is how long the launch market stays committed. Locking liquidity helps fans trust the market will not disappear right after launch."
+                    description="Longer lock times usually look safer to buyers."
+                  />
                 </div>
               )}
               <div className="panel p-5 bg-panel border-edge rounded-2xl space-y-3">
-                <Row k="Initial implied price" v={launchKind === "ARTIST" ? "Open Audio curve config" : `${impliedPrice.toFixed(8)} ${liquidityPairAsset}`} color="text-neon" />
-                <Row k="Slippage estimate" v={launchKind === "ARTIST" ? "Curve quoted in AUDIO" : liquidityPairAmount >= 1 ? "Low/Medium" : "High"} color={launchKind === "ARTIST" || liquidityPairAmount >= 1 ? "text-neon" : "text-amber"} />
-                <Row k="Liquidity source" v={launchKind === "ARTIST" ? "Meteora Dynamic Bonding Curve" : "Public curve / explicit pool approval"} />
-                <Row k="Lock status" v={launchKind === "ARTIST" ? "50% creator vesting over 5 years" : `${liquidityLockDays} days required`} color="text-neon" />
+                <Row k="Starting price" v={launchKind === "ARTIST" ? "Open Audio curve config" : `${impliedPrice.toFixed(8)} ${liquidityPairAsset}`} color="text-neon" help="The starting price is estimated from how many song coins and how much payment coin you put into the market." />
+                <Row k="Expected price movement" v={launchKind === "ARTIST" ? "Curve quoted in AUDIO" : liquidityPairAmount >= 1 ? "Low/Medium" : "High"} color={launchKind === "ARTIST" || liquidityPairAmount >= 1 ? "text-neon" : "text-amber"} help="If the market is small, one buy or sell can move the price more. A deeper market usually moves less." />
+                <Row k="Market source" v={launchKind === "ARTIST" ? "Meteora Dynamic Bonding Curve" : "Public pool approval"} help="This tells you where fans will buy. The public pool or curve is the market, not a hidden artist wallet." />
+                <Row k="Trust lock" v={launchKind === "ARTIST" ? "50% creator vesting over 5 years" : `${liquidityLockDays} days required`} color="text-neon" help="A lock or vesting schedule helps show fans the launch is not just a quick sellout by the artist." />
               </div>
               <div className="grid gap-3 md:grid-cols-4">
                 <LaunchMetric k="Pool depth" v={projectedDepth} />
@@ -884,7 +947,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               </div>
               {!liquidityValid && (
                 <div className="rounded-xl border border-red/20 bg-red/10 p-4 text-sm text-red">
-                  Liquidity is required before launch. This protects buyers and allows trading to start fairly.
+                  Add enough fan-market liquidity before launch. This gives buyers a real public pool to trade against.
                 </div>
               )}
             </motion.section>
@@ -1097,12 +1160,24 @@ function Stepper({ step }: { step: number }) {
 }
 
 function Field({
-  label, value, onChange, step, min, unit
-}: { label: string; value: number; onChange: (n: number) => void; step?: number; min?: number; unit: string }) {
+  label, value, onChange, step, min, unit, help, description
+}: {
+  label: string;
+  value: number;
+  onChange: (n: number) => void;
+  step?: number;
+  min?: number;
+  unit: string;
+  help?: string;
+  description?: string;
+}) {
   return (
     <div className="space-y-2">
-      <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1 flex justify-between">
-        <span>{label}</span>
+      <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1 flex justify-between gap-3">
+        <span className="inline-flex items-center gap-1.5">
+          {label}
+          {help ? <InfoTooltip side="bottom" def={help} /> : null}
+        </span>
         <span className="text-mute font-mono">{unit}</span>
       </label>
       <input
@@ -1113,15 +1188,28 @@ function Field({
         onChange={(e) => onChange(Number(e.target.value))}
         className="w-full bg-panel border border-edge rounded-xl px-4 py-3 text-lg font-mono text-ink focus:border-neon focus:ring-1 focus:ring-neon transition-all outline-none"
       />
+      {description ? <p className="px-1 text-[11px] leading-relaxed text-mute">{description}</p> : null}
     </div>
   );
 }
 
-function Row({ k, v, color }: { k: string; v: string; color?: string }) {
+function Row({ k, v, color, help }: { k: string; v: string; color?: string; help?: string }) {
   return (
     <div className="flex items-center justify-between gap-4 py-2 border-b border-edge last:border-0">
-      <span className="text-[10px] uppercase tracking-widest font-bold text-mute">{k}</span>
+      <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold text-mute">
+        {k}
+        {help ? <InfoTooltip side="bottom" def={help} /> : null}
+      </span>
       <span className={`font-mono text-xs font-bold ${color || "text-white"}`}>{v}</span>
+    </div>
+  );
+}
+
+function LiquidityExplainer({ title, body }: { title: string; body: string }) {
+  return (
+    <div className="rounded-2xl border border-edge bg-panel/80 p-4">
+      <div className="text-[10px] uppercase tracking-widest font-black text-ink">{title}</div>
+      <p className="mt-2 text-xs leading-relaxed text-mute">{body}</p>
     </div>
   );
 }
