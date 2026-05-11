@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, type AudiusProfile } from "@/lib/store";
 import { SafeImage } from "./SafeImage";
+import { formatFiat, priceAgeText } from "@/lib/fiat";
 
 interface BalState {
   balance: number | null;
@@ -40,11 +41,7 @@ function fmtNum(n: number) {
   return n.toFixed(4);
 }
 function fmtUsd(n: number) {
-  if (!isFinite(n)) return "—";
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
-  if (n >= 1) return `$${n.toFixed(2)}`;
-  return `$${n.toFixed(4)}`;
+  return formatFiat(n, "USD");
 }
 
 function shortAddr(address: string | null | undefined) {
@@ -215,6 +212,7 @@ export function WalletBalance({ compact = false }: { compact?: boolean } = {}) {
     `RPC: ${trading.rpc || "loading"}`,
     `SOL: ${trading.balance != null ? trading.balance.toFixed(6) : "loading"}`,
     `USD: ${trading.usd != null ? fmtUsd(trading.usd) : "loading"}`,
+    trading.updatedAt ? priceAgeText(trading.updatedAt) : null,
     trading.error ? `Status: ${trading.error}` : null,
   ].filter(Boolean).join("\n");
 

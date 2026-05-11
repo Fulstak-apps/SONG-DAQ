@@ -11,7 +11,7 @@ import { usePaperTrading, usePlayer, useSession, useUI, type PlayerTrack } from 
 import { sendSerializedTransaction, type WalletId } from "@/lib/wallet";
 import { toast } from "@/lib/toast";
 import { fmtNum, fmtPct } from "@/lib/pricing";
-import { getSolPriceUsd } from "@/lib/balance";
+import { formatCryptoWithFiat, formatFiat, formatFiatEstimate, priceAgeText, useLiveFiatPrices } from "@/lib/fiat";
 import { CHART_RANGE_LABELS, CHART_RANGES, isFastRange, type ChartRange } from "@/lib/chartRanges";
 import type { AudiusCoin } from "@/lib/audiusCoins";
 import { calculateCoinRisk } from "@/lib/risk/calculateCoinRisk";
@@ -29,9 +29,7 @@ const SLIPPAGE_PRESETS = [
 ];
 
 function fmtUsd(n: number, d = 4) {
-  if (!isFinite(n)) return "—";
-  if (Math.abs(n) >= 1) return `$${n.toFixed(2)}`;
-  return `$${n.toFixed(d)}`;
+  return formatFiat(n, "USD", d);
 }
 
 function toRawAmount(value: string, decimals: number): string {
@@ -95,6 +93,8 @@ export function CoinTradeModal({
   const [settleUsd, setSettleUsd] = useState<Record<"SOL" | "AUDIO", number>>({ SOL: 0, AUDIO: 0 });
   const [tracks, setTracks] = useState<any[]>([]);
   const loadingRef = useRef(false);
+  const fiatIds = useMemo(() => ["SOL", "AUDIO", coin?.mint], [coin?.mint]);
+  const { currency, prices: fiatPrices, updatedAt: fiatUpdatedAt } = useLiveFiatPrices(fiatIds);
 
   const canSignSolanaSwap = kind === "solana" && !!provider && provider !== "audius";
   const needsExternalWallet = !paperMode && !canSignSolanaSwap;
@@ -111,20 +111,11 @@ export function CoinTradeModal({
   }, [coin]);
   useEffect(() => { setErr(null); setOk(null); }, [coin?.mint, side]);
   useEffect(() => {
-    let alive = true;
-    Promise.allSettled([
-      getSolPriceUsd(),
-      fetch("/api/coins?limit=100", { cache: "no-store" }).then((r) => r.json()),
-    ]).then(([sol, coins]) => {
-      if (!alive) return;
-      const solUsd = sol.status === "fulfilled" ? Number(sol.value || 0) : 0;
-      const audioCoin = coins.status === "fulfilled"
-        ? (coins.value?.coins ?? []).find((c: any) => String(c.ticker).toUpperCase() === "AUDIO")
-        : null;
-      setSettleUsd({ SOL: solUsd, AUDIO: Number(audioCoin?.price ?? 0) });
+    setSettleUsd({
+      SOL: Number(fiatPrices.SOL?.usd ?? 0),
+      AUDIO: Number(fiatPrices.AUDIO?.usd ?? 0),
     });
-    return () => { alive = false; };
-  }, []);
+  }, [fiatPrices]);
 
   useEffect(() => {
     if (!coin?.mint) return;
@@ -246,15 +237,30 @@ export function CoinTradeModal({
     close: coin.price,
     volume: 0,
   }] : [];
-  const expectedOut = route && quote ? `${fromRawAmount(quote.outAmount, route.outputDecimals, 4)} ${route.outputTicker}` : "—";
+  const rawOutUnits = route && quote?.outAmount ? Number(quote.outAmount) / 10 ** route.outputDecimals : null;
+  const tokenUsd = Number(coin.price ?? fiatPrices[coin.mint]?.usd ?? 0);
+  const inputUnits = Number(amount || 0);
+  const inputUsd = side === "BUY"
+    ? inputUnits * (settleUsd.SOL || 0)
+    : inputUnits * (tokenUsd || 0);
+  const expectedOutFiat = rawOutUnits == null
+    ? null
+    : rawOutUnits * (route?.outputTicker === "SOL" ? settleUsd.SOL : tokenUsd);
+  const expectedOut = route && quote
+    ? `${fromRawAmount(quote.outAmount, route.outputDecimals, 4)} ${route.outputTicker} ${formatFiatEstimate(expectedOutFiat, currency)}`
+    : "—";
   const priceImpact = quote?.priceImpactPct != null ? `${(Number(quote.priceImpactPct) * 100).toFixed(2)}%` : "—";
+  const priceImpactUsd = quote?.priceImpactPct != null ? Math.abs(inputUsd * Number(quote.priceImpactPct)) : null;
   const routeProblem = isRouteProblem(err);
   const canSubmit = !busy && !quoteLoading && !isSameAssetRoute && !(side === "SELL" && isOwner) && Number(amount) > 0;
-  const inputUsd = Number(amount || 0) * (settleUsd.SOL || 0);
   const paperTokens = coin.price && coin.price > 0 ? inputUsd / coin.price : 0;
+  const estimatedNetworkFeeSol = 0.003;
+  const estimatedNetworkFeeUsd = settleUsd.SOL ? estimatedNetworkFeeSol * settleUsd.SOL : null;
+  const totalFiatCost = side === "BUY" ? inputUsd + (estimatedNetworkFeeUsd ?? 0) : inputUsd - (estimatedNetworkFeeUsd ?? 0);
+  const slippageFiat = inputUsd * (Number(slippageBps || 0) / 10_000);
   const currencyTitle = settleUsd.SOL
-    ? `${amount || 0} SOL is about ${fmtUsd(inputUsd, 2)} USD before fees.`
-    : "SOL selected. USD estimate is loading.";
+    ? `${formatCryptoWithFiat(Number(amount || 0), side === "BUY" ? "SOL" : coin.ticker, inputUsd, currency)} before fees. ${priceAgeText(fiatUpdatedAt)}.`
+    : "Fiat estimate unavailable.";
   const visibleTracks = tracks.slice(0, 4);
   const linkedTrackCount = visibleTracks.filter((track) => !!linkedCoinForTrack(track)).length;
   const selectedSong = coin.audius_track_title || visibleTracks[0]?.title || "Artist token";
@@ -673,8 +679,9 @@ export function CoinTradeModal({
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-mute">
-                  <span title={currencyTitle}>≈ <span className="text-ink">{fmtUsd(inputUsd, 2)}</span> USD</span>
+                  <span title={currencyTitle}>{formatFiatEstimate(inputUsd, currency)}</span>
                   {side === "BUY" && paperMode ? <span>≈ {fmtNum(paperTokens)} {coin.ticker}</span> : null}
+                  <span>{priceAgeText(fiatUpdatedAt)}</span>
                 </div>
               </label>
 
@@ -715,6 +722,9 @@ export function CoinTradeModal({
                     {slippagePercent(slippageBps)}
                   </span>
                 </div>
+                <div className="mt-2 text-[10px] uppercase tracking-widest text-mute">
+                  Max fiat movement estimate: <span className="text-ink">{formatFiatEstimate(slippageFiat, currency)}</span>
+                </div>
               </label>
 
               <div className="rounded-xl bg-panel border border-edge p-4 space-y-2.5">
@@ -732,6 +742,11 @@ export function CoinTradeModal({
                   v={quoteLoading ? "Finding route…" : expectedOut}
                   highlight
                 />
+                <OrderRow
+                  k={<Glossary term="Fiat total" def="The estimated real-world currency value before you approve the wallet transaction. This is approximate and may move with live prices.">Fiat total</Glossary>}
+                  v={formatFiatEstimate(totalFiatCost, currency)}
+                  highlight
+                />
                 {paperMode && (
                   <OrderRow
                     k={<Glossary term="Demo estimate" def="Paper trade mode estimates the position locally. It does not send a transaction, spend money, or prove that live liquidity exists.">Demo estimate</Glossary>}
@@ -742,7 +757,11 @@ export function CoinTradeModal({
                 <div className="h-px bg-white/[0.03] w-full" />
                 <OrderRow
                   k={<Glossary term="Price impact" def="How much your own trade is expected to move the price. Lower is better. High price impact means the market is thin or the trade is large.">Price impact</Glossary>}
-                  v={priceImpact}
+                  v={`${priceImpact} · ${formatFiatEstimate(priceImpactUsd, currency)}`}
+                />
+                <OrderRow
+                  k={<Glossary term="Estimated network fee" def="Solana charges a small network fee. This is an estimate so you can see the real-world cost before approving.">Estimated network fee</Glossary>}
+                  v={formatCryptoWithFiat(estimatedNetworkFeeSol, "SOL", estimatedNetworkFeeUsd, currency)}
                 />
                 <OrderRow
                   k={<Glossary term="Router" def="Jupiter searches Solana markets for a live route and builds the swap for your wallet to approve.">Router</Glossary>}
@@ -793,7 +812,7 @@ export function CoinTradeModal({
               {err && <div className="text-red text-[10px] uppercase tracking-widest text-center font-bold bg-red/5 border border-red/10 py-2 rounded-xl">{err}</div>}
               {ok && <div className="text-neon text-[10px] uppercase tracking-widest text-center font-bold bg-neon/5 border border-neon/10 py-2 rounded-xl">{ok}</div>}
               <p className="text-[9px] text-mute leading-relaxed text-center uppercase tracking-widest">
-                {paperMode ? "Demo mode. No money moves and no blockchain transaction is sent." : "Real Solana swap. No local fills are recorded."}
+                {paperMode ? `Demo mode. No money moves and no blockchain transaction is sent. ${priceAgeText(fiatUpdatedAt)}.` : `Real Solana swap. ${priceAgeText(fiatUpdatedAt)}.`}
               </p>
             </section>
           </div>

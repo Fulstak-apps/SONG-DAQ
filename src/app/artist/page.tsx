@@ -3,7 +3,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useSession } from "@/lib/store";
 import { CoinLauncher } from "@/components/CoinLauncher";
-import { fmtSol, fmtNum } from "@/lib/pricing";
+import { fmtNum } from "@/lib/pricing";
+import { formatCryptoWithFiat, priceAgeText, useLiveFiatPrices } from "@/lib/fiat";
 
 import { Glossary } from "@/components/Tooltip";
 
@@ -16,6 +17,8 @@ export default function ArtistPage() {
   const tradingWallet = address && provider !== "audius" ? address : null;
   const artistIdentityWallet = tradingWallet || audius?.wallets?.sol || address || null;
   const activeWallet = artistIdentityWallet;
+  const { currency, prices: fiatPrices, updatedAt: fiatUpdatedAt } = useLiveFiatPrices(["SOL"]);
+  const solUsdRate = Number(fiatPrices.SOL?.usd ?? 0);
 
   async function loadMe(blocking = false) {
     if (!activeWallet) return;
@@ -96,8 +99,8 @@ export default function ArtistPage() {
 
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Stat k="Active Artist Tokens" v={fmtNum(mySongs.length)} tooltip="Number of your artist and Song Tokens currently trading on the market." />
-        <Stat k="Total Network Cap" v={`${fmtSol(totalCap, 2)} SOL`} tooltip="The combined market capitalization of all your listed songs." />
-        <Stat k="Cumulative Revenue" v={`${fmtSol(artistRevenue, 4)} SOL`} accent="gain" tooltip="Total SOL you have earned from your retained shares." />
+        <Stat k="Total Network Cap" v={formatCryptoWithFiat(totalCap, "SOL", totalCap * solUsdRate, currency, 2)} tooltip={`The combined market capitalization of all your listed songs. ${priceAgeText(fiatUpdatedAt)}.`} />
+        <Stat k="Cumulative Revenue" v={formatCryptoWithFiat(artistRevenue, "SOL", artistRevenue * solUsdRate, currency, 4)} accent="gain" tooltip={`Total SOL you have earned from your retained shares. ${priceAgeText(fiatUpdatedAt)}.`} />
         <Stat k="Unique Holders" v={fmtNum(totalHolders)} tooltip="Total number of unique addresses holding your Song Tokens." />
       </section>
 
@@ -146,11 +149,11 @@ export default function ArtistPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex flex-col items-end gap-1">
-                        <span className="num font-bold text-white shadow-sm">{fmtSol(s.price, 6)}</span>
+                        <span className="num font-bold text-white shadow-sm">{formatCryptoWithFiat(s.price, "SOL", Number(s.price ?? 0) * solUsdRate, currency, 6)}</span>
                         <div className="flex gap-2 text-[9px] uppercase tracking-widest text-mute font-mono">
-                          <span>Cap {fmtSol(s.marketCap, 2)}</span>
+                          <span>Cap {formatCryptoWithFiat(s.marketCap, "SOL", Number(s.marketCap ?? 0) * solUsdRate, currency, 2)}</span>
                           <span>|</span>
-                          <span>Vol {fmtSol(s.volume24h, 2)}</span>
+                          <span>Vol {formatCryptoWithFiat(s.volume24h, "SOL", Number(s.volume24h ?? 0) * solUsdRate, currency, 2)}</span>
                         </div>
                       </div>
                     </td>

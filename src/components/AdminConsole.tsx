@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useSession } from "@/lib/store";
 import { safeJson } from "@/lib/safeJson";
+import { formatCryptoWithFiat, useLiveFiatPrices } from "@/lib/fiat";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -54,6 +55,8 @@ export function AdminConsole() {
   const [access, setAccess] = useState<"unknown" | "locked" | "open">("unknown");
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const { currency, prices: fiatPrices } = useLiveFiatPrices(["SOL"]);
+  const solUsdRate = Number(fiatPrices.SOL?.usd ?? 0);
 
   const refresh = async () => {
     setLoading(true);
@@ -268,7 +271,7 @@ export function AdminConsole() {
                   id: `trad-${t.id}`,
                   kind: "TRD",
                   label: `${t.side} ${t.song?.symbol}`,
-                  meta: `${short(t.user?.wallet || "")} · ${Number(t.amount).toLocaleString()} · ${Number(t.total).toFixed(4)} SOL`,
+                  meta: `${short(t.user?.wallet || "")} · ${Number(t.amount).toLocaleString()} · ${formatCryptoWithFiat(Number(t.total), "SOL", Number(t.total) * solUsdRate, currency, 4)}`,
                   ts: t.createdAt,
                   href: `/coin/${t.songId}`,
                 })), ...(data.recentCoinTrades ?? []).map((t) => ({

@@ -7,10 +7,11 @@ import { SafeImage } from "@/components/SafeImage";
 import { useAudiusAudioBalance, useNativeBalance } from "@/components/WalletBalance";
 import { WalletButton } from "@/components/WalletButton";
 import { usePaperTrading, useSession, useUI } from "@/lib/store";
-import { fmtNum, fmtSol } from "@/lib/pricing";
+import { fmtNum } from "@/lib/pricing";
 import { getSolPriceUsd } from "@/lib/balance";
 import { readJson } from "@/lib/safeJson";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
+import { formatCryptoWithFiat, formatFiat, priceAgeText } from "@/lib/fiat";
 
 interface TokenRow {
   mint: string;
@@ -39,11 +40,7 @@ interface TokenHoldings {
 }
 
 function fmtUsd(n: number) {
-  if (!isFinite(n)) return "—";
-  if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
-  if (Math.abs(n) >= 1) return `$${n.toFixed(2)}`;
-  return `$${n.toFixed(4)}`;
+  return formatFiat(n, "USD");
 }
 
 function short(addr: string) {
@@ -240,11 +237,13 @@ export default function PortfolioPage() {
   const audioValueTopUpUsd = Math.max(0, audioValueUsd - indexedAudioValueUsd);
   const artistValueTopUpUsd = Math.max(0, artistValueUsd - indexedArtistValueUsd);
   const songValueUsd = songValueSol * (solUsdPrice || (native.balance ? (native.usd ?? 0) / native.balance : 0));
+  const royaltyUsd = royaltySol * (solUsdPrice || 0);
+  const fiatUpdatedAt = native.updatedAt ?? null;
   const totalIndexedValueUsd = totalUsd + audioValueTopUpUsd + artistValueTopUpUsd + songValueUsd + cashUsd;
   const recentActivity = [
-    ...(portfolio?.trades ?? []).map((t: any) => ({ ...t, kind: "Song", label: t.song?.symbol ?? "SONG", total: `${fmtSol(t.total, 4)} SOL` })),
+    ...(portfolio?.trades ?? []).map((t: any) => ({ ...t, kind: "Song", label: t.song?.symbol ?? "SONG", total: formatCryptoWithFiat(t.total, "SOL", Number(t.total ?? 0) * (solUsdPrice || 0)) })),
     ...(portfolio?.coinTrades ?? []).map((t: any) => ({ ...t, kind: "Artist", label: t.ticker ?? "TOKEN", total: fmtUsd(t.totalUsd ?? 0) })),
-    ...(portfolio?.payouts ?? []).map((p: any) => ({ ...p, side: "ROYALTY", kind: "Royalty", label: p.song?.symbol ?? "SONG", total: `${fmtSol(p.amount, 4)} SOL` })),
+    ...(portfolio?.payouts ?? []).map((p: any) => ({ ...p, side: "ROYALTY", kind: "Royalty", label: p.song?.symbol ?? "SONG", total: formatCryptoWithFiat(p.amount, "SOL", Number(p.amount ?? 0) * (solUsdPrice || 0)) })),
   ].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 8);
   const pnl = (portfolio?.summary?.pnl ?? 0) + (tradingTokens.data?.totalUsd ?? 0) - (tradingTokens.data?.totalUsd ?? 0);
   const concentration = Math.max(
@@ -279,8 +278,8 @@ export default function PortfolioPage() {
 
         <section className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
           <Metric label="Demo Cash" value={fmtUsd(cashUsd)} sub="Combined paper value from SOL + AUDIO + seed cash" />
-          <Metric label="Demo SOL" value={`${fmtSol(paperSol, 4)} SOL`} sub={paperUsd.sol ? `${fmtUsd(paperSol * paperUsd.sol)} USD` : "Simulated wallet SOL"} />
-          <Metric label="Demo AUDIO" value={fmtNum(paperAudio)} sub={paperUsd.audio ? `${fmtUsd(paperAudio * paperUsd.audio)} USD` : "Simulated AUDIO balance"} />
+          <Metric label="Demo SOL" value={formatCryptoWithFiat(paperSol, "SOL", paperUsd.sol ? paperSol * paperUsd.sol : null)} sub="Simulated wallet SOL" />
+          <Metric label="Demo AUDIO" value={formatCryptoWithFiat(paperAudio, "AUDIO", paperUsd.audio ? paperAudio * paperUsd.audio : null)} sub="Simulated AUDIO balance" />
           <Metric label="Artist Tokens" value={fmtNum(paperPositions.length)} sub="Paper holdings" />
           <Metric label="Song Tokens" value="0" sub="Use the market to add positions" />
           <Metric label="PnL / Net Change" value="—" sub="Demo mode starts neutral" />
@@ -391,12 +390,12 @@ export default function PortfolioPage() {
 
       <section className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
         <Metric label="Total Indexed Value" value={fmtUsd(totalIndexedValueUsd)} sub={paperMode ? "Wallet + AUDIO + coins + paper cash" : "Wallet + AUDIO + all indexed coins"} />
-        <Metric label="External SOL" value={externalAddress && native.balance != null ? `${fmtSol(native.balance, 4)} SOL` : "Connect"} sub={externalAddress ? (native.usd ? fmtUsd(native.usd) : "Solana balance") : "Connect external wallet"} />
+        <Metric label="External SOL" value={externalAddress && native.balance != null ? formatCryptoWithFiat(native.balance, "SOL", native.usd) : "Connect"} sub={externalAddress ? priceAgeText(fiatUpdatedAt) : "Connect external wallet"} />
         <Metric label="External USD" value={externalAddress && native.usd != null ? fmtUsd(native.usd) : "—"} sub={externalAddress ? "Native SOL value" : "Not connected"} />
-        <Metric label="AUDIO" value={fmtNum(audioBalance)} sub={audioValueUsd ? fmtUsd(audioValueUsd) : "Audius token"} />
+        <Metric label="AUDIO" value={formatCryptoWithFiat(audioBalance, "AUDIO", audioValueUsd || null)} sub="Audius token value" />
         <Metric label="Cash" value={fmtUsd(cashUsd)} sub={paperMode ? "Combined paper value from SOL + AUDIO + seed cash" : "Connect bank later"} />
         <Metric label="Artist Tokens" value={fmtNum(artistTokens.length)} sub={fmtUsd(artistValueUsd)} />
-        <Metric label="Song Tokens" value={fmtNum(songTokens.length)} sub={`${fmtSol(songValueSol, 4)} SOL indexed`} />
+        <Metric label="Song Tokens" value={fmtNum(songTokens.length)} sub={formatCryptoWithFiat(songValueSol, "SOL", songValueUsd)} />
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-3">
@@ -479,7 +478,7 @@ export default function PortfolioPage() {
                 </div>
                 <div className="text-right">
                   <div className="font-mono text-sm text-white">{fmtNum(h.amount ?? 0)}</div>
-                  <div className="text-[10px] uppercase tracking-widest text-mute">{fmtSol((h.amount ?? 0) * (h.song?.price ?? 0), 4)} SOL</div>
+                  <div className="text-[10px] uppercase tracking-widest text-mute">{formatCryptoWithFiat((h.amount ?? 0) * (h.song?.price ?? 0), "SOL", ((h.amount ?? 0) * (h.song?.price ?? 0)) * (solUsdPrice || 0))}</div>
                 </div>
               </Link>
             )) : (
@@ -515,8 +514,8 @@ export default function PortfolioPage() {
           <div className="panel-elevated p-5 grain">
             <h2 className="text-lg font-black tracking-tight mb-4">Song Token Index</h2>
             <div className="grid grid-cols-2 gap-2">
-              <Mini label="Song Value" value={`${fmtSol(songValueSol, 4)} SOL`} />
-              <Mini label="PnL" value={`${fmtSol(portfolio?.summary?.pnl ?? 0, 4)} SOL`} />
+              <Mini label="Song Value" value={formatCryptoWithFiat(songValueSol, "SOL", songValueUsd)} />
+              <Mini label="Royalty" value={formatCryptoWithFiat(royaltySol, "SOL", royaltyUsd)} />
             </div>
           </div>
         </div>

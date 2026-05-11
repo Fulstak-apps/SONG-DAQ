@@ -3,9 +3,9 @@ import { useEffect, useMemo, useState } from "react";
 import { useSession, useUI } from "@/lib/store";
 import { api } from "@/lib/api";
 import { getConnectedWalletId, sendSerializedTransaction } from "@/lib/wallet";
-import { fmtSol } from "@/lib/pricing";
 import { Glossary } from "@/components/Tooltip";
 import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
+import { formatCryptoWithFiat, formatFiatEstimate, priceAgeText, useLiveFiatPrices } from "@/lib/fiat";
 
 export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void }) {
   const { address, kind, provider } = useSession();
@@ -21,9 +21,11 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [ok, setOk] = useState<string | null>(null);
+  const { currency, prices: fiatPrices, updatedAt: fiatUpdatedAt } = useLiveFiatPrices(["SOL"]);
 
   const tokenAmt = Number(tokens) || 0;
   const solAmt = Number(solIn) || 0;
+  const solUsdRate = Number(fiatPrices.SOL?.usd ?? 0);
 
   useEffect(() => {
     let alive = true;
@@ -96,6 +98,10 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
   
   const displayTotal = quote ? quote.total : null;
   const displayAvgPrice = quote ? quote.avgPrice : null;
+  const displayTotalUsd = displayTotal != null && solUsdRate > 0 ? Number(displayTotal) * solUsdRate : null;
+  const displayAvgPriceUsd = displayAvgPrice != null && solUsdRate > 0 ? Number(displayAvgPrice) * solUsdRate : null;
+  const feeUsd = quote?.fee != null && solUsdRate > 0 ? Number(quote.fee) * solUsdRate : null;
+  const slippageUsd = displayTotalUsd != null ? displayTotalUsd * (Number(maxSlippageBps || 0) / 10_000) : null;
   const walletCanTransact = kind === "solana" && provider !== "audius";
   const canExecute = !busy && walletCanTransact && swapRouteReady && Number(tokens || solIn) > 0 && !!quote;
 
@@ -137,6 +143,9 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-widest font-bold text-mute pointer-events-none group-focus-within:text-neon transition">Tokens</div>
           </div>
+          <div className="px-1 text-[10px] uppercase tracking-widest text-mute">
+            {song?.price ? formatFiatEstimate(tokenAmt * Number(song.price) * solUsdRate, currency) : "Fiat estimate unavailable"}
+          </div>
         </div>
 
         {side === "BUY" && (
@@ -164,6 +173,9 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
                 />
                 <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-widest font-bold text-mute pointer-events-none group-focus-within:text-neon transition">{asset}</div>
               </div>
+              <div className="px-1 text-[10px] uppercase tracking-widest text-mute">
+                {formatCryptoWithFiat(solAmt, "SOL", solAmt * solUsdRate, currency)}
+              </div>
             </div>
           </div>
         )}
@@ -184,18 +196,22 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
             />
             <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-mute pointer-events-none group-focus-within:text-neon transition">BPS</div>
           </div>
+          <div className="px-1 text-[10px] uppercase tracking-widest text-mute">
+            Max fiat movement estimate: {formatFiatEstimate(slippageUsd, currency)}
+          </div>
         </div>
       </div>
 
       <div className="rounded-xl bg-panel2 p-4 text-[10px] uppercase tracking-widest font-bold space-y-3 border border-edge relative z-10">
-        <Row k="Execution Price" v={quote ? `${fmtSol(displayAvgPrice!, 6)} ${asset}` : "—"} />
-        <Row k={side === "BUY" ? "Total Expenditure" : "Estimated Proceeds"} v={quote ? `${fmtSol(displayTotal!, 5)} ${asset}` : "—"} color="text-ink" />
-        <Row k="Network Fee (0.5%)" v={quote ? `${fmtSol(quote.fee, 5)} SOL` : "—"} />
+        <Row k="Execution Price" v={quote ? formatCryptoWithFiat(displayAvgPrice!, asset, displayAvgPriceUsd, currency, 6) : "—"} />
+        <Row k={side === "BUY" ? "Total Expenditure" : "Estimated Proceeds"} v={quote ? formatCryptoWithFiat(displayTotal!, asset, displayTotalUsd, currency, 5) : "—"} color="text-ink" />
+        <Row k="Network Fee (0.5%)" v={quote ? formatCryptoWithFiat(quote.fee, "SOL", feeUsd, currency, 5) : "—"} />
         <Row k="Settlement Units" v={quote ? `${quote.tokens.toFixed(2)} UNITS` : "—"} />
         <Row k="Price Impact" v={`${slippagePct}%`} color={Number(slippagePct) > 2 ? "text-red" : "text-neon"} />
-        <Row k="Spot Price" v={quote ? `${fmtSol(quote.newSpotPrice, 6)} SOL` : "—"} />
+        <Row k="Spot Price" v={quote ? formatCryptoWithFiat(quote.newSpotPrice, "SOL", Number(quote.newSpotPrice ?? 0) * solUsdRate, currency, 6) : "—"} />
         <Row k="Route" v={swapRouteReady ? "Jupiter live route" : quote?.routeError || "Waiting for Jupiter indexing"} color={swapRouteReady ? "text-neon" : "text-amber"} />
         <Row k="Wallet Approval" v="On-chain swap only" color="text-neon" />
+        <div className="pt-1 text-[9px] text-mute">{priceAgeText(fiatUpdatedAt)}</div>
       </div>
 
       <div className="relative z-10 space-y-3">

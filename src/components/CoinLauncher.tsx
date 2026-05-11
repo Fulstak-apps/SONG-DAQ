@@ -16,6 +16,7 @@ import { RoyaltyConfigEditor } from "./RoyaltyConfigEditor";
 import type { AudiusTrack } from "@/lib/audius";
 import { createArtistPaidSongMint, getConnectedWalletId, sendSerializedTransaction, type WalletId } from "@/lib/wallet";
 import { Glossary, InfoTooltip } from "@/components/Tooltip";
+import { formatCryptoWithFiat, formatFiatEstimate, priceAgeText, useLiveFiatPrices } from "@/lib/fiat";
 import { WalletButton } from "@/components/WalletButton";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
@@ -102,6 +103,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const [liquidityLockDays, setLiquidityLockDays] = useState(180);
   const [ownershipConfirmed, setOwnershipConfirmed] = useState(false);
   const [riskAcknowledged, setRiskAcknowledged] = useState(false);
+  const { currency, prices: fiatPrices, updatedAt: fiatUpdatedAt } = useLiveFiatPrices(["SOL", "AUDIO", "USDC"]);
 
   // Step 4
   const [busy, setBusy] = useState(false);
@@ -159,6 +161,15 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const reserveBps = Math.max(0, 10_000 - artistAllocationBps - Math.round(launchLiquidityRatio * 10_000));
   const projectedDepth = liquidityPairAmount >= 5 ? "Institutional" : liquidityPairAmount >= 1 ? "Healthy" : "Thin";
   const launchImpact = liquidityPairAmount > 0 ? Math.min(25, (1 / liquidityPairAmount) * 2.5) : 25;
+  const pairUsdRate = liquidityPairAsset === "USDC" ? 1 : Number(fiatPrices[liquidityPairAsset]?.usd ?? 0);
+  const liquidityPairUsd = pairUsdRate > 0 ? liquidityPairAmount * pairUsdRate : null;
+  const impliedPriceUsd = pairUsdRate > 0 ? impliedPrice * pairUsdRate : null;
+  const solUsdRate = Number(fiatPrices.SOL?.usd ?? 0);
+  const audioUsdRate = Number(fiatPrices.AUDIO?.usd ?? 0);
+  const estimatedNetworkFeeSol = 0.003;
+  const estimatedNetworkFeeUsd = solUsdRate > 0 ? estimatedNetworkFeeSol * solUsdRate : null;
+  const creatorFirstBuyUsd = audioUsdRate > 0 ? liquidityPairAmount * audioUsdRate : null;
+  const fiatAge = priceAgeText(fiatUpdatedAt);
 
   function applyLaunchPreset(preset: typeof LAUNCH_PRESETS[number]) {
     setLaunchPreset(preset.id);
@@ -881,7 +892,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     min={0}
                     unit="$AUDIO"
                     help="Optional first buy means the artist buys a small amount of their own artist coin at launch using AUDIO. It is not required."
-                    description="Leave this at 0 if you only want to create the public curve."
+                    description={`Leave this at 0 if you only want to create the public curve. ${formatFiatEstimate(creatorFirstBuyUsd, currency)}`}
                   />
                 </div>
               ) : (
@@ -894,7 +905,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     min={1}
                     unit="Tokens"
                     help="This is how many of the new song coins go into the public market. Fans buy from this pool instead of buying directly from the artist."
-                    description="This is the song-coin side of liquidity. Think of it as stocking the shelf for fans."
+                    description={`This is the song-coin side of liquidity. Pool value tracks the payment side: ${formatFiatEstimate(liquidityPairUsd, currency)}.`}
                   />
                   <Field
                     label={`Liquidity payment side (${liquidityPairAsset})`}
@@ -904,7 +915,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     min={0.01}
                     unit={liquidityPairAsset}
                     help={`This is the ${liquidityPairAsset} that sits next to the song coins. Together, the song coins plus ${liquidityPairAsset} create the first market price.`}
-                    description="This is the payment side of liquidity. Buyers trade against it."
+                    description={`This is the payment side of liquidity: ${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)}.`}
                   />
                   <div className="space-y-2">
                     <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold text-mute px-1">
@@ -934,10 +945,13 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 </div>
               )}
               <div className="panel p-5 bg-panel border-edge rounded-2xl space-y-3">
-                <Row k="Starting price" v={launchKind === "ARTIST" ? "Open Audio curve config" : `${impliedPrice.toFixed(8)} ${liquidityPairAsset}`} color="text-neon" help="The starting price is estimated from how many song coins and how much payment coin you put into the market." />
+                <Row k="Starting price" v={launchKind === "ARTIST" ? "Open Audio curve config" : `${impliedPrice.toFixed(8)} ${liquidityPairAsset} ${formatFiatEstimate(impliedPriceUsd, currency, 4)}`} color="text-neon" help="The starting price is estimated from how many song coins and how much payment coin you put into the market." />
+                <Row k="Launch liquidity" v={launchKind === "ARTIST" ? formatCryptoWithFiat(liquidityPairAmount, "AUDIO", creatorFirstBuyUsd, currency) : formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)} color="text-neon" help="This is the real-world estimate of the payment coin being added to the launch liquidity pool." />
+                <Row k="Estimated network fee" v={formatCryptoWithFiat(estimatedNetworkFeeSol, "SOL", estimatedNetworkFeeUsd, currency)} help="Solana network fees move. This is an estimate, not a guaranteed final charge." />
                 <Row k="Expected price movement" v={launchKind === "ARTIST" ? "Curve quoted in AUDIO" : liquidityPairAmount >= 1 ? "Low/Medium" : "High"} color={launchKind === "ARTIST" || liquidityPairAmount >= 1 ? "text-neon" : "text-amber"} help="If the market is small, one buy or sell can move the price more. A deeper market usually moves less." />
                 <Row k="Market source" v={launchKind === "ARTIST" ? "Meteora Dynamic Bonding Curve" : "Public pool approval"} help="This tells you where fans will buy. The public pool or curve is the market, not a hidden artist wallet." />
                 <Row k="Trust lock" v={launchKind === "ARTIST" ? "50% creator vesting over 5 years" : `${liquidityLockDays} days required`} color="text-neon" help="A lock or vesting schedule helps show fans the launch is not just a quick sellout by the artist." />
+                <div className="pt-1 text-[9px] uppercase tracking-widest text-mute">{fiatAge}</div>
               </div>
               <div className="grid gap-3 md:grid-cols-4">
                 <LaunchMetric k="Pool depth" v={projectedDepth} />
@@ -979,7 +993,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <div className="text-[10px] uppercase tracking-widest font-black text-white">Launch summary</div>
                       <Row k={launchKind === "ARTIST" ? "Artist" : "Song"} v={launchKind === "ARTIST" ? (audius?.name || audius?.handle || "Artist coin") : (pick?.title ?? "Song coin")} />
                       <Row k="Supply" v={launchKind === "ARTIST" ? "1B / 9 decimals" : fmtNum(supply)} />
-                      <Row k="Market" v={launchKind === "ARTIST" ? "Meteora DBC vs $AUDIO" : `${fmtNum(liquidityTokenAmount)} tokens + ${liquidityPairAmount} ${liquidityPairAsset}`} color="text-neon" />
+                      <Row k="Market" v={launchKind === "ARTIST" ? `Meteora DBC vs $AUDIO · ${formatCryptoWithFiat(liquidityPairAmount, "AUDIO", creatorFirstBuyUsd, currency)}` : `${fmtNum(liquidityTokenAmount)} tokens + ${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)}`} color="text-neon" />
+                      <Row k="Estimated network fee" v={formatCryptoWithFiat(estimatedNetworkFeeSol, "SOL", estimatedNetworkFeeUsd, currency)} />
                       <Row k="Trading opens" v={launchKind === "ARTIST" ? "After AUDIO curve transaction confirms" : "After liquidity transaction verifies"} color="text-neon" />
                       <Row k="Vesting / lock" v={launchKind === "ARTIST" ? "50% artist vesting over 5 years" : `${liquidityLockDays} days`} />
                       <Row k="Artist allocation" v={`${(artistAllocationBps / 100).toFixed(2)}%`} />
@@ -994,7 +1009,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                           <span className="font-black text-neon">Approval 1:</span> {launchKind === "ARTIST" ? "creates the Artist Coin pool on Meteora Dynamic Bonding Curve using the AUDIO quote mint." : "creates the SPL mint, attaches SONG·DAQ metadata, mints the fixed supply to your connected artist wallet, disables freeze authority, and revokes mint authority."}
                         </div>
                         <div>
-                          <span className="font-black text-neon">{launchKind === "ARTIST" ? "Optional first buy:" : "Approval 2:"}</span> {launchKind === "ARTIST" ? `if entered, your wallet also buys with ${liquidityPairAmount || 0} AUDIO in the same launch flow.` : `creates the public liquidity pool with the token amount and ${liquidityPairAsset} amount shown here.`}
+                          <span className="font-black text-neon">{launchKind === "ARTIST" ? "Optional first buy:" : "Approval 2:"}</span> {launchKind === "ARTIST" ? `if entered, your wallet also buys with ${formatCryptoWithFiat(liquidityPairAmount || 0, "AUDIO", creatorFirstBuyUsd, currency)} in the same launch flow.` : `creates the public liquidity pool with the token amount and ${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)} shown here.`}
                         </div>
                         <div>
                           Wallet prompts should show your wallet as signer, this token symbol, normal Solana programs, and no unlimited approval.
@@ -1031,6 +1046,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <span>I understand that fans can potentially profit only if demand pushes the coin price higher, but profit is not guaranteed and prices can go down.</span>
                   </label>
                   <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-left text-xs leading-relaxed text-neon/85">
+                    <div className="mb-1 text-[10px] uppercase tracking-widest font-black text-neon">{fiatAge}</div>
                     {launchKind === "ARTIST"
                       ? "Open Audio Artist Coins use a $AUDIO-paired public bonding curve plus artist vesting. Your wallet signs the live transaction and SONG·DAQ shows the real wallet or backend result."
                       : "Audius-style launches use a public market curve plus artist vesting. Your wallet signs the live transaction and SONG·DAQ shows the real wallet or backend result."}
