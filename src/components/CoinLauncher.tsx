@@ -773,14 +773,14 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                         description={`Total supply estimate: ${formatFiatEstimate(fullSupplyValueUsd, currency)}. If all coins were counted at the starting price, this would be the estimated value. The real market value can be much lower or higher once people start trading.`}
                       />
                       <Field
-                        label="Initial Curve Price"
+                        label="Starting token price"
                         value={basePrice}
                         onChange={markCustom(setBasePrice)}
                         step={0.0001}
                         min={0}
                         unit="SOL"
-                        help="This is the estimated starting price per song coin before trading demand moves the curve."
-                        description={`Starting price per coin: ${formatCryptoWithFiat(basePrice, "SOL", basePriceUsd, currency, 6)}.`}
+                        help="This is the estimated price for 1 song coin at launch. The price can move up or down once people start buying and selling."
+                        description={`Starting token price: ${formatCryptoWithFiat(basePrice, "SOL", basePriceUsd, currency, 6)}.`}
                       />
                       <Field label="Curve Momentum" value={curveSlope} onChange={markCustom(setCurveSlope)} step={0.0000001} min={0} unit="Slope" />
                       <Field label="Max Wallet Cap" value={maxWalletBps / 100} onChange={(n) => { setLaunchPreset("custom"); setMaxWalletBps(Math.round(n * 100)); }} step={0.25} min={0.1} unit="% of supply" />
@@ -839,11 +839,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   <PreviewCurve series={previewSeries} />
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <div className="text-[9px] uppercase tracking-widest font-bold text-mute">Launch Price</div>
+                      <div className="text-[9px] uppercase tracking-widest font-bold text-mute">Starting token price</div>
                       <div className="font-mono text-sm font-bold text-white">{formatCryptoWithFiat(previewStartPrice, "SOL", previewStartUsd, currency, 6)}</div>
                     </div>
                     <div className="space-y-1 text-right">
-                      <div className="text-[9px] uppercase tracking-widest font-bold text-mute">Launch price</div>
+                      <div className="text-[9px] uppercase tracking-widest font-bold text-mute">Projected token price</div>
                       <div className="font-mono text-sm font-bold text-neon">{formatCryptoWithFiat(previewEndPrice, "SOL", previewEndUsd, currency, 6)}</div>
                     </div>
                   </div>
