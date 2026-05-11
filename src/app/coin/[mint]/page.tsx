@@ -18,6 +18,7 @@ import { useCoins } from "@/lib/useCoins";
 import { fmtNum, fmtPct } from "@/lib/pricing";
 import type { AudiusCoin } from "@/lib/audiusCoins";
 import { Glossary, InfoTooltip } from "@/components/Tooltip";
+import { readJson } from "@/lib/safeJson";
 
 import { CHART_RANGE_LABELS, CHART_RANGES, CHART_RANGE_MS, isFastRange, type ChartRange } from "@/lib/chartRanges";
 
@@ -46,7 +47,7 @@ export default function CoinPage() {
   const [range, setRange] = useState<ChartRange>("LIVE");
   const [chartType, setChartType] = useState<"line" | "candles">("line");
   const [chartFullscreen, setChartFullscreen] = useState(false);
-  const [advancedMode, setAdvancedMode] = useState(false);
+  const advancedMode = true;
   const { coins: allCoins } = useCoins("marketCap");
   const [search, setSearch] = useState("");
   const [tracks, setTracks] = useState<any[]>([]);
@@ -63,12 +64,12 @@ export default function CoinPage() {
         fetch(`/api/coins/${mint}`, { cache: "no-store" }),
         fetch(`/api/coins/${mint}/history?range=${range}`, { cache: "no-store" }),
       ]);
-      const cj = await coinR.json();
-      if (!coinR.ok) throw new Error(cj.error || "failed");
-      setCoin(cj.coin);
+      const cj = await readJson<{ coin?: AudiusCoin; error?: string }>(coinR);
+      if (!coinR.ok) throw new Error(cj?.error || "Could not load this coin.");
+      setCoin(cj?.coin ?? null);
       if (histR.ok) {
-        const hj = await histR.json();
-        setPoints(hj.candles ?? []);
+        const hj = await readJson<{ candles?: PricePointDTO[] }>(histR);
+        setPoints(hj?.candles ?? []);
       }
     } catch (e: any) { setErr(e.message); }
   }, [mint, range]);
@@ -85,8 +86,8 @@ export default function CoinPage() {
     if (!coin?.artist_handle) { setTracks([]); return; }
     let alive = true;
     fetch(`/api/audius/tracks?handle=${encodeURIComponent(coin.artist_handle)}`, { cache: "no-store" })
-      .then((r) => r.ok ? r.json() : { tracks: [] })
-      .then((j) => { if (alive) setTracks(j.tracks ?? []); })
+      .then((r) => r.ok ? readJson<{ tracks?: any[] }>(r) : { tracks: [] })
+      .then((j) => { if (alive) setTracks(j?.tracks ?? []); })
       .catch(() => {});
     return () => { alive = false; };
   }, [coin?.artist_handle]);
@@ -226,13 +227,13 @@ export default function CoinPage() {
             </div>
           </div>
           
-          <button 
-            onClick={() => setAdvancedMode(false)} 
+          <Link
+            href="/market"
             className="px-3 sm:px-4 py-2 bg-red/10 text-red border border-red/20 hover:bg-red/20 transition-all rounded-md text-[10px] uppercase tracking-widest font-bold shadow-sm flex items-center gap-2"
           >
-            <span>Close Advanced</span>
+            <span>Back to Market</span>
             <span className="text-lg leading-none">&times;</span>
-          </button>
+          </Link>
         </div>
 
         {/* Main Terminal Layout */}
@@ -393,7 +394,7 @@ export default function CoinPage() {
             onClick={() => toggleWatch(coin.mint)}
             className={`px-4 py-1.5 rounded-lg text-[10px] font-bold tracking-widest uppercase whitespace-nowrap transition-all shadow-md ${watching ? "bg-neon/20 text-neon border border-neon/30" : "bg-panel text-mute border border-edge hover:bg-panel2 hover:text-white"}`}
           >{watching ? "★ Active Tracking" : "☆ Track Asset"}</button>
-          <button className="px-4 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-bold transition-all shadow-lg bg-panel border border-edge text-ink hover:bg-panel2 hover:text-neon" onClick={() => setAdvancedMode(true)}>
+          <button className="px-4 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-bold transition-all shadow-lg bg-panel border border-edge text-ink hover:bg-panel2 hover:text-neon">
             Advanced
           </button>
         </div>

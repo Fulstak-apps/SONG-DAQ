@@ -10,6 +10,7 @@ import { RoleToggle } from "./RoleToggle";
 import { LoginModal } from "./LoginModal";
 import { WalletButton } from "./WalletButton";
 import { usePaperTrading, useSession, useUI, usePrestige, useAlerts } from "@/lib/store";
+import { safeJson } from "@/lib/safeJson";
 import { getCurrentWalletAddress, subscribeWalletChanges, type WalletId } from "@/lib/wallet";
 
 type NavItem = { href: string; label: string; icon: string; reqArtistMode?: boolean };
@@ -50,9 +51,9 @@ export function Navbar() {
     }
     let alive = true;
     fetch(`/api/me?wallet=${encodeURIComponent(address)}`, { cache: "no-store" })
-      .then((r) => r.json())
+      .then((r) => safeJson(r))
       .then((j) => {
-        if (alive) setRole(j?.user?.role ?? null);
+        if (alive) setRole((j as any)?.user?.role ?? null);
       })
       .catch(() => {
         if (alive) setRole(null);
@@ -62,13 +63,13 @@ export function Navbar() {
   useEffect(() => {
     let alive = true;
     fetch("/api/admin/session", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((j) => { if (alive) setAdminSession(!!j.authenticated); })
+      .then((r) => safeJson(r))
+      .then((j) => { if (alive) setAdminSession(!!(j as any).authenticated); })
       .catch(() => { if (alive) setAdminSession(false); });
     const onFocus = () => {
       fetch("/api/admin/session", { cache: "no-store" })
-        .then((r) => r.json())
-        .then((j) => setAdminSession(!!j.authenticated))
+        .then((r) => safeJson(r))
+        .then((j) => setAdminSession(!!(j as any).authenticated))
         .catch(() => setAdminSession(false));
     };
     window.addEventListener("focus", onFocus);

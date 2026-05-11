@@ -9,6 +9,7 @@ import { WalletButton } from "@/components/WalletButton";
 import { usePaperTrading, useSession, useUI } from "@/lib/store";
 import { fmtNum, fmtSol } from "@/lib/pricing";
 import { getSolPriceUsd } from "@/lib/balance";
+import { readJson } from "@/lib/safeJson";
 
 interface TokenRow {
   mint: string;
@@ -59,8 +60,8 @@ function useTokenHoldings(address: string | null | undefined, mode: "summary" | 
       setLoading(true);
       try {
         const r = await fetch(`/api/wallet/tokens?address=${encodeURIComponent(address)}&mode=${mode}`, { cache: "no-store" });
-        const j = await r.json();
-        if (alive && r.ok) setData(j);
+        const j = await readJson<TokenHoldings>(r);
+        if (alive && r.ok && j) setData(j);
       } catch {
         /* keep last good value */
       } finally {
@@ -99,7 +100,7 @@ export default function PortfolioPage() {
       if (audius?.wallets?.eth) params.set("audiusEthWallet", audius.wallets.eth);
       try {
         const r = await fetch(`/api/portfolio?${params.toString()}`, { cache: "no-store" });
-        const j = await r.json();
+        const j = await readJson(r);
         if (alive && r.ok) setPortfolio(j);
       } catch {
         /* keep last */
@@ -117,7 +118,7 @@ export default function PortfolioPage() {
       try {
         const [solUsd, coinResp] = await Promise.allSettled([
           getSolPriceUsd(),
-          fetch("/api/coins?limit=100", { cache: "no-store" }).then((r) => r.json()),
+          fetch("/api/coins?limit=100", { cache: "no-store" }).then((r) => readJson<any>(r)),
         ]);
         if (!alive) return;
         const audio = coinResp.status === "fulfilled"
@@ -139,7 +140,7 @@ export default function PortfolioPage() {
   useEffect(() => {
     let alive = true;
     fetch("/api/coins?limit=100", { cache: "no-store" })
-      .then((r) => r.json())
+      .then((r) => readJson<any>(r))
       .then((j) => {
         if (!alive) return;
         const next: Record<string, any> = {};

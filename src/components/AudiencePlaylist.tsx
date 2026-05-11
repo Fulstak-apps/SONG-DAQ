@@ -6,6 +6,7 @@ import { SafeImage } from "./SafeImage";
 import { usePlayer, type PlayerTrack } from "@/lib/store";
 import { fmtNum } from "@/lib/pricing";
 import type { AudiusTrack } from "@/lib/audius";
+import { readJson } from "@/lib/safeJson";
 
 function artwork(t: AudiusTrack) {
   return t.artwork?.["1000x1000"] || t.artwork?.["480x480"] || t.artwork?.["150x150"] || null;
@@ -31,8 +32,8 @@ export function AudiencePlaylist() {
   useEffect(() => {
     let alive = true;
     fetch("/api/audius/search", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((j) => { if (alive) setTracks((j.tracks ?? []).slice(0, 8)); })
+      .then((r) => readJson<{ tracks?: AudiusTrack[] }>(r))
+      .then((j) => { if (alive) setTracks((j?.tracks ?? []).slice(0, 8)); })
       .catch(() => {})
       .finally(() => { if (alive) setLoading(false); });
     return () => { alive = false; };

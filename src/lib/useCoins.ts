@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type { AudiusCoin } from "./audiusCoins";
 import { applyPaperMarket } from "./paperMarket";
+import { readJson } from "./safeJson";
 import { usePaperTrading } from "./store";
 
 /**
@@ -35,8 +36,9 @@ function getEntry(sort: string): Entry {
 
 async function fetchOnce(sort: string): Promise<AudiusCoin[]> {
   const r = await fetch(`/api/coins?sort=${sort}`, { cache: "no-store" });
-  const j = await r.json();
-  return j.coins ?? [];
+  const j = await readJson<{ coins?: AudiusCoin[] }>(r);
+  if (!r.ok) throw new Error(j && "error" in j ? String((j as any).error) : `Coins request failed (${r.status})`);
+  return j?.coins ?? [];
 }
 
 function ensurePolling(sort: string) {

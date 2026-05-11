@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSession, useUI } from "@/lib/store";
 import { WALLETS, connectWallet, disconnectWallet, type WalletId } from "@/lib/wallet";
 import { redirectToAudiusLogin } from "@/lib/audiusOAuth";
+import { safeJson } from "@/lib/safeJson";
 import { Music, TrendingUp, ShieldCheck, ChevronLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 
 type Step = "ROLE" | "WALLET" | "AUDIUS" | "ARTIST_READY" | "DONE";
@@ -89,8 +90,8 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
           body: JSON.stringify({ wallet: r.address, walletType: r.kind, profile: audius, role: "ARTIST" }),
         });
         if (!link.ok) {
-          const j = await link.json().catch(() => ({}));
-          throw new Error(j.error || "Could not link external wallet to your artist account.");
+          const j = await safeJson(link);
+          throw new Error((j as any).error || "Could not link external wallet to your artist account.");
         }
         setSession({ address: r.address, kind: r.kind, provider: r.provider });
         setUserMode("ARTIST");

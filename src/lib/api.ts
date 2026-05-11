@@ -1,5 +1,7 @@
 "use client";
 
+import { errorFromJson, readJson } from "./safeJson";
+
 export async function api<T>(
   path: string,
   init?: RequestInit & { json?: unknown },
@@ -12,11 +14,9 @@ export async function api<T>(
     body = JSON.stringify(init.json);
   }
   const res = await fetch(path, { ...init, headers, body, cache: "no-store" });
-  const text = await res.text();
-  const data = text ? JSON.parse(text) : null;
+  const data = await readJson(res);
   if (!res.ok) {
-    const msg = (data && (data.error || data.message)) || `HTTP ${res.status}`;
-    throw new Error(msg);
+    throw new Error(errorFromJson(data, `HTTP ${res.status}`));
   }
   return data as T;
 }
