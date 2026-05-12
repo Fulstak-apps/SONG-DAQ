@@ -11,6 +11,7 @@ const TOKEN_2022_PROGRAM = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
 // $AUDIO on Solana (Wormhole-wrapped)
 const AUDIO_MINT = "9LzCMqDgTKYz9Drzqnpgee3SGa89up3a247ypMj2xrqM";
 const MAX_FULL_TOKENS = 80;
+const MAX_METADATA_LOOKUPS = 30;
 const JUPITER_PRICE_API = "https://lite-api.jup.ag/price/v3";
 const JUPITER_TOKEN_API = "https://api.jup.ag/tokens/v2/search";
 const JUPITER_API_KEY = process.env.JUPITER_API_KEY;
@@ -133,20 +134,19 @@ function jupiterHeaders() {
 
 async function fetchJupiterTokenInfo(mints: string[]): Promise<Map<string, JupiterTokenInfo>> {
   const out = new Map<string, JupiterTokenInfo>();
-  const unique = [...new Set(mints)].filter(Boolean);
+  const unique = [...new Set(mints)].filter(Boolean).slice(0, MAX_METADATA_LOOKUPS);
 
-  for (let i = 0; i < unique.length; i += 12) {
-    const batch = unique.slice(i, i + 12);
-    const results = await Promise.allSettled(batch.map(async (mint) => {
+  for (let i = 0; i < unique.length; i += 15) {
+    const batch = unique.slice(i, i + 15);
+    await Promise.allSettled(batch.map(async (mint) => {
       const matches = await fetchJson<JupiterTokenInfo[]>(
         `${JUPITER_TOKEN_API}?query=${encodeURIComponent(mint)}`,
         { headers: jupiterHeaders(), next: { revalidate: 300 } },
-        4_000,
+        1_800,
       );
       const exact = matches.find((t) => t.id === mint) ?? matches[0];
       if (exact) out.set(mint, exact);
     }));
-    void results;
   }
 
   return out;

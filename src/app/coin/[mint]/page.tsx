@@ -175,7 +175,7 @@ export default function CoinPage() {
     <div className="panel p-10 text-center shadow-2xl space-y-4">
       <div className="text-red uppercase tracking-widest font-bold">{err}</div>
       <p className="mx-auto max-w-md text-xs leading-relaxed text-mute">
-        This can happen when Render is waking up, Supabase is slow, or the coin index is retrying. The app keeps live signing disabled until data is available.
+        This can happen when Render is waking up, Supabase is slow, or the coin index is still syncing a brand-new mint. Refreshing will retry the live coin lookup.
       </p>
       <button onClick={load} className="btn-primary h-11 px-5 text-[10px] uppercase tracking-widest font-black">Retry</button>
     </div>

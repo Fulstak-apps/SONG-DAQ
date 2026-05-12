@@ -81,24 +81,22 @@ export async function GET(req: NextRequest) {
   let audiusWallet: any = null;
 
   if (effectiveAudiusId) {
-    // Fetch user's tracks
-    try {
-      const j = await fetchJson<any>(
+    const [tracksResult, profileResult] = await Promise.allSettled([
+      fetchJson<any>(
         `${AUDIUS_API}/v1/users/${encodeURIComponent(effectiveAudiusId)}/tracks?app_name=${encodeURIComponent(APP)}`,
         { cache: "no-store" },
-        5_000,
-      ).catch(() => null);
-      if (j) audiusTracks = j?.data ?? [];
-    } catch { /* ignore */ }
-
-    // Fetch user profile for wallet + follower info
-    try {
-      const j = await fetchJson<any>(
+        2_500,
+      ),
+      fetchJson<any>(
         `${AUDIUS_API}/v1/users/${encodeURIComponent(effectiveAudiusId)}?app_name=${encodeURIComponent(APP)}`,
         { cache: "no-store" },
-        5_000,
-      ).catch(() => null);
-      const u = j?.data;
+        2_500,
+      ),
+    ]);
+    if (tracksResult.status === "fulfilled") audiusTracks = tracksResult.value?.data ?? [];
+
+    if (profileResult.status === "fulfilled") {
+      const u = profileResult.value?.data;
       if (u) {
         audiusWallet = {
           userId: u.id,
@@ -115,7 +113,7 @@ export async function GET(req: NextRequest) {
           totalPlays: audiusTracks.reduce((sum: number, t: any) => sum + (t.play_count ?? 0), 0),
         };
       }
-    } catch { /* ignore */ }
+    }
   }
 
   return NextResponse.json({
