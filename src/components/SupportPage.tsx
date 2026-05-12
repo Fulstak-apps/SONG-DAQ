@@ -53,21 +53,45 @@ const adminFlow = [
   "Keep notes so every important admin action has history.",
 ];
 
+const quickFacts = [
+  ["Song Coins", "A song coin is tied to one song. Fans buy from the public market created by launch liquidity."],
+  ["Artist Coins", "An artist coin represents the artist market. Open Audio/Audius Artist Coins can be imported or launched through the supported flow."],
+  ["Liquidity", "Liquidity is the public pool money that lets fans buy and sell. It is separate from the artist’s held allocation."],
+  ["Paper Mode", "Paper Mode gives you a fake funded wallet so you can test launch, buy, sell, and portfolio flows without spending real money."],
+];
+
+const glossary = [
+  ["Launch liquidity", "The starting market. It pairs song coins with SOL, USDC, or AUDIO so buyers and sellers have a pool to trade against."],
+  ["Artist hold", "The artist’s allocation. It should stay separate from the public market so the artist is not selling the whole supply at once."],
+  ["Public allocation", "The portion of supply used for the market. Fans buy from this pool or curve."],
+  ["Market value", "The app should use tradable supply and real liquidity signals, not blindly count the full 1B supply as liquid value."],
+  ["Royalty status", "The public label that tells users whether royalty splits are not submitted, in progress, verified, paid, or added to the pool."],
+  ["Wallet confirmation", "The final screen in Phantom, Solflare, or Backpack before a real transaction is sent."],
+];
+
 export function SupportPage() {
   return (
     <main className="space-y-6">
       <section className="panel-elevated overflow-hidden p-6 md:p-10">
         <div className="max-w-4xl space-y-5">
           <div className="text-[11px] tracking-[0.22em] font-black text-neon">song-daq support</div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-ink">Everything you need to use song-daq.</h1>
-          <p className="text-base md:text-lg text-mute leading-relaxed">
-            song-daq is a song coin marketplace. Artists launch coins tied to songs, and fans can buy or sell those coins. Prices can move based on demand, trading, song activity, and verified royalty activity.
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-ink">Everything you need to use song-daq with confidence.</h1>
+          <p className="text-base md:text-xl text-ink/85 leading-relaxed font-semibold">
+            song-daq is a music market where artists launch coins tied to artists and songs, and fans can buy, sell, track, and test those markets with clear wallet, liquidity, price, and royalty signals.
           </p>
-          <p className="text-sm md:text-base text-mute leading-relaxed">
-            The goal is simple: make music feel investable without making the app confusing. Normal users get clean charts, clear wallet prompts, SOL plus USD values, and plain-English explanations. Advanced users can open deeper chart tools when they want them.
+          <p className="text-sm md:text-base text-ink/70 leading-relaxed font-medium">
+            The goal is simple: make music markets understandable. New users see clean charts, direct wallet prompts, SOL plus USD values, and plain-English explanations. Power users can go deeper into liquidity, volume, slippage, holder activity, and royalty records.
           </p>
-          <div className="rounded-2xl border border-neon/20 bg-neon/10 p-4 text-sm text-neon font-bold leading-relaxed">
+          <div className="rounded-2xl border border-neon/25 bg-neon/10 p-4 text-sm text-neon font-black leading-relaxed shadow-[inset_0_0_24px_rgba(193,255,0,0.05)]">
             Launch works in two clear approvals: create the fixed-supply coin, then add launch liquidity. Fans buy from the liquidity pool, not from a hidden mint. Royalty money supports the coin after launch.
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {quickFacts.map(([title, body]) => (
+              <div key={title} className="rounded-2xl border border-edge bg-panel p-4">
+                <div className="text-[10px] uppercase tracking-[0.22em] font-black text-neon">{title}</div>
+                <p className="mt-2 text-sm leading-relaxed text-ink/75 font-semibold">{body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -91,14 +115,15 @@ export function SupportPage() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <SupportCard icon={<Landmark />} title="What Is Launch Liquidity?">
-          <p>Launch liquidity is required to make a song coin tradable. song-daq separates the supply into artist hold, launch liquidity, and reserve. The launch-liquidity portion may stage in the artist wallet briefly, then the artist approves a second transaction that moves those coins plus SOL, USDC, or AUDIO into the public trading pool.</p>
+          <p><strong className="text-ink">Liquidity is the public market money.</strong> It is what makes a coin tradable after the mint is created.</p>
+          <p>song-daq separates the supply into artist hold, launch liquidity, and reserve. The launch-liquidity portion may stage in the artist wallet briefly, then the artist approves a second transaction that moves those coins plus SOL, USDC, or AUDIO into the public trading pool.</p>
           <p>This is separate from royalties. A coin can launch without royalty verification, but it still needs liquidity to trade.</p>
           <p>Think of launch liquidity like opening the first market for the coin. Without it, people can see the coin, but there is no real pool for buys and sells.</p>
           <p>Once the pool is verified, fans can buy with SOL. Fans may profit if demand rises and they later sell higher, and prices can also go down.</p>
         </SupportCard>
 
         <SupportCard icon={<FileCheck2 />} title="How Royalty Splits Work">
-          <p>Royalty setup happens after the coin is created. Open your distributor dashboard, go to splits or royalty sharing, and add <span className="font-mono text-neon">{ROYALTY_EMAIL}</span> as the split recipient.</p>
+          <p><strong className="text-ink">Royalty setup happens after the coin is created.</strong> Open your distributor dashboard, go to splits or royalty sharing, and add <span className="font-mono text-neon">{ROYALTY_EMAIL}</span> as the split recipient.</p>
           <p>Send the split invitation from inside the distributor platform, then return to song-daq and submit the verification form. Admin reviews it, then the coin can move from Royalty Verification In Progress to Royalty Verified.</p>
           <p>The artist does not manually email monthly royalty money. The distributor sends the royalty split to song-daq, and admin records what was received.</p>
           <Link href="/splits" className="btn-primary mt-2 inline-flex h-11 px-4 text-[10px] uppercase tracking-widest font-black">
@@ -117,6 +142,24 @@ export function SupportPage() {
           <p>Manual royalty and treasury controls live in the admin dashboard. They do not stop users from testing the public launch, buy, sell, and wallet flows.</p>
           <p>If a launch or trade fails, song-daq should show the real backend or wallet error instead of a fake paused state.</p>
         </SupportCard>
+      </section>
+
+      <section className="panel-elevated p-6 md:p-10 space-y-5">
+        <div>
+          <div className="text-[10px] uppercase tracking-[0.28em] font-black text-mute">Plain-English Terms</div>
+          <h2 className="text-3xl md:text-5xl font-black text-ink">The words users need to understand.</h2>
+          <p className="mt-3 max-w-4xl text-sm md:text-base text-ink/70 font-medium leading-relaxed">
+            song-daq should explain market language right where users make decisions. These terms show up during launch, trading, liquidity, and portfolio review.
+          </p>
+        </div>
+        <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {glossary.map(([title, body]) => (
+            <div key={title} className="rounded-2xl border border-edge bg-panel p-4">
+              <h3 className="text-sm font-black uppercase tracking-widest text-ink">{title}</h3>
+              <p className="mt-3 text-sm leading-relaxed text-ink/75 font-semibold">{body}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
@@ -218,7 +261,7 @@ function Walkthrough({ icon, title, steps }: { icon: React.ReactNode; title: str
         {steps.map((step, index) => (
           <li key={step} className="flex gap-3 rounded-2xl border border-edge bg-panel p-4">
             <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-neon text-[11px] font-black text-black">{index + 1}</span>
-            <span className="text-sm text-mute leading-relaxed">{step}</span>
+            <span className="text-sm text-ink/75 leading-relaxed font-semibold">{step}</span>
           </li>
         ))}
       </ol>
@@ -233,7 +276,7 @@ function SupportCard({ icon, title, children }: { icon: React.ReactNode; title: 
         <div className="w-10 h-10 rounded-2xl bg-white/[0.05] border border-edge grid place-items-center text-neon">{icon}</div>
         <h2 className="text-2xl font-black text-ink">{title}</h2>
       </div>
-      <div className="space-y-3 text-sm md:text-base text-mute leading-relaxed">
+      <div className="space-y-3 text-sm md:text-base text-ink/75 leading-relaxed font-medium">
         {children}
       </div>
     </section>
@@ -244,7 +287,7 @@ function Checklist({ items }: { items: string[] }) {
   return (
     <div className="space-y-2">
       {items.map((item) => (
-        <div key={item} className="flex gap-2 rounded-xl border border-edge bg-panel2/70 p-3 text-sm text-mute leading-relaxed">
+        <div key={item} className="flex gap-2 rounded-xl border border-edge bg-panel2/70 p-3 text-sm text-ink/75 font-semibold leading-relaxed">
           <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-neon" />
           <span>{item}</span>
         </div>
@@ -267,7 +310,7 @@ function StatusGrid() {
       {statuses.map(([name, desc]) => (
         <div key={name} className="rounded-xl border border-edge bg-panel2/70 p-3">
           <div className="text-[10px] uppercase tracking-widest font-black text-ink">{name}</div>
-          <p className="mt-1 text-xs text-mute leading-relaxed">{desc}</p>
+          <p className="mt-1 text-xs text-ink/70 font-medium leading-relaxed">{desc}</p>
         </div>
       ))}
     </div>
@@ -280,7 +323,7 @@ function MiniGuide({ title, items }: { title: string; items: string[] }) {
       <h3 className="text-sm font-black uppercase tracking-widest text-ink">{title}</h3>
       <ul className="mt-3 space-y-2">
         {items.map((item) => (
-          <li key={item} className="text-sm text-mute leading-relaxed">• {item}</li>
+          <li key={item} className="text-sm text-ink/75 font-semibold leading-relaxed">• {item}</li>
         ))}
       </ul>
     </div>
