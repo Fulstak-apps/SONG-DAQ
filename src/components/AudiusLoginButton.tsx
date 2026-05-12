@@ -54,7 +54,7 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
   }
 
   if (!mounted) {
-    return <button className="btn text-[10px] font-bold uppercase tracking-widest">Sign in with Audius</button>;
+    return <button className="btn text-[11px] font-bold uppercase tracking-widest">Sign in with Audius</button>;
   }
 
   if (audius) {
@@ -78,12 +78,12 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
                   className="h-7 w-7 rounded-full object-cover"
                 />
               ) : (
-                <span className="grid place-items-center rounded-full bg-violet/20 font-black text-violet h-7 w-7 text-[10px]">
+                <span className="grid place-items-center rounded-full bg-violet/20 font-black text-violet h-7 w-7 text-[11px]">
                   {(audius.name || audius.handle || "A").charAt(0).toUpperCase()}
                 </span>
               )}
             </span>
-            <span className="min-w-0 whitespace-normal break-words text-[9px] font-black uppercase tracking-[0.12em] leading-tight text-violet/90">
+            <span className="min-w-0 whitespace-normal break-words text-[11px] font-black uppercase tracking-[0.12em] leading-tight text-violet/90">
               {audius.name || `@${audius.handle}`}
             </span>
             {audius.verified && <ShieldCheck size={11} className="shrink-0 text-violet" />}
@@ -100,7 +100,7 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
           href={audius.handle ? `https://audius.co/${audius.handle}` : "#"}
           target="_blank"
           rel="noreferrer"
-          className={`flex min-w-0 items-center rounded-2xl border border-violet/30 bg-violet/10 text-[10px] text-violet backdrop-blur-md transition hover:bg-violet/14 ${compact ? "gap-2 px-2 py-1.5" : "gap-2.5 px-2.5 py-1.5"}`}
+          className={`flex min-w-0 items-center rounded-2xl border border-violet/30 bg-violet/10 text-[11px] text-violet backdrop-blur-md transition hover:bg-violet/14 ${compact ? "gap-2 px-2 py-1.5" : "gap-2.5 px-2.5 py-1.5"}`}
           title={`${audius.name} (@${audius.handle})`}
         >
             <span className={`relative shrink-0 overflow-hidden rounded-full border border-violet/25 bg-violet/18 ${compact ? "h-7 w-7" : "h-8 w-8"}`}>
@@ -113,13 +113,13 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
                   className={`${compact ? "h-7 w-7" : "h-8 w-8"} rounded-full object-cover`}
                 />
               ) : (
-              <span className={`grid place-items-center rounded-full bg-violet/20 font-black text-violet ${compact ? "h-7 w-7 text-[10px]" : "h-8 w-8 text-[11px]"}`}>
+              <span className={`grid place-items-center rounded-full bg-violet/20 font-black text-violet ${compact ? "h-7 w-7 text-[11px]" : "h-8 w-8 text-[11px]"}`}>
                 {(audius.name || audius.handle || "A").charAt(0).toUpperCase()}
               </span>
               )}
             </span>
           {compact ? (
-              <span className="min-w-0 flex-1 max-w-[150px] whitespace-normal break-words text-[9px] font-black uppercase tracking-[0.12em] text-violet/90 leading-tight">
+              <span className="min-w-0 flex-1 max-w-[150px] whitespace-normal break-words text-[11px] font-black uppercase tracking-[0.12em] text-violet/90 leading-tight">
                 {audius.name || `@${audius.handle}`}
               </span>
             ) : (
@@ -127,7 +127,7 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
               <span className="block whitespace-normal break-words text-[11px] font-black text-ink leading-tight">
                 {audius.name || `@${audius.handle}`}
               </span>
-              <span className="block truncate text-[9px] uppercase tracking-widest text-violet/85">
+              <span className="block truncate text-[11px] uppercase tracking-widest text-violet/85">
                 @{audius.handle}
               </span>
             </span>
@@ -144,7 +144,7 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
   return (
     <div className="relative" ref={ref}>
       <button
-        className="btn text-[10px] font-bold uppercase tracking-widest"
+        className="btn text-[11px] font-bold uppercase tracking-widest"
         onClick={() => setOpen((v) => !v)}
         disabled={busy === "oauth"}
         title="Sign in with Audius"
@@ -162,17 +162,17 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
           >
             <div className="label mb-3">Connect your Audius identity</div>
             <button
-              className="btn-primary w-full mb-3 text-[10px] font-black uppercase tracking-widest"
+              className="btn-primary w-full mb-3 text-[11px] font-black uppercase tracking-widest"
               onClick={loginOAuth}
               disabled={!!busy}
             >
               {busy === "oauth" ? <><Loader2 size={12} className="animate-spin" /> Opening Audius…</> : "Sign in with Audius (popup)"}
             </button>
-            <p className="text-[10px] text-mute mt-3 leading-relaxed">
+            <p className="text-[11px] text-mute mt-3 leading-relaxed">
               OAuth opens Audius in a popup. Artist launch access requires verified Audius sign-in through the official connection flow.
             </p>
             <button
-              className="btn w-full mt-3 text-[10px] font-black uppercase tracking-widest"
+              className="btn w-full mt-3 text-[11px] font-black uppercase tracking-widest"
               onClick={() => {
                 setErr(null);
                 void redirectToAudiusLogin().catch((e: any) => setErr(e?.message ?? String(e)));
@@ -181,7 +181,7 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
             >
               Try full-page sign in
             </button>
-            {err && <div className="text-red text-[10px] mt-2 bg-red/5 border border-red/10 rounded-lg px-3 py-2 font-bold">{err}</div>}
+            {err && <div className="text-red text-[11px] mt-2 bg-red/5 border border-red/10 rounded-lg px-3 py-2 font-bold">{err}</div>}
           </motion.div>
         )}
       </AnimatePresence>

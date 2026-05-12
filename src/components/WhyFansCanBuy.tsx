@@ -23,8 +23,8 @@ export function WhyFansCanBuy({ compact = false }: { compact?: boolean }) {
   if (compact) {
     return (
       <div className="min-w-0 max-w-full rounded-2xl border border-neon/20 bg-neon/8 p-4 text-neon">
-        <div className="text-[10px] font-black uppercase tracking-[0.18em]">Why fans can buy</div>
-        <p className="mt-2 text-xs leading-relaxed text-neon/78">
+        <div className="text-[11px] font-black uppercase tracking-[0.18em]">Why fans can buy</div>
+        <p className="mt-2 text-sm leading-relaxed text-neon/78">
           Artist hold is separate. Public allocation plus liquidity creates the market fans trade against.
         </p>
         <div className="mt-3 space-y-2">
@@ -32,8 +32,8 @@ export function WhyFansCanBuy({ compact = false }: { compact?: boolean }) {
             <div key={item.title} className="flex min-w-0 items-start gap-2 rounded-xl border border-neon/12 bg-black/15 p-2.5">
               <span className="mt-0.5 shrink-0 text-neon">{item.icon}</span>
               <div className="min-w-0">
-                <div className="text-[10px] font-black uppercase tracking-[0.04em] text-neon">{item.title}</div>
-                <div className="mt-0.5 text-[11px] leading-relaxed text-neon/68">{item.body}</div>
+                <div className="text-[11px] font-black uppercase tracking-[0.04em] text-neon">{item.title}</div>
+                <div className="mt-0.5 text-sm leading-relaxed text-neon/68">{item.body}</div>
               </div>
             </div>
           ))}
@@ -44,7 +44,7 @@ export function WhyFansCanBuy({ compact = false }: { compact?: boolean }) {
 
   return (
     <section className="min-w-0 max-w-full overflow-hidden rounded-2xl border border-neon/20 bg-neon/8 p-5 text-neon">
-      <div className="text-[10px] uppercase tracking-[0.18em] font-black">Why fans can buy</div>
+      <div className="text-[11px] uppercase tracking-[0.18em] font-black">Why fans can buy</div>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-neon/80 sm:text-base">
         Artists do not sell every coin straight from their wallet. Part of the supply goes into a public market pool, the artist share stays separate, and liquidity is what lets fans buy and sell.
         <span className="block pt-1 text-neon/65">Price movement depends on demand, liquidity depth, and real trading activity.</span>
@@ -56,7 +56,7 @@ export function WhyFansCanBuy({ compact = false }: { compact?: boolean }) {
               <span className="mt-0.5 shrink-0">{item.icon}</span>
               <span className="min-w-0 whitespace-normal break-words">{item.title}</span>
             </div>
-            <div className="mt-2 max-w-full text-[12px] leading-relaxed text-neon/72 sm:text-[13px]">{item.body}</div>
+            <div className="mt-2 max-w-full text-sm leading-relaxed text-neon/72">{item.body}</div>
           </div>
         ))}
       </div>

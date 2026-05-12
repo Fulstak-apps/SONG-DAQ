@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getCoin, hydrateArtists, type AudiusCoin } from "@/lib/audiusCoins";
 import { prisma } from "@/lib/db";
 import { getAssetUsdRates, valueLocalSongCoin } from "@/lib/serverAssetPrices";
+import { calculateSupplyDistribution, getBurnedSupplyFromEvents } from "@/lib/supplyDistribution";
 
 export const dynamic = "force-dynamic";
 
@@ -22,6 +23,14 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
   const mint = song.mintAddress || song.fakeTokenAddress || song.id;
   const valuation = valueLocalSongCoin(song, rates);
   const supply = valuation.totalSupply;
+  const burnedSupply = getBurnedSupplyFromEvents(song.events);
+  const supplyDistribution = calculateSupplyDistribution({
+    supply,
+    circulating: valuation.circulatingSupply || song.circulating,
+    liquidityTokenAmount: valuation.tradableSupply || song.liquidityTokenAmount,
+    artistAllocationBps: song.artistAllocationBps,
+    burnedSupply,
+  });
   const isOpenAudio = String(song.distributor || "").includes("Open Audio")
     || String(song.riskLevel || "").startsWith("OPEN_AUDIO")
     || String(song.audiusTrackId || "").startsWith("artist-coin:");
@@ -75,6 +84,8 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
     royaltyVerificationStatus: song.royaltyVerificationStatus || "not_submitted",
     royaltyBacked: Boolean(song.royaltyBacked),
     tradableSupply: valuation.tradableSupply,
+    burnedSupply,
+    supplyDistribution,
     fullyDilutedValue: valuation.fullyDilutedValueUsd,
     marketValueBasis: valuation.basis,
     marketValueNote: valuation.note,
@@ -107,9 +118,9 @@ async function getLocalCoin(id: string) {
         },
       },
       events: {
-        where: { kind: { in: ["LIQUIDITY", "LAUNCH"] } },
+        where: { kind: { in: ["LIQUIDITY", "LAUNCH", "BURN"] } },
         orderBy: { createdAt: "desc" },
-        take: 6,
+        take: 100,
         select: { kind: true, payload: true, createdAt: true },
       },
     },
@@ -150,9 +161,9 @@ export async function GET(_req: NextRequest, ctx: { params: { mint: string } }) 
           },
         },
         events: {
-          where: { kind: { in: ["LIQUIDITY", "LAUNCH"] } },
+          where: { kind: { in: ["LIQUIDITY", "LAUNCH", "BURN"] } },
           orderBy: { createdAt: "desc" },
-          take: 6,
+          take: 100,
           select: { kind: true, payload: true, createdAt: true },
         },
       },

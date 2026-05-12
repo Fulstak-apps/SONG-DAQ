@@ -122,12 +122,12 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
       </div>
 
       <div className="space-y-5 relative z-10">
-        <div className="rounded-xl border border-amber/20 bg-amber/5 px-4 py-3 text-[10px] uppercase tracking-widest font-bold text-amber leading-relaxed">
+        <div className="rounded-xl border border-amber/20 bg-amber/5 px-4 py-3 text-[11px] uppercase tracking-widest font-bold text-amber leading-relaxed">
           song-daq will never ask for a message signature as a fake trade. Wallet approval appears only when Jupiter returns a real on-chain swap transaction for this exact order.
         </div>
         
         <div className="space-y-2">
-          <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1 flex justify-between">
+          <label className="text-[11px] uppercase tracking-widest font-bold text-mute px-1 flex justify-between">
             <Glossary term="Token amount" def="How many Song Coins you want to buy or sell. If you are buying and do not know the amount, use the budget field instead.">
               Token Amount
             </Glossary>
@@ -141,9 +141,9 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
               className="w-full bg-panel2 border border-edge rounded-xl px-4 py-3 text-xl font-mono text-ink placeholder-mute focus:border-neon/50 focus:ring-1 focus:ring-neon/50 transition-all outline-none"
               placeholder="0.00"
             />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-widest font-bold text-mute pointer-events-none group-focus-within:text-neon transition">Tokens</div>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] uppercase tracking-widest font-bold text-mute pointer-events-none group-focus-within:text-neon transition">Tokens</div>
           </div>
-          <div className="px-1 text-[10px] uppercase tracking-widest text-mute">
+          <div className="px-1 text-[11px] uppercase tracking-widest text-mute">
             {song?.price ? formatFiatEstimate(tokenAmt * Number(song.price) * solUsdRate, currency) : "Fiat estimate unavailable"}
           </div>
         </div>
@@ -152,12 +152,12 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
           <div className="space-y-4">
             <div className="flex items-center gap-4">
               <div className="h-px flex-1 bg-edge" />
-              <div className="text-[9px] uppercase tracking-widest font-bold text-mute">OR SPECIFY BUDGET</div>
+              <div className="text-[11px] uppercase tracking-widest font-bold text-mute">OR SPECIFY BUDGET</div>
               <div className="h-px flex-1 bg-edge" />
             </div>
             
             <div className="space-y-2">
-              <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1 flex justify-between">
+              <label className="text-[11px] uppercase tracking-widest font-bold text-mute px-1 flex justify-between">
                 <Glossary term="Budget" def="The most SOL you want to spend on this buy. The app estimates how many Song Coins that budget can get.">
                   Budget
                 </Glossary>
@@ -171,9 +171,9 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
                   className="w-full bg-panel2 border border-edge rounded-xl px-4 py-3 text-xl font-mono text-ink placeholder-mute focus:border-neon/50 focus:ring-1 focus:ring-neon/50 transition-all outline-none"
                   placeholder="0.000"
                 />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-widest font-bold text-mute pointer-events-none group-focus-within:text-neon transition">{asset}</div>
+                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] uppercase tracking-widest font-bold text-mute pointer-events-none group-focus-within:text-neon transition">{asset}</div>
               </div>
-              <div className="px-1 text-[10px] uppercase tracking-widest text-mute">
+              <div className="px-1 text-[11px] uppercase tracking-widest text-mute">
                 {formatCryptoWithFiat(solAmt, "SOL", solAmt * solUsdRate, currency)}
               </div>
             </div>
@@ -181,7 +181,7 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
         )}
 
         <div className="space-y-2">
-          <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1 flex justify-between">
+          <label className="text-[11px] uppercase tracking-widest font-bold text-mute px-1 flex justify-between">
             <Glossary term="Price movement allowance" def="How much the price can move while your wallet is confirming. Lower protects you more but can fail if the market moves. Higher is more flexible but can give a slightly worse price.">
               Price Movement Allowance
             </Glossary>
@@ -194,15 +194,15 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
               onChange={(e) => setMax(e.target.value)}
               className="w-full bg-panel2 border border-edge rounded-xl px-4 py-2 text-sm font-mono text-ink placeholder-mute focus:border-neon/50 transition-all outline-none"
             />
-            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[10px] font-bold text-mute pointer-events-none group-focus-within:text-neon transition">BPS</div>
+            <div className="absolute right-4 top-1/2 -translate-y-1/2 text-[11px] font-bold text-mute pointer-events-none group-focus-within:text-neon transition">BPS</div>
           </div>
-          <div className="px-1 text-[10px] uppercase tracking-widest text-mute">
+          <div className="px-1 text-[11px] uppercase tracking-widest text-mute">
             Max fiat movement estimate: {formatFiatEstimate(slippageUsd, currency)}
           </div>
         </div>
       </div>
 
-      <div className="rounded-xl bg-panel2 p-4 text-[10px] uppercase tracking-widest font-bold space-y-3 border border-edge relative z-10">
+      <div className="rounded-xl bg-panel2 p-4 text-[11px] uppercase tracking-widest font-bold space-y-3 border border-edge relative z-10">
         <Row k="Execution Price" v={quote ? formatCryptoWithFiat(displayAvgPrice!, asset, displayAvgPriceUsd, currency, 6) : "—"} />
         <Row k={side === "BUY" ? "Total Expenditure" : "Estimated Proceeds"} v={quote ? formatCryptoWithFiat(displayTotal!, asset, displayTotalUsd, currency, 5) : "—"} color="text-ink" />
         <Row k="Network Fee (0.5%)" v={quote ? formatCryptoWithFiat(quote.fee, "SOL", feeUsd, currency, 5) : "—"} />
@@ -211,7 +211,7 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
         <Row k="Spot Price" v={quote ? formatCryptoWithFiat(quote.newSpotPrice, "SOL", Number(quote.newSpotPrice ?? 0) * solUsdRate, currency, 6) : "—"} />
         <Row k="Route" v={swapRouteReady ? "Jupiter live route" : quote?.routeError || "Waiting for Jupiter indexing"} color={swapRouteReady ? "text-neon" : "text-amber"} />
         <Row k="Wallet Approval" v="On-chain swap only" color="text-neon" />
-        <div className="pt-1 text-[9px] text-mute">{priceAgeText(fiatUpdatedAt)}</div>
+        <div className="pt-1 text-[11px] text-mute">{priceAgeText(fiatUpdatedAt)}</div>
       </div>
 
       <div className="relative z-10 space-y-3">
@@ -223,14 +223,14 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
           {busy ? "CHECKING ROUTE…" : !address ? "CONNECT SOLANA WALLET" : !walletCanTransact ? "EXTERNAL WALLET REQUIRED" : !swapRouteReady ? "SWAP ROUTE COMING ONLINE" : quote ? `CHECK ${side} ROUTE` : "NO LIVE ROUTE"}
         </button>
 
-        {err && <div className="text-red text-[10px] uppercase tracking-widest font-bold text-center bg-red/10 border border-red/20 py-2 rounded-lg">{err}</div>}
-        {ok && <div className="text-neon text-[10px] uppercase tracking-widest font-bold text-center bg-neon/10 border border-neon/20 py-2 rounded-lg">{ok}</div>}
+        {err && <div className="text-red text-[11px] uppercase tracking-widest font-bold text-center bg-red/10 border border-red/20 py-2 rounded-lg">{err}</div>}
+        {ok && <div className="text-neon text-[11px] uppercase tracking-widest font-bold text-center bg-neon/10 border border-neon/20 py-2 rounded-lg">{ok}</div>}
         {!swapRouteReady && quote?.routeError && (
-          <div className="text-amber text-[10px] uppercase tracking-widest font-bold text-center bg-amber/10 border border-amber/20 py-2 rounded-lg leading-relaxed">
+          <div className="text-amber text-[11px] uppercase tracking-widest font-bold text-center bg-amber/10 border border-amber/20 py-2 rounded-lg leading-relaxed">
             New pools can take time to appear in Jupiter. song-daq will not ask your wallet to sign until a live route exists.
           </div>
         )}
-        {!address && <div className="text-mute text-[10px] uppercase tracking-widest font-bold text-center">Authorization required to transact.</div>}
+        {!address && <div className="text-mute text-[11px] uppercase tracking-widest font-bold text-center">Authorization required to transact.</div>}
       </div>
     </div>
   );

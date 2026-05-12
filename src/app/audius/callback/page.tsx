@@ -177,7 +177,7 @@ export default function AudiusCallback() {
             {icon}
           </div>
 
-          <div className="text-[10px] uppercase tracking-[0.28em] font-black text-mute">Audius OAuth</div>
+          <div className="text-[11px] uppercase tracking-[0.28em] font-black text-mute">Audius OAuth</div>
           <h1 className="mt-3 text-3xl md:text-4xl font-black tracking-tight text-white">
             {status === "error" ? "Connection Interrupted" : "Securing Artist Access"}
           </h1>
@@ -198,13 +198,13 @@ export default function AudiusCallback() {
 
             <div className="grid gap-3 md:grid-cols-2">
               <div className="rounded-xl border border-edge bg-panel2 p-4">
-                <div className="text-[10px] uppercase tracking-widest font-black text-violet">Status</div>
+                <div className="text-[11px] uppercase tracking-widest font-black text-violet">Status</div>
                 <div className="mt-2 text-sm font-bold text-white">
                   {status === "loading" ? "Connecting..." : status === "success" ? "Connected" : "Needs Attention"}
                 </div>
               </div>
               <div className="rounded-xl border border-edge bg-panel2 p-4">
-                <div className="text-[10px] uppercase tracking-widest font-black text-neon">Next Step</div>
+                <div className="text-[11px] uppercase tracking-widest font-black text-neon">Next Step</div>
                 <div className="mt-2 text-sm font-bold text-white">
                   {status === "error" ? "Retry sign-in" : "Return to song-daq"}
                 </div>
@@ -221,14 +221,14 @@ export default function AudiusCallback() {
               <button
                 type="button"
                 onClick={() => window.location.replace("/market")}
-                className="btn-primary px-5 py-3 text-[10px] uppercase tracking-widest font-black"
+                className="btn-primary px-5 py-3 text-[11px] uppercase tracking-widest font-black"
               >
                 Return to song-daq
               </button>
               <button
                 type="button"
                 onClick={() => window.location.replace("/market?login=artist")}
-                className="btn px-5 py-3 text-[10px] uppercase tracking-widest font-black"
+                className="btn px-5 py-3 text-[11px] uppercase tracking-widest font-black"
               >
                 Retry Audius Login
               </button>

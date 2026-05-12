@@ -5,7 +5,7 @@ export default function InvestorOnboardingPage() {
   return (
     <main className="space-y-6">
       <section className="panel-elevated p-6 md:p-10 space-y-4">
-        <div className="text-[10px] uppercase tracking-[0.3em] font-black text-neon">Investor onboarding</div>
+        <div className="text-[11px] uppercase tracking-[0.3em] font-black text-neon">Investor onboarding</div>
         <h1 className="text-4xl md:text-6xl font-black text-ink">Trade song coins with clear risk signals.</h1>
         <p className="max-w-3xl text-mute leading-relaxed">
           Before buying, song-daq shows wallet, crypto plus fiat values, token amount, slippage, fees, royalty status, and risk acknowledgments in plain English.

@@ -7,7 +7,8 @@ import { validateRoyalty, DEFAULT_ROYALTY } from "@/lib/royaltyConfig";
 import { assertAudiusTrackOwnership, AuthError } from "@/lib/auth";
 import { moderateCoinText } from "@/lib/risk/contentModeration";
 import { databaseReadiness } from "@/lib/appMode";
-import { getAssetUsdRates, valueLocalSongCoin } from "@/lib/serverAssetPrices";
+import { getAssetUsdRates } from "@/lib/serverAssetPrices";
+import { buildSongAssetState, songAssetReadFields } from "@/lib/assetState";
 import { PublicKey } from "@solana/web3.js";
 
 export const dynamic = "force-dynamic";
@@ -49,29 +50,20 @@ export async function GET(req: NextRequest) {
     take: 50,
     include: {
       artistWallet: { select: { wallet: true, handle: true, audiusHandle: true, audiusVerified: true } },
-      events: { where: { kind: "LAUNCH" }, select: { payload: true }, take: 5 },
+      events: { where: { kind: { in: ["LAUNCH", "BURN"] } }, select: { kind: true, payload: true }, take: 100 },
     },
   });
   const realSongs = songs
-    .filter((song) => !song.events.some((e) => (safeParse(e.payload) as any)?.mock))
+    .filter((song) => !song.events.some((e) => e.kind === "LAUNCH" && (safeParse(e.payload) as any)?.mock))
     .map(({ events, ...song }) => song);
+  const eventsBySongId = new Map(songs.map((song) => [song.id, song.events]));
   const rates = await getAssetUsdRates(["SOL", "AUDIO", "USDC", ...realSongs.map((song) => song.liquidityPairAsset)]);
   const normalizedSongs = realSongs.map((song) => {
-    const valuation = valueLocalSongCoin(song, rates);
+    const events = eventsBySongId.get(song.id) ?? [];
+    const state = buildSongAssetState({ ...song, events }, rates);
     return {
       ...song,
-      price: valuation.priceSol || song.price,
-      currentPriceSol: valuation.priceSol || song.currentPriceSol,
-      currentPriceUsd: valuation.priceUsd || song.currentPriceUsd,
-      marketCap: valuation.marketValueSol || 0,
-      marketCapUsd: valuation.marketValueUsd || 0,
-      launchLiquidityUsd: valuation.liquidityUsd || song.launchLiquidityUsd,
-      circulating: valuation.circulatingSupply || song.circulating,
-      tradableSupply: valuation.tradableSupply,
-      fullyDilutedValueUsd: valuation.fullyDilutedValueUsd,
-      marketValueBasis: valuation.basis,
-      marketValueNote: valuation.note,
-      isMarketValueReliable: valuation.isMarketValueReliable,
+      ...songAssetReadFields(state, song),
     };
   });
   return NextResponse.json({ songs: normalizedSongs });

@@ -13,14 +13,14 @@ export default function HowItWorksPage() {
   return (
     <main className="space-y-6">
       <section className="panel-elevated p-6 md:p-10 space-y-4">
-        <div className="text-[10px] uppercase tracking-[0.3em] font-black text-neon">First-time guide</div>
+        <div className="text-[11px] uppercase tracking-[0.3em] font-black text-neon">First-time guide</div>
         <h1 className="text-4xl md:text-6xl font-black text-ink">How song-daq works</h1>
         <p className="max-w-3xl text-mute leading-relaxed">
           song-daq is a music market app. Artists create song-linked coins, fans trade them, and royalty activity can later be recorded into the coin ecosystem after admin verification.
         </p>
         <div className="flex flex-wrap gap-2">
-          <Link href="/market" className="btn-primary h-11 px-4 text-[10px] uppercase tracking-widest font-black">Explore market</Link>
-          <Link href="/artist" className="btn h-11 px-4 text-[10px] uppercase tracking-widest font-black">Launch artist flow</Link>
+          <Link href="/market" className="btn-primary h-11 px-4 text-[11px] uppercase tracking-widest font-black">Explore market</Link>
+          <Link href="/artist" className="btn h-11 px-4 text-[11px] uppercase tracking-widest font-black">Launch artist flow</Link>
         </div>
       </section>
       <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">

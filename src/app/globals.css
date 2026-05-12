@@ -77,6 +77,9 @@
 html, body {
   background: var(--bg);
   color: var(--ink);
+  min-height: 100%;
+  font-size: 16px;
+  line-height: 1.55;
   font-feature-settings: "cv02", "cv03", "cv04", "ss01", "tnum";
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
@@ -88,6 +91,11 @@ html, body {
 
 *, *::before, *::after {
   min-width: 0;
+}
+
+p,
+li {
+  line-height: 1.65;
 }
 
 img, video, canvas, svg {
@@ -112,6 +120,7 @@ textarea {
 @media (max-width: 640px) {
   html {
     -webkit-text-size-adjust: 100%;
+    font-size: 15.5px;
   }
 
   main {
@@ -197,6 +206,9 @@ body::before {
   /* Buttons — premium tactile feedback */
   .btn {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-[var(--glass-border)] bg-white/5 text-sm font-semibold text-ink backdrop-blur-sm relative overflow-hidden;
+    min-height: 44px;
+    font-size: 0.95rem;
+    line-height: 1.2;
     box-shadow: var(--shadow-xs), inset 0 1px 0 rgba(255,255,255,0.04);
     transition: transform 0.12s var(--spring), background-color 0.16s var(--ease), border-color 0.16s var(--ease), box-shadow 0.16s var(--ease), color 0.16s var(--ease);
     touch-action: manipulation;
@@ -225,6 +237,9 @@ body::before {
 
   .btn-primary {
     @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-violet to-[#7E1BCC] text-pure-white text-sm font-bold tracking-wide relative overflow-hidden shadow-lg shadow-violet/20;
+    min-height: 46px;
+    font-size: 0.96rem;
+    line-height: 1.2;
     transition: transform 0.12s var(--spring), background-color 0.16s var(--ease), box-shadow 0.16s var(--ease), filter 0.16s var(--ease);
     touch-action: manipulation;
   }
@@ -252,6 +267,9 @@ body::before {
 
   .btn-danger {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl bg-red text-pure-white text-sm font-bold relative overflow-hidden;
+    min-height: 44px;
+    font-size: 0.95rem;
+    line-height: 1.2;
     box-shadow: 0 4px 20px rgba(255, 51, 102, 0.25), inset 0 1px 0 rgba(255,255,255,0.15);
     transition: transform 0.12s var(--spring), background-color 0.16s var(--ease), box-shadow 0.16s var(--ease);
     touch-action: manipulation;
@@ -281,6 +299,9 @@ body::before {
   /* Glass Button */
   .btn-glass {
     @apply inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl border border-[var(--glass-border)] text-sm font-semibold text-ink relative overflow-hidden;
+    min-height: 44px;
+    font-size: 0.95rem;
+    line-height: 1.2;
     background: rgba(255,255,255,0.065);
     backdrop-filter: blur(20px);
     box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 2px 8px rgba(0,0,0,0.3);
@@ -299,7 +320,9 @@ body::before {
 
   /* Chips — refined */
   .chip {
-    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider bg-white/5 border border-[var(--glass-border)] text-mute backdrop-blur-md;
+    @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold uppercase tracking-wider bg-white/5 border border-[var(--glass-border)] text-mute backdrop-blur-md;
+    font-size: 0.7rem;
+    line-height: 1rem;
     transition: all 0.2s var(--ease);
   }
   .chip:hover {
@@ -327,7 +350,9 @@ body::before {
   .gain { @apply text-neon; }
   .lose { @apply text-red; }
   .label {
-    @apply text-[10px] uppercase tracking-[0.2em] text-mute font-black;
+    @apply text-[11px] uppercase tracking-[0.2em] text-mute font-black;
+    font-size: 0.72rem;
+    line-height: 1rem;
     letter-spacing: 0.2em;
   }
   .num { @apply font-mono tabular-nums tracking-tight; }
@@ -398,7 +423,9 @@ input, select, textarea {
   padding: 12px 16px;
   color: var(--ink);
   outline: none;
-  font-size: 0.875rem;
+  min-height: 46px;
+  font-size: 1rem;
+  line-height: 1.5;
   transition: all 0.25s var(--ease);
   box-shadow: inset 0 2px 4px rgba(0,0,0,0.3), inset 0 0 0 0 transparent;
 }

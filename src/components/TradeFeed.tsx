@@ -121,7 +121,7 @@ export function TradeFeed({ songId, assetMint, detailMode = false }: { songId?: 
             </Glossary>
           </span>
         </div>
-        <div className="flex items-center bg-white/[0.055] border border-edge rounded-lg p-0.5 text-[9px] font-black uppercase tracking-widest">
+        <div className="flex items-center bg-white/[0.055] border border-edge rounded-lg p-0.5 text-[11px] font-black uppercase tracking-widest">
           {(["LIVE", "TODAY", "WEEK", "MONTH"] as Filter[]).map(f => (
             <button
               key={f}
@@ -185,17 +185,17 @@ export function TradeFeed({ songId, assetMint, detailMode = false }: { songId?: 
                         <SafeImage src={e.song?.artworkUrl || p.logo_uri || null} alt={e.song?.symbol || p.symbol || e.kind} fill sizes="40px" fallback={e.song?.symbol || p.symbol || e.kind} className="object-cover" />
                       </div>
                       <div className="w-14 shrink-0">
-                        <span className={`chip w-full justify-center text-[8px] ${c}`}>{e.kind}</span>
+                        <span className={`chip w-full justify-center text-[11px] ${c}`}>{e.kind}</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-[9px] text-mute px-1.5 py-0.5 rounded bg-white/[0.055] border border-edge font-mono uppercase tracking-widest shrink-0">{e.song?.symbol || p.symbol || "SYS"}</span>
-                          {p.wallet && <span className="text-[9px] text-mute font-mono truncate">{shortWallet(p.wallet)}</span>}
-                          {isWhale && <span className="text-[8px] bg-gold/10 text-gold border border-gold/20 px-1.5 py-0.5 rounded uppercase tracking-widest font-black animate-pulse">Whale</span>}
+                          <span className="text-[11px] text-mute px-1.5 py-0.5 rounded bg-white/[0.055] border border-edge font-mono uppercase tracking-widest shrink-0">{e.song?.symbol || p.symbol || "SYS"}</span>
+                          {p.wallet && <span className="text-[11px] text-mute font-mono truncate">{shortWallet(p.wallet)}</span>}
+                          {isWhale && <span className="text-[11px] bg-gold/10 text-gold border border-gold/20 px-1.5 py-0.5 rounded uppercase tracking-widest font-black animate-pulse">Whale</span>}
                         </div>
                         <div className="truncate text-ink text-sm mt-1 font-medium tracking-tight">{summary(e)}</div>
                       </div>
-                      <span className="text-[10px] text-mute num shrink-0 uppercase tracking-widest font-bold">{relTime(e.createdAt)}</span>
+                      <span className="text-[11px] text-mute num shrink-0 uppercase tracking-widest font-bold">{relTime(e.createdAt)}</span>
                     </div>
                   ) : href ? (
                     <Link href={href} className="w-full px-5 py-3 flex items-center gap-3 relative text-left">
@@ -204,17 +204,17 @@ export function TradeFeed({ songId, assetMint, detailMode = false }: { songId?: 
                         <SafeImage src={e.song?.artworkUrl || p.logo_uri || null} alt={e.song?.symbol || p.symbol || e.kind} fill sizes="40px" fallback={e.song?.symbol || p.symbol || e.kind} className="object-cover" />
                       </div>
                       <div className="w-14 shrink-0">
-                        <span className={`chip w-full justify-center text-[8px] ${c}`}>{e.kind}</span>
+                        <span className={`chip w-full justify-center text-[11px] ${c}`}>{e.kind}</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-[9px] text-mute px-1.5 py-0.5 rounded bg-white/[0.055] border border-edge font-mono uppercase tracking-widest shrink-0">{e.song?.symbol || p.symbol || "SYS"}</span>
-                          {p.wallet && <span className="text-[9px] text-mute font-mono truncate">{shortWallet(p.wallet)}</span>}
-                          {isWhale && <span className="text-[8px] bg-gold/10 text-gold border border-gold/20 px-1.5 py-0.5 rounded uppercase tracking-widest font-black animate-pulse">Whale</span>}
+                          <span className="text-[11px] text-mute px-1.5 py-0.5 rounded bg-white/[0.055] border border-edge font-mono uppercase tracking-widest shrink-0">{e.song?.symbol || p.symbol || "SYS"}</span>
+                          {p.wallet && <span className="text-[11px] text-mute font-mono truncate">{shortWallet(p.wallet)}</span>}
+                          {isWhale && <span className="text-[11px] bg-gold/10 text-gold border border-gold/20 px-1.5 py-0.5 rounded uppercase tracking-widest font-black animate-pulse">Whale</span>}
                         </div>
                         <div className="truncate text-ink text-sm mt-1 font-medium tracking-tight">{summary(e)}</div>
                       </div>
-                      <span className="text-[10px] text-mute num shrink-0 uppercase tracking-widest font-bold">{relTime(e.createdAt)}</span>
+                      <span className="text-[11px] text-mute num shrink-0 uppercase tracking-widest font-bold">{relTime(e.createdAt)}</span>
                     </Link>
                   ) : (
                     <button
@@ -227,17 +227,17 @@ export function TradeFeed({ songId, assetMint, detailMode = false }: { songId?: 
                         <SafeImage src={e.song?.artworkUrl || p.logo_uri || null} alt={e.song?.symbol || p.symbol || e.kind} fill sizes="40px" fallback={e.song?.symbol || p.symbol || e.kind} className="object-cover" />
                       </div>
                       <div className="w-14 shrink-0">
-                        <span className={`chip w-full justify-center text-[8px] ${c}`}>{e.kind}</span>
+                        <span className={`chip w-full justify-center text-[11px] ${c}`}>{e.kind}</span>
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-[9px] text-mute px-1.5 py-0.5 rounded bg-white/[0.055] border border-edge font-mono uppercase tracking-widest shrink-0">{e.song?.symbol || p.symbol || "SYS"}</span>
-                          {p.wallet && <span className="text-[9px] text-mute font-mono truncate">{shortWallet(p.wallet)}</span>}
-                          {isWhale && <span className="text-[8px] bg-gold/10 text-gold border border-gold/20 px-1.5 py-0.5 rounded uppercase tracking-widest font-black animate-pulse">Whale</span>}
+                          <span className="text-[11px] text-mute px-1.5 py-0.5 rounded bg-white/[0.055] border border-edge font-mono uppercase tracking-widest shrink-0">{e.song?.symbol || p.symbol || "SYS"}</span>
+                          {p.wallet && <span className="text-[11px] text-mute font-mono truncate">{shortWallet(p.wallet)}</span>}
+                          {isWhale && <span className="text-[11px] bg-gold/10 text-gold border border-gold/20 px-1.5 py-0.5 rounded uppercase tracking-widest font-black animate-pulse">Whale</span>}
                         </div>
                         <div className="truncate text-ink text-sm mt-1 font-medium tracking-tight">{summary(e)}</div>
                       </div>
-                      <span className="text-[10px] text-mute num shrink-0 uppercase tracking-widest font-bold">{relTime(e.createdAt)}</span>
+                      <span className="text-[11px] text-mute num shrink-0 uppercase tracking-widest font-bold">{relTime(e.createdAt)}</span>
                     </button>
                   )}
 
@@ -252,24 +252,24 @@ export function TradeFeed({ songId, assetMint, detailMode = false }: { songId?: 
                         <div className="px-5 py-4 space-y-4">
                           <div className="flex flex-wrap items-center gap-2">
                             {href ? (
-                              <Link href={href} className="rounded-lg border border-edge bg-panel px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-ink hover:bg-panel2 transition">
+                              <Link href={href} className="rounded-lg border border-edge bg-panel px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-ink hover:bg-panel2 transition">
                                 Open Token
                               </Link>
                             ) : null}
                             {solscan ? (
-                              <a href={solscan} target="_blank" rel="noreferrer" className="rounded-lg border border-edge bg-panel px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-ink hover:bg-panel2 transition">
+                              <a href={solscan} target="_blank" rel="noreferrer" className="rounded-lg border border-edge bg-panel px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-ink hover:bg-panel2 transition">
                                 Solscan
                               </a>
                             ) : null}
                             {birdeye ? (
-                              <a href={birdeye} target="_blank" rel="noreferrer" className="rounded-lg border border-edge bg-panel px-3 py-1.5 text-[10px] font-black uppercase tracking-widest text-ink hover:bg-panel2 transition">
+                              <a href={birdeye} target="_blank" rel="noreferrer" className="rounded-lg border border-edge bg-panel px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-ink hover:bg-panel2 transition">
                                 Birdeye
                               </a>
                             ) : null}
                           </div>
 
                           <div className="space-y-2">
-                            <div className="text-[10px] uppercase tracking-widest font-black text-mute">Related Trades</div>
+                            <div className="text-[11px] uppercase tracking-widest font-black text-mute">Related Trades</div>
                             {related.length ? (
                               <div className="space-y-2">
                                 {related.map((item) => {
@@ -278,14 +278,14 @@ export function TradeFeed({ songId, assetMint, detailMode = false }: { songId?: 
                                   const itemBirdeye = itemPayload.mint ? `https://birdeye.so/token/${itemPayload.mint}?chain=solana` : null;
                                   return (
                                     <div key={item.id} className="rounded-xl border border-edge bg-panel/80 px-3 py-2.5 flex items-center gap-3">
-                                      <span className={`chip shrink-0 text-[8px] ${colorFor(item.kind)}`}>{item.kind}</span>
+                                      <span className={`chip shrink-0 text-[11px] ${colorFor(item.kind)}`}>{item.kind}</span>
                                       <div className="min-w-0 flex-1">
                                         <div className="truncate text-sm font-medium text-ink">{summary(item)}</div>
-                                        <div className="text-[10px] uppercase tracking-widest text-mute font-bold mt-1">{relTime(item.createdAt)}</div>
+                                        <div className="text-[11px] uppercase tracking-widest text-mute font-bold mt-1">{relTime(item.createdAt)}</div>
                                       </div>
                                       <div className="flex items-center gap-2 shrink-0">
-                                        {itemSolscan ? <a href={itemSolscan} target="_blank" rel="noreferrer" className="text-[10px] uppercase tracking-widest font-black text-neon hover:text-white transition">Solscan</a> : null}
-                                        {itemBirdeye ? <a href={itemBirdeye} target="_blank" rel="noreferrer" className="text-[10px] uppercase tracking-widest font-black text-violet hover:text-white transition">Birdeye</a> : null}
+                                        {itemSolscan ? <a href={itemSolscan} target="_blank" rel="noreferrer" className="text-[11px] uppercase tracking-widest font-black text-neon hover:text-white transition">Solscan</a> : null}
+                                        {itemBirdeye ? <a href={itemBirdeye} target="_blank" rel="noreferrer" className="text-[11px] uppercase tracking-widest font-black text-violet hover:text-white transition">Birdeye</a> : null}
                                       </div>
                                     </div>
                                   );

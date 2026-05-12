@@ -18,6 +18,7 @@ type NavItem = { href: string; label: string; icon: string; reqArtistMode?: bool
 
 const NAV: NavItem[] = [
   { href: "/market", label: "MARKET", icon: "◉" },
+  { href: "/signals", label: "SIGNALS", icon: "◇" },
   { href: "/portfolio", label: "PORTFOLIO", icon: "◧" },
   { href: "/artist", label: "LAUNCH COIN", reqArtistMode: true, icon: "♫" },
   { href: "/social", label: "INTEL", icon: "📡" },
@@ -159,7 +160,7 @@ export function Navbar() {
               <motion.span
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
-                className={`hidden 2xl:inline-flex text-[8px] font-black uppercase tracking-widest ${TIER_COLORS[tier] || "text-mute"} bg-white/8 px-1.5 py-0.5 rounded border border-edge`}
+                className={`hidden 2xl:inline-flex text-[11px] font-black uppercase tracking-widest ${TIER_COLORS[tier] || "text-mute"} bg-white/8 px-1.5 py-0.5 rounded border border-edge`}
               >
                 {tier}
               </motion.span>
@@ -177,7 +178,7 @@ export function Navbar() {
                   prefetch={false}
                   onClick={navigate(n.href)}
                   aria-current={active ? "page" : undefined}
-                  className={`relative shrink-0 px-2 lg:px-2.5 xl:px-3 py-2 rounded-xl text-[8px] lg:text-[9px] xl:text-[10px] font-black tracking-widest transition-all duration-300 ${
+                  className={`relative shrink-0 px-2.5 lg:px-3 xl:px-3.5 py-2.5 rounded-xl text-[11px] lg:text-[11px] xl:text-xs font-black tracking-widest transition-all duration-300 ${
                     active
                       ? "text-neon shadow-[0_0_18px_rgba(0,229,114,0.16)]"
                       : "text-mute hover:text-ink hover:bg-white/[0.045]"
@@ -197,7 +198,7 @@ export function Navbar() {
               );
             })}
             {paperMode && (
-              <span className="ml-1 inline-flex shrink-0 items-center rounded-full border border-neon/25 bg-neon/10 px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-neon">
+              <span className="ml-1 inline-flex shrink-0 items-center rounded-full border border-neon/25 bg-neon/10 px-2.5 py-1 text-[11px] font-black uppercase tracking-widest text-neon">
                 Demo Paper Trading
               </span>
             )}
@@ -227,7 +228,7 @@ export function Navbar() {
               </button>
             ) : (
               <button 
-                className="btn-primary min-h-10 px-3 py-2 text-[10px] font-black tracking-widest shadow-neon-glow sm:px-5"
+                className="btn-primary min-h-10 px-3 py-2 text-[11px] font-black tracking-widest shadow-neon-glow sm:px-5 sm:text-xs"
                 onClick={openLoginModal}
               >
                 <span className="relative z-10">CONNECT</span>
@@ -244,7 +245,7 @@ export function Navbar() {
 
             <button
               onClick={togglePaperMode}
-              className={`h-9 xl:h-10 rounded-xl border px-2.5 xl:px-3 text-[9px] font-black uppercase tracking-widest transition-all shrink-0 ${
+              className={`h-9 xl:h-10 rounded-xl border px-2.5 xl:px-3 text-[11px] font-black uppercase tracking-widest transition-all shrink-0 ${
                 paperMode
                   ? "border-neon/40 bg-neon text-[#020403] shadow-[0_0_18px_rgba(0,229,114,0.22)]"
                   : "border-neon/20 bg-neon/10 text-neon hover:bg-neon/15"
@@ -274,7 +275,7 @@ export function Navbar() {
                 prefetch={false}
                 onClick={navigate(n.href)}
                 aria-current={active ? "page" : undefined}
-                className={`min-w-0 truncate rounded-xl border px-2 py-2.5 text-center text-[8px] font-black uppercase tracking-widest transition min-[390px]:text-[9px] ${
+                className={`min-w-0 truncate rounded-xl border px-2.5 py-3 text-center text-[11px] font-black uppercase tracking-widest transition min-[390px]:text-[11px] ${
                   active
                     ? "border-neon/45 bg-neon/15 text-neon shadow-[0_0_16px_rgba(0,229,114,0.16)]"
                     : "border-edge bg-white/[0.045] text-mute hover:text-ink"
@@ -285,7 +286,7 @@ export function Navbar() {
             );
           })}
           {paperMode && (
-            <span className="col-span-2 min-[390px]:col-span-3 rounded-xl border border-neon/25 bg-neon/10 px-3 py-2 text-center text-[8px] font-black uppercase tracking-widest text-neon">
+            <span className="col-span-2 min-[390px]:col-span-3 rounded-xl border border-neon/25 bg-neon/10 px-3 py-2 text-center text-[11px] font-black uppercase tracking-widest text-neon">
               Paper wallet active · simulated funds
             </span>
           )}
@@ -302,10 +303,10 @@ export function Navbar() {
 
 function PaperWalletPill() {
   return (
-    <div className="hidden items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3 py-2 text-[9px] font-black uppercase tracking-widest text-neon lg:flex">
+    <div className="hidden items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3 py-2 text-[11px] font-black uppercase tracking-widest text-neon lg:flex">
       <span className="h-1.5 w-1.5 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.8)]" />
       Paper Wallet
-      <span className="font-mono text-[8px] text-neon/75">100 SOL · 2.5K AUDIO</span>
+      <span className="font-mono text-[11px] text-neon/75">100 SOL · 2.5K AUDIO</span>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { verifyAdminSession } from "@/lib/adminSession";
 import { canMarkLive, riskLevelForLiquidity } from "@/lib/launchState";
+import { refreshSongAssetState } from "@/lib/assetState";
 
 export const dynamic = "force-dynamic";
 
@@ -144,6 +145,8 @@ export async function POST(req: NextRequest) {
         _count: { select: { reports: true, trades: true, payouts: true, watchers: true, events: true } },
       },
     });
+    const refreshed = await refreshSongAssetState(song.id).catch(() => null);
+    if (refreshed?.song) result = { ...result, ...refreshed.song };
   }
 
   if (entity === "user") {

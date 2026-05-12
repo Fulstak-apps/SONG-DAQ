@@ -7,7 +7,7 @@ export function CurrencySelector({ compact = false }: { compact?: boolean }) {
   return (
     <label
       className={`inline-flex items-center gap-2 rounded-xl border border-edge bg-white/[0.055] text-mute transition hover:border-neon/30 hover:text-ink ${
-        compact ? "h-9 px-2 text-[8px]" : "h-10 px-3 text-[9px]"
+        compact ? "min-h-10 px-2.5 text-[11px]" : "min-h-11 px-3 text-[11px]"
       }`}
       title={error || priceAgeText(updatedAt)}
     >
@@ -15,7 +15,7 @@ export function CurrencySelector({ compact = false }: { compact?: boolean }) {
       <select
         value={currency}
         onChange={(event) => setCurrency(event.target.value)}
-        className="bg-transparent font-mono font-black uppercase text-ink outline-none"
+        className="!h-auto !min-h-0 !border-0 !bg-transparent !p-0 !shadow-none font-mono font-black uppercase text-ink outline-none"
         aria-label="Display currency"
       >
         {COMMON_DISPLAY_CURRENCIES.map((code) => (

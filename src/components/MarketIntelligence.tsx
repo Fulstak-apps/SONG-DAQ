@@ -37,14 +37,14 @@ export function MarketDepthPanel({ coin }: { coin: AudiusCoin & Record<string, a
     <section className="panel p-5 shadow-xl space-y-4">
       <div className="flex items-center justify-between gap-3 border-b border-edge pb-3">
         <div>
-          <div className="text-[10px] uppercase tracking-widest font-black text-mute">Market Depth</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">Market Depth</div>
           <div className="mt-1 text-xl font-black text-ink">Slippage Ladder</div>
         </div>
         <Layers3 size={18} className="text-neon" />
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-xs">
-          <thead className="text-[9px] uppercase tracking-widest text-mute">
+          <thead className="text-[11px] uppercase tracking-widest text-mute">
             <tr>
               <th className="py-2 text-left">Order Size</th>
               <th className="py-2 text-right text-red">Bid</th>
@@ -102,7 +102,7 @@ export function ActivityRiskPanel({ coin }: { coin: AudiusCoin & Record<string, 
     <section className="panel p-5 shadow-xl space-y-4">
       <div className="flex items-center justify-between gap-3 border-b border-edge pb-3">
         <div>
-          <div className="text-[10px] uppercase tracking-widest font-black text-mute">Abnormal Activity</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">Abnormal Activity</div>
           <div className="mt-1 text-xl font-black text-ink">{risk.score}/100 Trust Score</div>
         </div>
         <Activity size={18} className={flags.some((f) => f.on) ? "text-amber" : "text-neon"} />
@@ -110,7 +110,7 @@ export function ActivityRiskPanel({ coin }: { coin: AudiusCoin & Record<string, 
       <div className="grid gap-2">
         {flags.map((f) => (
           <div key={f.label} className={`rounded-xl border px-3 py-2 ${f.on ? "border-amber/25 bg-amber/10" : "border-edge bg-panel2"}`}>
-            <div className={`text-[10px] uppercase tracking-widest font-black ${f.on ? "text-amber" : "text-mute"}`}>{f.label}</div>
+            <div className={`text-[11px] uppercase tracking-widest font-black ${f.on ? "text-amber" : "text-mute"}`}>{f.label}</div>
             <div className="mt-1 text-xs text-mute">{f.on ? f.text : "No active flag."}</div>
           </div>
         ))}
@@ -137,7 +137,7 @@ export function TokenAlertsPanel({ coin }: { coin: AudiusCoin & Record<string, a
     <section className="panel p-5 shadow-xl space-y-4">
       <div className="flex items-center justify-between gap-3 border-b border-edge pb-3">
         <div>
-          <div className="text-[10px] uppercase tracking-widest font-black text-mute">Watchlists & Alerts</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">Watchlists & Alerts</div>
           <div className="mt-1 text-xl font-black text-ink">Price Triggers</div>
         </div>
         <Bell size={18} className="text-gold" />
@@ -155,7 +155,7 @@ export function TokenAlertsPanel({ coin }: { coin: AudiusCoin & Record<string, a
         <option value="holders">Holder count</option>
         <option value="liquidity">Liquidity</option>
       </select>
-      <button onClick={addAlert} className="btn-primary w-full h-10 text-[10px] uppercase tracking-widest font-black">Add Alert</button>
+      <button onClick={addAlert} className="btn-primary w-full h-10 text-[11px] uppercase tracking-widest font-black">Add Alert</button>
       <div className="space-y-2">
         {mine.length ? mine.slice(0, 4).map((a) => (
           <div key={a.id} className="rounded-xl border border-edge bg-panel2 px-3 py-2 flex items-center justify-between gap-3 text-xs">
@@ -177,7 +177,7 @@ export function LiquidityManagementPanel({ coin, isOwner }: { coin: AudiusCoin &
     <section className="panel p-5 shadow-xl space-y-4">
       <div className="flex items-center justify-between gap-3 border-b border-edge pb-3">
         <div>
-          <div className="text-[10px] uppercase tracking-widest font-black text-mute">Liquidity Management</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">Liquidity Management</div>
           <div className="mt-1 text-xl font-black text-ink">{health}/100 Pool Health</div>
         </div>
         <LockKeyhole size={18} className={locked ? "text-neon" : "text-amber"} />
@@ -189,7 +189,7 @@ export function LiquidityManagementPanel({ coin, isOwner }: { coin: AudiusCoin &
         <MiniMetric label="Route" value={liquidity > 0 ? "Tradable" : "Waiting"} />
       </div>
       {isOwner ? (
-        <Link href="/artist" className="btn w-full h-10 text-[10px] uppercase tracking-widest font-black">Manage Artist Dashboard</Link>
+        <Link href="/artist" className="btn w-full h-10 text-[11px] uppercase tracking-widest font-black">Manage Artist Dashboard</Link>
       ) : (
         <div className="rounded-xl border border-edge bg-panel2 p-3 text-xs text-mute">Only the issuing artist can manage future liquidity actions.</div>
       )}
@@ -200,7 +200,7 @@ export function LiquidityManagementPanel({ coin, isOwner }: { coin: AudiusCoin &
 function MiniMetric({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-edge bg-panel2 p-3 min-w-0">
-      <div className="text-[9px] uppercase tracking-widest font-black text-mute">{label}</div>
+      <div className="text-[11px] uppercase tracking-widest font-black text-mute">{label}</div>
       <div className="mt-1 truncate font-mono text-xs text-ink">{value}</div>
     </div>
   );

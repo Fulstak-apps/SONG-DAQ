@@ -123,7 +123,7 @@ export default function SongTradingPage() {
   }, [song]);
 
   if (err) return <div className="panel p-10 text-center text-red uppercase tracking-widest font-bold shadow-2xl">{err}</div>;
-  if (!song) return <div className="panel p-10 text-center text-neon uppercase tracking-widest text-[10px] animate-pulse">Establishing Connection to Network…</div>;
+  if (!song) return <div className="panel p-10 text-center text-neon uppercase tracking-widest text-[11px] animate-pulse">Establishing Connection to Network…</div>;
 
   const change = (song.performance - 1) * 100;
   const isTradable = song.status === "LIVE" && Number(song.liquidityPairAmount || 0) > 0 && Number(song.liquidityTokenAmount || 0) > 0;
@@ -163,7 +163,7 @@ export default function SongTradingPage() {
             </div>
             <div className="w-px h-6 bg-white/10 mx-1 sm:mx-2 hidden sm:block" />
             <div className="flex items-baseline gap-2 sm:gap-3">
-              <span className="text-lg sm:text-xl font-mono font-bold text-white">{fmtSol(song.price, 6)} <span className="text-[10px] text-mute">SOL</span></span>
+              <span className="text-lg sm:text-xl font-mono font-bold text-white">{fmtSol(song.price, 6)} <span className="text-[11px] text-mute">SOL</span></span>
               <span className={`num text-sm font-bold tracking-wider ${change >= 0 ? "gain" : "lose"}`}>
                 {change >= 0 ? "+" : ""}{fmtPct(change)}
               </span>
@@ -177,7 +177,7 @@ export default function SongTradingPage() {
           
           <button 
             onClick={() => setAdvancedMode(false)} 
-            className="px-3 sm:px-4 py-2 bg-red/10 text-red border border-red/20 hover:bg-red/20 transition-all rounded-md text-[10px] uppercase tracking-widest font-bold shadow-sm flex items-center gap-2"
+            className="px-3 sm:px-4 py-2 bg-red/10 text-red border border-red/20 hover:bg-red/20 transition-all rounded-md text-[11px] uppercase tracking-widest font-bold shadow-sm flex items-center gap-2"
           >
             <span>Close Advanced</span>
             <span className="text-lg leading-none">&times;</span>
@@ -190,13 +190,13 @@ export default function SongTradingPage() {
           {/* Left Sidebar (TradeFeed + Holders) */}
           <div className="w-full lg:w-80 border-b lg:border-b-0 lg:border-r border-edge flex flex-col bg-panel2 overflow-y-auto no-scrollbar shrink-0 max-h-[34dvh] lg:max-h-none">
             <div className="p-3 border-b border-edge bg-panel">
-              <div className="text-[10px] uppercase tracking-widest font-bold text-mute">Live Order Tape</div>
+              <div className="text-[11px] uppercase tracking-widest font-bold text-mute">Live Order Tape</div>
             </div>
             <div className="h-[50%] overflow-y-auto no-scrollbar border-b border-edge p-2">
               <TradeFeed />
             </div>
             <div className="p-3 border-b border-edge bg-panel">
-              <div className="text-[10px] uppercase tracking-widest font-bold text-mute">Top Holders</div>
+              <div className="text-[11px] uppercase tracking-widest font-bold text-mute">Top Holders</div>
             </div>
             <div className="flex-1 overflow-y-auto no-scrollbar p-2">
               <ul className="divide-y divide-edge text-xs">
@@ -216,13 +216,13 @@ export default function SongTradingPage() {
             
             {/* Chart Toolbar */}
             <div className="border-b border-edge bg-panel relative z-10 px-4 py-2">
-              <div className="mb-1 text-[9px] uppercase tracking-widest font-black text-mute">Timeframe: <span className="text-neon">{CHART_RANGE_LABELS[range]}</span></div>
+              <div className="mb-1 text-[11px] uppercase tracking-widest font-black text-mute">Timeframe: <span className="text-neon">{CHART_RANGE_LABELS[range]}</span></div>
               <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
                 {CHART_RANGES.map((r) => (
                   <button
                     key={r}
                     onClick={() => setRange(r)}
-                    className={`px-3 py-1 rounded text-[10px] uppercase tracking-widest font-bold transition-all shrink-0 ${range === r ? "bg-neon/15 text-neon border border-neon/25" : "text-mute hover:text-white hover:bg-white/10"}`}
+                    className={`px-3 py-1 rounded text-[11px] uppercase tracking-widest font-bold transition-all shrink-0 ${range === r ? "bg-neon/15 text-neon border border-neon/25" : "text-mute hover:text-white hover:bg-white/10"}`}
                   >{r}</button>
                 ))}
               </div>
@@ -231,14 +231,14 @@ export default function SongTradingPage() {
             {/* Chart */}
             <div className="flex-1 p-4 relative z-10">
               <div className="w-full h-full min-h-[300px]">
-                <PriceChart points={filtered} live={range === "LIVE"} mode="advanced" showVolume showMA7={false} showMA25={false} />
+                <PriceChart points={filtered} quote="USD" live={range === "LIVE"} mode="advanced" showVolume showMA7={false} showMA25={false} />
               </div>
             </div>
 
             {/* Bottom Panel (Liquidity Matrix) */}
             <div className="min-h-[220px] lg:h-[35%] border-t border-edge bg-panel2 flex flex-col relative z-10">
               <div className="p-2 border-b border-edge bg-panel px-4">
-                <div className="text-[10px] uppercase tracking-widest font-bold text-mute">Liquidity Matrix</div>
+                <div className="text-[11px] uppercase tracking-widest font-bold text-mute">Liquidity Matrix</div>
               </div>
               <div className="flex-1 overflow-auto no-scrollbar p-2">
                 {!depth ? null : (
@@ -280,11 +280,11 @@ export default function SongTradingPage() {
             ) : <PendingLiquidityPanel song={song} isOwner={isOwner} />}
             
             <div className="panel p-4 bg-panel">
-              <div className="text-[10px] uppercase tracking-widest font-bold text-mute mb-3">Distributor Royalties</div>
+              <div className="text-[11px] uppercase tracking-widest font-bold text-mute mb-3">Distributor Royalties</div>
               <div className="space-y-2">
                 <div className="flex justify-between items-center text-xs"><span className="text-mute">Artist Share</span><span className="font-mono text-violet font-bold">{(song.artistShareBps / 100).toFixed(0)}%</span></div>
                 <div className="flex justify-between items-center text-xs"><span className="text-mute">Holder Dividend</span><span className="font-mono text-neon font-bold">{(song.holderShareBps / 100).toFixed(0)}%</span></div>
-                <div className="flex justify-between items-center text-xs"><span className="text-mute">Status</span>{song.splitsLocked ? <span className="chip-neon border-none px-1 py-0 shadow-none">Locked</span> : <span className="text-[10px] text-orange-500 font-bold uppercase tracking-widest">Pending</span>}</div>
+                <div className="flex justify-between items-center text-xs"><span className="text-mute">Status</span>{song.splitsLocked ? <span className="chip-neon border-none px-1 py-0 shadow-none">Locked</span> : <span className="text-[11px] text-orange-500 font-bold uppercase tracking-widest">Pending</span>}</div>
               </div>
             </div>
           </div>
@@ -320,7 +320,7 @@ export default function SongTradingPage() {
               <span className={`num text-lg font-bold tracking-wider ${change >= 0 ? "gain drop-shadow-[0_0_10px_rgba(0,229,114,0.4)]" : "lose drop-shadow-[0_0_10px_rgba(255,51,102,0.4)]"}`}>
                 {change >= 0 ? "+" : ""}{fmtPct(change)}
               </span>
-              <span className="text-[10px] uppercase tracking-widest text-mute font-bold ml-2">ATH {fmtSol(song.ath, 6)}</span>
+              <span className="text-[11px] uppercase tracking-widest text-mute font-bold ml-2">ATH {fmtSol(song.ath, 6)}</span>
             </div>
             <SongPageAudioPlayer
               disabled={!playerTrack}
@@ -339,17 +339,17 @@ export default function SongTradingPage() {
           </div>
           <div className="flex w-full flex-col gap-3 shrink-0 relative z-10 md:w-auto">
             {address && (
-              <button className={`px-4 py-2 rounded-lg text-[10px] uppercase tracking-widest font-bold transition-all shadow-lg ${watching ? "bg-neon/20 text-neon border border-neon/50 shadow-[0_0_15px_rgba(0,229,114,0.3)]" : "bg-panel2 border border-edge text-ink hover:bg-white/10 hover:text-white"}`} onClick={toggleWatch}>
+              <button className={`px-4 py-2 rounded-lg text-[11px] uppercase tracking-widest font-bold transition-all shadow-lg ${watching ? "bg-neon/20 text-neon border border-neon/50 shadow-[0_0_15px_rgba(0,229,114,0.3)]" : "bg-panel2 border border-edge text-ink hover:bg-white/10 hover:text-white"}`} onClick={toggleWatch}>
                 {watching ? "★ Tracking" : "☆ Track"}
               </button>
             )}
-            <button className="px-4 py-2 rounded-lg text-[10px] uppercase tracking-widest font-bold transition-all shadow-lg bg-panel2 border border-edge text-ink hover:bg-white/10 hover:text-neon" onClick={() => setAdvancedMode(true)}>
+            <button className="px-4 py-2 rounded-lg text-[11px] uppercase tracking-widest font-bold transition-all shadow-lg bg-panel2 border border-edge text-ink hover:bg-white/10 hover:text-neon" onClick={() => setAdvancedMode(true)}>
               Advanced
             </button>
             {song.splitsLocked ? (
-              <span className="text-[9px] uppercase tracking-widest font-bold text-neon flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-neon rounded-full shadow-[0_0_5px_rgba(0,229,114,0.8)]" /> Splits Locked</span>
+              <span className="text-[11px] uppercase tracking-widest font-bold text-neon flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-neon rounded-full shadow-[0_0_5px_rgba(0,229,114,0.8)]" /> Splits Locked</span>
             ) : (
-              <span className="text-[9px] uppercase tracking-widest font-bold text-orange-500 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(249,115,22,0.8)]" /> Unverified Splits</span>
+              <span className="text-[11px] uppercase tracking-widest font-bold text-orange-500 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(249,115,22,0.8)]" /> Unverified Splits</span>
             )}
           </div>
         </div>
@@ -358,21 +358,21 @@ export default function SongTradingPage() {
           <div className="absolute inset-0 bg-gradient-to-b from-transparent to-bg/30 pointer-events-none" />
           <div className="px-2 pt-1 pb-4 flex flex-col gap-2 relative z-10">
             <div className="flex items-center justify-between gap-3">
-              <span className="text-[10px] uppercase tracking-widest font-black text-mute">Timeframe: <span className="text-neon">{CHART_RANGE_LABELS[range]}</span></span>
-              <span className="text-[10px] uppercase tracking-widest font-mono text-mute">{filtered.length} Candles</span>
+              <span className="text-[11px] uppercase tracking-widest font-black text-mute">Timeframe: <span className="text-neon">{CHART_RANGE_LABELS[range]}</span></span>
+              <span className="text-[11px] uppercase tracking-widest font-mono text-mute">{filtered.length} Candles</span>
             </div>
             <div className="flex items-center gap-1 bg-panel p-1 rounded-lg border border-edge overflow-x-auto no-scrollbar">
               {CHART_RANGES.map((r) => (
                 <button
                   key={r}
                   onClick={() => setRange(r)}
-                  className={`px-2.5 sm:px-3 py-1.5 rounded-md text-[10px] uppercase tracking-widest font-bold transition-all shrink-0 ${range === r ? "bg-neon/15 text-neon border border-neon/25 shadow-sm" : "text-mute hover:text-white hover:bg-white/10"}`}
+                  className={`px-2.5 sm:px-3 py-1.5 rounded-md text-[11px] uppercase tracking-widest font-bold transition-all shrink-0 ${range === r ? "bg-neon/15 text-neon border border-neon/25 shadow-sm" : "text-mute hover:text-white hover:bg-white/10"}`}
                 >{r}</button>
               ))}
             </div>
           </div>
           <div className="relative z-10 h-[280px] sm:h-[380px]">
-            <PriceChart points={filtered} live={range === "LIVE"} mode="advanced" showVolume showMA7={false} showMA25={false} />
+            <PriceChart points={filtered} quote="USD" live={range === "LIVE"} mode="advanced" showVolume showMA7={false} showMA25={false} />
           </div>
         </div>
 
@@ -383,6 +383,11 @@ export default function SongTradingPage() {
             tooltip={song.marketValueNote || "Public value uses public tradable supply, not the full minted supply."}
           />
           <Stat k="Circulating" v={`${fmtNum(song.circulating)} / ${fmtNum(song.supply)}`} tooltip="Tokens actively trading versus total minted supply." />
+          <Stat
+            k="Burned"
+            v={fmtNum(song.burnedSupply || song.supplyDistribution?.burnedSupply || 0)}
+            tooltip="Burned coins are permanently removed from supply. After a burn, song-daq updates total supply, artist hold, public pool, reserve, and portfolio values."
+          />
           <Stat k="Reserve" v={`${fmtSol(song.reserveSol, 2)} SOL`} tooltip="Liquidity pool backing the bonding curve." />
           <Stat k="Royalty Pool" v={`${fmtSol(song.royaltyPool, 4)} SOL`} tooltip="Accumulated streaming royalties awaiting distribution." />
           <Stat k="Streams" v={fmtNum(song.streams)} />
@@ -397,7 +402,7 @@ export default function SongTradingPage() {
               <div className="label">Institutional Holders</div>
             </div>
             {!holders.length ? (
-              <div className="px-6 py-12 text-center text-mute text-[10px] uppercase tracking-widest font-bold">No registered wallets.</div>
+              <div className="px-6 py-12 text-center text-mute text-[11px] uppercase tracking-widest font-bold">No registered wallets.</div>
             ) : (
               <ul className="divide-y divide-edge max-h-[300px] overflow-y-auto">
                 {holders.map((h, i) => (
@@ -421,7 +426,7 @@ export default function SongTradingPage() {
             </div>
             {!depth ? null : (
               <table className="w-full text-xs text-left">
-                <thead className="bg-panel text-mute text-[9px] uppercase tracking-widest font-bold border-b border-edge">
+                <thead className="bg-panel text-mute text-[11px] uppercase tracking-widest font-bold border-b border-edge">
                   <tr>
                     <th className="px-5 py-3">Lot Size</th>
                     <th className="text-right px-5 py-3 text-neon">Ask (Buy)</th>
@@ -458,6 +463,7 @@ export default function SongTradingPage() {
           </>
         ) : <PendingLiquidityPanel song={song} isOwner={isOwner} />}
         <TokenTrustPanel song={song} isTradable={isTradable} />
+        <SupplyDistributionPanel song={song} />
         
         {!song.splitsLocked && (
           <div className="panel p-5 bg-orange-500/5 border border-orange-500/20 rounded-2xl space-y-4 shadow-xl">
@@ -467,10 +473,10 @@ export default function SongTradingPage() {
               </div>
               <div className="space-y-1">
                 <h4 className="text-[11px] font-black uppercase tracking-widest text-orange-500">Unverified Splits</h4>
-                <p className="text-[10px] text-mute leading-relaxed font-medium">This asset has not yet locked its royalty distribution protocol. Holders are not receiving streaming revenue.</p>
+                <p className="text-[11px] text-mute leading-relaxed font-medium">This asset has not yet locked its royalty distribution protocol. Holders are not receiving streaming revenue.</p>
               </div>
             </div>
-            <Link href="/splits" className="btn w-full py-3 text-[10px] font-black uppercase tracking-widest bg-orange-500/10 border-orange-500/20 text-orange-500 hover:bg-orange-500/20 transition-all flex items-center justify-center gap-2">
+            <Link href="/splits" className="btn w-full py-3 text-[11px] font-black uppercase tracking-widest bg-orange-500/10 border-orange-500/20 text-orange-500 hover:bg-orange-500/20 transition-all flex items-center justify-center gap-2">
               Setup splits with your distributor <ExternalLink size={12} />
             </Link>
           </div>
@@ -479,7 +485,7 @@ export default function SongTradingPage() {
         <div className="panel overflow-hidden shadow-xl">
           <div className="px-5 py-4 border-b border-edge bg-panel">
             <Glossary term="Royalties" def="How external revenue is distributed among network participants.">
-              Distribution Architecture
+              Royalty Split Distribution
             </Glossary>
           </div>
           <div className="p-5 space-y-4">
@@ -496,12 +502,99 @@ export default function SongTradingPage() {
             </div>
             
             <div className="space-y-3 pt-2">
-              <div className="flex justify-between items-center"><span className="text-[10px] uppercase tracking-widest text-mute font-bold">DSP Distributor</span><span className="font-medium text-xs text-ink">{song.distributor || "Decentralized"}</span></div>
-              <div className="flex justify-between items-center"><span className="text-[10px] uppercase tracking-widest text-mute font-bold">Master Vault</span><span className="font-mono text-[10px] text-neon truncate max-w-[200px]">{song.royaltyVault || "Network Locked"}</span></div>
-              <div className="flex justify-between items-center"><span className="text-[10px] uppercase tracking-widest text-mute font-bold">SPL Token</span><span className="font-mono text-[10px] text-ink bg-panel2 px-2 py-0.5 rounded border border-edge">{song.mintAddress?.slice(0, 4)}…{song.mintAddress?.slice(-4)}</span></div>
+              <div className="flex justify-between items-center"><span className="text-[11px] uppercase tracking-widest text-mute font-bold">DSP Distributor</span><span className="font-medium text-xs text-ink">{song.distributor || "Decentralized"}</span></div>
+              <div className="flex justify-between items-center"><span className="text-[11px] uppercase tracking-widest text-mute font-bold">Master Vault</span><span className="font-mono text-[11px] text-neon truncate max-w-[200px]">{song.royaltyVault || "Network Locked"}</span></div>
+              <div className="flex justify-between items-center"><span className="text-[11px] uppercase tracking-widest text-mute font-bold">SPL Token</span><span className="font-mono text-[11px] text-ink bg-panel2 px-2 py-0.5 rounded border border-edge">{song.mintAddress?.slice(0, 4)}…{song.mintAddress?.slice(-4)}</span></div>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function pctFromBps(value: unknown) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n) || n <= 0) return "0.00%";
+  return `${(n / 100).toFixed(2)}%`;
+}
+
+function SupplyDistributionPanel({ song }: { song: any }) {
+  const distribution = song.supplyDistribution || {};
+  const totalSupply = Number(distribution.totalSupply ?? song.supply ?? 0);
+  const rows = [
+    {
+      label: "Public Pool",
+      value: Number(distribution.publicLiquiditySupply ?? song.tradableSupply ?? song.liquidityTokenAmount ?? 0),
+      pct: pctFromBps(distribution.publicLiquidityBps),
+      tone: "text-neon",
+      help: "Coins placed into the public liquidity route. Fans buy and sell against this pool.",
+    },
+    {
+      label: "Artist Hold",
+      value: Number(distribution.artistAllocationSupply ?? (totalSupply * Number(song.artistAllocationBps || 0)) / 10_000),
+      pct: pctFromBps(distribution.artistAllocationBps ?? song.artistAllocationBps),
+      tone: "text-violet",
+      help: "The artist-side allocation. If the artist burns coins from their wallet, this number goes down automatically.",
+    },
+    {
+      label: "Reserve",
+      value: Number(distribution.reserveSupply ?? 0),
+      pct: pctFromBps(distribution.reserveBps),
+      tone: "text-white",
+      help: "Coins not currently counted as public pool or artist hold. This can support future liquidity or platform mechanics.",
+    },
+    {
+      label: "Burned",
+      value: Number(distribution.burnedSupply ?? song.burnedSupply ?? 0),
+      pct: pctFromBps(distribution.burnedBps),
+      tone: "text-red",
+      help: "Coins permanently destroyed and removed from total supply.",
+    },
+    {
+      label: "Circulating",
+      value: Number(distribution.circulatingSupply ?? song.circulating ?? 0),
+      pct: pctFromBps(distribution.circulatingBps),
+      tone: "text-ink",
+      help: "Coins currently active in the market calculation.",
+    },
+  ];
+
+  return (
+    <div className="panel overflow-hidden shadow-xl">
+      <div className="px-5 py-4 border-b border-edge bg-panel">
+        <Glossary
+          term="Supply Split"
+          def="Supply split shows where the coins sit: public pool, artist hold, reserve, burned, and circulating. Burns recalculate this automatically."
+        >
+          Supply Split After Burns
+        </Glossary>
+      </div>
+      <div className="p-5 space-y-4">
+        <div className="rounded-xl border border-edge bg-panel p-3">
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">Total Indexed Supply</div>
+          <div className="mt-1 font-mono text-xl font-black text-white">{totalSupply > 0 ? fmtNum(totalSupply) : "Pending"}</div>
+        </div>
+        <div className="space-y-3">
+          {rows.map((row) => (
+            <div key={row.label} className="rounded-xl border border-edge bg-panel p-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest font-black text-mute">
+                    <InfoTooltip label={row.label} def={row.help} />
+                  </div>
+                  <div className={`mt-1 font-mono text-base font-black ${row.tone}`}>{fmtNum(row.value)}</div>
+                </div>
+                <div className="shrink-0 rounded-full border border-white/10 bg-white/[0.04] px-2.5 py-1 font-mono text-[11px] font-black text-white">
+                  {row.pct}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="text-xs leading-relaxed text-mute">
+          When coins are burned, song-daq records the burn event, reduces indexed supply, updates the public value math, and refreshes the artist/public/reserve split shown here.
+        </p>
       </div>
     </div>
   );
@@ -557,7 +650,7 @@ function TokenTrustPanel({ song, isTradable }: { song: any; isTradable: boolean 
           <ShieldCheck size={18} />
         </div>
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-widest font-black text-neon">Token Trust Check</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-neon">Token Trust Check</div>
           <p className="mt-1 text-xs leading-relaxed text-mute">
             song-daq only opens trading after a real liquidity route is verified. Royalty status is separate from launch liquidity.
           </p>
@@ -567,7 +660,7 @@ function TokenTrustPanel({ song, isTradable }: { song: any; isTradable: boolean 
         {trustItems.map((item) => (
           <div key={item.label} className="flex items-start justify-between gap-3 rounded-xl border border-edge bg-panel p-3">
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-widest font-black text-ink">{item.label}</div>
+              <div className="text-[11px] uppercase tracking-widest font-black text-ink">{item.label}</div>
               <div className="mt-1 text-[11px] leading-relaxed text-mute">{item.detail}</div>
             </div>
             <div className={`mt-0.5 shrink-0 ${item.ok ? "text-neon" : item.warn ? "text-amber" : "text-red"}`}>
@@ -617,7 +710,7 @@ function PendingLiquidityPanel({ song, isOwner = false }: { song: any; isOwner?:
           <ShieldCheck className="text-orange-500" size={18} />
         </div>
         <div className="min-w-0">
-          <div className="text-[10px] uppercase tracking-widest font-black text-orange-500">{status}</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-orange-500">{status}</div>
           <h3 className="mt-1 text-lg font-black tracking-tight text-white">Trading route not live yet</h3>
           <p className="mt-2 text-xs text-mute leading-relaxed">
             This Song Coin can be inspected on-chain, but song-daq will not enable buy or sell actions until the artist adds the reserved coins plus SOL/USDC into a verified liquidity pool.
@@ -627,11 +720,11 @@ function PendingLiquidityPanel({ song, isOwner = false }: { song: any; isOwner?:
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="rounded-xl border border-edge bg-panel p-3 min-w-0">
-          <div className="text-[9px] uppercase tracking-widest font-black text-mute">SPL Mint</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">SPL Mint</div>
           <div className="mt-1 font-mono text-xs text-white truncate">{mint}</div>
         </div>
         <div className="rounded-xl border border-edge bg-panel p-3">
-          <div className="text-[9px] uppercase tracking-widest font-black text-mute">Liquidity</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">Liquidity</div>
           <div className="mt-1 text-xs uppercase tracking-widest font-black text-orange-500">Not verified</div>
         </div>
       </div>
@@ -663,7 +756,7 @@ function LiveLiquidityPanel({ song, onChanged }: { song: any; onChanged?: () => 
           <BadgeCheck className="text-neon" size={18} />
         </div>
         <div className="min-w-0">
-          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-black text-neon">
+          <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest font-black text-neon">
             Liquidity is live
             <InfoTooltip
               side="bottom"
@@ -679,15 +772,15 @@ function LiveLiquidityPanel({ song, onChanged }: { song: any; onChanged?: () => 
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="rounded-xl border border-edge bg-panel p-3 min-w-0">
-          <div className="text-[9px] uppercase tracking-widest font-black text-mute">SPL Mint</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">SPL Mint</div>
           <div className="mt-1 font-mono text-xs text-white truncate">{mint}</div>
         </div>
         <div className="rounded-xl border border-edge bg-panel p-3">
-          <div className="text-[9px] uppercase tracking-widest font-black text-mute">Current Pair</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">Current Pair</div>
           <div className="mt-1 text-xs uppercase tracking-widest font-black text-neon">{pairAmount.toLocaleString()} {pairAsset}</div>
         </div>
         <div className="rounded-xl border border-edge bg-panel p-3">
-          <div className="text-[9px] uppercase tracking-widest font-black text-mute">Coin Side</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">Coin Side</div>
           <div className="mt-1 text-xs uppercase tracking-widest font-black text-neon">{tokenAmount.toLocaleString()} coins</div>
         </div>
       </div>
@@ -757,10 +850,10 @@ function SongPageAudioPlayer({
         </button>
         <div className="min-w-0 flex-1">
           <div className="mb-2 flex items-center justify-between gap-3">
-            <div className="text-[10px] uppercase tracking-widest font-black text-neon">
+            <div className="text-[11px] uppercase tracking-widest font-black text-neon">
               {playing ? "Playing from Audius" : active ? "Paused" : "Play Song"}
             </div>
-            <div className="font-mono text-[10px] text-mute">
+            <div className="font-mono text-[11px] text-mute">
               {formatTime(safeCurrent)} / {safeDuration ? formatTime(safeDuration) : "--:--"}
             </div>
           </div>
@@ -791,7 +884,7 @@ function SongPageAudioPlayer({
           <button
             type="button"
             onClick={() => onSkip(-10)}
-            className="btn h-10 px-2 text-[9px] uppercase tracking-widest font-black"
+            className="btn h-10 px-2 text-[11px] uppercase tracking-widest font-black"
             aria-label="Back 10 seconds"
           >
             <RotateCcw size={13} /> 10
@@ -799,7 +892,7 @@ function SongPageAudioPlayer({
           <button
             type="button"
             onClick={() => onSkip(10)}
-            className="btn h-10 px-2 text-[9px] uppercase tracking-widest font-black"
+            className="btn h-10 px-2 text-[11px] uppercase tracking-widest font-black"
             aria-label="Forward 10 seconds"
           >
             10 <RotateCw size={13} />
@@ -883,12 +976,12 @@ function BurnTokensPanel({ song, onBurned }: { song: any; onBurned?: () => void 
   return (
     <div className="rounded-2xl border border-red/20 bg-red/5 p-4 space-y-3">
       <button
-        className="btn w-full h-11 border-red/25 bg-red/10 text-red hover:bg-red/15 text-[10px] font-black uppercase tracking-widest"
+        className="btn w-full h-11 border-red/25 bg-red/10 text-red hover:bg-red/15 text-[11px] font-black uppercase tracking-widest"
         onClick={() => setOpen((v) => !v)}
       >
         {open ? "Close Burn Tool" : "Burn Tokens"}
       </button>
-      <div className="text-[10px] uppercase tracking-widest font-bold text-red/80">
+      <div className="text-[11px] uppercase tracking-widest font-bold text-red/80">
         Permanently remove coins from your wallet
       </div>
       {open && (
@@ -896,28 +989,28 @@ function BurnTokensPanel({ song, onBurned }: { song: any; onBurned?: () => void 
           <div className="rounded-xl border border-red/20 bg-red/10 p-3 text-[11px] leading-relaxed text-red/90">
             Burning destroys tokens forever. Use it only when you want to reduce supply or remove tokens you own. This is not the same as selling, and you will not receive SOL back.
           </div>
-          <label className="space-y-2 text-[10px] uppercase tracking-widest font-bold text-mute">
+          <label className="space-y-2 text-[11px] uppercase tracking-widest font-bold text-mute">
             <span>Amount to burn</span>
             <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-edge bg-panel px-4 py-3 text-sm text-ink outline-none focus:border-red/50" placeholder="1000" />
           </label>
           <div className="grid gap-2 sm:grid-cols-2">
             <div className="rounded-xl border border-edge bg-panel p-3">
-              <div className="text-[9px] uppercase tracking-widest font-black text-mute">Estimated value removed</div>
+              <div className="text-[11px] uppercase tracking-widest font-black text-mute">Estimated value removed</div>
               <div className="mt-1 font-mono text-xs font-bold text-white">{formatFiatEstimate(estimatedValueUsd, currency)}</div>
             </div>
             <div className="rounded-xl border border-edge bg-panel p-3">
-              <div className="text-[9px] uppercase tracking-widest font-black text-mute">Network fee estimate</div>
+              <div className="text-[11px] uppercase tracking-widest font-black text-mute">Network fee estimate</div>
               <div className="mt-1 font-mono text-xs font-bold text-white">{formatCryptoWithFiat(estimatedFeeSol, "SOL", estimatedFeeUsd, currency)}</div>
             </div>
           </div>
-          <label className="space-y-2 text-[10px] uppercase tracking-widest font-bold text-mute">
+          <label className="space-y-2 text-[11px] uppercase tracking-widest font-bold text-mute">
             <span>Type BURN to confirm</span>
             <input value={confirm} onChange={(e) => setConfirm(e.target.value)} className="w-full rounded-xl border border-edge bg-panel px-4 py-3 text-sm text-ink outline-none focus:border-red/50" placeholder="BURN" />
           </label>
-          <div className="text-[9px] uppercase tracking-widest text-mute">{priceAgeText(updatedAt)}</div>
+          <div className="text-[11px] uppercase tracking-widest text-mute">{priceAgeText(updatedAt)}</div>
           {status && <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-xs text-neon">{status}</div>}
           {err && <div className="rounded-xl border border-red/20 bg-red/10 p-3 text-xs text-red">{err}</div>}
-          <button className="btn-primary w-full h-11 text-[10px] font-black uppercase tracking-widest disabled:opacity-50" disabled={busy || !canSubmit} onClick={submit}>
+          <button className="btn-primary w-full h-11 text-[11px] font-black uppercase tracking-widest disabled:opacity-50" disabled={busy || !canSubmit} onClick={submit}>
             {busy ? "Burning…" : `Permanently Burn ${amountNumber > 0 ? amountNumber.toLocaleString() : ""} $${song.symbol}`}
           </button>
         </div>
@@ -1036,22 +1129,22 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
   return (
     <div className="rounded-2xl border border-neon/20 bg-neon/5 p-4 space-y-3">
       <button
-        className="btn-primary w-full h-11 text-[10px] font-black uppercase tracking-widest"
+        className="btn-primary w-full h-11 text-[11px] font-black uppercase tracking-widest"
         onClick={() => setOpen((v) => !v)}
       >
         {open ? "Close Liquidity Form" : hasExistingLiquidity ? "Add More Liquidity" : "Add Liquidity"}
       </button>
-      <div className="text-[10px] uppercase tracking-widest font-bold text-neon/80">
+      <div className="text-[11px] uppercase tracking-widest font-bold text-neon/80">
         Artist-only liquidity {hasExistingLiquidity ? "top-up" : "setup"} for {mintLabel}
       </div>
       {open && (
         <div className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <label className="space-y-2 text-[10px] uppercase tracking-widest font-bold text-mute">
+            <label className="space-y-2 text-[11px] uppercase tracking-widest font-bold text-mute">
               <span>Token amount</span>
               <input value={tokenAmount} onChange={(e) => setTokenAmount(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-edge bg-panel px-4 py-3 text-sm text-ink outline-none focus:border-neon/50" />
             </label>
-            <label className="space-y-2 text-[10px] uppercase tracking-widest font-bold text-mute">
+            <label className="space-y-2 text-[11px] uppercase tracking-widest font-bold text-mute">
               <span className="flex items-center gap-1.5">
                 Paired asset amount ({pairAsset})
                 <InfoTooltip
@@ -1060,18 +1153,18 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
                 />
               </span>
               <input value={pairAmount} onChange={(e) => setPairAmount(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-edge bg-panel px-4 py-3 text-sm text-ink outline-none focus:border-neon/50" />
-              <span className="block text-[10px] normal-case tracking-normal text-mute">
+              <span className="block text-[11px] normal-case tracking-normal text-mute">
                 {formatCryptoWithFiat(pairAmountNumber, pairAsset, pairUsd, currency)}
               </span>
             </label>
-            <label className="space-y-2 text-[10px] uppercase tracking-widest font-bold text-mute">
+            <label className="space-y-2 text-[11px] uppercase tracking-widest font-bold text-mute">
               <span>Paired Asset</span>
               <select value={pairAsset} onChange={(e) => setPairAsset(e.target.value as "SOL" | "USDC")} className="w-full bg-panel border border-edge rounded-xl px-4 py-3 text-sm text-ink">
                 <option value="SOL">SOL</option>
                 <option value="USDC">USDC</option>
               </select>
             </label>
-            <label className="space-y-2 text-[10px] uppercase tracking-widest font-bold text-mute">
+            <label className="space-y-2 text-[11px] uppercase tracking-widest font-bold text-mute">
               <span>Liquidity lock days</span>
               <input value={lockDays} onChange={(e) => setLockDays(e.target.value)} inputMode="numeric" className="w-full rounded-xl border border-edge bg-panel px-4 py-3 text-sm text-ink outline-none focus:border-neon/50" />
             </label>
@@ -1082,7 +1175,7 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
               : "This sends the reserved launch coins plus paired SOL/USDC into the public pool. Once the transaction is verified, song-daq marks the coin live so fans can buy and sell."}
           </div>
           <div className="rounded-2xl border border-neon/25 bg-neon/10 p-4">
-            <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-widest font-black text-neon">
+            <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest font-black text-neon">
               Full estimated spend
               <InfoTooltip
                 side="bottom"
@@ -1094,22 +1187,22 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
           </div>
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl border border-edge bg-panel p-3">
-              <div className="text-[9px] uppercase tracking-widest font-black text-mute">Payment side</div>
+              <div className="text-[11px] uppercase tracking-widest font-black text-mute">Payment side</div>
               <div className="mt-1 font-mono text-xs font-bold text-white">{formatCryptoWithFiat(pairAmountNumber, pairAsset, pairUsd, currency)}</div>
             </div>
             <div className="rounded-xl border border-edge bg-panel p-3">
-              <div className="text-[9px] uppercase tracking-widest font-black text-mute">Estimated pool</div>
+              <div className="text-[11px] uppercase tracking-widest font-black text-mute">Estimated pool</div>
               <div className="mt-1 font-mono text-xs font-bold text-neon">{formatFiatEstimate(poolValueUsd, currency)}</div>
             </div>
             <div className="rounded-xl border border-edge bg-panel p-3">
-              <div className="text-[9px] uppercase tracking-widest font-black text-mute">Network fee</div>
+              <div className="text-[11px] uppercase tracking-widest font-black text-mute">Network fee</div>
               <div className="mt-1 font-mono text-xs font-bold text-white">{formatCryptoWithFiat(estimatedFeeSol, "SOL", estimatedFeeUsd, currency)}</div>
             </div>
           </div>
-          <div className="text-[9px] uppercase tracking-widest text-mute">{priceAgeText(updatedAt)}</div>
+          <div className="text-[11px] uppercase tracking-widest text-mute">{priceAgeText(updatedAt)}</div>
           {status && <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-xs text-neon">{status}</div>}
           {err && <div className="rounded-xl border border-red/20 bg-red/10 p-3 text-xs text-red">{err}</div>}
-          <button className="btn-primary w-full h-11 text-[10px] font-black uppercase tracking-widest disabled:opacity-50" disabled={busy} onClick={submit}>
+          <button className="btn-primary w-full h-11 text-[11px] font-black uppercase tracking-widest disabled:opacity-50" disabled={busy} onClick={submit}>
             {busy ? "Saving Liquidity…" : `Confirm Liquidity · ${formatFiatEstimate(totalSpendUsd, currency)}`}
           </button>
         </div>
@@ -1122,7 +1215,7 @@ function Sline({ k, v, color }: { k: string; v: string; color: "violet" | "neon"
   const dot = color === "violet" ? "bg-violet shadow-[0_0_8px_rgba(155,81,224,0.8)]" : color === "neon" ? "bg-neon shadow-[0_0_8px_rgba(0,229,114,0.8)]" : "bg-white/40";
   return (
     <div className="flex items-center justify-between group">
-      <span className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-mute group-hover:text-white transition"><span className={`w-2 h-2 rounded-full ${dot}`} />{k}</span>
+      <span className="flex items-center gap-2 text-[11px] uppercase tracking-widest font-bold text-mute group-hover:text-white transition"><span className={`w-2 h-2 rounded-full ${dot}`} />{k}</span>
       <span className="num font-bold text-white tracking-wider">{v}</span>
     </div>
   );
@@ -1131,8 +1224,8 @@ function Sline({ k, v, color }: { k: string; v: string; color: "violet" | "neon"
 function Toggle({ k, on }: { k: string; on: boolean }) {
   return (
     <div className="flex items-center justify-between group">
-      <span className="text-[10px] uppercase tracking-widest font-bold text-mute group-hover:text-white transition">{k}</span>
-      <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded border ${on ? "text-neon bg-neon/10 border-neon/30 drop-shadow-[0_0_5px_rgba(0,229,114,0.3)]" : "text-mute bg-panel2 border-edge"}`}>{on ? "ACTIVE" : "DISABLED"}</span>
+      <span className="text-[11px] uppercase tracking-widest font-bold text-mute group-hover:text-white transition">{k}</span>
+      <span className={`text-[11px] font-mono font-bold px-2 py-0.5 rounded border ${on ? "text-neon bg-neon/10 border-neon/30 drop-shadow-[0_0_5px_rgba(0,229,114,0.3)]" : "text-mute bg-panel2 border-edge"}`}>{on ? "ACTIVE" : "DISABLED"}</span>
     </div>
   );
 }

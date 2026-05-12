@@ -52,7 +52,7 @@ export function HeatMap({
       <div className="orb orb-neon w-[300px] h-[300px] -top-20 -right-20 opacity-20" />
       <div className="flex items-center justify-between mb-3 relative z-10">
         <div className="label flex items-center gap-2">Market Heat Map · size by cap, color by 24h% <span className="h-1.5 w-1.5 rounded-full bg-neon animate-pulseDot" /></div>
-        <div className="flex items-center gap-2 text-[10px] text-mute font-bold">
+        <div className="flex items-center gap-2 text-[11px] text-mute font-bold">
           <span>−10%</span>
           <div className="h-1.5 w-32 rounded-full overflow-hidden" style={{ background: "linear-gradient(to right, rgba(255,51,102,0.5), rgba(255,51,102,0.1), rgba(0,229,114,0.1), rgba(0,229,114,0.5))" }} />
           <span>+10%</span>
@@ -87,7 +87,7 @@ export function HeatMap({
               <div className={`absolute inset-0 ${change >= 0 ? "live-scan-neon" : "live-scan-red"} opacity-70`} />
               <div className="relative z-10 font-mono text-xs font-black truncate text-pure-white drop-shadow">${c.ticker}</div>
               <div className="relative z-10 flex items-baseline justify-between gap-1 mt-1">
-                <span className="text-[10px] text-pure-white/80 truncate">{formatDisplayFiat(c.marketCap ?? 0, 0)}</span>
+                <span className="text-[11px] text-pure-white/80 truncate">{formatDisplayFiat(c.marketCap ?? 0, 0)}</span>
                 <span className="text-[11px] font-mono font-black text-pure-white">
                   {change >= 0 ? "+" : ""}{change.toFixed(2)}%
                 </span>

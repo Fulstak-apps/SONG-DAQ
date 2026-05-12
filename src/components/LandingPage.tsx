@@ -111,7 +111,7 @@ export function LandingPage() {
 
         <div className="relative z-10 flex-1 min-w-0 space-y-5 text-center lg:text-left">
           <div className="space-y-2">
-            <div className="text-[10px] uppercase tracking-[0.22em] sm:tracking-[0.3em] font-black text-mute mb-3">Live Music Economy</div>
+            <div className="text-[11px] uppercase tracking-[0.22em] sm:tracking-[0.3em] font-black text-mute mb-3">Live Music Economy</div>
             <div className="relative h-[92px] sm:h-[112px] md:h-[138px]">
             <AnimatePresence mode="wait">
               <motion.h1
@@ -140,7 +140,7 @@ export function LandingPage() {
 
           <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
             {trustBadges.map((badge) => (
-              <span key={badge} className="rounded-full border border-neon/20 bg-neon/8 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-neon">
+              <span key={badge} className="rounded-full border border-neon/20 bg-neon/8 px-3 py-1.5 text-[11px] font-black uppercase tracking-[0.18em] text-neon">
                 {badge}
               </span>
             ))}
@@ -154,6 +154,7 @@ export function LandingPage() {
           >
             <PathButton href="/market" title="Fan / Investor" body="Browse coins, watch charts, buy, sell, and track your portfolio." tone="neon" />
             <PathButton href="/artist" title="Artist" body="Connect Audius, choose Artist Coin or Song Coin, launch, add liquidity, and set up splits." tone="violet" />
+            <PathButton href="/demo" title="Investor Demo" body="Walk through Paper Mode, buying, selling, and portfolio tracking with simulated funds." tone="neon" />
           </motion.div>
         </div>
 
@@ -168,17 +169,17 @@ export function LandingPage() {
             <div className="absolute -right-14 -top-14 h-32 w-32 rounded-full bg-neon/10 blur-3xl" />
             <div className="relative flex items-start justify-between gap-4">
               <div>
-                <div className="text-[10px] uppercase tracking-[0.24em] font-black text-mute">Live Market</div>
+                <div className="text-[11px] uppercase tracking-[0.24em] font-black text-mute">Live Market</div>
                 <div className="mt-1 text-xl font-black tracking-tight text-ink">Pulse</div>
               </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-neon/25 bg-neon/10 px-2.5 py-1 text-[8px] uppercase tracking-widest font-black text-neon">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-neon/25 bg-neon/10 px-2.5 py-1 text-[11px] uppercase tracking-widest font-black text-neon">
                 <span className="h-1.5 w-1.5 rounded-full bg-neon animate-pulseDot" /> Live
               </span>
             </div>
             <div className="relative mt-5 grid gap-3">
             {!pulseLoaded ? (
               <>
-                <div className="rounded-2xl border border-edge bg-neon/8 px-4 py-3 text-[10px] uppercase tracking-[0.2em] font-black text-neon">
+                <div className="rounded-2xl border border-edge bg-neon/8 px-4 py-3 text-[11px] uppercase tracking-[0.2em] font-black text-neon">
                   <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-neon animate-pulseDot" /> Loading market data...</span>
                 </div>
                 <HeroPulseStat label="Volume" loading />
@@ -193,7 +194,7 @@ export function LandingPage() {
               </>
             )}
             </div>
-            <div className="relative mt-4 flex items-center justify-between gap-3 text-[9px] uppercase tracking-[0.18em] font-black text-mute">
+            <div className="relative mt-4 flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.18em] font-black text-mute">
               <span>Audius synced</span>
               <span className="text-neon/80">Every 60s</span>
             </div>
@@ -232,7 +233,7 @@ export function LandingPage() {
 
       <Section>
         <div className="text-center mb-12">
-          <div className="text-[10px] uppercase tracking-[0.3em] font-black text-mute mb-3">How song-daq Works</div>
+          <div className="text-[11px] uppercase tracking-[0.3em] font-black text-mute mb-3">How song-daq Works</div>
           <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gradient-hero">Six steps to a music market</h2>
         </div>
       </Section>
@@ -243,7 +244,7 @@ export function LandingPage() {
         <Section className="h-full" delay={0.1}><Step num={3} title="Launch Coin" icon={<CircleDollarSign className="text-violet" size={24} />} desc="Create your song coin. Set royalty share (min 10%)." active /></Section>
         <Section className="h-full" delay={0.15}><Step num={4} title="Lock Splits" icon={<Lock className="text-neon" size={24} />} desc="Send unique royalty email to your distributor." /></Section>
         <Section className="h-full" delay={0.2}><Step num={5} title="Verify" icon={<ShieldCheck className="text-violet" size={24} />} desc="Distributor confirms → Splits Locked badge." /></Section>
-        <Section className="h-full" delay={0.25}><Step num={6} title="Fans Invest" icon={<Users className="text-violet" size={24} />} desc="Royalties flow monthly. Everyone wins." /></Section>
+        <Section className="h-full" delay={0.25}><Step num={6} title="Fans Invest" icon={<Users className="text-violet" size={24} />} desc="Royalty activity and market updates become visible for holders and fans." /></Section>
       </div>
 
       {/* ═══ PRODUCT SHOWCASE ═════════════════════════════ */}
@@ -290,7 +291,7 @@ export function LandingPage() {
                   <div className="bg-neon/60 flex-[15]" />
                   <div className="bg-amber/60 flex-[10]" />
                 </div>
-                <div className="flex gap-6 mt-3 text-[10px] text-mute uppercase tracking-widest font-bold">
+                <div className="flex gap-6 mt-3 text-[11px] text-mute uppercase tracking-widest font-bold">
                   <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-violet/60" />50% Community</span>
                   <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-blue-500/60" />25% Royalty Pool</span>
                   <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-sm bg-neon/60" />15% Artist</span>
@@ -341,7 +342,7 @@ export function LandingPage() {
       {/* ═══ FEATURE GRID ═════════════════════════════════ */}
       <Section>
         <div className="text-center mb-12">
-          <div className="text-[10px] uppercase tracking-[0.3em] font-black text-mute mb-3">Platform Features</div>
+          <div className="text-[11px] uppercase tracking-[0.3em] font-black text-mute mb-3">Platform Features</div>
           <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gradient-hero">Built for the new music economy</h2>
         </div>
       </Section>
@@ -470,7 +471,7 @@ export function LandingPage() {
               CONNECT WALLET
               <ArrowRight size={16} className="ml-2" />
             </button>
-            <div className="text-[10px] text-mute uppercase tracking-widest font-bold pt-2">
+            <div className="text-[11px] text-mute uppercase tracking-widest font-bold pt-2">
               Solana · On-Chain · Verified
             </div>
           </div>
@@ -486,7 +487,7 @@ function LiveStat({ label, value, className = "" }: { label: string; value: stri
   return (
     <div className={`text-center ${className}`}>
       <div className="text-xl md:text-2xl font-black font-mono text-white tracking-tight">{value}</div>
-      <div className="text-[9px] uppercase tracking-[0.2em] font-bold text-mute mt-1">{label}</div>
+      <div className="text-[11px] uppercase tracking-[0.2em] font-bold text-mute mt-1">{label}</div>
     </div>
   );
 }
@@ -495,7 +496,7 @@ function LiveStatSkeleton({ label, className = "" }: { label: string; className?
   return (
     <div className={`text-center ${className}`}>
       <div className="mx-auto h-7 w-24 rounded-lg skeleton" />
-      <div className="text-[9px] uppercase tracking-[0.2em] font-bold text-mute mt-2">{label}</div>
+      <div className="text-[11px] uppercase tracking-[0.2em] font-bold text-mute mt-2">{label}</div>
     </div>
   );
 }
@@ -504,7 +505,7 @@ function HeroPulseStat({ label, value, accent = "text-ink", loading = false }: {
   return (
     <div className="rounded-2xl border border-edge bg-white/[0.045] px-4 py-3">
       <div className="flex min-w-0 items-center justify-between gap-4">
-        <span className="min-w-0 truncate text-[10px] uppercase tracking-[0.2em] font-black text-mute">{label}</span>
+        <span className="min-w-0 truncate text-[11px] uppercase tracking-[0.2em] font-black text-mute">{label}</span>
         {loading ? (
           <span className="h-5 w-20 shrink-0 rounded-lg skeleton" />
         ) : (
@@ -545,7 +546,7 @@ function PathButton({ href, title, body, tone }: { href: string; title: string; 
 function FlowCard({ title, items }: { title: string; items: string[] }) {
   return (
     <div className="panel-elevated grain flex h-full min-h-[250px] flex-col p-5 md:p-6">
-      <div className="text-[10px] font-black uppercase tracking-[0.26em] text-neon">{title}</div>
+      <div className="text-[11px] font-black uppercase tracking-[0.26em] text-neon">{title}</div>
       <ul className="mt-4 space-y-3">
         {items.map((item) => (
           <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-mute">
@@ -576,13 +577,13 @@ function Step({ num, title, icon, desc, active }: { num: number; title: string; 
     <Tooltip
       width={340}
       triggerClassName="flex h-full w-full items-stretch"
-      content={<div><div className="font-black text-neon mb-1">{title}</div><p className="text-pure-white/70 text-xs leading-relaxed">{desc}</p></div>}
+      content={<div><div className="font-black text-neon mb-1">{title}</div><p className="text-pure-white/70 text-sm leading-relaxed">{desc}</p></div>}
     >
-      <div className={`panel-elevated relative flex h-full min-h-[210px] w-full flex-col items-center justify-between gap-3 p-4 text-center md:aspect-square md:min-h-0 lg:aspect-square ${active ? "border-neon/20 shadow-neon-glow" : ""}`}>
-        <div className="shrink-0 text-[9px] font-black text-mute tracking-widest">{String(num).padStart(2, "0")}</div>
+      <div className={`panel-elevated relative flex h-full min-h-[230px] w-full flex-col items-center justify-between gap-3 p-4 text-center md:aspect-square md:min-h-0 lg:aspect-square ${active ? "border-neon/20 shadow-neon-glow" : ""}`}>
+        <div className="shrink-0 text-[11px] font-black text-mute tracking-widest">{String(num).padStart(2, "0")}</div>
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.03]">{icon}</div>
-        <div className="min-h-[2rem] shrink-0 text-xs font-black uppercase tracking-widest text-white/70 flex items-center justify-center">{title}</div>
-        <p className="flex flex-1 items-center text-[11px] text-mute leading-relaxed line-clamp-4">{desc}</p>
+        <div className="min-h-[2.5rem] shrink-0 text-sm font-black uppercase tracking-widest text-white/75 flex items-center justify-center">{title}</div>
+        <p className="flex flex-1 items-center text-sm text-mute leading-relaxed line-clamp-4">{desc}</p>
       </div>
     </Tooltip>
   );
@@ -604,7 +605,7 @@ function MiniStat({ k, v, accent }: { k: string; v: string; accent?: boolean }) 
       content={<p className="text-xs text-pure-white/70 leading-relaxed">{k} is shown as a quick readout so artists and fans can understand the token economics without opening a separate dashboard.</p>}
     >
       <div className="rounded-xl bg-white/[0.03] border border-white/[0.04] p-3">
-        <div className="text-[9px] uppercase tracking-widest font-bold text-mute mb-1">{k}</div>
+        <div className="text-[11px] uppercase tracking-widest font-bold text-mute mb-1">{k}</div>
         <div className={`text-sm font-bold font-mono ${accent ? "text-neon" : "text-white"}`}>{v}</div>
       </div>
     </Tooltip>

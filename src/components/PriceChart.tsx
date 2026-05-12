@@ -322,7 +322,7 @@ export function PriceChart({
               return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
             }}
             stroke="rgba(248,250,252,0.42)"
-            fontSize={10}
+            fontSize={12}
             tickMargin={12}
             axisLine={false}
             tickLine={false}
@@ -331,7 +331,7 @@ export function PriceChart({
             yAxisId="price"
             hide={investing}
             stroke="rgba(248,250,252,0.42)"
-            fontSize={10}
+            fontSize={12}
             tickFormatter={(v) => fmtPrice(Number(v))}
             domain={[axisMin, axisMax]}
             width={82}
@@ -347,13 +347,13 @@ export function PriceChart({
               backdropFilter: "blur(24px)",
               border: investing ? "1px solid rgba(88,214,79,0.32)" : "1px solid rgba(255,255,255,0.16)",
               borderRadius: investing ? 18 : 16,
-              fontSize: 12,
+              fontSize: 13,
               color: "#FFF",
               boxShadow: investing ? "0 16px 40px rgba(0,0,0,0.75), 0 0 22px rgba(88,214,79,0.16)" : "0 20px 40px rgba(0,0,0,0.6)",
               padding: "12px 16px"
             }}
             itemStyle={{ color: stroke, fontWeight: "bold", fontFamily: "var(--font-mono)" }}
-            labelStyle={{ color: "rgba(248,250,252,0.72)", fontSize: "9px", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "6px", fontWeight: 900 }}
+            labelStyle={{ color: "rgba(248,250,252,0.72)", fontSize: "11px", textTransform: "uppercase", letterSpacing: "2px", marginBottom: "6px", fontWeight: 900 }}
             labelFormatter={(t) => new Date(Number(t)).toLocaleString()}
             formatter={(v: any, name: string) => [
               name === "volume"
@@ -482,7 +482,7 @@ export function PriceChart({
       ) : null}
       {investing ? (
         <div className="pointer-events-none absolute inset-0 z-[3]">
-          <div className="absolute inset-y-4 right-2 flex w-[74px] flex-col justify-between text-right font-mono text-[10px] font-bold text-white/45 sm:right-3 sm:w-[92px] sm:text-xs">
+          <div className="absolute inset-y-4 right-3 hidden w-[102px] flex-col justify-between text-right font-mono text-xs font-bold text-white/55 sm:flex">
             {priceScaleTicks.map((tick, i) => (
               <span key={`${tick}-${i}`} className="rounded-md bg-black/35 px-1 py-0.5 tabular-nums backdrop-blur-sm">
                 {fmtPrice(tick)}
@@ -491,41 +491,41 @@ export function PriceChart({
           </div>
 
           <div
-            className="absolute left-6 right-[88px] border-t border-dashed border-[#58d64f]/45 sm:right-[112px]"
+            className="absolute left-6 right-[98px] border-t border-dashed border-[#58d64f]/45 sm:right-[122px]"
             style={{ top: `${currentY}%` }}
           >
-            <span className="absolute right-[-88px] top-1/2 -translate-y-1/2 rounded-full border border-[#58d64f]/45 bg-[#58d64f] px-2 py-1 font-mono text-[10px] font-black text-black shadow-[0_0_18px_rgba(88,214,79,0.45)] sm:right-[-112px] sm:text-xs">
+            <span className="absolute right-[-98px] top-1/2 -translate-y-1/2 rounded-full border border-[#58d64f]/45 bg-[#58d64f] px-2 py-1 font-mono text-[11px] font-black text-black shadow-[0_0_18px_rgba(88,214,79,0.45)] sm:right-[-122px] sm:text-xs">
               {fmtPrice(currentPrice)}
             </span>
           </div>
 
           <div
-            className="absolute hidden -translate-x-1/2 rounded-full border border-white/15 bg-black/55 px-2 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-[#58d64f] backdrop-blur-sm sm:block"
-            style={{ left: `${Math.min(78, xPctFor(highPoint.t))}%`, top: `${Math.max(6, yPctFor(highPoint.displayHigh) - 7)}%` }}
+            className="absolute hidden -translate-x-1/2 rounded-full border border-white/15 bg-black/55 px-2 py-1 font-mono text-[11px] font-black uppercase tracking-widest text-[#58d64f] backdrop-blur-sm sm:block"
+            style={{ left: `${Math.min(66, xPctFor(highPoint.t))}%`, top: `${Math.max(6, yPctFor(highPoint.displayHigh) - 7)}%` }}
           >
             High {fmtPrice(highPoint.displayHigh)}
           </div>
           <div
-            className="absolute hidden -translate-x-1/2 rounded-full border border-white/15 bg-black/55 px-2 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-white/70 backdrop-blur-sm sm:block"
-            style={{ left: `${Math.min(78, xPctFor(lowPoint.t))}%`, top: `${Math.min(88, yPctFor(lowPoint.displayLow) + 4)}%` }}
+            className="absolute hidden -translate-x-1/2 rounded-full border border-white/15 bg-black/55 px-2 py-1 font-mono text-[11px] font-black uppercase tracking-widest text-white/70 backdrop-blur-sm sm:block"
+            style={{ left: `${Math.min(66, xPctFor(lowPoint.t))}%`, top: `${Math.min(88, yPctFor(lowPoint.displayLow) + 4)}%` }}
           >
             Low {fmtPrice(Math.max(0, lowPoint.displayLow))}
           </div>
 
-          <div className="absolute bottom-1 left-6 right-[88px] flex justify-between font-mono text-[10px] font-bold text-white/35 sm:right-[112px]">
+          <div className="absolute bottom-1 left-6 right-[98px] flex justify-between font-mono text-[11px] font-bold text-white/45 sm:right-[122px]">
             <span>{formatTime(startTime)}</span>
             <span>{formatTime(midTime)}</span>
             <span>{formatTime(endTime)}</span>
           </div>
           {(renderMA7 || renderMA25) ? (
-            <div className="absolute left-6 top-4 flex gap-2 text-[9px] font-black uppercase tracking-widest">
+            <div className="absolute left-6 top-4 flex gap-2 text-[11px] font-black uppercase tracking-widest">
               {renderMA7 ? <span title="MA7 means 7-period moving average. It smooths recent price movement so you can see the short-term trend." className="rounded-full border border-[#ffd166]/35 bg-black/45 px-2 py-1 text-[#ffd166] backdrop-blur-sm">MA 7 ?</span> : null}
               {renderMA25 ? <span title="MA25 means 25-period moving average. It shows a longer trend and helps compare short-term price movement against the bigger direction." className="rounded-full border border-violet/35 bg-black/45 px-2 py-1 text-violet backdrop-blur-sm">MA 25 ?</span> : null}
             </div>
           ) : null}
         </div>
       ) : null}
-      {!investing ? <div className="pointer-events-none absolute right-4 top-4 flex items-center gap-2 rounded-full border border-edge bg-panel px-2.5 py-1 text-[9px] uppercase tracking-widest font-black text-ink backdrop-blur-md">
+      {!investing ? <div className="pointer-events-none absolute right-4 top-4 flex items-center gap-2 rounded-full border border-edge bg-panel px-2.5 py-1 text-[11px] uppercase tracking-widest font-black text-ink backdrop-blur-md">
         <span className={`h-1.5 w-1.5 rounded-full ${up ? "bg-neon" : "bg-red"} animate-pulseDot`} />
         Live
       </div> : null}

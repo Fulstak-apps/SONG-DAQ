@@ -77,7 +77,7 @@ export function HiddenAdminAccess() {
                 <div className="mb-3 inline-flex h-11 w-11 items-center justify-center rounded-2xl border border-neon/20 bg-neon/10 text-neon">
                   <ShieldCheck size={18} />
                 </div>
-                <div className="text-[10px] font-black uppercase tracking-[0.28em] text-mute">Private Access</div>
+                <div className="text-[11px] font-black uppercase tracking-[0.28em] text-mute">Private Access</div>
                 <h2 className="mt-2 text-2xl font-black text-ink">Admin Login</h2>
                 <p className="mt-2 text-sm leading-relaxed text-mute">
                   Sign in to open moderation, launch, report, and split operations.
@@ -118,7 +118,7 @@ export function HiddenAdminAccess() {
             <button disabled={busy} className="btn-primary mt-5 h-12 w-full text-[11px] font-black uppercase tracking-widest">
               {busy ? <span className="inline-flex items-center gap-2"><Loader2 size={14} className="animate-spin" /> Checking</span> : <span className="inline-flex items-center gap-2"><Lock size={14} /> Open Admin</span>}
             </button>
-            <p className="mt-3 text-center text-[9px] font-bold uppercase tracking-widest text-mute">
+            <p className="mt-3 text-center text-[11px] font-bold uppercase tracking-widest text-mute">
               Shortcut: Control + Shift + A
             </p>
           </motion.form>

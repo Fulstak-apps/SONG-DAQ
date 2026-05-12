@@ -295,11 +295,11 @@ export function CoinPreviewModal({
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="text-2xl sm:text-3xl font-black tracking-tight text-ink">${coin.ticker}</div>
-                <span className={`rounded-md border px-2 py-0.5 text-[9px] uppercase tracking-widest font-black ${
+                <span className={`rounded-md border px-2 py-0.5 text-[11px] uppercase tracking-widest font-black ${
                   isSongDaqLocal ? "border-neon/20 bg-neon/10 text-neon" : "border-violet/20 bg-violet/10 text-violet"
                 }`}>{assetLabel}</span>
                 <RiskBadge coin={coin as any} compact />
-                <span className="rounded-md border border-violet/20 bg-violet/10 px-2 py-0.5 text-[9px] uppercase tracking-widest font-black text-violet">
+                <span className="rounded-md border border-violet/20 bg-violet/10 px-2 py-0.5 text-[11px] uppercase tracking-widest font-black text-violet">
                   {isSongDaqLocal ? "Created on song-daq" : "Imported public market"}
                 </span>
               </div>
@@ -318,7 +318,7 @@ export function CoinPreviewModal({
                 <span className={`num text-sm font-black ${change >= 0 ? "text-neon" : "text-red"}`}>
                   {change >= 0 ? "+" : ""}{fmtPct(change)} 24h
                 </span>
-                <span className="inline-flex items-center gap-1 rounded-full border border-edge bg-panel2 px-2.5 py-1 text-[9px] uppercase tracking-widest font-black text-mute">
+                <span className="inline-flex items-center gap-1 rounded-full border border-edge bg-panel2 px-2.5 py-1 text-[11px] uppercase tracking-widest font-black text-mute">
                   <span className="h-1.5 w-1.5 rounded-full bg-neon animate-pulseDot" /> Live
                 </span>
               </div>
@@ -331,7 +331,7 @@ export function CoinPreviewModal({
           <section className="relative grid gap-0 lg:grid-cols-[minmax(0,1fr)_380px] xl:grid-cols-[minmax(0,1fr)_420px]">
             <div className="min-w-0 border-b border-edge p-4 sm:p-5 lg:border-b-0 lg:border-r">
                 <div className="mb-3 flex flex-col gap-2 xl:flex-row xl:items-center xl:justify-between">
-                <div className="text-[10px] uppercase tracking-widest font-black text-mute">
+                <div className="text-[11px] uppercase tracking-widest font-black text-mute">
                   Timeframe: <span className="text-neon">{CHART_RANGE_LABELS[range]}</span>
                 </div>
                 <div className="flex max-w-full flex-wrap items-center gap-2">
@@ -340,7 +340,7 @@ export function CoinPreviewModal({
                       <button
                         key={r}
                         onClick={() => setRange(r)}
-                        className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[9px] font-black uppercase tracking-widest transition ${
+                        className={`shrink-0 rounded-lg px-2.5 py-1.5 text-[11px] font-black uppercase tracking-widest transition ${
                           range === r ? "bg-neon/15 text-neon border border-neon/25" : "text-mute hover:text-ink hover:bg-white/10"
                         }`}
                       >
@@ -348,7 +348,7 @@ export function CoinPreviewModal({
                       </button>
                     ))}
                   </div>
-                  <div className="flex rounded-xl border border-edge bg-panel2 p-1 text-[9px] font-black uppercase tracking-widest">
+                  <div className="flex rounded-xl border border-edge bg-panel2 p-1 text-[11px] font-black uppercase tracking-widest">
                     {(["candles", "line"] as const).map((mode) => (
                       <button
                         key={mode}
@@ -420,7 +420,7 @@ export function CoinPreviewModal({
                     <SafeImage src={coin.artist_avatar ?? coin.logo_uri} alt={coin.artist_name ?? coin.name} fill sizes="56px" fallback={coin.ticker} className="object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10px] uppercase tracking-widest font-black text-mute">Artist Profile</div>
+                    <div className="text-[11px] uppercase tracking-widest font-black text-mute">Artist Profile</div>
                     <div className="mt-1 text-sm font-black text-ink whitespace-normal break-words">{coin.artist_name ?? coin.name}</div>
                     {coin.artist_handle ? <div className="mt-0.5 text-[11px] font-bold text-violet">@{coin.artist_handle}</div> : null}
                   </div>
@@ -433,7 +433,7 @@ export function CoinPreviewModal({
               </div>
 
               <div className="rounded-2xl border border-edge bg-panel p-4">
-                <div className="mb-3 text-[10px] uppercase tracking-widest font-black text-mute">Coin Snapshot</div>
+                <div className="mb-3 text-[11px] uppercase tracking-widest font-black text-mute">Coin Snapshot</div>
                 <div className="grid gap-2">
                   <SnapshotRow label="Token" value={`$${coin.ticker}`} />
                   <SnapshotRow label="Artist" value={coin.artist_name ?? coin.name} />
@@ -445,19 +445,19 @@ export function CoinPreviewModal({
               </div>
 
               <div className="grid grid-cols-2 gap-2">
-                <button className="btn-primary h-11 text-[10px] font-black uppercase tracking-widest" onClick={() => trade("BUY")}>Buy</button>
-                <button className="btn h-11 text-[10px] font-black uppercase tracking-widest" onClick={() => trade("SELL")}>Sell</button>
+                <button className="btn-primary h-11 text-[11px] font-black uppercase tracking-widest" onClick={() => trade("BUY")}>Buy</button>
+                <button className="btn h-11 text-[11px] font-black uppercase tracking-widest" onClick={() => trade("SELL")}>Sell</button>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <button
-                  className="btn h-10 text-[10px] uppercase tracking-widest font-black"
+                  className="btn h-10 text-[11px] uppercase tracking-widest font-black"
                   onClick={toggleAudio}
                 >
                   {isPlayingThis ? <Pause size={13} /> : <Play size={13} />}
                   {isPlayingThis ? "Pause" : "Play"}
                 </button>
                 <button
-                  className={`btn h-10 text-[10px] uppercase tracking-widest font-black ${watched ? "text-gold border-gold/30" : ""}`}
+                  className={`btn h-10 text-[11px] uppercase tracking-widest font-black ${watched ? "text-gold border-gold/30" : ""}`}
                   onClick={() => watchlist.toggle(coin.mint)}
                 >
                   <Star size={13} fill={watched ? "currentColor" : "none"} />
@@ -467,8 +467,8 @@ export function CoinPreviewModal({
 
               <div className="rounded-2xl border border-edge bg-panel p-4">
                 <div className="mb-3 flex items-center justify-between gap-3">
-                  <div className="text-[10px] uppercase tracking-widest font-black text-mute">Issuer Discography</div>
-                  <span className="text-[9px] uppercase tracking-widest font-black text-neon">{visibleTracks.length || 0} tracks</span>
+                  <div className="text-[11px] uppercase tracking-widest font-black text-mute">Issuer Discography</div>
+                  <span className="text-[11px] uppercase tracking-widest font-black text-neon">{visibleTracks.length || 0} tracks</span>
                 </div>
                 <div className="space-y-2">
                   {visibleTracks.length ? visibleTracks.map((track) => {
@@ -483,27 +483,27 @@ export function CoinPreviewModal({
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-xs font-black text-ink">{player.title}</div>
-                            <div className="mt-0.5 text-[10px] uppercase tracking-widest text-mute">{fmtNum(track.play_count ?? 0)} plays</div>
+                            <div className="mt-0.5 text-[11px] uppercase tracking-widest text-mute">{fmtNum(track.play_count ?? 0)} plays</div>
                           </div>
-                          <span className={`shrink-0 rounded-md border px-2 py-1 text-[8px] font-black uppercase tracking-widest ${linked ? "border-neon/25 bg-neon/10 text-neon" : "border-edge bg-panel text-mute"}`}>
+                          <span className={`shrink-0 rounded-md border px-2 py-1 text-[11px] font-black uppercase tracking-widest ${linked ? "border-neon/25 bg-neon/10 text-neon" : "border-edge bg-panel text-mute"}`}>
                             {linked ? "Coin On" : "No Coin"}
                           </span>
                         </div>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          <button className="btn h-8 px-2.5 text-[9px] uppercase tracking-widest font-black" onClick={() => toggleTrack(track)}>
+                          <button className="btn h-10 px-2.5 text-[11px] uppercase tracking-widest font-black" onClick={() => toggleTrack(track)}>
                             {isTrackPlaying ? <Pause size={12} /> : <Play size={12} />}
                             {isTrackPlaying ? "Pause" : "Play"}
                           </button>
                           {linked ? (
-                            <Link href={`/coin/${linked.mint}`} className="btn h-8 px-2.5 text-[9px] uppercase tracking-widest font-black">
+                            <Link href={`/coin/${linked.mint}`} className="btn h-10 px-2.5 text-[11px] uppercase tracking-widest font-black">
                               Open Coin
                             </Link>
                           ) : signedInArtistOwnsCoin ? (
-                            <Link href={createSongCoinHref(track)} className="btn-primary h-8 px-2.5 text-[9px] uppercase tracking-widest font-black">
+                            <Link href={createSongCoinHref(track)} className="btn-primary h-10 px-2.5 text-[11px] uppercase tracking-widest font-black">
                               Create Coin
                             </Link>
                           ) : (
-                            <span className="inline-flex h-8 items-center rounded-lg border border-edge bg-panel px-2.5 text-[9px] uppercase tracking-widest font-black text-mute">
+                            <span className="inline-flex h-10 items-center rounded-lg border border-edge bg-panel px-2.5 text-[11px] uppercase tracking-widest font-black text-mute">
                               No Coin Yet
                             </span>
                           )}
@@ -519,7 +519,7 @@ export function CoinPreviewModal({
               </div>
 
               <div className="rounded-2xl border border-edge bg-panel p-4 space-y-3">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest font-black text-mute">
                   <ShieldCheck size={13} className="text-neon" />
                   Security & Trust
                 </div>
@@ -531,17 +531,17 @@ export function CoinPreviewModal({
               </div>
 
               <div className="rounded-2xl border border-edge bg-panel p-4 space-y-3">
-                <div className="text-[10px] uppercase tracking-widest font-black text-mute">Contract Preview</div>
+                <div className="text-[11px] uppercase tracking-widest font-black text-mute">Contract Preview</div>
                 <button onClick={copyMint} className="w-full rounded-xl border border-edge bg-panel2 p-3 text-left font-mono text-xs text-ink hover:border-neon/30 transition flex items-center justify-between gap-2">
                   <span className="truncate">{short(coin.mint)}</span>
                   <Copy size={13} className="text-mute" />
                 </button>
                 <div className="flex flex-wrap gap-2">
-                  <Link href={`/coin/${coin.mint}`} className="btn h-9 px-3 text-[10px] uppercase tracking-widest font-black">
+                  <Link href={`/coin/${coin.mint}`} className="btn h-9 px-3 text-[11px] uppercase tracking-widest font-black">
                     <ExternalLink size={13} /> Full page
                   </Link>
                   {coin.artist_handle && (
-                    <a href={`https://audius.co/${coin.artist_handle}`} target="_blank" rel="noreferrer" className="btn h-9 px-3 text-[10px] uppercase tracking-widest font-black">
+                    <a href={`https://audius.co/${coin.artist_handle}`} target="_blank" rel="noreferrer" className="btn h-9 px-3 text-[11px] uppercase tracking-widest font-black">
                       Audius
                     </a>
                   )}
@@ -549,22 +549,22 @@ export function CoinPreviewModal({
               </div>
 
               <div className="rounded-2xl border border-edge bg-panel p-4">
-                <div className="mb-3 text-[10px] uppercase tracking-widest font-black text-mute">Recent Movement</div>
+                <div className="mb-3 text-[11px] uppercase tracking-widest font-black text-mute">Recent Movement</div>
                 <div className="space-y-2">
                   {txPreview.length ? txPreview.map((p, i) => (
                     <div key={`${p.id ?? p.createdAt}-${i}`} className="rounded-xl border border-edge bg-panel2/70 px-3 py-2">
                       <div className="flex items-center justify-between gap-3 text-xs">
                         <div className="min-w-0">
-                          <div className="text-[10px] uppercase tracking-widest font-black text-mute">
+                          <div className="text-[11px] uppercase tracking-widest font-black text-mute">
                             {new Date(p.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                           </div>
-                          <div className={`mt-1 text-[10px] uppercase tracking-widest font-black ${p.side === "BUY" ? "text-neon" : "text-red"}`}>
+                          <div className={`mt-1 text-[11px] uppercase tracking-widest font-black ${p.side === "BUY" ? "text-neon" : "text-red"}`}>
                             {p.side} {p.amount ? `${fmtNum(p.amount)} ${coin.ticker}` : coin.ticker}
                           </div>
                         </div>
                         <div className="text-right">
                           <div className="font-mono text-ink">{formatDisplayFiat(p.priceUsd, 6)}</div>
-                          {p.totalUsd ? <div className="text-[10px] uppercase tracking-widest text-mute font-black">{formatDisplayFiat(p.totalUsd, 2)}</div> : null}
+                          {p.totalUsd ? <div className="text-[11px] uppercase tracking-widest text-mute font-black">{formatDisplayFiat(p.totalUsd, 2)}</div> : null}
                         </div>
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -573,14 +573,14 @@ export function CoinPreviewModal({
                             href={`https://solscan.io/tx/${p.txSig}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="rounded-lg border border-neon/20 bg-neon/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-neon hover:bg-neon/15 transition"
+                            className="rounded-lg border border-neon/20 bg-neon/10 px-2.5 py-1 text-[11px] font-black uppercase tracking-widest text-neon hover:bg-neon/15 transition"
                           >
                             Solscan Tx
                           </a>
                         ) : (
                           <a
                             href={`/coin/${coin.mint}`}
-                            className="rounded-lg border border-edge bg-panel px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-ink hover:bg-panel transition"
+                            className="rounded-lg border border-edge bg-panel px-2.5 py-1 text-[11px] font-black uppercase tracking-widest text-ink hover:bg-panel transition"
                           >
                             Coin Page
                           </a>
@@ -590,7 +590,7 @@ export function CoinPreviewModal({
                             href={`https://solscan.io/account/${p.wallet}`}
                             target="_blank"
                             rel="noreferrer"
-                            className="rounded-lg border border-edge bg-panel px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-ink hover:bg-panel transition"
+                            className="rounded-lg border border-edge bg-panel px-2.5 py-1 text-[11px] font-black uppercase tracking-widest text-ink hover:bg-panel transition"
                           >
                             Wallet
                           </a>
@@ -613,7 +613,7 @@ export function CoinPreviewModal({
 function Metric({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
     <div className="rounded-xl border border-edge bg-panel p-3 min-w-0">
-      <div className="text-[9px] uppercase tracking-widest text-mute font-black truncate">{label}</div>
+      <div className="text-[11px] uppercase tracking-widest text-mute font-black truncate">{label}</div>
       <div className={`mt-1 font-mono font-bold text-ink truncate ${accent ?? ""}`}>{value}</div>
     </div>
   );
@@ -622,7 +622,7 @@ function Metric({ label, value, accent }: { label: string; value: string; accent
 function InsightCard({ label, value, body }: { label: string; value: string; body: string }) {
   return (
     <div className="rounded-xl border border-edge bg-panel p-3">
-      <div className="text-[9px] uppercase tracking-widest text-mute font-black">{label}</div>
+      <div className="text-[11px] uppercase tracking-widest text-mute font-black">{label}</div>
       <div className="mt-1 text-sm font-black text-ink break-words">{value}</div>
       <p className="mt-2 text-[11px] leading-relaxed text-mute">{body}</p>
     </div>
@@ -632,7 +632,7 @@ function InsightCard({ label, value, body }: { label: string; value: string; bod
 function SnapshotRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-edge bg-panel2/70 px-3 py-2 text-xs">
-      <span className="text-[9px] uppercase tracking-widest text-mute font-black">{label}</span>
+      <span className="text-[11px] uppercase tracking-widest text-mute font-black">{label}</span>
       <span className="min-w-0 truncate text-right font-mono font-black text-ink">{value}</span>
     </div>
   );

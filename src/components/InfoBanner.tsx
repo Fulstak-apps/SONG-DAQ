@@ -57,7 +57,7 @@ export function InfoBanner() {
 
   return (
     <div
-      className="h-10 flex items-center px-5 overflow-hidden relative rounded-xl border border-edge bg-panel backdrop-blur-xl"
+      className="flex min-h-10 items-center overflow-hidden rounded-xl border border-edge bg-panel px-3 py-2 backdrop-blur-xl sm:h-10 sm:px-5 sm:py-0"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
@@ -71,13 +71,13 @@ export function InfoBanner() {
           animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
           exit={{ opacity: 0, y: -12, filter: "blur(4px)" }}
           transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-          className="flex items-center gap-3 w-full relative z-10"
+          className="relative z-10 flex w-full items-center gap-3"
         >
           <div className="shrink-0">{m.icon}</div>
-          <div className="flex items-center gap-2.5 min-w-0">
-            <span className="text-[9px] font-black uppercase tracking-[0.2em] text-mute whitespace-nowrap">{m.label}</span>
-            <span className="w-1 h-1 rounded-full bg-edge shrink-0" />
-            <span className="text-[11px] font-medium text-ink truncate">{m.text}</span>
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-2.5">
+            <span className="text-[11px] font-black uppercase tracking-[0.2em] text-mute whitespace-nowrap">{m.label}</span>
+            <span className="hidden h-1 w-1 shrink-0 rounded-full bg-edge sm:block" />
+            <span className="truncate text-[11px] font-medium text-ink">{m.text}</span>
           </div>
           {/* Progress dots */}
           <div className="ml-auto flex items-center gap-1 shrink-0">

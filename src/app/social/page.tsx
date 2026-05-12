@@ -72,7 +72,7 @@ function IntelFallback({ story }: { story: NewsStory }) {
       <div className="relative grid h-20 w-20 place-items-center rounded-2xl border border-white/10 bg-black/30 font-mono text-3xl font-black text-white/75 shadow-depth">
         {initial}
       </div>
-      <div className="absolute bottom-4 left-4 right-4 text-center text-[9px] uppercase tracking-[0.24em] font-black text-white/45">{story.source}</div>
+      <div className="absolute bottom-4 left-4 right-4 text-center text-[11px] uppercase tracking-[0.24em] font-black text-white/55">{story.source}</div>
     </div>
   );
 }
@@ -134,7 +134,7 @@ export default function SocialPage() {
     <div className="space-y-6">
       <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-4">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.3em] font-black text-mute mb-2">Intel</div>
+          <div className="text-[11px] uppercase tracking-[0.3em] font-black text-mute mb-2">Intel</div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tight text-gradient-hero">Music x Creator x AI Radar</h1>
           <p className="text-mute text-sm mt-2 max-w-2xl">
             Live music industry, creator economy, technology, AI, and worldwide trending signals from real news feeds.
@@ -145,7 +145,7 @@ export default function SocialPage() {
             <button
               key={f}
               onClick={() => setFilter(f)}
-              className={`shrink-0 px-3 sm:px-4 py-2 rounded-lg text-[10px] uppercase tracking-widest font-black transition active:scale-95 ${
+              className={`shrink-0 px-3 sm:px-4 py-2 rounded-lg text-[11px] uppercase tracking-widest font-black transition active:scale-95 ${
                 filter === f ? "bg-neon/15 text-neon border border-neon/25" : "text-mute hover:text-white hover:bg-white/10"
               }`}
             >
@@ -219,10 +219,10 @@ function StoryCard({ story, variant }: { story: NewsStory; variant: "lead" | "wi
       </div>
       <div className="relative flex flex-col p-4 bg-panel">
         <div className="flex items-center gap-2 mb-3">
-          <span className={`text-[9px] px-2 py-1 rounded-md uppercase font-black tracking-widest border ${badge[story.category]}`}>
+          <span className={`text-[11px] px-2 py-1 rounded-md uppercase font-black tracking-widest border ${badge[story.category]}`}>
             {story.category}
           </span>
-          <span className="text-[10px] uppercase tracking-widest text-mute font-bold truncate">{story.source}</span>
+          <span className="text-[11px] uppercase tracking-widest text-mute font-bold truncate">{story.source}</span>
           <ExternalLink size={12} className="ml-auto text-mute opacity-0 group-hover:opacity-100 transition" />
         </div>
         <h2 className={`${titleSize} font-black leading-[1.12] tracking-tight text-ink group-hover:text-neon transition break-words`}>
@@ -231,7 +231,7 @@ function StoryCard({ story, variant }: { story: NewsStory; variant: "lead" | "wi
         {snippet && (
           <p className={`mt-3 text-sm text-mute break-words max-w-2xl ${variant === "normal" ? "line-clamp-2" : "line-clamp-3"}`}>{snippet}</p>
         )}
-        <div className="mt-4 text-[10px] uppercase tracking-widest text-mute font-bold">
+        <div className="mt-4 text-[11px] uppercase tracking-widest text-mute font-bold">
           {dateLabel(story.pubDate)}
         </div>
       </div>

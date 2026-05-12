@@ -9,7 +9,8 @@ import { fetchMetrics } from "./audius";
 import { computePerformance } from "./pricing";
 import { spotPrice } from "./bondingCurve";
 import { cacheGet, cacheSet } from "./redis";
-import { getAssetUsdRates, valueLocalSongCoin } from "./serverAssetPrices";
+import { getAssetUsdRates } from "./serverAssetPrices";
+import { buildSongAssetState, songAssetPersistFields } from "./assetState";
 
 export async function refreshSong(songId: string, force = false): Promise<void> {
   const cacheKey = `song:refresh:${songId}`;
@@ -17,7 +18,12 @@ export async function refreshSong(songId: string, force = false): Promise<void> 
     const stamp = await cacheGet<number>(cacheKey);
     if (stamp) return;
   }
-  const song = await prisma.songToken.findUnique({ where: { id: songId } });
+  const song = await prisma.songToken.findUnique({
+    where: { id: songId },
+    include: {
+      events: { where: { kind: "BURN" }, select: { kind: true, payload: true }, take: 100 },
+    },
+  });
   if (!song) return;
   let metrics: { streams: number; likes: number; reposts: number };
   try {
@@ -45,11 +51,7 @@ export async function refreshSong(songId: string, force = false): Promise<void> 
     performance,
   });
   const rates = await getAssetUsdRates(["SOL", "AUDIO", "USDC", song.liquidityPairAsset]);
-  const solUsd = Number(rates.SOL || 0);
-  const valuation = valueLocalSongCoin({ ...(song as any), price: curvePrice }, rates);
-  const price = valuation.priceSol > 0 ? valuation.priceSol : curvePrice;
-  const marketValueSol = valuation.marketValueSol > 0 ? valuation.marketValueSol : 0;
-  const marketValueUsd = valuation.marketValueUsd > 0 ? valuation.marketValueUsd : 0;
+  const state = buildSongAssetState({ ...(song as any), price: curvePrice }, rates);
   await prisma.songToken.update({
     where: { id: songId },
     data: {
@@ -57,11 +59,7 @@ export async function refreshSong(songId: string, force = false): Promise<void> 
       likes: metrics.likes,
       reposts: metrics.reposts,
       performance,
-      price,
-      marketCap: marketValueSol,
-      currentPriceSol: price,
-      currentPriceUsd: valuation.priceUsd > 0 ? valuation.priceUsd : solUsd > 0 ? price * solUsd : song.currentPriceUsd,
-      marketCapUsd: marketValueUsd,
+      ...songAssetPersistFields(state, song),
     },
   });
   await cacheSet(cacheKey, Date.now(), 60);

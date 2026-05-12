@@ -94,10 +94,10 @@ export function ArtistDashboard() {
           </div>
         </div>
         <div className="flex items-center gap-2 shrink-0 relative z-10">
-          <Link href="/artist" className="btn-primary px-6 py-3 text-[10px] font-black tracking-widest">
+          <Link href="/artist" className="btn-primary px-6 py-3 text-[11px] font-black tracking-widest">
             <Plus size={14} /> Launch Artist Token
           </Link>
-          <Link href="/portfolio" className="btn-glass px-5 py-3 text-[10px] font-black tracking-widest">
+          <Link href="/portfolio" className="btn-glass px-5 py-3 text-[11px] font-black tracking-widest">
             <Briefcase size={14} /> Portfolio
           </Link>
         </div>
@@ -150,7 +150,7 @@ export function ArtistDashboard() {
       <section>
         <div className="flex items-center justify-between mb-3 px-1">
           <div className="label">Your Artist Coins</div>
-          <a href="https://audius.co/clubs" target="_blank" rel="noreferrer" className="text-[10px] text-mute hover:text-white uppercase tracking-widest font-bold transition flex items-center gap-1">
+          <a href="https://audius.co/clubs" target="_blank" rel="noreferrer" className="text-[11px] text-mute hover:text-white uppercase tracking-widest font-bold transition flex items-center gap-1">
             Manage on Audius <ExternalLink size={10} />
           </a>
         </div>
@@ -185,7 +185,7 @@ export function ArtistDashboard() {
       <section>
         <div className="flex items-center justify-between mb-3 px-1">
           <div className="label">Your Song IPOs</div>
-          <Link href="/artist" className="btn-primary text-[10px] px-4 py-2 font-black tracking-widest">+ New Launch</Link>
+          <Link href="/artist" className="btn-primary text-[11px] px-4 py-2 font-black tracking-widest">+ New Launch</Link>
         </div>
         {mySongs.length ? (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
@@ -215,7 +215,7 @@ export function ArtistDashboard() {
           <div className="label mb-4 relative z-10">Locker & Reward Pools</div>
           <div className="overflow-x-auto relative z-10">
             <table className="w-full text-sm">
-              <thead className="text-[9px] uppercase tracking-widest font-black text-mute">
+              <thead className="text-[11px] uppercase tracking-widest font-black text-mute">
                 <tr>
                   <th className="text-left py-2 pl-2">Coin</th>
                   <th className="text-right py-2">Locked</th>
@@ -256,7 +256,7 @@ function ReadinessCard({ icon, title, value, body, tone }: { icon: React.ReactNo
   return (
     <div className="panel-elevated p-5 grain">
       <div className={`w-10 h-10 rounded-xl border grid place-items-center mb-3 ${cls}`}>{icon}</div>
-      <div className="text-[10px] uppercase tracking-widest font-black text-mute">{title}</div>
+      <div className="text-[11px] uppercase tracking-widest font-black text-mute">{title}</div>
       <div className="mt-1 text-xl font-black text-ink">{value}</div>
       <p className="mt-2 text-xs leading-relaxed text-mute">{body}</p>
     </div>

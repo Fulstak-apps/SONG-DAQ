@@ -194,8 +194,8 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               {step === "ROLE" && (
                 <motion.div key="role" {...fade} className="space-y-5">
                   <div className="text-center">
-                    <h2 className="text-xl font-semibold tracking-tight">Welcome to song-daq</h2>
-                    <p className="text-mute text-sm mt-1">How would you like to participate?</p>
+                    <h2 className="text-2xl font-semibold tracking-tight">Welcome to song-daq</h2>
+                    <p className="text-mute text-base mt-1">How would you like to participate?</p>
                   </div>
                   <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
                     <RoleCard
@@ -220,8 +220,8 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               {step === "WALLET" && (
                 <motion.div key="wallet" {...fade} className="space-y-5">
                   <div className="text-center">
-                    <h2 className="text-xl font-semibold tracking-tight">{role === "ARTIST" ? "Optional Wallet" : "Investor Wallet"}</h2>
-                    <p className="text-mute text-sm mt-1">
+                    <h2 className="text-2xl font-semibold tracking-tight">{role === "ARTIST" ? "Optional Wallet" : "Investor Wallet"}</h2>
+                    <p className="text-mute text-base mt-1">
                       {role === "ARTIST" ? "Attach an external Solana wallet if you do not want to use your Audius wallet." : "Choose a Solana wallet to trade"}
                     </p>
                   </div>
@@ -249,14 +249,14 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                 <motion.div key="artist-ready" {...fade} className="space-y-5 text-center">
                   <CheckCircle2 size={44} className="text-violet mx-auto" />
                   <div>
-                    <h2 className="text-xl font-semibold tracking-tight">Artist mode connected</h2>
-                    <p className="text-mute text-sm mt-1">
+                    <h2 className="text-2xl font-semibold tracking-tight">Artist mode connected</h2>
+                    <p className="text-mute text-base mt-1">
                       Artists can launch and manage coins, plus buy, sell, follow, and view every market like an investor.
                     </p>
                   </div>
                   {audius && (
                     <div className="rounded-2xl border border-edge bg-panel2 p-4 text-left">
-                      <div className="text-[10px] uppercase tracking-widest font-black text-mute">You&apos;re signed in as</div>
+                      <div className="text-[11px] uppercase tracking-widest font-black text-mute">You&apos;re signed in as</div>
                       <div className="mt-3 flex items-center gap-3">
                         <span className="relative h-14 w-14 shrink-0 overflow-hidden rounded-full border border-violet/25 bg-violet/15">
                           {audius.avatar ? (
@@ -270,12 +270,12 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                         <div className="min-w-0 flex-1">
                           <div className="text-base font-black text-ink break-words leading-tight">{audius.name || `@${audius.handle}`}</div>
                           <div className="mt-1 text-xs text-violet break-all">@{audius.handle}</div>
-                          <div className="mt-2 text-[10px] uppercase tracking-widest font-bold text-mute">
+                          <div className="mt-2 text-[11px] uppercase tracking-widest font-bold text-mute">
                             Audius wallet: <span className="font-mono text-ink">{audius.wallets?.sol ? `${audius.wallets.sol.slice(0, 6)}…${audius.wallets.sol.slice(-4)}` : "Not exposed"}</span>
                           </div>
                         </div>
                       </div>
-                      <div className="mt-3 text-[10px] uppercase tracking-widest font-bold text-mute">
+                      <div className="mt-3 text-[11px] uppercase tracking-widest font-bold text-mute">
                         External trading wallet: <span className="font-mono text-ink">{address && provider !== "audius" && provider !== "paper" ? `${address.slice(0, 6)}…${address.slice(-4)}` : "Connect Phantom, Solflare, or Backpack before live launch/trading"}</span>
                       </div>
                     </div>
@@ -300,8 +300,8 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                   >
                     <CheckCircle2 size={48} className="text-neon mx-auto" />
                   </motion.div>
-                  <h2 className="text-xl font-semibold">You&apos;re in</h2>
-                  <p className="text-mute text-sm">
+                  <h2 className="text-2xl font-semibold">You&apos;re in</h2>
+                  <p className="text-mute text-base">
                     {role === "ARTIST" ? "Artist mode activated. Go launch a token." : "Welcome aboard. Start exploring the market."}
                   </p>
                 </motion.div>
@@ -331,7 +331,7 @@ function RoleCard({ icon, label, desc, color, onClick }: {
     >
       <div className={`${text} mb-3`}>{icon}</div>
       <div className={`font-semibold text-base ${groupText} transition`}>{label}</div>
-      <div className="text-xs text-mute mt-1">{desc}</div>
+      <div className="text-sm text-mute mt-1">{desc}</div>
     </button>
   );
 }
@@ -344,8 +344,8 @@ function WalletRow({ w, busy, onConnect }: { w: any; busy: boolean; onConnect: (
       className="w-full bg-panel2 border border-edge hover:border-neon/40 text-left px-4 py-3 rounded-xl flex items-center justify-between transition-all group active:scale-[0.98]"
       disabled={busy}
     >
-      <span className="font-medium text-sm group-hover:text-neon transition">{w.label}</span>
-      <span className="text-xs text-mute">
+      <span className="font-medium text-base group-hover:text-neon transition">{w.label}</span>
+      <span className="text-sm text-mute">
         {busy ? (
           <Loader2 size={14} className="animate-spin" />
         ) : installed ? "Connect →" : "Install ↗"}
@@ -364,8 +364,8 @@ function AudiusStep({ busy, err, onOAuth }: {
         <div className="w-12 h-12 bg-violet/10 text-violet rounded-full flex items-center justify-center mx-auto mb-3">
           <ShieldCheck size={24} />
         </div>
-        <h2 className="text-xl font-semibold tracking-tight">Connect Audius</h2>
-        <p className="text-mute text-sm mt-1">Use Sign in with Audius to verify artist identity. Manual handle linking is disabled for launch access.</p>
+        <h2 className="text-2xl font-semibold tracking-tight">Connect Audius</h2>
+        <p className="text-mute text-base mt-1">Use Sign in with Audius to verify artist identity. Manual handle linking is disabled for launch access.</p>
       </div>
 
       <button
@@ -380,7 +380,7 @@ function AudiusStep({ busy, err, onOAuth }: {
         ) : "Sign in with Audius"}
       </button>
 
-      <p className="text-[11px] text-mute leading-relaxed">
+      <p className="text-sm text-mute leading-relaxed">
         OAuth opens Audius in a popup. Your public profile and Audius-linked wallet are attached only after the Audius sign-in succeeds.
       </p>
 
@@ -394,7 +394,7 @@ function ErrorBanner({ message }: { message: string }) {
     <motion.div
       initial={{ opacity: 0, height: 0 }}
       animate={{ opacity: 1, height: "auto" }}
-      className="flex items-start gap-2 text-red text-xs p-3 bg-red/5 border border-red/20 rounded-lg"
+      className="flex items-start gap-2 text-red text-sm p-3 bg-red/5 border border-red/20 rounded-lg"
     >
       <AlertCircle size={14} className="shrink-0 mt-0.5" />
       <span>{message}</span>

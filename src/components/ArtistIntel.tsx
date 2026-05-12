@@ -124,7 +124,7 @@ export function ArtistIntel({
     <section className={`panel-elevated grain ${compact ? "p-4" : "p-5 sm:p-6"} space-y-4`}>
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.28em] font-black text-neon">Artist Intel</div>
+          <div className="text-[11px] uppercase tracking-[0.28em] font-black text-neon">Artist Intel</div>
           <h2 className="mt-1 text-2xl font-black tracking-tight text-ink">Artist Momentum</h2>
           <p className="mt-1 max-w-2xl text-xs leading-relaxed text-mute">
             Verified music and social signals are pulled from Audius/Open Audio first. Other platforms only appear when there is a confident match or artist-approved link.
@@ -133,7 +133,7 @@ export function ArtistIntel({
         <button
           type="button"
           onClick={() => setNonce((n) => n + 1)}
-          className="btn h-9 px-3 text-[9px] uppercase tracking-widest font-black"
+          className="btn h-9 px-3 text-[11px] uppercase tracking-widest font-black"
         >
           <RefreshCw size={12} className={loading ? "animate-spin" : ""} />
           Refresh
@@ -153,7 +153,7 @@ export function ArtistIntel({
             {spotify ? <ProfileCard profile={spotify} icon={<TrendingUp size={16} />} /> : null}
             {tracks.length ? (
               <div className="rounded-2xl border border-edge bg-panel p-4">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest font-black text-mute">
                   <Music2 size={14} className="text-neon" />
                   Audius Catalog
                 </div>
@@ -165,7 +165,7 @@ export function ArtistIntel({
                       </div>
                       <div className="min-w-0 flex-1">
                         <div className="truncate text-xs font-black text-ink">{track.title}</div>
-                        <div className="mt-0.5 text-[9px] uppercase tracking-widest text-mute">{fmtNum(track.playCount ?? 0)} plays</div>
+                        <div className="mt-0.5 text-[11px] uppercase tracking-widest text-mute">{fmtNum(track.playCount ?? 0)} plays</div>
                       </div>
                       <ExternalLink size={12} className="shrink-0 text-mute" />
                     </a>
@@ -183,9 +183,9 @@ export function ArtistIntel({
                     <SafeImage src={video.imageUrl ?? null} alt={video.title ?? "YouTube video"} fill sizes="(max-width: 768px) 100vw, 50vw" fallback="YT" className="object-cover transition group-hover:scale-[1.02]" />
                   </div>
                   <div className="p-4">
-                    <div className="text-[10px] uppercase tracking-widest font-black text-neon">YouTube Match</div>
+                    <div className="text-[11px] uppercase tracking-widest font-black text-neon">YouTube Match</div>
                     <div className="mt-1 line-clamp-2 text-sm font-black text-ink">{video.title}</div>
-                    <div className="mt-2 flex flex-wrap gap-2 text-[10px] uppercase tracking-widest text-mute">
+                    <div className="mt-2 flex flex-wrap gap-2 text-[11px] uppercase tracking-widest text-mute">
                       {video.channelName ? <span>{video.channelName}</span> : null}
                       {video.viewCount ? <span>{fmtNum(video.viewCount)} views</span> : null}
                       {video.likeCount ? <span>{fmtNum(video.likeCount)} likes</span> : null}
@@ -199,7 +199,7 @@ export function ArtistIntel({
           {otherLinks.length ? (
             <div className="flex flex-wrap gap-2">
               {otherLinks.map((link) => (
-                <a key={`${link.platform}-${link.url}`} href={link.url} target="_blank" rel="noreferrer" className="btn h-9 px-3 text-[9px] uppercase tracking-widest font-black">
+                <a key={`${link.platform}-${link.url}`} href={link.url} target="_blank" rel="noreferrer" className="btn h-9 px-3 text-[11px] uppercase tracking-widest font-black">
                   {platformLabel(link.platform)}
                   <ExternalLink size={12} />
                 </a>
@@ -209,7 +209,7 @@ export function ArtistIntel({
         </>
       )}
 
-      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.05] pt-3 text-[9px] uppercase tracking-widest text-mute">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-t border-white/[0.05] pt-3 text-[11px] uppercase tracking-widest text-mute">
         <span>{data?.note || "Stats are estimates and may update with delay."}</span>
         <span>{ageLabel(data?.updatedAt)}</span>
       </div>
@@ -225,13 +225,13 @@ function ProfileCard({ profile, icon, primary = false }: { profile: IntelProfile
           <SafeImage src={profile.imageUrl ?? null} alt={profile.displayName ?? profile.platform} fill sizes="48px" fallback={platformLabel(profile.platform).slice(0, 2)} className="object-cover" />
         </div>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest font-black text-mute">
             {icon}
             {platformLabel(profile.platform)}
             {profile.verified ? <ShieldCheck size={12} className="text-neon" /> : null}
           </div>
           <div className="mt-1 truncate text-sm font-black text-ink">{profile.displayName || profile.handle || platformLabel(profile.platform)}</div>
-          {profile.handle ? <div className="text-[10px] font-bold text-violet">@{profile.handle}</div> : null}
+          {profile.handle ? <div className="text-[11px] font-bold text-violet">@{profile.handle}</div> : null}
         </div>
         <ExternalLink size={13} className="shrink-0 text-mute" />
       </div>
@@ -249,7 +249,7 @@ function ProfileCard({ profile, icon, primary = false }: { profile: IntelProfile
 function Mini({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-edge bg-panel2/70 p-2">
-      <div className="text-[8px] uppercase tracking-widest text-mute font-black">{label}</div>
+      <div className="text-[11px] uppercase tracking-widest text-mute font-black">{label}</div>
       <div className="mt-0.5 font-mono text-xs font-black text-ink">{value}</div>
     </div>
   );

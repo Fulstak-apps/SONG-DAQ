@@ -100,25 +100,25 @@ export function CoinCard({
             <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
               <span className="font-bold text-base text-ink tracking-tight break-words">${c.ticker}</span>
               {tier.label && (
-                <span className={`text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border ${tier.color}`}>
+                <span className={`text-[11px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded-md border ${tier.color}`}>
                   {tier.label}
                 </span>
               )}
               {isOwner && (
                 <Tooltip content="This is your launched Artist Token. As the creator, you cannot trade your own coin.">
-                  <span className="chip-violet text-[8px]">Issuer</span>
+                  <span className="chip-violet text-[11px]">Issuer</span>
                 </Tooltip>
               )}
               <RiskBadge coin={c as any} compact />
               <Tooltip content={sourceHelp}>
-                <span className={`rounded-md border px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest ${
+                <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest ${
                   isSongDaqLocal ? "border-neon/25 bg-neon/10 text-neon" : "border-violet/25 bg-violet/10 text-violet"
                 }`}>
                   {isSongDaqLocal ? "song-daq" : "Open Audio"}
                 </span>
               </Tooltip>
             </div>
-            <div className="text-[10px] text-mute line-clamp-2 uppercase tracking-widest font-bold mt-0.5">
+            <div className="text-[11px] text-mute line-clamp-2 uppercase tracking-widest font-bold mt-1 leading-snug">
               {c.artist_name ? <>{c.artist_name}{c.artist_handle ? ` · @${c.artist_handle}` : ""}</> : c.name}
             </div>
           </div>
@@ -142,13 +142,13 @@ export function CoinCard({
         {trackTitle ? (
           <>
           <span className="text-violet animate-pulseDot text-xs">♪</span>
-          <span className="text-[10px] text-mute truncate uppercase tracking-widest font-bold">{trackTitle}</span>
-          {c.audius_play_count ? <span className="shrink-0 text-[10px] text-mute font-mono">· {fmtNum(c.audius_play_count)}</span> : null}
+          <span className="text-[11px] text-mute truncate uppercase tracking-widest font-bold">{trackTitle}</span>
+          {c.audius_play_count ? <span className="shrink-0 text-[11px] text-mute font-mono">· {fmtNum(c.audius_play_count)}</span> : null}
           </>
         ) : (
           <>
             <span className="text-neon text-xs">◌</span>
-            <span className="text-[10px] text-mute truncate uppercase tracking-widest font-bold">Audio preview unavailable</span>
+            <span className="text-[11px] text-mute truncate uppercase tracking-widest font-bold">Audio preview unavailable</span>
           </>
         )}
       </div>
@@ -164,7 +164,7 @@ export function CoinCard({
           </div>
         }
       >
-        <span className="w-fit rounded-full border border-edge bg-white/[0.045] px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-mute transition hover:border-neon/30 hover:text-neon">
+          <span className="w-fit rounded-full border border-edge bg-white/[0.045] px-2.5 py-1 text-[11px] font-black uppercase tracking-widest text-mute transition hover:border-neon/30 hover:text-neon">
           What does this mean?
         </span>
       </Tooltip>
@@ -176,14 +176,14 @@ export function CoinCard({
             <Rocket className="text-neon" size={14} />
             {assetLabel}
           </h2>
-          <span className="text-[9px] text-mute uppercase tracking-widest font-black mb-1">Price</span>
+          <span className="text-[11px] text-mute uppercase tracking-widest font-black mb-1">Price</span>
           <span className="num text-xl font-black tracking-tight text-ink">{formatDisplayFiat(c.price ?? 0, 6)}</span>
           <div className="flex items-center gap-3 mt-1.5">
-            <span className="text-[9px] text-mute uppercase tracking-widest font-bold">
+            <span className="text-[11px] text-mute uppercase tracking-widest font-bold">
               Public <span className="text-ink ml-1">{marketValueLabel}</span>
             </span>
             <span className="w-0.5 h-0.5 rounded-full bg-white/[0.06]" />
-            <span className="text-[9px] text-mute uppercase tracking-widest font-bold">
+            <span className="text-[11px] text-mute uppercase tracking-widest font-bold">
               Vol <span className="text-ink ml-1">{formatDisplayFiat(c.v24hUSD ?? 0, 0)}</span>
             </span>
           </div>
@@ -192,7 +192,7 @@ export function CoinCard({
           <div className="w-24 h-10 opacity-50 group-hover:opacity-100 transition-opacity">
             <Sparkline data={spark.length ? spark : [0, 0]} color={sparkColor} />
           </div>
-          <span className={`num text-[10px] px-2.5 py-1 rounded-lg font-black tracking-wider ${
+          <span className={`num text-[11px] px-2.5 py-1 rounded-lg font-black tracking-wider ${
             change >= 0
               ? "bg-neon/8 text-neon border border-neon/15"
               : "bg-red/8 text-red border border-red/15"
@@ -204,12 +204,12 @@ export function CoinCard({
 
       {/* Holders + Stream row */}
         <div className="flex items-center justify-between pt-2 border-t border-edge min-h-[40px]">
-          <span className="text-[9px] text-mute uppercase tracking-widest font-bold">
+          <span className="text-[11px] text-mute uppercase tracking-widest font-bold">
             {c.holder ?? 0} Holders
           </span>
           <button
             onClick={togglePlay}
-            className={`flex h-10 min-w-[92px] items-center justify-center gap-1.5 rounded-xl border px-4 py-2 text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${
+            className={`flex h-10 min-w-[92px] items-center justify-center gap-1.5 rounded-xl border px-4 py-2 text-[11px] font-black uppercase tracking-widest transition-all shadow-sm ${
               isPlayingThis
                 ? "bg-violet/20 border-violet/35 text-violet"
                 : playerTrack
@@ -225,11 +225,11 @@ export function CoinCard({
       {/* Action buttons */}
       <div className="flex items-center gap-2">
         <button
-          className="btn-primary flex-1 h-10 text-[10px] font-black uppercase tracking-widest"
+          className="btn-primary flex-1 h-10 text-[11px] font-black uppercase tracking-widest"
           onClick={(e) => { e.stopPropagation(); onTrade?.("BUY", c); }}
         >Buy</button>
         <button
-          className="btn h-10 px-5 text-[10px] font-black uppercase tracking-widest hover:bg-red/8 hover:text-red hover:border-red/20"
+          className="btn h-10 px-5 text-[11px] font-black uppercase tracking-widest hover:bg-red/8 hover:text-red hover:border-red/20"
           onClick={(e) => { e.stopPropagation(); onTrade?.("SELL", c); }}
         >Sell</button>
       </div>
@@ -282,33 +282,33 @@ export function CoinListRow({
         <div className="flex items-center gap-2">
           <span className="font-bold text-sm tracking-tight group-hover:text-neon transition">${c.ticker}</span>
           <RiskBadge coin={c as any} compact />
-          <span className={`rounded-md border px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest ${
+          <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest ${
             isSongDaqLocal ? "border-neon/25 bg-neon/10 text-neon" : "border-violet/25 bg-violet/10 text-violet"
           }`}>
             {isSongDaqLocal ? "song-daq" : "Open Audio"}
           </span>
-          {tier.label && <span className={`text-[7px] font-black uppercase tracking-widest px-1 py-0.5 rounded border ${tier.color}`}>{tier.label}</span>}
-          <span className="text-[9px] text-mute uppercase tracking-widest font-bold">{c.holder ?? 0} holders</span>
+          {tier.label && <span className={`text-[11px] font-black uppercase tracking-widest px-1 py-0.5 rounded border ${tier.color}`}>{tier.label}</span>}
+          <span className="text-[11px] text-mute uppercase tracking-widest font-bold">{c.holder ?? 0} holders</span>
         </div>
-        <div className="text-[10px] text-mute truncate uppercase tracking-widest mt-0.5">{c.artist_name || c.name}</div>
+        <div className="text-[11px] text-mute truncate uppercase tracking-widest mt-0.5">{c.artist_name || c.name}</div>
       </div>
       <div className="w-[calc(50%-0.375rem)] sm:w-28 text-left sm:text-right rounded-xl sm:rounded-none border border-edge sm:border-0 bg-white/[0.035] sm:bg-transparent px-3 py-2 sm:p-0">
         <div className="num text-xs font-bold text-ink tracking-wider">{marketValueLabel}</div>
-        <div className="text-[9px] text-mute uppercase tracking-widest mt-0.5">Public Value</div>
+        <div className="text-[11px] text-mute uppercase tracking-widest mt-0.5">Public Value</div>
       </div>
       <div className="w-[calc(50%-0.375rem)] sm:w-28 text-left sm:text-right rounded-xl sm:rounded-none border border-edge sm:border-0 bg-white/[0.035] sm:bg-transparent px-3 py-2 sm:p-0">
         <div className="num text-xs font-bold text-ink tracking-wider">{formatDisplayFiat(c.price ?? 0, 6)}</div>
-        <div className={`num text-[10px] font-black uppercase tracking-widest mt-0.5 ${change >= 0 ? "text-neon" : "text-red"}`}>
+        <div className={`num text-[11px] font-black uppercase tracking-widest mt-0.5 ${change >= 0 ? "text-neon" : "text-red"}`}>
           {change >= 0 ? "▲" : "▼"} {fmtPct(change)}
         </div>
       </div>
       <div className="w-full sm:w-20 flex justify-stretch sm:justify-center gap-2 sm:gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
         <button
-          className="btn-primary flex-1 sm:flex-none px-2 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest"
+          className="btn-primary flex-1 sm:flex-none px-2 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest"
           onClick={(e) => { e.stopPropagation(); onTrade?.("BUY", c); }}
         >BUY</button>
         <button
-          className="btn flex-1 sm:flex-none px-2 py-1.5 rounded-lg text-[8px] font-black uppercase tracking-widest border-white/[0.04]"
+          className="btn flex-1 sm:flex-none px-2 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest border-white/[0.04]"
           onClick={(e) => { e.stopPropagation(); onTrade?.("SELL", c); }}
         >SELL</button>
       </div>

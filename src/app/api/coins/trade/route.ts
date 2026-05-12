@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { getCoin } from "@/lib/audiusCoins";
 import { getConnection } from "@/lib/solana";
 import { getAssetUsdRates } from "@/lib/serverAssetPrices";
+import { refreshSongAssetState } from "@/lib/assetState";
 
 export const dynamic = "force-dynamic";
 
@@ -108,25 +109,37 @@ export async function POST(req: NextRequest) {
     const solUsd = Number(rates.SOL || 0);
     const totalSol = cleanTotal > 0 && solUsd > 0 ? cleanTotal / solUsd : 0;
     const nextPriceSol = cleanPrice > 0 && solUsd > 0 ? cleanPrice / solUsd : Number(localSong.currentPriceSol || localSong.price || 0);
+    const currentPoolTokens = Number(localSong.liquidityTokenAmount || 0);
+    const currentPoolPair = Number(localSong.liquidityPairAmount || 0);
+    const pairAsset = String(localSong.liquidityPairAsset || "SOL").toUpperCase();
+    const nextPoolTokens = side === "BUY"
+      ? Math.max(0, currentPoolTokens - cleanAmount)
+      : Math.min(Number(localSong.supply || 0), currentPoolTokens + cleanAmount);
+    const nextPoolPair = pairAsset === "SOL"
+      ? side === "BUY"
+        ? currentPoolPair + totalSol
+        : Math.max(0, currentPoolPair - totalSol)
+      : currentPoolPair;
     await prisma.songToken.update({
       where: { id: localSong.id },
       data: {
         circulating: nextCirculating,
+        liquidityTokenAmount: nextPoolTokens,
+        liquidityPairAmount: nextPoolPair,
         volume24h: Number(localSong.volume24h || 0) + totalSol,
         price: nextPriceSol,
         currentPriceSol: nextPriceSol,
         currentPriceUsd: cleanPrice,
-        marketCap: nextPriceSol > 0 ? nextPriceSol * nextCirculating : Number(localSong.marketCap || 0),
-        marketCapUsd: cleanPrice > 0 ? cleanPrice * nextCirculating : Number(localSong.marketCapUsd || 0),
       },
     }).catch(() => {});
+    const refreshed = await refreshSongAssetState(localSong.id).catch(() => null);
     await prisma.pricePoint.create({
       data: {
         songId: localSong.id,
-        open: nextPriceSol,
-        high: nextPriceSol,
-        low: nextPriceSol,
-        close: nextPriceSol,
+        open: refreshed?.state.priceSol || nextPriceSol,
+        high: refreshed?.state.priceSol || nextPriceSol,
+        low: refreshed?.state.priceSol || nextPriceSol,
+        close: refreshed?.state.priceSol || nextPriceSol,
         volume: cleanTotal,
       },
     }).catch(() => {});

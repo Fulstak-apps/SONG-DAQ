@@ -36,7 +36,7 @@ export function RoleToggle() {
   const artistActive = mode === "ARTIST";
 
   return (
-    <div className="hidden md:flex items-center bg-white/[0.055] border border-edge rounded-xl p-0.5 text-[10px] font-black uppercase tracking-widest" title={paperMode ? "Paper trading mode lets you preview either role locally." : "Artist accounts include investor access. Investor-only accounts cannot switch into Artist mode."}>
+    <div className="hidden md:flex items-center bg-white/[0.055] border border-edge rounded-xl p-0.5 text-[11px] font-black uppercase tracking-widest" title={paperMode ? "Paper trading mode lets you preview either role locally." : "Artist accounts include investor access. Investor-only accounts cannot switch into Artist mode."}>
       <button
         className={`relative px-3 py-1.5 rounded-lg transition-all duration-300 ${
           investorActive ? "text-ink" : "text-mute hover:text-ink"

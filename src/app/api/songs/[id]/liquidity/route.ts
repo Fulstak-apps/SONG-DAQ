@@ -5,6 +5,7 @@ import { getConnection, isValidPubkey } from "@/lib/solana";
 import { canMarkLive, riskLevelForLiquidity, validateLaunchLiquidity } from "@/lib/launchState";
 import { databaseReadiness } from "@/lib/appMode";
 import { getAssetUsdRates } from "@/lib/serverAssetPrices";
+import { refreshSongAssetState } from "@/lib/assetState";
 
 export const dynamic = "force-dynamic";
 
@@ -108,8 +109,8 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
         currentPriceSol: currentPriceSol || song.currentPriceSol,
         currentPriceUsd: currentPriceUsd || song.currentPriceUsd,
         price: currentPriceSol || song.price,
-        marketCap: currentPriceSol > 0 && publicMarketSupply > 0 ? currentPriceSol * publicMarketSupply : song.marketCap,
-        marketCapUsd: currentPriceUsd > 0 && publicMarketSupply > 0 ? currentPriceUsd * publicMarketSupply : song.marketCapUsd,
+        marketCap: currentPriceSol > 0 && publicMarketSupply > 0 ? currentPriceSol * publicMarketSupply : 0,
+        marketCapUsd: currentPriceUsd > 0 && publicMarketSupply > 0 ? currentPriceUsd * publicMarketSupply : 0,
         launchLiquiditySol: normalized.pairAsset === "SOL" ? normalized.pairAmount : song.launchLiquiditySol,
         launchLiquidityUsd: launchLiquidityUsd || song.launchLiquidityUsd,
         status: "LIVE",
@@ -150,9 +151,10 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
         status: "confirmed",
       },
     }).catch(() => {});
+    const refreshed = await refreshSongAssetState(song.id).catch(() => null);
 
     return NextResponse.json({
-      song: updated,
+      song: refreshed?.song || updated,
       message: "Liquidity added. This Song Coin is now marked live in the app.",
     });
   } catch (err) {

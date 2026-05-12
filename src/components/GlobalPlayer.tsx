@@ -104,9 +104,9 @@ export function GlobalPlayer() {
           ) : (
             <div className="text-sm font-bold text-ink truncate">{current.title}</div>
           )}
-          <div className="text-[10px] uppercase tracking-widest text-mute truncate">{current.artist}</div>
+          <div className="text-[11px] uppercase tracking-widest text-mute truncate">{current.artist}</div>
           {blocked && (
-            <div className="text-[9px] uppercase tracking-widest text-neon mt-0.5">
+            <div className="text-[11px] uppercase tracking-widest text-neon mt-0.5">
               Press play once to enable browser audio
             </div>
           )}
@@ -149,7 +149,7 @@ export function GlobalPlayer() {
             style={sliderStyle}
             aria-label="Player volume"
           />
-          <span className="text-[9px] uppercase tracking-widest font-bold w-10 text-right">{sliderPct}%</span>
+          <span className="text-[11px] uppercase tracking-widest font-bold w-10 text-right">{sliderPct}%</span>
         </div>
         <audio
           ref={audioRef}

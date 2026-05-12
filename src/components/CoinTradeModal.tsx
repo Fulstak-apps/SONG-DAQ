@@ -437,8 +437,8 @@ export function CoinTradeModal({
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-2 sm:gap-3">
                 <div className="font-black text-xl tracking-tighter text-ink">${coin.ticker}</div>
-                <div className="min-w-0 text-[10px] text-mute whitespace-normal break-words uppercase tracking-widest font-bold">{coin.artist_name ?? coin.name}</div>
-                {isOwner && <span className="chip-violet text-[8px]">Your coin</span>}
+                <div className="min-w-0 text-[11px] text-mute whitespace-normal break-words uppercase tracking-widest font-bold">{coin.artist_name ?? coin.name}</div>
+                {isOwner && <span className="chip-violet text-[11px]">Your coin</span>}
               </div>
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-1">
                 <span className="font-mono text-lg font-bold tracking-tight text-ink">{formatDisplayFiat(coin.price ?? 0, 6)}</span>
@@ -447,13 +447,13 @@ export function CoinTradeModal({
                 </span>
                 <div className="flex flex-wrap items-center gap-3 sm:ml-auto">
                   <WhyDidThisMove symbol={coin.ticker} change={change} />
-                  <Link href={`/coin/${coin.mint}`} className="text-[10px] uppercase tracking-widest text-mute hover:text-ink transition flex items-center gap-1 font-bold">
+                  <Link href={`/coin/${coin.mint}`} className="text-[11px] uppercase tracking-widest text-mute hover:text-ink transition flex items-center gap-1 font-bold">
                     Full view <span className="text-neon">→</span>
                   </Link>
                 </div>
               </div>
             </div>
-            <button className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/[0.055] hover:bg-white/[0.1] transition text-mute hover:text-ink border border-edge" onClick={onClose}>×</button>
+            <button className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.055] hover:bg-white/[0.1] transition text-mute hover:text-ink border border-edge" onClick={onClose}>×</button>
           </header>
           <div className="px-4 pt-4 sm:px-6 space-y-3">
             <WhyFansCanBuy compact />
@@ -466,7 +466,7 @@ export function CoinTradeModal({
                   <Glossary term="Price Chart" def="Real-time price indexed from Audius/Open Audio and observed route data." category="advanced">
                     Live Price · {currency}
                   </Glossary>
-                  <div className="mt-1 text-[9px] uppercase tracking-widest font-black text-mute">Timeframe: <span className="text-neon">{CHART_RANGE_LABELS[range]}</span></div>
+                  <div className="mt-1 text-[11px] uppercase tracking-widest font-black text-mute">Timeframe: <span className="text-neon">{CHART_RANGE_LABELS[range]}</span></div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <div className="flex max-w-full gap-0.5 overflow-x-auto no-scrollbar p-0.5 rounded-lg bg-white/[0.055] border border-edge">
@@ -474,13 +474,13 @@ export function CoinTradeModal({
                       <button
                         key={r}
                         onClick={() => setRange(r)}
-                        className={`shrink-0 px-2.5 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest transition ${
+                        className={`shrink-0 px-3 py-1.5 rounded-md text-[11px] font-bold uppercase tracking-widest transition ${
                           range === r ? "bg-neon/15 text-neon border border-neon/25" : "text-mute hover:text-ink hover:bg-white/10"
                         }`}
                       >{r}</button>
                     ))}
                   </div>
-                  <div className="flex rounded-lg bg-white/[0.055] border border-edge p-0.5 text-[9px] font-bold uppercase tracking-widest">
+                  <div className="flex rounded-lg bg-white/[0.055] border border-edge p-0.5 text-[11px] font-bold uppercase tracking-widest">
                     {(["line", "candles"] as const).map((mode) => (
                       <button
                         key={mode}
@@ -533,13 +533,13 @@ export function CoinTradeModal({
               <div className={`rounded-xl border p-3 ${paperMode ? "border-violet/30 bg-violet/10" : "border-edge bg-panel"}`}>
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest font-black text-ink">Paper Trade / Demo</div>
+                    <div className="text-[11px] uppercase tracking-widest font-black text-ink">Paper Trade / Demo</div>
                     <p className="mt-1 text-xs leading-relaxed text-mute">Test buys and sells without sending money or touching the blockchain.</p>
                   </div>
                   <button
                     type="button"
                     onClick={() => setPaperMode(!paperMode)}
-                    className={`shrink-0 rounded-full border px-3 py-1.5 text-[10px] font-black uppercase tracking-widest ${paperMode ? "border-violet/30 bg-violet text-white" : "border-edge bg-panel2 text-mute"}`}
+                    className={`shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-black uppercase tracking-widest ${paperMode ? "border-violet/30 bg-violet text-white" : "border-edge bg-panel2 text-mute"}`}
                   >
                     {paperMode ? "On" : "Off"}
                   </button>
@@ -547,8 +547,8 @@ export function CoinTradeModal({
               </div>
 
               <div className="rounded-xl border border-neon/20 bg-neon/8 p-3">
-                <div className="text-[10px] uppercase tracking-widest font-black text-neon">Trade in 4 steps</div>
-                <div className="mt-2 grid gap-2 text-[11px] leading-relaxed text-mute sm:grid-cols-2">
+                <div className="text-[11px] uppercase tracking-widest font-black text-neon">Trade in 4 steps</div>
+                <div className="mt-2 grid gap-2 text-sm leading-relaxed text-mute sm:grid-cols-2">
                   <div><span className="font-black text-ink">1.</span> Enter {currency}/SOL amount</div>
                   <div><span className="font-black text-ink">2.</span> Review token estimate</div>
                   <div><span className="font-black text-ink">3.</span> Check fee and price movement</div>
@@ -562,7 +562,7 @@ export function CoinTradeModal({
                     <SafeImage src={coin.logo_uri} alt={coin.ticker} fill sizes="48px" fallback={coin.ticker} className="object-cover" />
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10px] uppercase tracking-widest font-black text-mute">What You Are Trading</div>
+                    <div className="text-[11px] uppercase tracking-widest font-black text-mute">What You Are Trading</div>
                     <div className="mt-1 text-sm font-black text-ink break-words">${coin.ticker} · {coin.name}</div>
                     <div className="mt-0.5 text-[11px] font-bold text-violet break-words">{coin.artist_name ?? "Unknown artist"}</div>
                   </div>
@@ -575,7 +575,7 @@ export function CoinTradeModal({
                   <TradeInfo label="Liquidity" value={formatDisplayFiat(coin.liquidity ?? 0, 0)} />
                   <TradeInfo label="Holders" value={fmtNum(coin.holder ?? 0)} />
                 </div>
-                <div className="mt-3 rounded-xl border border-edge bg-panel2/70 p-3 text-[11px] leading-relaxed text-mute">
+                <div className="mt-3 rounded-xl border border-edge bg-panel2/70 p-3 text-sm leading-relaxed text-mute">
                   <span className="font-black text-ink">{marketPulse}.</span> {fmtNum(coin.trade24h ?? 0)} trades today, {fmtNum(coin.uniqueWallet24h ?? 0)} active wallets, and {formatDisplayFiat(coin.v24hUSD ?? 0, 0)} in 24h volume. {royaltyStatus}.
                 </div>
               </div>
@@ -598,18 +598,18 @@ export function CoinTradeModal({
                   SOL
                 </span>
               </div>
-              <div className="rounded-xl border border-amber/20 bg-amber/10 p-3 text-xs leading-relaxed text-amber/90">
-                <div className="text-[10px] uppercase tracking-widest font-black text-amber">Audius wallet support coming soon</div>
+              <div className="rounded-xl border border-amber/20 bg-amber/10 p-3 text-sm leading-relaxed text-amber/90">
+                <div className="text-[11px] uppercase tracking-widest font-black text-amber">Audius wallet support coming soon</div>
                 <p className="mt-1">
                   Audius login proves identity and can show your built-in Audius wallet balance. Real song-daq trades currently require an external Solana wallet like Phantom, Solflare, or Backpack.
                 </p>
               </div>
 
               {needsExternalWallet && (
-                <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-xs leading-relaxed text-neon/90">
+                <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-sm leading-relaxed text-neon/90">
                   <div className="flex items-center justify-between gap-3">
                     <div className="min-w-0">
-                      <div className="text-[10px] uppercase tracking-widest font-black text-neon">External wallet required</div>
+                      <div className="text-[11px] uppercase tracking-widest font-black text-neon">External wallet required</div>
                       <p className="mt-1 text-neon/85">
                         Connect Phantom, Solflare, or Backpack before trading. If you do not have one installed, the wallet menu will send you to install it.
                       </p>
@@ -624,12 +624,12 @@ export function CoinTradeModal({
               <div className="rounded-xl border border-edge bg-panel p-3">
                 <div className="mb-3 flex items-center justify-between gap-3">
                   <div>
-                    <div className="text-[10px] uppercase tracking-widest font-black text-ink">Artist Songs</div>
-                    <div className="mt-0.5 text-[10px] uppercase tracking-widest text-mute">
+                    <div className="text-[11px] uppercase tracking-widest font-black text-ink">Artist Songs</div>
+                    <div className="mt-0.5 text-[11px] uppercase tracking-widest text-mute">
                       {linkedTrackCount}/{visibleTracks.length || 0} shown have linked coins.
                     </div>
                   </div>
-                  <Link href={`/coin/${coin.mint}`} className="shrink-0 text-[9px] uppercase tracking-widest font-black text-neon hover:text-ink transition">
+                  <Link href={`/coin/${coin.mint}`} className="shrink-0 text-[11px] uppercase tracking-widest font-black text-neon hover:text-ink transition">
                     Full coin →
                   </Link>
                 </div>
@@ -647,9 +647,9 @@ export function CoinTradeModal({
                           </div>
                           <div className="min-w-0 flex-1">
                             <div className="truncate text-xs font-black text-ink">{player.title}</div>
-                            <div className="mt-0.5 text-[9px] uppercase tracking-widest text-mute">{fmtNum(track.play_count ?? track.playCount ?? 0)} plays</div>
+                            <div className="mt-0.5 text-[11px] uppercase tracking-widest text-mute">{fmtNum(track.play_count ?? track.playCount ?? 0)} plays</div>
                           </div>
-                          <span className={`shrink-0 rounded-md border px-2 py-1 text-[8px] font-black uppercase tracking-widest ${
+                          <span className={`shrink-0 rounded-md border px-2 py-1 text-[11px] font-black uppercase tracking-widest ${
                             linkedIsCurrent
                               ? "border-violet/30 bg-violet/10 text-violet"
                               : linkedCoin
@@ -660,20 +660,20 @@ export function CoinTradeModal({
                           </span>
                         </div>
                         <div className="mt-2 flex flex-wrap gap-2">
-                          <button type="button" className="btn h-8 px-2.5 text-[9px] uppercase tracking-widest font-black" onClick={() => playArtistTrack(track)}>
+                          <button type="button" className="btn h-9 px-3 text-[11px] uppercase tracking-widest font-black" onClick={() => playArtistTrack(track)}>
                             {isTrackPlaying ? <Pause size={12} /> : <Play size={12} />}
                             {isTrackPlaying ? "Pause" : "Play"}
                           </button>
                           {linkedCoin ? (
-                            <Link href={`/coin/${linkedCoin.mint}`} className="btn h-8 px-2.5 text-[9px] uppercase tracking-widest font-black">
+                            <Link href={`/coin/${linkedCoin.mint}`} className="btn h-9 px-3 text-[11px] uppercase tracking-widest font-black">
                               {linkedIsCurrent ? "Current Coin" : "Open Coin"}
                             </Link>
                           ) : isOwner ? (
-                            <Link href={createSongCoinHref(track)} className="btn-primary h-8 px-2.5 text-[9px] uppercase tracking-widest font-black">
+                            <Link href={createSongCoinHref(track)} className="btn-primary h-9 px-3 text-[11px] uppercase tracking-widest font-black">
                               Create Coin
                             </Link>
                           ) : (
-                            <span className="inline-flex h-8 items-center rounded-lg border border-edge bg-panel px-2.5 text-[9px] uppercase tracking-widest font-black text-mute">
+                            <span className="inline-flex h-9 items-center rounded-lg border border-edge bg-panel px-3 text-[11px] uppercase tracking-widest font-black text-mute">
                               No Coin Yet
                             </span>
                           )}
@@ -714,7 +714,7 @@ export function CoinTradeModal({
                     <span className="rounded-lg border border-edge bg-panel2 px-2 py-1 text-mute font-mono text-xs uppercase">{route?.inputTicker}</span>
                   </div>
                 </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-widest font-bold text-mute">
+                <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-widest font-bold text-mute">
                   <span title={currencyTitle}>{formatFiatEstimate(inputUsd, currency)}</span>
                   {side === "BUY" && paperMode ? <span>≈ {fmtNum(paperTokens)} {coin.ticker}</span> : null}
                   <span>{priceAgeText(fiatUpdatedAt)}</span>
@@ -741,7 +741,7 @@ export function CoinTradeModal({
                         slippageBps === preset.bps ? "border-neon/40 bg-neon/10 text-neon" : "border-edge bg-panel text-mute hover:text-ink"
                       }`}
                     >
-                      <span className="block text-[10px] font-black uppercase tracking-widest">{preset.label}</span>
+                      <span className="block text-[11px] font-black uppercase tracking-widest">{preset.label}</span>
                       <span className="mt-0.5 block font-mono text-xs">{preset.detail}</span>
                     </button>
                   ))}
@@ -758,7 +758,7 @@ export function CoinTradeModal({
                     {slippagePercent(slippageBps)}
                   </span>
                 </div>
-                <div className="mt-2 text-[10px] uppercase tracking-widest text-mute">
+                <div className="mt-2 text-[11px] uppercase tracking-widest text-mute">
                   Max fiat movement estimate: <span className="text-ink">{formatFiatEstimate(slippageFiat, currency)}</span>
                 </div>
               </label>
@@ -810,8 +810,8 @@ export function CoinTradeModal({
               </div>
 
               {routeProblem && (
-                <div className="rounded-xl border border-amber/20 bg-amber/10 p-3 text-xs leading-relaxed text-amber/90">
-                  <div className="text-[10px] uppercase tracking-widest font-black text-amber">Trade route unavailable</div>
+                <div className="rounded-xl border border-amber/20 bg-amber/10 p-3 text-sm leading-relaxed text-amber/90">
+                  <div className="text-[11px] uppercase tracking-widest font-black text-amber">Trade route unavailable</div>
                   <p className="mt-1">
                     This token may not have enough live liquidity for that trade yet. Try a smaller amount, switch between SOL and AUDIO, or choose a more active token.
                   </p>
@@ -819,8 +819,8 @@ export function CoinTradeModal({
               )}
 
               {side === "BUY" && (
-                <label className="block rounded-xl border border-amber/20 bg-amber/10 p-3 text-xs leading-relaxed text-amber/90">
-                  <span className="mb-2 block text-[10px] uppercase tracking-widest font-black text-amber">Investor Confirmation · {risk.label}</span>
+                <label className="block rounded-xl border border-amber/20 bg-amber/10 p-3 text-sm leading-relaxed text-amber/90">
+                  <span className="mb-2 block text-[11px] uppercase tracking-widest font-black text-amber">Investor Confirmation · {risk.label}</span>
                   <span className="block">This coin can move up or down. Liquidity may be limited, and royalty claims may still be unverified. Review the chart, pool depth, wallet cost, and royalty status before buying.</span>
                   <span className="mt-3 flex items-start gap-2">
                     <input type="checkbox" checked={riskAccepted} onChange={(e) => setRiskAccepted(e.target.checked)} className="mt-0.5" />
@@ -845,9 +845,9 @@ export function CoinTradeModal({
                   needsExternalWallet ? "Connect external wallet" :
                   address ? `Review ${side}` : "Connect to trade"}
               </button>
-              {err && <div className="text-red text-[10px] uppercase tracking-widest text-center font-bold bg-red/5 border border-red/10 py-2 rounded-xl">{err}</div>}
-              {ok && <div className="text-neon text-[10px] uppercase tracking-widest text-center font-bold bg-neon/5 border border-neon/10 py-2 rounded-xl">{ok}</div>}
-              <p className="text-[9px] text-mute leading-relaxed text-center uppercase tracking-widest">
+              {err && <div className="text-red text-[11px] uppercase tracking-widest text-center font-bold bg-red/5 border border-red/10 py-2 rounded-xl">{err}</div>}
+              {ok && <div className="text-neon text-[11px] uppercase tracking-widest text-center font-bold bg-neon/5 border border-neon/10 py-2 rounded-xl">{ok}</div>}
+              <p className="text-[11px] text-mute leading-relaxed text-center uppercase tracking-widest">
                 {paperMode ? `Demo mode. No money moves and no blockchain transaction is sent. ${priceAgeText(fiatUpdatedAt)}.` : `Real Solana swap. ${priceAgeText(fiatUpdatedAt)}.`}
               </p>
             </section>
@@ -861,7 +861,7 @@ export function CoinTradeModal({
 function OrderRow({ k, v, highlight }: { k: React.ReactNode; v: string; highlight?: boolean }) {
   return (
     <div className="flex items-center justify-between text-xs gap-3">
-      <span className="text-mute uppercase tracking-widest text-[9px] font-bold">{k}</span>
+      <span className="text-mute uppercase tracking-widest text-[11px] font-bold">{k}</span>
       <span className={`font-mono text-right ${highlight ? "text-ink font-bold" : "text-mute"}`}>{v}</span>
     </div>
   );
@@ -881,8 +881,8 @@ function ChartStat({ k, v, tooltip }: { k: string; v: string; tooltip: string })
 function TradeInfo({ label, value, accent }: { label: string; value: string; accent?: string }) {
   return (
     <div className="min-w-0 rounded-xl border border-edge bg-panel2/70 p-2.5">
-      <div className="text-[8px] uppercase tracking-widest text-mute font-black">{label}</div>
-      <div className={`mt-1 truncate font-mono text-xs font-black text-ink ${accent ?? ""}`} title={value}>{value}</div>
+      <div className="text-[11px] uppercase tracking-widest text-mute font-black">{label}</div>
+      <div className={`mt-1 truncate font-mono text-sm font-black text-ink ${accent ?? ""}`} title={value}>{value}</div>
     </div>
   );
 }

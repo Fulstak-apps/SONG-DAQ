@@ -71,13 +71,13 @@ export function AudiencePlaylist() {
               )}
             </div>
             <div className="min-w-0">
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] font-black text-neon">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] font-black text-neon">
                 <Radio size={12} /> Audius Playlist
               </div>
               <div className="text-sm font-black text-ink truncate mt-1">
                 {cover ? cover.title : "Open Audio Queue"}
               </div>
-              <div className="text-[10px] uppercase tracking-widest text-mute truncate">
+              <div className="text-[11px] uppercase tracking-widest text-mute truncate">
                 {cover ? cover.artist : loading ? "Loading tracks..." : `${queue.length || 0} tracks loaded`}
               </div>
             </div>
@@ -85,17 +85,17 @@ export function AudiencePlaylist() {
           <div className="grid w-full grid-cols-[1fr_auto_auto] items-center gap-2 sm:flex sm:w-auto sm:shrink-0">
             {queue[0] && (
               <button
-                className="btn-primary h-9 px-4 text-[10px] font-black tracking-widest"
+                className="btn-primary h-9 px-4 text-[11px] font-black tracking-widest"
                 onClick={() => current ? toggle() : playTrack(queue[0], queue)}
               >
                 {playing ? <Pause size={13} /> : <Play size={13} />}
                 {playing ? "Pause" : "Play"}
               </button>
             )}
-            <button className="btn h-9 px-3 text-[10px] font-black tracking-widest" onClick={next} disabled={!current} title="Next track">
+            <button className="btn h-9 px-3 text-[11px] font-black tracking-widest" onClick={next} disabled={!current} title="Next track">
               <SkipForward size={13} />
             </button>
-            <button className="btn h-9 px-3 text-[10px] font-black tracking-widest" onClick={() => setExpanded(true)}>
+            <button className="btn h-9 px-3 text-[11px] font-black tracking-widest" onClick={() => setExpanded(true)}>
               Expand <ChevronDown size={13} />
             </button>
           </div>
@@ -107,14 +107,14 @@ export function AudiencePlaylist() {
   return (
     <section className="panel-elevated overflow-hidden grain">
       <div className="px-4 py-2 border-b border-edge flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-[0.24em] font-black text-mute">Expanded Queue</span>
-        <button className="text-[10px] uppercase tracking-widest font-black text-mute hover:text-ink transition" onClick={() => setExpanded(false)}>
+        <span className="text-[11px] uppercase tracking-[0.24em] font-black text-mute">Expanded Queue</span>
+        <button className="text-[11px] uppercase tracking-widest font-black text-mute hover:text-ink transition" onClick={() => setExpanded(false)}>
           Collapse
         </button>
       </div>
       <div className="grid lg:grid-cols-[260px_1fr]">
         <div className="p-4 border-b lg:border-b-0 lg:border-r border-edge bg-white/[0.035]">
-          <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.24em] font-black text-neon">
+          <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.24em] font-black text-neon">
             <Radio size={13} /> Audius Playlist
           </div>
           <div className="mt-4 flex gap-4 lg:block">
@@ -133,7 +133,7 @@ export function AudiencePlaylist() {
               <div className="mt-3 flex items-center gap-2">
                 {queue[0] && (
                   <button
-                    className="btn-primary px-4 py-2 text-[10px] font-black tracking-widest"
+                    className="btn-primary px-4 py-2 text-[11px] font-black tracking-widest"
                     onClick={() => current ? toggle() : playTrack(queue[0], queue)}
                   >
                     {playing ? <Pause size={13} /> : <Play size={13} />}
@@ -141,7 +141,7 @@ export function AudiencePlaylist() {
                   </button>
                 )}
                 <button
-                  className="btn px-3 py-2 text-[10px] font-black tracking-widest"
+                  className="btn px-3 py-2 text-[11px] font-black tracking-widest"
                   onClick={next}
                   disabled={!current}
                   title="Next track"
@@ -154,7 +154,7 @@ export function AudiencePlaylist() {
         </div>
 
         <div className="min-w-0">
-          <div className="hidden md:grid grid-cols-[42px_1fr_82px_70px] gap-3 px-4 py-2.5 border-b border-edge text-[9px] uppercase tracking-[0.2em] font-black text-mute">
+          <div className="hidden md:grid grid-cols-[42px_1fr_82px_70px] gap-3 px-4 py-2.5 border-b border-edge text-[11px] uppercase tracking-[0.2em] font-black text-mute">
             <span>#</span>
             <span>Track</span>
             <span className="text-right">Plays</span>
@@ -181,7 +181,7 @@ export function AudiencePlaylist() {
                     active ? "bg-neon/[0.07]" : "hover:bg-white/[0.035]"
                   }`}
                 >
-                  <span className={`w-8 h-8 rounded-lg grid place-items-center border text-[10px] font-black ${
+                  <span className={`w-8 h-8 rounded-lg grid place-items-center border text-[11px] font-black ${
                     active ? "bg-neon text-black border-neon" : "bg-white/[0.055] border-edge text-mute"
                   }`}>
                     {active && playing ? <Pause size={13} /> : active ? <Play size={13} /> : String(i + 1).padStart(2, "0")}
@@ -192,7 +192,7 @@ export function AudiencePlaylist() {
                     </span>
                     <span className="min-w-0">
                       <span className={`block text-[13px] font-bold truncate ${active ? "text-neon" : "text-ink"}`}>{track.title}</span>
-                      <span className="block text-[10px] uppercase tracking-widest text-mute truncate">
+                      <span className="block text-[11px] uppercase tracking-widest text-mute truncate">
                         {track.user?.name || track.user?.handle || "Audius"}
                       </span>
                     </span>
@@ -204,10 +204,10 @@ export function AudiencePlaylist() {
             })}
           </div>
           <div className="px-5 py-3 border-t border-edge flex items-center justify-between">
-            <span className="text-[10px] uppercase tracking-widest font-bold text-mute">
+            <span className="text-[11px] uppercase tracking-widest font-bold text-mute">
               {loading ? "Loading tracks..." : `${queue.length || 0} tracks loaded`}
             </span>
-            <Link href="/social" className="text-[10px] uppercase tracking-widest font-bold text-mute hover:text-ink transition">
+            <Link href="/social" className="text-[11px] uppercase tracking-widest font-bold text-mute hover:text-ink transition">
               More signal →
             </Link>
           </div>

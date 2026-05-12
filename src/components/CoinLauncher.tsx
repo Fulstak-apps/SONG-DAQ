@@ -20,6 +20,7 @@ import { formatCryptoWithFiat, formatFiatEstimate, priceAgeText, useLiveFiatPric
 import { WalletButton } from "@/components/WalletButton";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
+import { SongIPOStatusCard } from "@/components/GamificationLayer";
 import { ChevronRight, ChevronLeft, Rocket, Music, Settings, BarChart3, ShieldCheck, CheckCircle2 } from "lucide-react";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
@@ -227,6 +228,44 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
     : liquidityPairAsset === "SOL"
       ? formatCryptoWithFiat(liquidityPairAmount + estimatedSetupRentSol, "SOL", estimatedTotalSpendUsd, currency)
       : `${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)} + ${formatCryptoWithFiat(estimatedSetupRentSol, "SOL", estimatedSetupRentUsd, currency)}`;
+  const launchPreviewAsset = useMemo(() => {
+    const rawTitle = launchKind === "ARTIST"
+      ? String(audius?.name || audius?.handle || "Artist Coin")
+      : String(pick?.title || prefillTrackTitle || "Song Coin");
+    const rawTicker = launchKind === "ARTIST" ? String(audius?.handle || rawTitle) : rawTitle;
+    const ticker = rawTicker.replace(/[^a-z0-9]/gi, "").slice(0, 8).toUpperCase() || (launchKind === "ARTIST" ? "ARTIST" : "SONG");
+    return {
+      id: `launch-${ticker}`,
+      mint: `launch-${ticker}`,
+      ticker,
+      title: rawTitle,
+      name: rawTitle,
+      artistName: audius?.name || audius?.handle || "Artist",
+      artist_name: audius?.name || audius?.handle || "Artist",
+      price: impliedPriceUsd ?? basePriceUsd ?? 0,
+      totalSupply: supply,
+      supply,
+      marketCap: startingPublicMarketValueUsd ?? fullSupplyValueUsd ?? 0,
+      v24hUSD: liquidityPairUsd ?? creatorFirstBuyUsd ?? 0,
+      holder: 0,
+      priceChange24hPercent: launchKind === "ARTIST" ? 8 : 4,
+      royaltyPercentageCommitted: royalty.holderShareBps / 100,
+    };
+  }, [
+    launchKind,
+    audius?.name,
+    audius?.handle,
+    pick?.title,
+    prefillTrackTitle,
+    impliedPriceUsd,
+    basePriceUsd,
+    supply,
+    startingPublicMarketValueUsd,
+    fullSupplyValueUsd,
+    liquidityPairUsd,
+    creatorFirstBuyUsd,
+    royalty.holderShareBps,
+  ]);
 
   function applyLaunchPreset(preset: typeof LAUNCH_PRESETS[number]) {
     setLaunchPreset(preset.id);
@@ -662,10 +701,10 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
             </div>
             Launch Your Artist Market
           </h2>
-          <div className="text-[10px] uppercase tracking-widest font-bold text-mute">
+          <div className="text-[11px] uppercase tracking-widest font-bold text-mute">
             Authenticated Issuer: <span className="text-white">@{audius.handle}</span>
           </div>
-          <div className="text-[10px] uppercase tracking-widest font-black text-neon">
+          <div className="text-[11px] uppercase tracking-widest font-black text-neon">
             Sync mode: <span className="text-white">{audiusVisibility}</span>
           </div>
         </div>
@@ -676,21 +715,21 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         <button
           type="button"
           onClick={() => { setLaunchKind("SONG"); setLiquidityPairAsset("SOL"); setBasePrice(0.001); setCurveSlope(0.0000005); setStep(1); setErr(null); }}
-          className={`rounded-xl px-4 py-3 text-[10px] uppercase tracking-widest font-black transition ${launchKind === "SONG" ? "bg-neon/15 text-neon border border-neon/25" : "text-mute hover:text-ink"}`}
+          className={`rounded-xl px-4 py-3 text-[11px] uppercase tracking-widest font-black transition ${launchKind === "SONG" ? "bg-neon/15 text-neon border border-neon/25" : "text-mute hover:text-ink"}`}
         >
           Song Coin · song-daq
         </button>
         <button
           type="button"
           onClick={() => { setLaunchKind("ARTIST"); setStep(1); setErr(null); }}
-          className={`rounded-xl px-4 py-3 text-[10px] uppercase tracking-widest font-black transition ${launchKind === "ARTIST" ? "bg-violet/15 text-violet border border-violet/25" : "text-mute hover:text-ink"}`}
+          className={`rounded-xl px-4 py-3 text-[11px] uppercase tracking-widest font-black transition ${launchKind === "ARTIST" ? "bg-violet/15 text-violet border border-violet/25" : "text-mute hover:text-ink"}`}
         >
           Artist Coin · Audius-visible
         </button>
       </div>
 
       <div className="relative z-10 rounded-2xl border border-edge bg-panel p-4">
-        <div className="text-[10px] uppercase tracking-widest font-black text-mute">Audius sync</div>
+        <div className="text-[11px] uppercase tracking-widest font-black text-mute">Audius sync</div>
         <p className="mt-2 text-xs leading-relaxed text-mute">
           Audius/Open Audio coins launched on Audius can be imported into song-daq by mint address. Coins launched on song-daq show on Audius only when they use the official Open Audio Artist Coin path: $AUDIO quote, Meteora bonding curve, 1B supply, 9 decimals, and artist vesting. Custom song coins stay visible in song-daq while linking back to the Audius track and artist.
         </p>
@@ -700,12 +739,12 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         <div className="relative z-10 rounded-xl border border-violet/25 bg-violet/10 px-4 py-3 text-violet flex items-start gap-3">
           <ShieldCheck size={16} className="mt-0.5 shrink-0" />
           <div className="min-w-0">
-            <div className="text-[10px] uppercase tracking-widest font-black">Audius wallet recognized</div>
+            <div className="text-[11px] uppercase tracking-widest font-black">Audius wallet recognized</div>
             <div className="mt-1 text-xs leading-relaxed text-violet/85">
               song-daq can use your Audius wallet for artist identity, imported Audius/Open Audio coins, and coin setup records. A live Solana mint still needs an external wallet signature until Open Audio exposes an in-app signing bridge for third-party apps.
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="rounded-xl border border-violet/25 bg-panel px-3 py-2 font-mono text-[10px] text-ink">
+              <span className="rounded-xl border border-violet/25 bg-panel px-3 py-2 font-mono text-[11px] text-ink">
                 {audiusWalletAddress.slice(0, 6)}…{audiusWalletAddress.slice(-4)}
               </span>
               <WalletButton compact connectOnly />
@@ -722,6 +761,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         tokenTrustReady={!allocationRisk && ownershipConfirmed && riskAcknowledged}
       />
       <WhyFansCanBuy compact />
+      <div className="relative z-10">
+        <SongIPOStatusCard asset={launchPreviewAsset} />
+      </div>
 
       <div className="relative z-10 min-h-[360px] sm:min-h-[460px]">
         <AnimatePresence mode="wait">
@@ -731,7 +773,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest font-black text-mute">
                   <Music size={14} className="text-violet" /> Step 01 — {launchKind === "ARTIST" ? "Artist Name + Image" : "Pick Song + Artwork"}
                 </div>
 
@@ -742,16 +784,16 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   </div>
                   <div className="min-w-0 space-y-3">
                     <div>
-                      <div className="text-[10px] uppercase tracking-widest font-black text-mute">Audius Artist Profile</div>
+                      <div className="text-[11px] uppercase tracking-widest font-black text-mute">Audius Artist Profile</div>
                       <div className="mt-1 text-2xl font-black text-ink whitespace-normal break-words">{audius.name || audius.handle}</div>
                       <div className="text-xs text-mute">@{audius.handle}</div>
                     </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[10px] uppercase tracking-widest font-bold">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] uppercase tracking-widest font-bold">
                       <div className="rounded-xl border border-edge bg-panel2 p-3 text-mute">{externalWalletAddress ? "External wallet" : "Audius wallet"} <span className="block font-mono text-ink normal-case tracking-normal truncate">{launchIdentityWallet.slice(0, 6)}…{launchIdentityWallet.slice(-4)}</span></div>
                       <div className="rounded-xl border border-edge bg-panel2 p-3 text-mute">Audio <span className="block text-amber">Unavailable until song attached</span></div>
                     </div>
                     <div className="rounded-2xl border border-violet/25 bg-violet/10 p-4">
-                      <div className="text-[10px] uppercase tracking-widest font-black text-violet">Two-way Audius sync</div>
+                      <div className="text-[11px] uppercase tracking-widest font-black text-violet">Two-way Audius sync</div>
                       <p className="mt-2 text-xs leading-relaxed text-violet/85">
                         Launch an Artist Coin here with the Open Audio path and it is built for Audius/Open Audio indexing. If you already launched on Audius, paste the official mint here and song-daq will build the coin page, chart, portfolio, royalty setup, admin tracking, and trading context around it.
                       </p>
@@ -766,7 +808,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                           type="button"
                           onClick={importOpenAudioArtistCoin}
                           disabled={importBusy || !importMint.trim()}
-                          className="rounded-xl border border-violet/30 bg-violet/15 px-4 py-3 text-[10px] font-black uppercase tracking-widest text-violet transition hover:bg-violet/25 disabled:cursor-not-allowed disabled:opacity-40"
+                          className="rounded-xl border border-violet/30 bg-violet/15 px-4 py-3 text-[11px] font-black uppercase tracking-widest text-violet transition hover:bg-violet/25 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                           {importBusy ? "Importing" : "Import"}
                         </button>
@@ -776,11 +818,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                           href="https://audius.co/clubs"
                           target="_blank"
                           rel="noreferrer"
-                          className="rounded-full border border-edge bg-panel px-3 py-1.5 text-[9px] font-black uppercase tracking-widest text-ink transition hover:border-violet/40 hover:text-violet"
+                          className="rounded-full border border-edge bg-panel px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-ink transition hover:border-violet/40 hover:text-violet"
                         >
                           Open Audius Coins
                         </a>
-                        <span className="text-[10px] leading-relaxed text-mute">Audius → song-daq works by import. song-daq → Audius works when the launch uses the Open Audio Artist Coin standard.</span>
+                        <span className="text-[11px] leading-relaxed text-mute">Audius → song-daq works by import. song-daq → Audius works when the launch uses the Open Audio Artist Coin standard.</span>
                       </div>
                       {importMessage && <div className="mt-3 text-xs font-bold text-neon">{importMessage}</div>}
                     </div>
@@ -791,7 +833,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               {launchKind === "SONG" && loadingTracks && (
                 <div className="flex flex-col items-center justify-center py-20 space-y-4">
                   <div className="w-8 h-8 border-2 border-neon border-t-transparent rounded-full animate-spin" />
-                  <div className="text-[10px] uppercase tracking-widest font-bold text-mute">Loading your Audius songs...</div>
+                  <div className="text-[11px] uppercase tracking-widest font-bold text-mute">Loading your Audius songs...</div>
                 </div>
               )}
               
@@ -802,7 +844,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   <div className="text-mute text-sm font-medium leading-relaxed">
                     No compatible master recordings found for @{audius.handle}.
                   </div>
-                  <div className="text-[10px] uppercase tracking-widest font-bold text-mute">
+                  <div className="text-[11px] uppercase tracking-widest font-bold text-mute">
                     Upload a track to Audius first, then come back to launch its market.
                   </div>
                 </div>
@@ -824,7 +866,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="font-bold text-white truncate group-hover:text-neon transition">{t.title}</div>
-                        <div className="mt-2 flex items-center gap-3 text-[10px] font-mono font-bold text-mute">
+                        <div className="mt-2 flex items-center gap-3 text-[11px] font-mono font-bold text-mute">
                           <span>▶ {fmtNum(t.play_count ?? 0)}</span>
                           <span>♥ {fmtNum(t.favorite_count ?? 0)}</span>
                           <span>↺ {fmtNum(t.repost_count ?? 0)}</span>
@@ -845,7 +887,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               className="grid grid-cols-1 lg:grid-cols-2 gap-10"
             >
               <div className="space-y-6">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest font-black text-mute">
                   <Settings size={14} className="text-violet" /> Step 02 — Market Setup
                 </div>
                 <div className="space-y-4">
@@ -862,10 +904,10 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <div className="space-y-3">
                         <div className="flex items-center justify-between gap-3 px-1">
                           <div>
-                            <div className="text-[10px] uppercase tracking-widest font-black text-mute">Automatic Launch Settings</div>
+                            <div className="text-[11px] uppercase tracking-widest font-black text-mute">Automatic Launch Settings</div>
                             <div className="mt-1 text-xs text-mute">Choose how much the artist holds, how much opens the market, and how tight the wallet cap is.</div>
                           </div>
-                          <span className="hidden sm:inline-flex rounded-full border border-edge bg-panel px-2.5 py-1 text-[8px] uppercase tracking-widest font-black text-mute">
+                          <span className="hidden sm:inline-flex rounded-full border border-edge bg-panel px-2.5 py-1 text-[11px] uppercase tracking-widest font-black text-mute">
                             {launchPreset === "custom" ? "Custom" : "Preset"}
                           </span>
                         </div>
@@ -882,12 +924,12 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                                   active ? "border-neon/35 bg-neon/10 shadow-[0_0_18px_rgba(0,229,114,0.12)]" : "border-edge bg-panel hover:border-white/20 hover:bg-panel2"
                                 }`}
                               >
-                                <div className={`text-[10px] uppercase tracking-widest font-black ${active ? "text-neon" : "text-ink"}`}>{preset.title}</div>
+                                <div className={`text-[11px] uppercase tracking-widest font-black ${active ? "text-neon" : "text-ink"}`}>{preset.title}</div>
                                 <div className="mt-1 font-mono text-[11px] font-black text-white">{preset.label}</div>
-                                <div className="mt-1 font-mono text-[10px] font-black text-neon">
+                                <div className="mt-1 font-mono text-[11px] font-black text-neon">
                                   {formatCryptoWithFiat(preset.pairAmount, "SOL", presetUsd, currency)}
                                 </div>
-                                <p className="mt-2 text-[10px] leading-relaxed text-mute">{preset.note}</p>
+                                <p className="mt-2 text-[11px] leading-relaxed text-mute">{preset.note}</p>
                               </button>
                             );
                           })}
@@ -898,9 +940,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                               showCustomPreset || launchPreset === "custom" ? "border-violet/40 bg-violet/10 text-violet" : "border-edge bg-panel hover:border-white/20 hover:bg-panel2"
                             }`}
                           >
-                            <div className="text-[10px] uppercase tracking-widest font-black">Advanced Custom</div>
+                            <div className="text-[11px] uppercase tracking-widest font-black">Advanced Custom</div>
                             <div className="mt-1 font-mono text-[11px] font-black text-white">Manual tokenomics</div>
-                            <p className="mt-2 text-[10px] leading-relaxed text-mute">Open the detailed controls only when you want to fine-tune every number yourself.</p>
+                            <p className="mt-2 text-[11px] leading-relaxed text-mute">Open the detailed controls only when you want to fine-tune every number yourself.</p>
                           </button>
                         </div>
                         <div className="grid gap-2 md:grid-cols-4">
@@ -934,7 +976,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       {(showCustomPreset || launchPreset === "custom") && (
                         <div className="space-y-4 rounded-2xl border border-violet/20 bg-violet/5 p-4">
                           <div>
-                            <div className="text-[10px] uppercase tracking-widest font-black text-violet">Advanced custom controls</div>
+                            <div className="text-[11px] uppercase tracking-widest font-black text-violet">Advanced custom controls</div>
                             <p className="mt-1 text-xs leading-relaxed text-mute">Most artists should use Fan First, Balanced, or Premium. These controls are for fine-tuning launch mechanics after you understand the tradeoffs.</p>
                           </div>
                           <Field
@@ -1003,7 +1045,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       : "Song Coins are tied to one Audius track and show in song-daq. They use Audius catalog metadata, but they are not automatically listed on Audius unless Open Audio adds song-level coin indexing."}
                   </div>
                   <div className="space-y-2">
-                    <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1">Settlement Distributor</label>
+                    <label className="text-[11px] uppercase tracking-widest font-bold text-mute px-1">Settlement Distributor</label>
                     <select
                       className="w-full bg-panel border border-edge rounded-xl px-4 py-3 text-sm text-ink focus:border-neon focus:ring-1 focus:ring-neon transition-all outline-none appearance-none cursor-pointer"
                       value={distributor}
@@ -1020,7 +1062,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 </div>
               </div>
               <div className="space-y-6">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest font-black text-mute">
                   <ShieldCheck size={14} className="text-neon" /> Royalty Distribution Model
                 </div>
                 <div className="panel p-6 bg-panel border-edge rounded-2xl">
@@ -1037,28 +1079,28 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               className="grid grid-cols-1 lg:grid-cols-2 gap-10"
             >
               <div className="space-y-6">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest font-black text-mute">
                   <BarChart3 size={14} className="text-violet" /> Step 03 — Curve Preview
                 </div>
                 <div className="panel p-6 bg-panel border-edge rounded-2xl space-y-4">
                   <PreviewCurve series={previewSeries} />
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-1">
-                      <div className="text-[9px] uppercase tracking-widest font-bold text-mute">Starting token price</div>
+                      <div className="text-[11px] uppercase tracking-widest font-bold text-mute">Starting token price</div>
                       <div className="font-mono text-sm font-bold text-white">{formatCryptoWithFiat(previewStartPrice, "SOL", previewStartUsd, currency, 6)}</div>
                     </div>
                     <div className="space-y-1 text-right">
-                      <div className="text-[9px] uppercase tracking-widest font-bold text-mute">Projected token price</div>
+                      <div className="text-[11px] uppercase tracking-widest font-bold text-mute">Projected token price</div>
                       <div className="font-mono text-sm font-bold text-neon">{formatCryptoWithFiat(previewEndPrice, "SOL", previewEndUsd, currency, 6)}</div>
                     </div>
                   </div>
-                  <div className="rounded-xl border border-edge bg-panel2 p-3 text-[10px] uppercase tracking-widest text-mute">
+                  <div className="rounded-xl border border-edge bg-panel2 p-3 text-[11px] uppercase tracking-widest text-mute">
                     {fiatAge}
                   </div>
                 </div>
               </div>
               <div className="space-y-6">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
+                <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest font-black text-mute">
                   Verification Manifest
                 </div>
                 <div className="panel p-6 bg-panel border-edge rounded-2xl space-y-3">
@@ -1084,11 +1126,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
+              <div className="flex items-center gap-2 text-[11px] uppercase tracking-widest font-black text-mute">
                 <ShieldCheck size={14} className="text-neon" /> Step 04 — Add Liquidity
               </div>
               <div className="rounded-2xl border border-neon/20 bg-neon/8 p-5 text-neon">
-                <div className="flex flex-wrap items-center gap-2 text-[10px] uppercase tracking-widest font-black">
+                <div className="flex flex-wrap items-center gap-2 text-[11px] uppercase tracking-widest font-black">
                   <span>{launchKind === "ARTIST" ? "Open Audio bonding curve opens the coin for fans" : "Liquidity opens the coin for fans"}</span>
                   <InfoTooltip
                     side="bottom"
@@ -1157,7 +1199,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     description={`This is the payment side of liquidity: ${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)}.`}
                   />
                   <div className="space-y-2">
-                    <label className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold text-mute px-1">
+                    <label className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest font-bold text-mute px-1">
                       <span>Liquidity Payment Coin</span>
                       <InfoTooltip
                         side="bottom"
@@ -1201,7 +1243,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     : "This is a song-level song-daq coin linked to an Audius track. It can be traded here, but Audius may not list custom song coins on its own app."}
                 />
                 <Row k="Trust lock" v={launchKind === "ARTIST" ? "50% creator vesting over 5 years" : `${liquidityLockDays} days required`} color="text-neon" help="A lock or vesting schedule helps show fans the launch is not just a quick sellout by the artist." />
-                <div className="pt-1 text-[9px] uppercase tracking-widest text-mute">{fiatAge}</div>
+                <div className="pt-1 text-[11px] uppercase tracking-widest text-mute">{fiatAge}</div>
               </div>
               <div className="grid gap-3 md:grid-cols-4">
                 <LaunchMetric k="Pool depth" v={projectedDepth} />
@@ -1242,7 +1284,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   </div>
                   <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
                     <div className="panel p-4 text-left space-y-2 bg-panel border-edge">
-                      <div className="text-[10px] uppercase tracking-widest font-black text-white">Launch summary</div>
+                      <div className="text-[11px] uppercase tracking-widest font-black text-white">Launch summary</div>
                       <Row k={launchKind === "ARTIST" ? "Artist" : "Song"} v={launchKind === "ARTIST" ? (audius?.name || audius?.handle || "Artist coin") : (pick?.title ?? "Song coin")} />
                       <Row k="Full estimated spend" v={`${estimatedTotalSpendLabel} · ${formatFiatEstimate(estimatedTotalSpendUsd, currency)}`} color="text-neon" />
                       <Row k="Supply" v={launchKind === "ARTIST" ? "1B / 9 decimals" : fmtNum(supply)} />
@@ -1280,7 +1322,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <Row k="Signing policy" v="Wallet transaction only. No private key. No blind message." color="text-neon" />
                     </div>
                     <div className="panel p-4 text-left space-y-3 bg-panel border-edge">
-                      <div className="text-[10px] uppercase tracking-widest font-black text-white">Wallet approval preview</div>
+                      <div className="text-[11px] uppercase tracking-widest font-black text-white">Wallet approval preview</div>
                       <div className="space-y-3 text-xs leading-relaxed text-mute">
                         <div>
                           <span className="font-black text-neon">Approval 1:</span> {launchKind === "ARTIST" ? "creates the Artist Coin pool on Meteora Dynamic Bonding Curve using the AUDIO quote mint." : `creates the SPL mint, attaches song-daq metadata, mints ${fmtNum(artistVestedTokenAmount)} artist-hold coins plus ${fmtNum(launchLiquidityTokenAmount)} liquidity-staging coins to your wallet, sends ${fmtNum(reserveTokenAmount)} reserve coins to treasury, disables freeze authority, and revokes mint authority.`}
@@ -1296,7 +1338,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   </div>
                   <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
                     <div className="rounded-xl border border-neon/20 bg-neon/10 p-4 text-left text-xs leading-relaxed text-neon/85">
-                      <div className="mb-2 text-[10px] uppercase tracking-widest font-black text-neon">Clean launch rules</div>
+                      <div className="mb-2 text-[11px] uppercase tracking-widest font-black text-neon">Clean launch rules</div>
                       <ul className="list-disc space-y-1 pl-4">
                         <li>{launchKind === "ARTIST" ? "Uses the Open Audio Artist Coin standard: 1B supply and 9 decimals." : "Fixed supply is created once."}</li>
                         <li>{launchKind === "ARTIST" ? "Pairs the public market against the official $AUDIO mint." : "Freeze authority is disabled."}</li>
@@ -1306,7 +1348,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       </ul>
                     </div>
                     <div className="rounded-xl border border-amber/20 bg-amber/10 p-4 text-left text-xs leading-relaxed text-amber/90">
-                      <div className="mb-2 text-[10px] uppercase tracking-widest font-black text-amber">Do not sign if you see</div>
+                      <div className="mb-2 text-[11px] uppercase tracking-widest font-black text-amber">Do not sign if you see</div>
                       <ul className="list-disc space-y-1 pl-4">
                         <li>A seed phrase, private key, or password request.</li>
                         <li>A message signature pretending to launch or trade.</li>
@@ -1324,7 +1366,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <span>I understand that fans buy from the public market, and prices can move up or down after launch.</span>
                   </label>
                   <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-left text-xs leading-relaxed text-neon/85">
-                    <div className="mb-1 text-[10px] uppercase tracking-widest font-black text-neon">{fiatAge}</div>
+                    <div className="mb-1 text-[11px] uppercase tracking-widest font-black text-neon">{fiatAge}</div>
                     {launchKind === "ARTIST"
                       ? "Open Audio Artist Coins use a $AUDIO-paired public bonding curve plus artist vesting. Your wallet signs the live transaction and song-daq shows the real wallet or backend result."
                       : "Audius-style launches use a public market curve plus artist vesting. Your wallet signs the live transaction and song-daq shows the real wallet or backend result."}
@@ -1350,7 +1392,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <div className="text-neon text-lg font-black tracking-tighter uppercase animate-pulse">
                       {liquidityStage === "idle" ? "Launching Market…" : "Setting Up Liquidity…"}
                     </div>
-                    <div className="max-w-md text-mute text-[10px] uppercase tracking-widest font-bold leading-relaxed">
+                    <div className="max-w-md text-mute text-[11px] uppercase tracking-widest font-bold leading-relaxed">
                       {liquidityMessage || "Waiting for artist wallet signature · verifying Solana mint"}
                     </div>
                   </div>
@@ -1371,12 +1413,12 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                         ? `Successfully imported ${result.song?.symbol} into song-daq.`
                         : `Successfully minted ${result.song?.symbol} on Solana.`}
                     </div>
-                    <div className="text-mute font-mono text-[10px] break-all">{result.song?.mintAddress}</div>
+                    <div className="text-mute font-mono text-[11px] break-all">{result.song?.mintAddress}</div>
                     {result.launch?.metadataUri && (
-                      <div className="text-mute font-mono text-[10px] break-all">Metadata: {result.launch.metadataUri}</div>
+                      <div className="text-mute font-mono text-[11px] break-all">Metadata: {result.launch.metadataUri}</div>
                     )}
                     {result.launch?.mintTx && (
-                      <div className="text-neon font-mono text-[10px] break-all">Mint tx: {result.launch.mintTx}</div>
+                      <div className="text-neon font-mono text-[11px] break-all">Mint tx: {result.launch.mintTx}</div>
                     )}
                     <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-xs leading-relaxed text-neon">
                       {launchKind === "ARTIST"
@@ -1390,7 +1432,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                           ? "border-amber/20 bg-amber/10 text-amber"
                           : "border-violet/20 bg-violet/10 text-violet"
                     }`}>
-                      <div className="mb-1 text-[10px] uppercase tracking-widest font-black">
+                      <div className="mb-1 text-[11px] uppercase tracking-widest font-black">
                         {liquidityStage === "live" ? "Liquidity live" : liquidityStage === "failed" ? "Liquidity still needed" : "Liquidity setup running"}
                       </div>
                       {liquidityMessage || "song-daq is preparing the launch liquidity step."}
@@ -1424,7 +1466,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       <footer className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-3 pt-6 sm:pt-8 border-t border-edge relative z-10">
         <button
           type="button"
-          className={`flex w-full sm:w-auto items-center justify-center gap-2 text-[10px] uppercase tracking-widest font-bold transition-all ${step === 1 ? "opacity-0 pointer-events-none" : "text-mute hover:text-ink"}`}
+          className={`flex w-full sm:w-auto items-center justify-center gap-2 text-[11px] uppercase tracking-widest font-bold transition-all ${step === 1 ? "opacity-0 pointer-events-none" : "text-mute hover:text-ink"}`}
           onClick={() => setStep((s) => (s > 1 ? ((s - 1) as Step) : s))}
           disabled={step === 1}
         >
@@ -1432,7 +1474,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         </button>
         <button
           type="button"
-          className="flex w-full sm:w-auto items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-panel border border-edge text-[10px] uppercase tracking-widest font-bold text-ink hover:bg-panel2 hover:border-neon/50 hover:text-neon active:scale-[0.99] transition-all disabled:opacity-30 disabled:grayscale"
+          className="flex w-full sm:w-auto items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-panel border border-edge text-[11px] uppercase tracking-widest font-bold text-ink hover:bg-panel2 hover:border-neon/50 hover:text-neon active:scale-[0.99] transition-all disabled:opacity-30 disabled:grayscale"
           onClick={() => setStep((s) => Math.min(5, s + 1) as Step)}
           disabled={(step === 1 && !canStep2) || (step === 2 && !canStep3) || (step === 4 && !liquidityValid) || (step === 5 && !canLaunchReview)}
         >
@@ -1454,7 +1496,7 @@ function Stepper({ step }: { step: number }) {
         return (
           <div key={label} className="flex shrink-0 items-center gap-2 sm:gap-4 group">
             <div className="flex flex-col items-center gap-1.5">
-              <div className={`w-8 h-8 rounded-xl border flex items-center justify-center text-[10px] font-black transition-all ${done ? "bg-neon/20 border-neon/50 text-neon shadow-[0_0_10px_rgba(0,229,114,0.2)]" : active ? "bg-neon text-black border-neon shadow-[0_0_15px_rgba(0,229,114,0.25)]" : "bg-panel border-edge text-mute"}`}>
+              <div className={`w-8 h-8 rounded-xl border flex items-center justify-center text-[11px] font-black transition-all ${done ? "bg-neon/20 border-neon/50 text-neon shadow-[0_0_10px_rgba(0,229,114,0.2)]" : active ? "bg-neon text-black border-neon shadow-[0_0_15px_rgba(0,229,114,0.25)]" : "bg-panel border-edge text-mute"}`}>
                 {idx}
               </div>
             </div>
@@ -1480,7 +1522,7 @@ function Field({
 }) {
   return (
     <div className="space-y-2">
-      <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1 flex justify-between gap-3">
+      <label className="text-[11px] uppercase tracking-widest font-bold text-mute px-1 flex justify-between gap-3">
         <span className="inline-flex items-center gap-1.5">
           {label}
           {help ? <InfoTooltip side="bottom" def={help} /> : null}
@@ -1503,7 +1545,7 @@ function Field({
 function Row({ k, v, color, help }: { k: string; v: string; color?: string; help?: string }) {
   return (
     <div className="flex items-center justify-between gap-4 py-2 border-b border-edge last:border-0">
-      <span className="inline-flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-bold text-mute">
+      <span className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest font-bold text-mute">
         {k}
         {help ? <InfoTooltip side="bottom" def={help} /> : null}
       </span>
@@ -1515,20 +1557,20 @@ function Row({ k, v, color, help }: { k: string; v: string; color?: string; help
 function LiquidityExplainer({ title, body }: { title: string; body: string }) {
   return (
     <div className="rounded-2xl border border-edge bg-panel/80 p-4">
-      <div className="text-[10px] uppercase tracking-widest font-black text-ink">{title}</div>
+      <div className="text-[11px] uppercase tracking-widest font-black text-ink">{title}</div>
       <p className="mt-2 text-xs leading-relaxed text-mute">{body}</p>
     </div>
   );
 }
 
 function Tag({ label }: { label: string }) {
-  return <span className="text-[8px] uppercase tracking-widest font-black px-2 py-1 rounded bg-panel2 text-mute border border-edge">{label}</span>;
+  return <span className="text-[11px] uppercase tracking-widest font-black px-2 py-1 rounded bg-panel2 text-mute border border-edge">{label}</span>;
 }
 
 function LaunchMetric({ k, v, tone = "neon", help }: { k: string; v: string; tone?: "neon" | "amber" | "violet"; help?: string }) {
   return (
     <div className="rounded-xl border border-edge bg-panel p-4">
-      <div className="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-widest font-black text-mute">
+      <div className="inline-flex items-center gap-1.5 text-[11px] uppercase tracking-widest font-black text-mute">
         {k}
         {help ? <InfoTooltip side="bottom" def={help} /> : null}
       </div>
@@ -1559,11 +1601,11 @@ function LaunchReadinessChecklist({
   ] as const;
   return (
     <section className="relative z-10 rounded-2xl border border-edge bg-panel p-4">
-      <div className="text-[10px] uppercase tracking-widest font-black text-ink">Open Audio launch checklist</div>
+      <div className="text-[11px] uppercase tracking-widest font-black text-ink">Open Audio launch checklist</div>
       <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
         {items.map(([label, ok, hint]) => (
           <div key={label} className="rounded-xl border border-edge bg-panel2 p-3">
-            <div className={`text-[10px] uppercase tracking-widest font-black ${ok ? "text-neon" : "text-amber"}`}>
+            <div className={`text-[11px] uppercase tracking-widest font-black ${ok ? "text-neon" : "text-amber"}`}>
               {ok ? "Ready" : "Needs input"} · {label}
             </div>
             <div className="mt-1 text-xs leading-relaxed text-mute">{hint}</div>
@@ -1609,40 +1651,40 @@ function LaunchPoolSummary({
     <div className="rounded-xl border border-neon/20 bg-panel p-3 text-left">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <div className="text-[10px] uppercase tracking-widest font-black text-neon">Public Trading Pool</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-neon">Public Trading Pool</div>
           <div className="mt-1 text-sm font-black text-white">{pairLabel}</div>
         </div>
-        <span className={`rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-widest ${statusTone}`}>{statusLabel}</span>
+        <span className={`rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-widest ${statusTone}`}>{statusLabel}</span>
       </div>
       <p className="mt-3 text-xs leading-relaxed text-mute">
         This is the market fans trade against. The liquidity transaction pairs the launch song coins with {liquidityPairAsset}, creating the public place where buy and sell quotes come from.
       </p>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         <div className="rounded-xl border border-edge bg-panel2 p-2.5">
-          <div className="text-[8px] uppercase tracking-widest font-black text-mute">Coin side</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">Coin side</div>
           <div className="mt-1 font-mono text-xs font-black text-white">{fmtNum(liquidityTokenAmount)}</div>
         </div>
         <div className="rounded-xl border border-edge bg-panel2 p-2.5">
-          <div className="text-[8px] uppercase tracking-widest font-black text-mute">Payment side</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">Payment side</div>
           <div className="mt-1 font-mono text-xs font-black text-white">{formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)}</div>
         </div>
         <div className="rounded-xl border border-edge bg-panel2 p-2.5">
-          <div className="text-[8px] uppercase tracking-widest font-black text-mute">Pool address</div>
-          <div className="mt-1 break-all font-mono text-[10px] font-black text-white">{poolId ? shortId(poolId) : "Waiting for router"}</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">Pool address</div>
+          <div className="mt-1 break-all font-mono text-[11px] font-black text-white">{poolId ? shortId(poolId) : "Waiting for router"}</div>
         </div>
         <div className="rounded-xl border border-edge bg-panel2 p-2.5">
-          <div className="text-[8px] uppercase tracking-widest font-black text-mute">LP mint</div>
-          <div className="mt-1 break-all font-mono text-[10px] font-black text-white">{lpMint ? shortId(lpMint) : "Pending"}</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-mute">LP mint</div>
+          <div className="mt-1 break-all font-mono text-[11px] font-black text-white">{lpMint ? shortId(lpMint) : "Pending"}</div>
         </div>
       </div>
       <div className="mt-3 flex flex-col gap-2 sm:flex-row">
         {liquidityTxSig ? (
-          <a className="btn h-9 flex-1 px-3 text-center text-[9px] uppercase tracking-widest font-black" href={`https://solscan.io/tx/${liquidityTxSig}`} target="_blank" rel="noreferrer">
+          <a className="btn h-9 flex-1 px-3 text-center text-[11px] uppercase tracking-widest font-black" href={`https://solscan.io/tx/${liquidityTxSig}`} target="_blank" rel="noreferrer">
             View Liquidity Tx
           </a>
         ) : null}
         {result?.song?.id ? (
-          <a className="btn-primary h-9 flex-1 px-3 text-center text-[9px] uppercase tracking-widest font-black" href={`/song/${result.song.id}?liquidity=1#liquidity`}>
+          <a className="btn-primary h-9 flex-1 px-3 text-center text-[11px] uppercase tracking-widest font-black" href={`/song/${result.song.id}?liquidity=1#liquidity`}>
             Add More Liquidity
           </a>
         ) : null}
@@ -1671,11 +1713,11 @@ function LaunchSuccessChecklist({
 
   return (
     <div className="rounded-xl border border-edge bg-panel p-3 text-left">
-      <div className="text-[10px] uppercase tracking-widest font-black text-ink">Launch success checklist</div>
+      <div className="text-[11px] uppercase tracking-widest font-black text-ink">Launch success checklist</div>
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         {items.map(([label, ok, hint]) => (
           <div key={label} className="rounded-xl border border-edge bg-panel2 p-2.5">
-            <div className={`text-[9px] uppercase tracking-widest font-black ${ok ? "text-neon" : "text-amber"}`}>
+            <div className={`text-[11px] uppercase tracking-widest font-black ${ok ? "text-neon" : "text-amber"}`}>
               {ok ? "Ready" : "Next"} · {label}
             </div>
             <p className="mt-1 text-[11px] leading-relaxed text-mute">{hint}</p>

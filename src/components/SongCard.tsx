@@ -80,12 +80,12 @@ export function SongCard({ s, compact = false }: { s: SongRow; compact?: boolean
           </div>
           <div className="min-w-0 flex-1">
             <div className="font-bold text-sm truncate tracking-tight text-ink">{s.title}</div>
-            <div className="text-[10px] text-mute truncate uppercase tracking-widest mt-0.5">{s.artistName}</div>
+            <div className="text-[11px] text-mute truncate uppercase tracking-widest mt-0.5">{s.artistName}</div>
           </div>
         </div>
         <div className="flex items-center justify-between pt-2 border-t border-edge">
           <span className="num text-xs font-bold text-ink">{fmtSol(s.price, 4)}</span>
-          <span className={`num text-[10px] font-black tracking-wider ${change >= 0 ? "text-neon" : "text-red"}`}>{fmtPct(change)}</span>
+          <span className={`num text-[11px] font-black tracking-wider ${change >= 0 ? "text-neon" : "text-red"}`}>{fmtPct(change)}</span>
         </div>
       </motion.div>
     );
@@ -111,9 +111,9 @@ export function SongCard({ s, compact = false }: { s: SongRow; compact?: boolean
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="font-bold text-base text-ink tracking-tight truncate">{s.title}</span>
-              <span className="text-[8px] font-mono font-black uppercase tracking-widest text-mute bg-white/[0.055] px-1.5 py-0.5 rounded border border-edge">{s.symbol}</span>
+              <span className="text-[11px] font-mono font-black uppercase tracking-widest text-mute bg-white/[0.055] px-1.5 py-0.5 rounded border border-edge">{s.symbol}</span>
             </div>
-            <div className="text-[10px] text-mute truncate uppercase tracking-widest font-bold mt-0.5">{s.artistName}</div>
+            <div className="text-[11px] text-mute truncate uppercase tracking-widest font-bold mt-0.5">{s.artistName}</div>
           </div>
         </div>
 
@@ -121,11 +121,11 @@ export function SongCard({ s, compact = false }: { s: SongRow; compact?: boolean
           {/* Verification badge */}
           {s.splitsLocked ? (
             <Tooltip content="Verified: Distributor-confirmed royalty splits locked on-chain.">
-              <span className="chip-neon text-[8px] py-0.5">✓ Verified</span>
+              <span className="chip-neon text-[11px] py-0.5">✓ Verified</span>
             </Tooltip>
           ) : (
             <Tooltip content="Pending: Artist has not yet locked distributor splits.">
-              <span className="chip text-amber border-amber/20 bg-amber/5 text-[8px] py-0.5">Pending</span>
+              <span className="chip text-amber border-amber/20 bg-amber/5 text-[11px] py-0.5">Pending</span>
             </Tooltip>
           )}
           {/* Watchlist */}
@@ -143,17 +143,17 @@ export function SongCard({ s, compact = false }: { s: SongRow; compact?: boolean
       {/* Price stats */}
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col">
-          <span className="text-[9px] text-mute uppercase tracking-widest font-black mb-1">Price</span>
-          <span className="num text-lg font-black text-ink">{fmtSol(s.price, 5)} <span className="text-[9px] text-mute">SOL</span></span>
+          <span className="text-[11px] text-mute uppercase tracking-widest font-black mb-1">Price</span>
+          <span className="num text-lg font-black text-ink">{fmtSol(s.price, 5)} <span className="text-[11px] text-mute">SOL</span></span>
         </div>
         <div className="flex flex-col">
-          <span className="text-[9px] text-mute uppercase tracking-widest font-black mb-1">24h</span>
+          <span className="text-[11px] text-mute uppercase tracking-widest font-black mb-1">24h</span>
           <span className={`num text-lg font-black ${change >= 0 ? "text-neon" : "text-red"}`}>{change >= 0 ? "+" : ""}{fmtPct(change)}</span>
         </div>
       </div>
 
       {/* Secondary stats */}
-      <div className="flex items-center gap-4 text-[9px] text-mute uppercase tracking-widest font-bold">
+      <div className="flex items-center gap-4 text-[11px] text-mute uppercase tracking-widest font-bold">
         <span>Streams <span className="text-ink ml-1">{fmtNum(s.streams)}</span></span>
         <span className="w-0.5 h-0.5 rounded-full bg-white/[0.06]" />
         <span>Vol <span className="text-ink ml-1">{fmtSol(s.volume24h, 2)}</span></span>
@@ -169,7 +169,7 @@ export function SongCard({ s, compact = false }: { s: SongRow; compact?: boolean
             className="h-full bg-gradient-to-r from-neon/30 to-neon/60 rounded-full"
           />
         </div>
-        <span className="text-[9px] text-mute uppercase tracking-widest font-black whitespace-nowrap">
+        <span className="text-[11px] text-mute uppercase tracking-widest font-black whitespace-nowrap">
           {(s.circulating / s.supply * 100).toFixed(0)}% float
         </span>
       </div>
@@ -179,7 +179,7 @@ export function SongCard({ s, compact = false }: { s: SongRow; compact?: boolean
         <>
           <button
             onClick={togglePlay}
-            className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border text-[9px] font-black uppercase tracking-widest transition-all ${
+            className={`flex items-center justify-center gap-2 w-full py-2.5 rounded-xl border text-[11px] font-black uppercase tracking-widest transition-all ${
               isPlayingThis
                 ? "bg-neon/8 border-neon/20 text-neon"
                 : "bg-white/[0.055] border-edge text-mute hover:text-ink hover:bg-white/[0.09]"
@@ -218,27 +218,27 @@ export function SongListRow({ s }: { s: SongRow }) {
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           <span className="font-bold text-sm tracking-tight group-hover:text-neon transition">{s.title}</span>
-          <span className="text-[9px] text-mute uppercase tracking-widest font-black">{s.symbol}</span>
+          <span className="text-[11px] text-mute uppercase tracking-widest font-black">{s.symbol}</span>
         </div>
-        <div className="text-[10px] text-mute truncate uppercase tracking-widest mt-0.5">{s.artistName}</div>
+        <div className="text-[11px] text-mute truncate uppercase tracking-widest mt-0.5">{s.artistName}</div>
       </div>
       <div className="w-28 text-right">
         <div className="num text-xs font-bold text-ink tracking-wider">{fmtSol(s.marketCap, 2)} SOL</div>
-        <div className="text-[9px] text-mute uppercase tracking-widest mt-0.5">Valuation</div>
+        <div className="text-[11px] text-mute uppercase tracking-widest mt-0.5">Valuation</div>
       </div>
       <div className="w-28 text-right">
         <div className="num text-xs font-bold text-ink tracking-wider">{fmtSol(s.price, 6)} SOL</div>
-        <div className={`num text-[10px] font-black uppercase tracking-widest mt-0.5 ${change >= 0 ? "text-neon" : "text-red"}`}>
+        <div className={`num text-[11px] font-black uppercase tracking-widest mt-0.5 ${change >= 0 ? "text-neon" : "text-red"}`}>
           {change >= 0 ? "▲" : "▼"} {fmtPct(change)}
         </div>
       </div>
       <div className="w-24 flex flex-col items-center gap-1">
         {s.splitsLocked ? (
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-neon/5 border border-neon/10 text-[8px] font-black uppercase tracking-widest text-neon">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-neon/5 border border-neon/10 text-[11px] font-black uppercase tracking-widest text-neon">
             <span className="w-1.5 h-1.5 rounded-full bg-neon shadow-[0_0_4px_rgba(0,229,114,0.5)]" /> ON-CHAIN
           </div>
         ) : (
-          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber/5 border border-amber/10 text-[8px] font-black uppercase tracking-widest text-amber">
+          <div className="flex items-center gap-1 px-2 py-1 rounded-lg bg-amber/5 border border-amber/10 text-[11px] font-black uppercase tracking-widest text-amber">
             <span className="w-1.5 h-1.5 rounded-full bg-amber shadow-[0_0_4px_rgba(245,158,11,0.5)]" /> PENDING
           </div>
         )}

@@ -3,7 +3,7 @@ import { prisma } from "@/lib/db";
 import { refreshSong } from "@/lib/refresh";
 import { getTrack } from "@/lib/audius";
 import { cacheGet, cacheSet } from "@/lib/redis";
-import { getAssetUsdRates, valueLocalSongCoin } from "@/lib/serverAssetPrices";
+import { buildSongAssetState, getSongAssetRates, songAssetReadFields } from "@/lib/assetState";
 
 export const dynamic = "force-dynamic";
 
@@ -16,7 +16,7 @@ export async function GET(_req: NextRequest, ctx: { params: { id: string } }) {
       artistWallet: { select: { wallet: true, handle: true, audiusHandle: true, audiusName: true, audiusVerified: true } },
       pricePoints: { orderBy: { ts: "desc" }, take: 240 },
       trades: { orderBy: { createdAt: "desc" }, take: 30, include: { user: { select: { wallet: true } } } },
-      events: { orderBy: { createdAt: "desc" }, take: 20 },
+      events: { orderBy: { createdAt: "desc" }, take: 100 },
     },
   });
   if (!song) return NextResponse.json({ error: "not found" }, { status: 404 });
@@ -27,24 +27,13 @@ export async function GET(_req: NextRequest, ctx: { params: { id: string } }) {
     duration = Number(track?.duration || 0);
     if (duration > 0) await cacheSet(durationKey, duration, 60 * 60 * 24).catch(() => {});
   }
-  const rates = await getAssetUsdRates(["SOL", "AUDIO", "USDC", song.liquidityPairAsset]);
-  const valuation = valueLocalSongCoin(song, rates);
+  const rates = await getSongAssetRates(song);
+  const state = buildSongAssetState(song, rates);
   return NextResponse.json({
     song: {
       ...song,
       duration: duration || null,
-      price: valuation.priceSol || song.price,
-      currentPriceSol: valuation.priceSol || song.currentPriceSol,
-      currentPriceUsd: valuation.priceUsd || song.currentPriceUsd,
-      marketCap: valuation.marketValueSol || 0,
-      marketCapUsd: valuation.marketValueUsd || 0,
-      launchLiquidityUsd: valuation.liquidityUsd || song.launchLiquidityUsd,
-      circulating: valuation.circulatingSupply || song.circulating,
-      tradableSupply: valuation.tradableSupply,
-      fullyDilutedValueUsd: valuation.fullyDilutedValueUsd,
-      marketValueBasis: valuation.basis,
-      marketValueNote: valuation.note,
-      isMarketValueReliable: valuation.isMarketValueReliable,
+      ...songAssetReadFields(state, song),
     },
   });
 }

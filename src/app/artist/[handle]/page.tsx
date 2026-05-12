@@ -9,6 +9,7 @@ import { SafeImage } from "@/components/SafeImage";
 import { CoinPreviewModal } from "@/components/CoinPreviewModal";
 import { CoinTradeModal } from "@/components/CoinTradeModal";
 import { ArtistIntel } from "@/components/ArtistIntel";
+import { BadgeRail, HypeMeterCard, MilestoneGrid, SongIPOPanel, UndervaluedSignalsPanel } from "@/components/GamificationLayer";
 import { fmtNum, fmtPct } from "@/lib/pricing";
 import type { AudiusCoin } from "@/lib/audiusCoins";
 import { usePlayer, useSession, type PlayerTrack } from "@/lib/store";
@@ -69,6 +70,22 @@ export default function ArtistProfilePage() {
   const verified = Boolean(user?.is_verified || artistCoins.some((c: any) => c.artist_handle || c.audiusVerified));
   const pendingLiquidity = artistCoins.filter((c: any) => Number(c.liquidity ?? c.reserveSol ?? c.liquidityPairAmount ?? 0) <= 0).length;
   const artistName = user?.name || user?.handle || decoded;
+  const gamifiedAssets = useMemo(() => {
+    if (artistCoins.length) return artistCoins as any[];
+    return topTracks.slice(0, 4).map((track) => ({
+      id: String(track.id),
+      mint: String(track.id),
+      ticker: String(track.title || "SONG").replace(/[^a-z0-9]/gi, "").slice(0, 8).toUpperCase() || "SONG",
+      title: track.title,
+      name: track.title,
+      artistName,
+      artist_name: artistName,
+      price: 0.00001,
+      v24hUSD: Number(track.play_count || 0) / 100,
+      holder: Math.max(1, Math.round(Number(track.favorite_count || 0) / 5)),
+      priceChange24hPercent: ((Number(track.repost_count || 0) % 18) - 4),
+    }));
+  }, [artistCoins, topTracks, artistName]);
   const isSignedInArtist = Boolean(
     (audius?.userId && user?.id && String(audius.userId) === String(user.id)) ||
     (audius?.handle && user?.handle && audius.handle.toLowerCase() === String(user.handle).toLowerCase())
@@ -154,7 +171,7 @@ export default function ArtistProfilePage() {
             <SafeImage src={profileImage(user, tracks)} alt={user.name || user.handle} fill sizes="112px" fallback={user.name || user.handle} className="object-cover" />
           </div>
           <div className="relative min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-[0.28em] text-mute font-black mb-2">Audius Artist</div>
+            <div className="text-[11px] uppercase tracking-[0.28em] text-mute font-black mb-2">Audius Artist</div>
             <h1 className={`${nameClass} font-black tracking-tight text-white leading-[0.95] break-words`}>{artistName}</h1>
             <div className="mt-2 flex flex-wrap items-center gap-3 text-sm text-mute">
               <span>@{user.handle}</span>
@@ -179,6 +196,19 @@ export default function ArtistProfilePage() {
         <Insight icon={<Radio size={16} />} label="Social Traction" value={`${fmtNum(totalPlays)} Plays`} tone="violet" />
       </section>
 
+      <section className="grid gap-4 xl:grid-cols-[0.85fr_1.15fr]">
+        <HypeMeterCard asset={gamifiedAssets[0]} />
+        <div className="space-y-4">
+          <SongIPOPanel assets={gamifiedAssets} limit={2} />
+          <UndervaluedSignalsPanel assets={gamifiedAssets} limit={2} />
+        </div>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-2">
+        <MilestoneGrid asset={gamifiedAssets[0]} compact />
+        <BadgeRail asset={gamifiedAssets[0]} limit={3} />
+      </section>
+
       <ArtistIntel
         artistName={artistName}
         handle={user.handle || decoded}
@@ -189,7 +219,7 @@ export default function ArtistProfilePage() {
 
       <section className="grid lg:grid-cols-[360px_1fr] gap-4">
         <aside className="panel-elevated p-5 h-fit">
-          <div className="text-[10px] uppercase tracking-[0.24em] text-mute font-black mb-4">Token Status</div>
+          <div className="text-[11px] uppercase tracking-[0.24em] text-mute font-black mb-4">Token Status</div>
           {artistCoins.length ? (
             <div className="space-y-3">
               {artistCoins.map((coin) => (
@@ -199,7 +229,7 @@ export default function ArtistProfilePage() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-black text-white truncate">${coin.ticker}</span>
-                    <span className="block text-[10px] uppercase tracking-widest text-mute truncate">Artist Token Live</span>
+                    <span className="block text-[11px] uppercase tracking-widest text-mute truncate">Artist Token Live</span>
                   </span>
                   <span className={`num text-xs font-black ${Number(coin.priceChange24hPercent ?? 0) >= 0 ? "text-neon" : "text-red"}`}>
                     {fmtPct(coin.priceChange24hPercent ?? 0)}
@@ -222,8 +252,8 @@ export default function ArtistProfilePage() {
 
         <section className="space-y-3">
           <div className="flex items-center justify-between px-1">
-            <div className="text-[10px] uppercase tracking-[0.24em] text-mute font-black">Songs and Activity</div>
-            <span className="text-[10px] uppercase tracking-widest text-mute font-bold">{tracks.length} tracks found</span>
+            <div className="text-[11px] uppercase tracking-[0.24em] text-mute font-black">Songs and Activity</div>
+            <span className="text-[11px] uppercase tracking-widest text-mute font-bold">{tracks.length} tracks found</span>
           </div>
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
             {topTracks.map((track) => {
@@ -244,29 +274,29 @@ export default function ArtistProfilePage() {
                   <div className="flex flex-wrap items-start justify-between gap-2">
                     <span className="min-w-0">
                       <span className="block text-sm font-black text-white break-words">{track.title}</span>
-                      <span className="block text-[10px] uppercase tracking-widest text-mute mt-1 truncate">{track.genre || track.mood || "Audius Track"}</span>
+                      <span className="block text-[11px] uppercase tracking-widest text-mute mt-1 truncate">{track.genre || track.mood || "Audius Track"}</span>
                     </span>
-                    <span className={`shrink-0 rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-widest ${
+                    <span className={`shrink-0 rounded-full border px-2 py-1 text-[11px] font-black uppercase tracking-widest ${
                       linkedCoin ? "border-neon/30 bg-neon/10 text-neon" : "border-edge bg-white/[0.04] text-mute"
                     }`}>
                       {linkedCoin ? "Coin On" : "No Coin"}
                     </span>
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] font-mono text-mute">
+                  <div className="mt-3 flex flex-wrap items-center gap-3 text-[11px] font-mono text-mute">
                     <span>{fmtNum(track.play_count ?? 0)} plays</span>
                     <span>{fmtNum(track.favorite_count ?? 0)} likes</span>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {linkedCoin ? (
-                      <Link href={`/coin/${linkedCoin.mint}`} className="btn h-8 px-3 text-[9px] uppercase tracking-widest font-black">
+                      <Link href={`/coin/${linkedCoin.mint}`} className="btn h-8 px-3 text-[11px] uppercase tracking-widest font-black">
                         Open Coin
                       </Link>
                     ) : isSignedInArtist ? (
-                      <Link href={createSongCoinHref(track)} className="btn-primary h-8 px-3 text-[9px] uppercase tracking-widest font-black">
+                      <Link href={createSongCoinHref(track)} className="btn-primary h-8 px-3 text-[11px] uppercase tracking-widest font-black">
                         Create Coin
                       </Link>
                     ) : (
-                      <span className="inline-flex h-8 items-center rounded-xl border border-edge bg-panel2 px-3 text-[9px] uppercase tracking-widest font-black text-mute">
+                      <span className="inline-flex h-8 items-center rounded-xl border border-edge bg-panel2 px-3 text-[11px] uppercase tracking-widest font-black text-mute">
                         No Coin Yet
                       </span>
                     )}
@@ -299,7 +329,7 @@ function Insight({ icon, label, value, tone }: { icon: React.ReactNode; label: s
     <div className="panel p-4 flex items-center gap-3">
       <div className={`w-10 h-10 rounded-xl border grid place-items-center ${color}`}>{icon}</div>
       <div className="min-w-0">
-        <div className="text-[9px] uppercase tracking-widest font-black text-mute">{label}</div>
+        <div className="text-[11px] uppercase tracking-widest font-black text-mute">{label}</div>
         <div className="mt-1 text-sm font-black text-ink truncate">{value}</div>
       </div>
     </div>
@@ -309,7 +339,7 @@ function Insight({ icon, label, value, tone }: { icon: React.ReactNode; label: s
 function Metric({ icon, label, value }: { icon: React.ReactNode; label: string; value: string }) {
   return (
     <div className="rounded-xl border border-edge bg-panel px-4 py-3 min-w-[92px]">
-      <div className="flex items-center gap-2 text-mute">{icon}<span className="text-[9px] uppercase tracking-widest font-black">{label}</span></div>
+      <div className="flex items-center gap-2 text-mute">{icon}<span className="text-[11px] uppercase tracking-widest font-black">{label}</span></div>
       <div className="num text-lg font-black text-white mt-1">{value}</div>
     </div>
   );

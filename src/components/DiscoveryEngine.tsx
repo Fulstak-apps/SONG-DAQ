@@ -63,7 +63,7 @@ function Segmented<T extends string>({
             <button
               key={o.id}
               onClick={() => onChange(o.id)}
-            className={`relative z-10 flex-1 sm:flex-none min-w-[92px] sm:min-w-[116px] px-3 sm:px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all duration-300 shrink-0 whitespace-nowrap ${
+            className={`relative z-10 flex-1 sm:flex-none min-w-[92px] sm:min-w-[116px] px-3 sm:px-4 py-2 rounded-lg text-[11px] font-black uppercase tracking-widest transition-all duration-300 shrink-0 whitespace-nowrap ${
                 active ? "text-ink" : "text-mute hover:text-ink"
               }`}
             >
@@ -106,7 +106,7 @@ function Stat({ k, v, accent, sub, tooltip }: { k: string; v: string; accent?: "
       }`}>
         {v}
       </div>
-      {sub && <div className="text-[10px] text-mute uppercase tracking-widest mt-1.5 font-bold">{sub}</div>}
+      {sub && <div className="text-[11px] text-mute uppercase tracking-widest mt-1.5 font-bold">{sub}</div>}
     </motion.div>
   );
 }
@@ -139,7 +139,7 @@ function HeroPulseRow({ label, value, accent = "text-ink" }: { label: string; va
   return (
     <div className="rounded-2xl border border-edge bg-white/[0.045] px-4 py-3">
       <div className="flex items-center justify-between gap-4">
-        <span className="min-w-0 text-[10px] uppercase tracking-[0.2em] font-black text-mute truncate">{label}</span>
+        <span className="min-w-0 text-[11px] uppercase tracking-[0.2em] font-black text-mute truncate">{label}</span>
         <motion.span
           key={value}
           initial={{ opacity: 0.65, y: 4 }}
@@ -157,7 +157,7 @@ function HeroPulseLoadingRow({ label }: { label: string }) {
   return (
     <div className="rounded-2xl border border-edge bg-white/[0.045] px-4 py-3">
       <div className="flex items-center justify-between gap-4">
-        <span className="min-w-0 text-[10px] uppercase tracking-[0.2em] font-black text-mute truncate">{label}</span>
+        <span className="min-w-0 text-[11px] uppercase tracking-[0.2em] font-black text-mute truncate">{label}</span>
         <span className="h-5 w-20 rounded-lg skeleton" />
       </div>
     </div>
@@ -188,7 +188,7 @@ function MarketPrimer({ onConnect }: { onConnect: () => void }) {
   return (
     <section className="grid lg:grid-cols-[1fr_320px] gap-3">
       <div className="panel-elevated p-5 grain">
-        <div className="text-[10px] uppercase tracking-[0.28em] font-black text-mute mb-4">Before You Connect</div>
+        <div className="text-[11px] uppercase tracking-[0.28em] font-black text-mute mb-4">Before You Connect</div>
         <div className="grid md:grid-cols-3 gap-3">
           {cards.map((card) => (
             <div key={card.title} className="rounded-xl border border-edge bg-white/[0.055] p-4">
@@ -200,10 +200,10 @@ function MarketPrimer({ onConnect }: { onConnect: () => void }) {
         </div>
       </div>
       <button onClick={onConnect} className="panel-elevated p-5 text-left group hover:border-neon/25 transition grain">
-        <div className="text-[10px] uppercase tracking-[0.28em] font-black text-neon mb-3">Enter Market</div>
+        <div className="text-[11px] uppercase tracking-[0.28em] font-black text-neon mb-3">Enter Market</div>
         <div className="text-2xl font-black text-white tracking-tight">Connect to Trade</div>
         <p className="text-sm text-mute mt-2 leading-relaxed">Choose investor wallet or artist Audius login in one flow.</p>
-        <div className="mt-5 btn-primary w-full text-[10px] font-black tracking-widest">CONNECT</div>
+        <div className="mt-5 btn-primary w-full text-[11px] font-black tracking-widest">CONNECT</div>
       </button>
     </section>
   );
@@ -472,7 +472,7 @@ export default function DiscoveryEngine() {
         
         <div className="flex-1 min-w-0 relative z-10 space-y-5 text-center md:text-left">
           <div className="space-y-2">
-            <div className="text-[10px] uppercase tracking-[0.22em] sm:tracking-[0.3em] font-black text-mute mb-3">Live Music Economy</div>
+            <div className="text-[11px] uppercase tracking-[0.22em] sm:tracking-[0.3em] font-black text-mute mb-3">Live Music Economy</div>
             <div className="relative h-[92px] sm:h-[112px] md:h-[138px]">
               <AnimatePresence mode="wait">
                 <motion.h1
@@ -505,19 +505,19 @@ export default function DiscoveryEngine() {
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 shrink-0 relative z-10 w-full md:w-auto">
             {isArtist && (
-              <Link href="/artist" className="w-full sm:w-auto btn-primary px-8 py-3.5 text-[10px] font-black tracking-widest shadow-neon-glow">
+              <Link href="/artist" className="w-full sm:w-auto btn-primary px-8 py-3.5 text-[11px] font-black tracking-widest shadow-neon-glow">
                 LAUNCH COIN
               </Link>
             )}
             {!address && (
               <button
                 onClick={openLoginModal}
-                className="w-full sm:w-auto btn-primary px-8 py-3.5 text-[10px] font-black tracking-widest shadow-neon-glow"
+                className="w-full sm:w-auto btn-primary px-8 py-3.5 text-[11px] font-black tracking-widest shadow-neon-glow"
               >
                 CONNECT TO TRADE
               </button>
             )}
-            <Link href="/portfolio" className="w-full sm:w-auto btn-glass px-8 py-3.5 text-[10px] uppercase tracking-widest font-black text-center">
+            <Link href="/portfolio" className="w-full sm:w-auto btn-glass px-8 py-3.5 text-[11px] uppercase tracking-widest font-black text-center">
               YOUR REPUTATION & PORTFOLIO
             </Link>
           </div>
@@ -529,17 +529,17 @@ export default function DiscoveryEngine() {
             <div className="absolute -right-14 -top-14 h-32 w-32 rounded-full bg-neon/10 blur-3xl" />
             <div className="relative flex items-start justify-between gap-4">
               <div>
-                <div className="text-[10px] uppercase tracking-[0.24em] font-black text-mute">Live Market</div>
+                <div className="text-[11px] uppercase tracking-[0.24em] font-black text-mute">Live Market</div>
                 <div className="mt-1 text-xl font-black tracking-tight text-ink">Pulse</div>
               </div>
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-neon/25 bg-neon/10 px-2.5 py-1 text-[8px] uppercase tracking-widest font-black text-neon">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-neon/25 bg-neon/10 px-2.5 py-1 text-[11px] uppercase tracking-widest font-black text-neon">
                 <span className="h-1.5 w-1.5 rounded-full bg-neon animate-pulseDot" /> Live
               </span>
             </div>
             <div className="relative mt-5 grid gap-3">
               {!networkStatsLoaded ? (
                 <>
-                  <div className="rounded-2xl border border-edge bg-neon/8 px-4 py-3 text-[10px] uppercase tracking-[0.2em] font-black text-neon">
+                  <div className="rounded-2xl border border-edge bg-neon/8 px-4 py-3 text-[11px] uppercase tracking-[0.2em] font-black text-neon">
                     <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-neon animate-pulseDot" /> Loading market data…</span>
                   </div>
                   <HeroPulseLoadingRow label="Volume" />
@@ -554,7 +554,7 @@ export default function DiscoveryEngine() {
                 </>
               )}
             </div>
-            <div className="relative mt-4 flex items-center justify-between gap-3 text-[9px] uppercase tracking-[0.18em] font-black text-mute">
+            <div className="relative mt-4 flex items-center justify-between gap-3 text-[11px] uppercase tracking-[0.18em] font-black text-mute">
               <span>Audius synced</span>
               <span className="text-neon/80">Every 60s</span>
             </div>
@@ -571,7 +571,7 @@ export default function DiscoveryEngine() {
       <section className="panel-elevated p-4 grain">
         <div className="flex flex-col lg:flex-row gap-3 lg:items-center">
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-[0.24em] font-black text-mute mb-2">Audius Artist Lookup</div>
+            <div className="text-[11px] uppercase tracking-[0.24em] font-black text-mute mb-2">Audius Artist Lookup</div>
             <input
               value={artistQuery}
               onChange={(e) => setArtistQuery(e.target.value)}
@@ -597,9 +597,9 @@ export default function DiscoveryEngine() {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-bold text-ink truncate">{r.user?.name || r.user?.handle}</span>
-                    <span className="block text-[10px] uppercase tracking-widest text-mute truncate">@{r.user?.handle}</span>
+                    <span className="block text-[11px] uppercase tracking-widest text-mute truncate">@{r.user?.handle}</span>
                   </span>
-                  <span className={`text-[9px] uppercase tracking-widest font-black rounded-md px-2 py-1 border shrink-0 ${r.coin ? "text-neon bg-neon/10 border-neon/25" : "text-mute bg-white/[0.05] border-edge"}`}>
+                  <span className={`text-[11px] uppercase tracking-widest font-black rounded-md px-2 py-1 border shrink-0 ${r.coin ? "text-neon bg-neon/10 border-neon/25" : "text-mute bg-white/[0.05] border-edge"}`}>
                     {r.coin ? "Coin Live" : "No Coin"}
                   </span>
                 </>
@@ -664,7 +664,7 @@ export default function DiscoveryEngine() {
 
             <button
               onClick={() => setShowWatchlistOnly(v => !v)}
-              className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-[10px] font-bold uppercase tracking-widest transition-all ${
+              className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-widest transition-all ${
                 showWatchlistOnly
                   ? "bg-gold/10 border-gold/20 text-gold"
                   : "bg-white/[0.045] border-edge text-mute hover:text-ink hover:bg-white/[0.08]"
@@ -673,7 +673,7 @@ export default function DiscoveryEngine() {
               <Star size={10} fill={showWatchlistOnly ? "currentColor" : "none"} />
               <span className="hidden sm:inline">Watchlist</span>
               {watchlist.items.length > 0 && (
-                <span className="text-[9px] bg-white/[0.04] px-1.5 py-0.5 rounded-full">{watchlist.items.length}</span>
+                <span className="text-[11px] bg-white/[0.04] px-1.5 py-0.5 rounded-full">{watchlist.items.length}</span>
               )}
             </button>
           </div>
@@ -693,7 +693,7 @@ export default function DiscoveryEngine() {
               <button
                 key={id}
                 onClick={() => setMarketFilter(id as MarketFilter)}
-                className={`shrink-0 min-w-[72px] px-3 py-2 rounded-xl border text-[10px] font-black uppercase tracking-widest transition-all ${
+                className={`shrink-0 min-w-[72px] px-3 py-2 rounded-xl border text-[11px] font-black uppercase tracking-widest transition-all ${
                   marketFilter === id
                     ? "bg-neon/10 border-neon/25 text-neon"
                     : "bg-white/[0.045] border-edge text-mute hover:text-ink hover:bg-white/[0.08]"
@@ -714,7 +714,7 @@ export default function DiscoveryEngine() {
               <button
                 key={id}
                 onClick={() => setMarketSource(id as MarketSource)}
-                className={`shrink-0 rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest transition ${
+                className={`shrink-0 rounded-xl border px-3 py-2 text-[11px] font-black uppercase tracking-widest transition ${
                   marketSource === id
                     ? "border-violet/30 bg-violet/12 text-violet"
                     : "border-edge bg-white/[0.045] text-mute hover:bg-white/[0.08] hover:text-ink"
@@ -737,7 +737,7 @@ export default function DiscoveryEngine() {
           <div className="w-full min-w-0 sm:w-auto xl:ml-auto">
             <div className="max-w-full min-w-0 overflow-hidden px-3 py-2 rounded-xl bg-white/[0.055] border border-edge flex items-center justify-center gap-2 whitespace-nowrap">
               <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-neon shadow-[0_0_6px_rgba(0,229,114,0.5)] animate-pulseDot" />
-              <span className="min-w-0 truncate text-[10px] text-mute uppercase tracking-widest font-black">
+              <span className="min-w-0 truncate text-[11px] text-mute uppercase tracking-widest font-black">
                 {loading ? "SYNCING..." : market === "coins" ? `${filteredCoins.length} ASSETS` : `${filteredSongs.length} ASSETS`}
               </span>
             </div>
@@ -803,7 +803,7 @@ export default function DiscoveryEngine() {
               className="grid xl:grid-cols-[minmax(0,1fr)_420px] 2xl:grid-cols-[minmax(0,1fr)_480px] gap-3 2xl:gap-4"
             >
               <div className="min-w-0 flex flex-col gap-1">
-                <div className="hidden md:flex px-6 py-2 items-center gap-4 text-[9px] font-black uppercase tracking-[0.2em] text-mute border-b border-edge">
+                <div className="hidden md:flex px-6 py-2 items-center gap-4 text-[11px] font-black uppercase tracking-[0.2em] text-mute border-b border-edge">
                   <span className="w-6" />
                   <span className="w-9">Logo</span>
                   <span className="flex-1">Asset Info</span>
@@ -873,7 +873,7 @@ export default function DiscoveryEngine() {
             animate={{ opacity: 1 }}
             className="flex flex-col gap-1"
           >
-            <div className="hidden md:flex px-6 py-2 items-center gap-4 text-[9px] font-black uppercase tracking-[0.2em] text-mute border-b border-edge">
+            <div className="hidden md:flex px-6 py-2 items-center gap-4 text-[11px] font-black uppercase tracking-[0.2em] text-mute border-b border-edge">
               <span className="w-6" />
               <span className="w-9">Cover</span>
               <span className="flex-1">Asset / Artist</span>

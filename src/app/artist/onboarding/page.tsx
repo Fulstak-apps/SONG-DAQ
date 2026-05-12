@@ -13,7 +13,7 @@ export default function ArtistOnboardingPage() {
   return (
     <main className="space-y-6">
       <section className="panel-elevated p-6 md:p-10 space-y-4">
-        <div className="text-[10px] uppercase tracking-[0.3em] font-black text-neon">Artist onboarding</div>
+        <div className="text-[11px] uppercase tracking-[0.3em] font-black text-neon">Artist onboarding</div>
         <h1 className="text-4xl md:text-6xl font-black text-ink">Launch a song coin on song-daq</h1>
         <p className="max-w-3xl text-mute leading-relaxed">
           This walkthrough separates the two money systems: launch liquidity gets the coin live, and royalty activity can support the coin after launch once distributor splits are verified.
@@ -23,7 +23,7 @@ export default function ArtistOnboardingPage() {
         {steps.map(([title, body, icon], i) => (
           <article key={String(title)} className="panel p-5 space-y-3">
             <div className="w-10 h-10 rounded-2xl border border-edge bg-panel2 grid place-items-center text-neon">{icon}</div>
-            <div className="text-[10px] uppercase tracking-widest font-black text-mute">Step {i + 1}</div>
+            <div className="text-[11px] uppercase tracking-widest font-black text-mute">Step {i + 1}</div>
             <h2 className="text-xl font-black text-ink">{title}</h2>
             <p className="text-sm text-mute leading-relaxed">{body}</p>
           </article>

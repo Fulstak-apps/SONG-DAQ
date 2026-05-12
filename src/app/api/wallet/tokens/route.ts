@@ -3,6 +3,7 @@ import { fetchJson } from "@/lib/fetchTimeout";
 import { prisma } from "@/lib/db";
 import { hasProductionDatabaseUrl } from "@/lib/appMode";
 import { getAssetUsdRates, valueLocalSongCoin } from "@/lib/serverAssetPrices";
+import { calculateSupplyDistribution, getBurnedSupplyFromEvents } from "@/lib/supplyDistribution";
 
 export const dynamic = "force-dynamic";
 
@@ -260,6 +261,11 @@ export async function GET(req: NextRequest) {
             wallet: true,
           },
         },
+        events: {
+          where: { kind: "BURN" },
+          select: { kind: true, payload: true },
+          take: 100,
+        },
       },
     });
     for (const song of localSongs) {
@@ -278,6 +284,14 @@ export async function GET(req: NextRequest) {
     const jupiterPrice = priceMap.get(t.mint);
     const meta = metaMap.get(t.mint);
     const songValuation = song ? valueLocalSongCoin(song, localRates) : null;
+    const burnedSupply = song ? getBurnedSupplyFromEvents((song as any).events) : 0;
+    const supplyDistribution = song ? calculateSupplyDistribution({
+      supply: songValuation?.totalSupply || song.supply,
+      circulating: songValuation?.circulatingSupply || song.circulating,
+      liquidityTokenAmount: songValuation?.tradableSupply || song.liquidityTokenAmount,
+      artistAllocationBps: song.artistAllocationBps,
+      burnedSupply,
+    }) : null;
     const songPrice = songValuation?.isMarketValueReliable ? Number(songValuation.priceUsd || 0) : 0;
     const price = Number(songPrice || coin?.price || jupiterPrice?.usdPrice || jupiterPrice?.price || 0);
     const valueUsd = price ? price * t.amount : null;
@@ -308,6 +322,8 @@ export async function GET(req: NextRequest) {
         : songValuation && !songValuation.isMarketValueReliable
           ? songValuation.note
           : null,
+      burnedSupply,
+      supplyDistribution,
       isAudio,
       isArtistCoin: !!coin || !!song,
       priceChange24h: jupiterPrice?.priceChange24h ?? null,

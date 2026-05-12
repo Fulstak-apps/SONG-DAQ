@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
 import { useSession } from "@/lib/store";
 import { safeJson } from "@/lib/safeJson";
-import { formatCryptoWithFiat, useLiveFiatPrices } from "@/lib/fiat";
+import { formatCryptoWithFiat, formatFiat, useLiveFiatPrices } from "@/lib/fiat";
 import {
   AlertTriangle,
   ArrowUpRight,
@@ -35,10 +35,56 @@ type Dashboard = {
   royaltyRequests: any[];
   royaltyPayments: any[];
   royaltyContributions: any[];
+  assetSyncHealth: AssetSyncRow[];
   transactions: any[];
   errorLogs: any[];
   adminLogs: any[];
   system: Record<string, any>;
+};
+
+type AssetSyncRow = {
+  id: string;
+  mintAddress?: string | null;
+  symbol: string;
+  title: string;
+  artistName?: string | null;
+  mode?: string | null;
+  status?: string | null;
+  syncStatus: "healthy" | "watch" | "needs_attention" | string;
+  price: { status: string; sol: number; usd: number; source?: string; lastPriceAt?: string | null };
+  pool: {
+    status: string;
+    pairAsset: string;
+    pairAmount: number;
+    tokenAmount: number;
+    liquidityUsd: number;
+    locked: boolean;
+    lockDays?: number;
+    health?: number;
+    lastLiquidityAt?: string | null;
+  };
+  supply: {
+    total: number;
+    circulating: number;
+    publicLiquidity: number;
+    artistAllocation: number;
+    reserve: number;
+    publicLiquidityBps: number;
+    artistAllocationBps: number;
+    reserveBps: number;
+  };
+  burn: { burnedSupply: number; burnedBps: number; lastBurnAt?: string | null };
+  royalty: {
+    status?: string | null;
+    backed?: boolean;
+    receivedUsd: number;
+    poolAddedUsd: number;
+    lastPaymentAt?: string | null;
+    lastPoolAt?: string | null;
+    lastEventAt?: string | null;
+  };
+  counts?: { trades?: number; events?: number; reports?: number; watchers?: number };
+  lastRefreshAt?: string | null;
 };
 
 type ActionPayload = {
@@ -128,17 +174,17 @@ export function AdminConsole() {
         <div className="w-14 h-14 rounded-2xl bg-panel2 border border-edge grid place-items-center mx-auto text-mute">
           <Lock size={22} />
         </div>
-        <div className="text-[10px] uppercase tracking-[0.28em] font-black text-mute">Restricted</div>
+        <div className="text-[11px] uppercase tracking-[0.28em] font-black text-mute">Restricted</div>
         <h1 className="text-2xl font-black text-ink">Page Not Available</h1>
         <p className="text-sm text-mute max-w-lg mx-auto">
           This area is only available to configured admin wallets or password-authenticated admin sessions.
           Log in at <span className="font-mono text-ink">/admin/login</span> or connect an admin wallet.
         </p>
         <div className="flex flex-wrap justify-center gap-2 pt-2">
-          <Link href="/market" className="btn h-10 px-4 text-[10px] uppercase tracking-widest font-black">
+          <Link href="/market" className="btn h-10 px-4 text-[11px] uppercase tracking-widest font-black">
             Back to Market
           </Link>
-          <button onClick={refresh} className="btn h-10 px-4 text-[10px] uppercase tracking-widest font-black">
+          <button onClick={refresh} className="btn h-10 px-4 text-[11px] uppercase tracking-widest font-black">
             <RefreshCcw size={12} /> Check Access
           </button>
         </div>
@@ -151,23 +197,23 @@ export function AdminConsole() {
       <header className="panel p-6 md:p-7 flex flex-col gap-5">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="space-y-3">
-            <div className="text-[10px] uppercase tracking-[0.28em] font-black text-red">Admin Backend</div>
+            <div className="text-[11px] uppercase tracking-[0.28em] font-black text-red">Admin Backend</div>
             <h1 className="text-3xl md:text-4xl font-black text-ink">Moderation, Launch Control, and Split Ops</h1>
             <p className="text-sm text-mute max-w-3xl leading-relaxed">
               Use this console to review abuse, resolve launch issues, lock or verify splits, and keep the market healthy without leaving the app.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={refresh} className="btn h-10 px-4 text-[10px] uppercase tracking-widest font-black">
+            <button onClick={refresh} className="btn h-10 px-4 text-[11px] uppercase tracking-widest font-black">
               <RefreshCcw size={12} /> Refresh
             </button>
-            <Link href="/admin/reports" className="btn h-10 px-4 text-[10px] uppercase tracking-widest font-black">
+            <Link href="/admin/reports" className="btn h-10 px-4 text-[11px] uppercase tracking-widest font-black">
               Legacy Queue <ArrowUpRight size={12} />
             </Link>
-            <Link href="/admin/settings" className="btn h-10 px-4 text-[10px] uppercase tracking-widest font-black">
+            <Link href="/admin/settings" className="btn h-10 px-4 text-[11px] uppercase tracking-widest font-black">
               Settings <ArrowUpRight size={12} />
             </Link>
-            <button onClick={logout} className="btn h-10 px-4 text-[10px] uppercase tracking-widest font-black text-red border-red/20">
+            <button onClick={logout} className="btn h-10 px-4 text-[11px] uppercase tracking-widest font-black text-red border-red/20">
               Logout
             </button>
           </div>
@@ -193,6 +239,8 @@ export function AdminConsole() {
       {loading && <div className="panel p-8 text-center text-mute uppercase tracking-widest font-bold text-xs">Loading admin data…</div>}
 
       {!loading && data && (
+        <>
+        <AssetSyncHealthPanel assets={data.assetSyncHealth ?? []} currency={currency} />
         <div className="grid gap-5 xl:grid-cols-[1.2fr_0.8fr]">
           <section className="space-y-5">
             <Panel title="Reports Queue" icon={<ShieldAlert size={16} />} meta={`${openReports} open · ${stats.reviewedReports ?? 0} reviewed`}>
@@ -202,7 +250,7 @@ export function AdminConsole() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div>
                         <div className="text-sm font-black text-ink">{r.reason}</div>
-                        <div className="text-[10px] uppercase tracking-widest font-bold text-mute mt-1">
+                        <div className="text-[11px] uppercase tracking-widest font-bold text-mute mt-1">
                           {r.song?.symbol || r.mint || "No asset"} · {r.reporter?.wallet ? short(r.reporter.wallet) : "Anonymous"}
                         </div>
                       </div>
@@ -239,7 +287,7 @@ export function AdminConsole() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-sm font-black text-ink truncate">{song.title}</div>
-                        <div className="text-[10px] uppercase tracking-widest font-bold text-mute mt-1 truncate">
+                        <div className="text-[11px] uppercase tracking-widest font-bold text-mute mt-1 truncate">
                           ${song.symbol} · {song.artistName} · {short(song.artistWallet?.wallet || "")}
                         </div>
                       </div>
@@ -285,9 +333,9 @@ export function AdminConsole() {
                   <article key={item.id} className="rounded-2xl border border-edge bg-panel2 p-4 flex items-center justify-between gap-3">
                     <div className="min-w-0">
                       <div className="text-sm font-black text-ink truncate">{item.label}</div>
-                      <div className="text-[10px] uppercase tracking-widest font-bold text-mute mt-1 truncate">{item.meta}</div>
+                      <div className="text-[11px] uppercase tracking-widest font-bold text-mute mt-1 truncate">{item.meta}</div>
                     </div>
-                    <Link href={item.href} className="btn h-9 px-3 text-[10px] uppercase tracking-widest font-black shrink-0">
+                    <Link href={item.href} className="btn h-9 px-3 text-[11px] uppercase tracking-widest font-black shrink-0">
                       Open
                     </Link>
                   </article>
@@ -298,7 +346,7 @@ export function AdminConsole() {
             <Panel title="Royalty Requests" icon={<Lock size={16} />} meta={`${data.royaltyRequests?.length ?? 0} recent requests`}>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[860px] text-left text-xs">
-                  <thead className="text-[10px] uppercase tracking-widest text-mute">
+                  <thead className="text-[11px] uppercase tracking-widest text-mute">
                     <tr>
                       <th className="py-2 pr-3">Artist</th>
                       <th className="py-2 pr-3">Song</th>
@@ -334,7 +382,7 @@ export function AdminConsole() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-sm font-black text-ink truncate">{p.songTitle}</div>
-                        <div className="mt-1 text-[10px] uppercase tracking-widest font-bold text-mute">
+                        <div className="mt-1 text-[11px] uppercase tracking-widest font-bold text-mute">
                           {p.monthCovered || "Unassigned month"} · {p.distributorSource || "Distributor/source pending"}
                         </div>
                       </div>
@@ -344,7 +392,7 @@ export function AdminConsole() {
                       </div>
                     </div>
                     {p.transactionHash && (
-                      <a href={`https://solscan.io/tx/${p.transactionHash}`} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-[10px] uppercase tracking-widest font-black text-violet hover:text-neon">
+                      <a href={`https://solscan.io/tx/${p.transactionHash}`} target="_blank" rel="noreferrer" className="mt-3 inline-flex text-[11px] uppercase tracking-widest font-black text-violet hover:text-neon">
                         View transaction <ArrowUpRight size={12} />
                       </a>
                     )}
@@ -371,7 +419,7 @@ export function AdminConsole() {
               </div>
               {system.databaseWarning && (
                 <div className="mt-4 rounded-2xl border border-amber/25 bg-amber/10 p-4 text-xs leading-relaxed text-ink/80">
-                  <div className="mb-1 text-[10px] font-black uppercase tracking-[0.22em] text-amber">Database Setup</div>
+                  <div className="mb-1 text-[11px] font-black uppercase tracking-[0.22em] text-amber">Database Setup</div>
                   {system.databaseWarning}
                   {system.databaseRecommendation ? ` ${system.databaseRecommendation}` : ""}
                 </div>
@@ -385,11 +433,11 @@ export function AdminConsole() {
                     <div className="flex items-center justify-between gap-2">
                       <div className="min-w-0">
                         <div className="text-sm font-black text-ink truncate">{song.title}</div>
-                        <div className="text-[10px] uppercase tracking-widest font-bold text-mute mt-1 truncate">${song.symbol}</div>
+                        <div className="text-[11px] uppercase tracking-widest font-bold text-mute mt-1 truncate">${song.symbol}</div>
                       </div>
                       <StatusPill value={song.riskLevel || "UNVERIFIED"} />
                     </div>
-                    <div className="grid gap-2 grid-cols-3 text-[10px] uppercase tracking-widest font-black text-mute">
+                    <div className="grid gap-2 grid-cols-3 text-[11px] uppercase tracking-widest font-black text-mute">
                       <MiniMetric k="Reports" v={String(song._count?.reports ?? 0)} />
                       <MiniMetric k="Liquidity" v={`${Math.round(song.liquidityHealth ?? 0)} / 100`} />
                       <MiniMetric k="Trades" v={String(song._count?.trades ?? 0)} />
@@ -410,7 +458,7 @@ export function AdminConsole() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0">
                         <div className="text-sm font-black text-ink truncate">{user.audiusHandle ? `@${user.audiusHandle}` : short(user.wallet)}</div>
-                        <div className="text-[10px] uppercase tracking-widest font-bold text-mute mt-1 truncate">{user.wallet}</div>
+                        <div className="text-[11px] uppercase tracking-widest font-bold text-mute mt-1 truncate">{user.wallet}</div>
                       </div>
                       <StatusPill value={user.role} />
                     </div>
@@ -440,7 +488,7 @@ export function AdminConsole() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <div className="text-sm font-black text-ink truncate">{song.title}</div>
-                          <div className="text-[10px] uppercase tracking-widest font-bold text-mute mt-1 truncate">{song.royaltyVault || "No split vault yet"}</div>
+                          <div className="text-[11px] uppercase tracking-widest font-bold text-mute mt-1 truncate">{song.royaltyVault || "No split vault yet"}</div>
                         </div>
                         <StatusPill value={song.royaltyStatus || "UNVERIFIED"} />
                       </div>
@@ -468,8 +516,110 @@ export function AdminConsole() {
             </Panel>
           </aside>
         </div>
+        </>
       )}
     </main>
+  );
+}
+
+function AssetSyncHealthPanel({ assets, currency }: { assets: AssetSyncRow[]; currency: string }) {
+  const healthy = assets.filter((asset) => asset.syncStatus === "healthy").length;
+  const needsAttention = assets.filter((asset) => asset.syncStatus === "needs_attention").length;
+  return (
+    <Panel
+      title="Asset Sync Health"
+      icon={<RefreshCcw size={16} />}
+      meta={`${assets.length} assets · ${healthy} healthy · ${needsAttention} needs attention`}
+    >
+      <div className="grid gap-3 lg:grid-cols-3">
+        <AdminStat label="Healthy Assets" value={healthy} icon={<ShieldCheck size={16} />} tone="neon" />
+        <AdminStat label="Watch Assets" value={assets.filter((asset) => asset.syncStatus === "watch").length} icon={<Clock3 size={16} />} tone="amber" />
+        <AdminStat label="Needs Attention" value={needsAttention} icon={<TriangleAlert size={16} />} tone="red" />
+      </div>
+      <div className="overflow-x-auto rounded-2xl border border-edge bg-panel2">
+        <table className="w-full min-w-[1180px] text-left text-xs">
+          <thead className="bg-white/[0.035] text-[11px] uppercase tracking-widest text-mute">
+            <tr>
+              <th className="px-4 py-3">Asset</th>
+              <th className="px-4 py-3">Latest Price</th>
+              <th className="px-4 py-3">Pool</th>
+              <th className="px-4 py-3">Supply</th>
+              <th className="px-4 py-3">Burn</th>
+              <th className="px-4 py-3">Royalty</th>
+              <th className="px-4 py-3">Last Refresh</th>
+              <th className="px-4 py-3">Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {assets.slice(0, 18).map((asset) => (
+              <tr key={asset.id} className="border-t border-edge/70 align-top">
+                <td className="px-4 py-4">
+                  <Link href={`/coin/${asset.mintAddress || asset.id}`} className="group block min-w-0">
+                    <div className="font-black text-ink group-hover:text-neon">{asset.title}</div>
+                    <div className="mt-1 flex flex-wrap items-center gap-1.5 text-[11px] uppercase tracking-widest font-black text-mute">
+                      <span>${asset.symbol}</span>
+                      <span>·</span>
+                      <span className="max-w-[180px] truncate">{asset.artistName || "Artist pending"}</span>
+                    </div>
+                  </Link>
+                </td>
+                <td className="px-4 py-4">
+                  <div className="font-mono text-sm font-black text-ink">{asset.price.usd > 0 ? formatFiat(asset.price.usd, currency, 6) : "Not priced"}</div>
+                  <div className="mt-1 text-[11px] uppercase tracking-widest text-mute">
+                    {asset.price.sol > 0 ? `${asset.price.sol.toPrecision(5)} SOL` : "SOL unavailable"} · {asset.price.source || "source pending"}
+                  </div>
+                </td>
+                <td className="px-4 py-4">
+                  <div className="font-black text-ink">{formatFiat(asset.pool.liquidityUsd || 0, currency, 2)}</div>
+                  <div className="mt-1 text-[11px] uppercase tracking-widest text-mute">
+                    {formatCompact(asset.pool.pairAmount)} {asset.pool.pairAsset} · {formatCompact(asset.pool.tokenAmount)} coins
+                  </div>
+                  <div className="mt-1 text-[11px] uppercase tracking-widest text-mute">
+                    {asset.pool.locked ? `${asset.pool.lockDays || 0}d lock` : "Unlocked"} · {asset.pool.status}
+                  </div>
+                </td>
+                <td className="px-4 py-4">
+                  <div className="font-black text-ink">{formatCompact(asset.supply.total)} total</div>
+                  <div className="mt-1 text-[11px] uppercase tracking-widest text-mute">
+                    {formatPct(asset.supply.publicLiquidityBps)} public · {formatPct(asset.supply.artistAllocationBps)} artist · {formatPct(asset.supply.reserveBps)} reserve
+                  </div>
+                  <div className="mt-1 text-[11px] uppercase tracking-widest text-mute">{formatCompact(asset.supply.circulating)} circulating</div>
+                </td>
+                <td className="px-4 py-4">
+                  <div className="font-black text-ink">{formatCompact(asset.burn.burnedSupply)}</div>
+                  <div className="mt-1 text-[11px] uppercase tracking-widest text-mute">
+                    {formatPct(asset.burn.burnedBps)} burned
+                  </div>
+                  <div className="mt-1 text-[11px] uppercase tracking-widest text-mute">{asset.burn.lastBurnAt ? timeAgo(asset.burn.lastBurnAt) : "No burns"}</div>
+                </td>
+                <td className="px-4 py-4">
+                  <StatusPill value={asset.royalty.status || "not_submitted"} />
+                  <div className="mt-2 text-[11px] uppercase tracking-widest text-mute">
+                    {formatFiat(asset.royalty.receivedUsd || 0, currency, 2)} received
+                  </div>
+                  <div className="mt-1 text-[11px] uppercase tracking-widest text-mute">
+                    {formatFiat(asset.royalty.poolAddedUsd || 0, currency, 2)} pool
+                  </div>
+                </td>
+                <td className="px-4 py-4">
+                  <div className="font-black text-ink">{asset.lastRefreshAt ? timeAgo(asset.lastRefreshAt) : "Never"}</div>
+                  <div className="mt-1 text-[11px] uppercase tracking-widest text-mute">
+                    {asset.price.lastPriceAt ? `Price ${timeAgo(asset.price.lastPriceAt)}` : "No price snapshot"}
+                  </div>
+                </td>
+                <td className="px-4 py-4">
+                  <AssetSyncPill value={asset.syncStatus} />
+                  <div className="mt-2 text-[11px] uppercase tracking-widest text-mute">
+                    {asset.counts?.trades ?? 0} trades · {asset.counts?.events ?? 0} events
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        {!assets.length && <EmptyState text="No assets synced yet." />}
+      </div>
+    </Panel>
   );
 }
 
@@ -481,7 +631,7 @@ function Panel({ title, icon, meta, children }: { title: string; icon?: ReactNod
           {icon && <span className="text-neon">{icon}</span>}
           <h2 className="text-lg md:text-xl font-black text-ink">{title}</h2>
         </div>
-        {meta && <div className="text-[10px] uppercase tracking-widest font-black text-mute">{meta}</div>}
+        {meta && <div className="text-[11px] uppercase tracking-widest font-black text-mute">{meta}</div>}
       </header>
       {children}
     </section>
@@ -499,13 +649,24 @@ function AdminStat({ label, value, icon, tone }: { label: string; value: number 
           : "text-neon border-neon/20 bg-neon/10";
   return (
     <div className="rounded-2xl border border-edge bg-panel2 p-4">
-      <div className={`inline-flex items-center gap-2 rounded-lg px-2 py-1 text-[10px] uppercase tracking-widest font-black ${toneCls}`}>
+      <div className={`inline-flex items-center gap-2 rounded-lg px-2 py-1 text-[11px] uppercase tracking-widest font-black ${toneCls}`}>
         {icon}
         {label}
       </div>
       <div className="mt-3 text-3xl font-black text-ink">{value}</div>
     </div>
   );
+}
+
+function AssetSyncPill({ value }: { value: string }) {
+  const v = String(value || "").toUpperCase();
+  const cls =
+    v === "HEALTHY"
+      ? "text-neon border-neon/20 bg-neon/10"
+      : v === "NEEDS_ATTENTION"
+        ? "text-red border-red/20 bg-red/10"
+        : "text-amber border-amber/20 bg-amber/10";
+  return <span className={`chip ${cls}`}>{v.replace(/_/g, " ") || "UNKNOWN"}</span>;
 }
 
 function StatusPill({ value }: { value: string }) {
@@ -534,7 +695,7 @@ function ActionButton({
     <button
       onClick={onClick}
       disabled={busy}
-      className={`btn h-9 px-3 text-[10px] uppercase tracking-widest font-black ${danger ? "text-red border-red/20" : ""}`}
+      className={`btn h-9 px-3 text-[11px] uppercase tracking-widest font-black ${danger ? "text-red border-red/20" : ""}`}
     >
       {busy ? "Working..." : label}
     </button>
@@ -544,7 +705,7 @@ function ActionButton({
 function MiniMetric({ k, v }: { k: string; v: string }) {
   return (
     <div className="rounded-xl border border-edge bg-panel p-3">
-      <div className="text-[9px] uppercase tracking-widest font-black text-mute">{k}</div>
+      <div className="text-[11px] uppercase tracking-widest font-black text-mute">{k}</div>
       <div className="mt-1 text-sm font-black text-ink truncate">{v}</div>
     </div>
   );
@@ -554,13 +715,45 @@ function SystemLine({ label, value, ok }: { label: string; value: string; ok: bo
   return (
     <div className="flex items-center justify-between gap-3 rounded-xl border border-edge bg-panel2 px-3 py-2">
       <div className="text-xs uppercase tracking-widest font-black text-mute">{label}</div>
-      <div className={`text-[10px] font-black uppercase tracking-widest ${ok ? "text-neon" : "text-amber"}`}>{value}</div>
+      <div className={`text-[11px] font-black uppercase tracking-widest ${ok ? "text-neon" : "text-amber"}`}>{value}</div>
     </div>
   );
 }
 
 function EmptyState({ text }: { text: string }) {
   return <div className="rounded-2xl border border-dashed border-edge bg-panel2 p-5 text-center text-xs uppercase tracking-widest font-bold text-mute">{text}</div>;
+}
+
+function formatCompact(value: number | null | undefined) {
+  const n = Number(value || 0);
+  if (!Number.isFinite(n)) return "0";
+  if (Math.abs(n) >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(2)}B`;
+  if (Math.abs(n) >= 1_000_000) return `${(n / 1_000_000).toFixed(2)}M`;
+  if (Math.abs(n) >= 1_000) return `${(n / 1_000).toFixed(2)}K`;
+  if (Math.abs(n) > 0 && Math.abs(n) < 0.01) return n.toFixed(6);
+  return n.toLocaleString(undefined, { maximumFractionDigits: 2 });
+}
+
+function formatPct(bps: number | null | undefined) {
+  const n = Number(bps || 0);
+  if (!Number.isFinite(n)) return "0%";
+  return `${(n / 100).toFixed(n % 100 === 0 ? 0 : 1)}%`;
+}
+
+function timeAgo(value: string | null | undefined) {
+  if (!value) return "Never";
+  const ms = Date.now() - new Date(value).getTime();
+  if (!Number.isFinite(ms)) return "Unknown";
+  const seconds = Math.max(0, Math.round(ms / 1000));
+  if (seconds < 10) return "Just now";
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.round(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.round(hours / 24);
+  if (days < 30) return `${days}d ago`;
+  return new Date(value).toLocaleDateString();
 }
 
 function short(value: string, take = 4) {

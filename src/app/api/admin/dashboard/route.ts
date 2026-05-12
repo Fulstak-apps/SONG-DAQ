@@ -4,6 +4,8 @@ import { NETWORK, RPC_URL } from "@/lib/solana";
 import { databaseReadiness } from "@/lib/appMode";
 import { requireAdmin } from "@/lib/auth";
 import { verifyAdminSession } from "@/lib/adminSession";
+import { buildSongAssetState } from "@/lib/assetState";
+import { getAssetUsdRates, normalizeAsset } from "@/lib/serverAssetPrices";
 
 export const dynamic = "force-dynamic";
 
@@ -92,11 +94,28 @@ function emptyDashboard(error?: string) {
     royaltyRequests: [],
     royaltyPayments: [],
     royaltyContributions: [],
+    assetSyncHealth: [],
     transactions: [],
     errorLogs: error ? [{ id: "database-unavailable", errorType: "DATABASE", message: error, resolved: false, createdAt: new Date().toISOString() }] : [],
     adminLogs: [],
     system: { ...systemStatus(false), databaseWarning: error || null },
   };
+}
+
+function latestDate(...values: Array<Date | string | null | undefined>) {
+  const times = values
+    .map((value) => {
+      if (!value) return 0;
+      const ts = +new Date(value);
+      return Number.isFinite(ts) ? ts : 0;
+    })
+    .filter(Boolean);
+  if (!times.length) return null;
+  return new Date(Math.max(...times)).toISOString();
+}
+
+function latestEventByKind(events: Array<{ kind?: string | null; createdAt?: Date | string | null }> = [], pattern: RegExp) {
+  return events.find((event) => pattern.test(String(event.kind || "").toUpperCase())) || null;
 }
 
 export async function GET(req: NextRequest) {
@@ -123,6 +142,7 @@ export async function GET(req: NextRequest) {
     royaltyRequests,
     royaltyPayments,
     royaltyContributions,
+    assetSyncRows,
     transactions,
     errorLogs,
     adminLogs,
@@ -185,6 +205,24 @@ export async function GET(req: NextRequest) {
     prisma.royaltyRequest.findMany({ orderBy: { createdAt: "desc" }, take: 50 }),
     prisma.royaltyPayment.findMany({ orderBy: { createdAt: "desc" }, take: 50 }),
     prisma.royaltyPoolContribution.findMany({ orderBy: { executedAt: "desc" }, take: 50 }),
+    prisma.songToken.findMany({
+      orderBy: [{ updatedAt: "desc" }, { createdAt: "desc" }],
+      take: 40,
+      include: {
+        artistWallet: { select: { wallet: true, handle: true, audiusHandle: true, audiusName: true, audiusVerified: true } },
+        events: {
+          orderBy: { createdAt: "desc" },
+          take: 25,
+          select: { kind: true, payload: true, createdAt: true },
+        },
+        pricePoints: {
+          orderBy: { ts: "desc" },
+          take: 1,
+          select: { ts: true, close: true, volume: true },
+        },
+        _count: { select: { trades: true, events: true, reports: true, watchers: true } },
+      },
+    }),
     prisma.transaction.findMany({ orderBy: { createdAt: "desc" }, take: 75 }),
     prisma.errorLog.findMany({ orderBy: { createdAt: "desc" }, take: 50 }),
     prisma.adminLog.findMany({ orderBy: { createdAt: "desc" }, take: 50 }),
@@ -232,6 +270,102 @@ export async function GET(req: NextRequest) {
   ] = statusCounts;
 
   const system = systemStatus(true);
+  const assetRates = await getAssetUsdRates([
+    "SOL",
+    "AUDIO",
+    "USDC",
+    ...assetSyncRows.map((song) => song.liquidityPairAsset),
+  ]);
+  const assetSyncHealth = assetSyncRows.map((song) => {
+    const state = buildSongAssetState(song, assetRates);
+    const lastBurn = latestEventByKind(song.events, /BURN/);
+    const lastLiquidity = latestEventByKind(song.events, /LIQUIDITY|POOL/);
+    const lastRoyaltyEvent = latestEventByKind(song.events, /ROYALTY|SPLIT/);
+    const poolStatus =
+      state.liquidityUsd >= 25 && state.tradableSupply > 0
+        ? "healthy"
+        : state.liquidityUsd > 0 || Number(song.liquidityPairAmount || 0) > 0
+          ? "thin"
+          : "missing";
+    const priceStatus = state.priceUsd > 0 ? "priced" : "missing";
+    const syncStatus =
+      priceStatus === "missing" || poolStatus === "missing"
+        ? "needs_attention"
+        : poolStatus === "thin" || !state.isMarketValueReliable
+          ? "watch"
+          : "healthy";
+    const lastPriceAt = song.pricePoints?.[0]?.ts || null;
+    const lastRefreshAt = latestDate(
+      song.updatedAt,
+      song.createdAt,
+      lastPriceAt,
+      song.events?.[0]?.createdAt,
+      song.lastRoyaltyPaymentDate,
+      song.lastRoyaltyPoolContributionDate,
+      song.lastRoyaltyRedistributionDate,
+    );
+    const artistName = song.artistWallet?.audiusName || song.artistWallet?.audiusHandle || song.artistName;
+
+    return {
+      id: song.id,
+      mintAddress: song.mintAddress,
+      symbol: song.symbol,
+      title: song.title,
+      artistName,
+      mode: song.mode,
+      status: song.status,
+      syncStatus,
+      price: {
+        status: priceStatus,
+        sol: state.priceSol,
+        usd: state.priceUsd,
+        source: state.marketValueBasis,
+        lastPriceAt: lastPriceAt ? new Date(lastPriceAt).toISOString() : null,
+      },
+      pool: {
+        status: poolStatus,
+        pairAsset: normalizeAsset(song.liquidityPairAsset || "SOL"),
+        pairAmount: Number(song.liquidityPairAmount || 0),
+        tokenAmount: Number(song.liquidityTokenAmount || 0),
+        liquidityUsd: state.liquidityUsd,
+        locked: Boolean(song.liquidityLocked),
+        lockDays: song.liquidityLockDays,
+        health: song.liquidityHealth,
+        lastLiquidityAt: lastLiquidity?.createdAt ? new Date(lastLiquidity.createdAt).toISOString() : null,
+      },
+      supply: {
+        total: state.totalSupply,
+        circulating: state.circulatingSupply,
+        publicLiquidity: state.supplyDistribution.publicLiquiditySupply,
+        artistAllocation: state.supplyDistribution.artistAllocationSupply,
+        reserve: state.supplyDistribution.reserveSupply,
+        publicLiquidityBps: state.supplyDistribution.publicLiquidityBps,
+        artistAllocationBps: state.supplyDistribution.artistAllocationBps,
+        reserveBps: state.supplyDistribution.reserveBps,
+      },
+      burn: {
+        burnedSupply: state.burnedSupply,
+        burnedBps: state.supplyDistribution.burnedBps,
+        lastBurnAt: lastBurn?.createdAt ? new Date(lastBurn.createdAt).toISOString() : null,
+      },
+      royalty: {
+        status: song.royaltyVerificationStatus || song.royaltyStatus,
+        backed: song.royaltyBacked,
+        receivedUsd: Number(song.totalRoyaltiesReceivedUsd || 0),
+        poolAddedUsd: Number(song.totalRoyaltyPoolContributionsUsd || 0),
+        lastPaymentAt: song.lastRoyaltyPaymentDate ? song.lastRoyaltyPaymentDate.toISOString() : null,
+        lastPoolAt: song.lastRoyaltyPoolContributionDate ? song.lastRoyaltyPoolContributionDate.toISOString() : null,
+        lastEventAt: lastRoyaltyEvent?.createdAt ? new Date(lastRoyaltyEvent.createdAt).toISOString() : null,
+      },
+      counts: {
+        trades: song._count?.trades ?? 0,
+        events: song._count?.events ?? 0,
+        reports: song._count?.reports ?? 0,
+        watchers: song._count?.watchers ?? 0,
+      },
+      lastRefreshAt,
+    };
+  });
 
   return NextResponse.json({
     summary: {
@@ -264,6 +398,7 @@ export async function GET(req: NextRequest) {
     royaltyRequests,
     royaltyPayments,
     royaltyContributions,
+    assetSyncHealth,
     transactions,
     errorLogs,
     adminLogs,

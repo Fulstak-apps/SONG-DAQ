@@ -1,4 +1,5 @@
 import { fetchJson } from "@/lib/fetchTimeout";
+import type { SupplyDistribution } from "@/lib/supplyDistribution";
 
 /**
  * Audius "Artist Tokens" — public Solana SPL tokens listed at
@@ -78,6 +79,8 @@ export interface AudiusCoin {
   royaltyVerificationStatus?: string;
   royaltyBacked?: boolean;
   tradableSupply?: number;
+  burnedSupply?: number;
+  supplyDistribution?: SupplyDistribution;
   fullyDilutedValue?: number;
   marketValueBasis?: string;
   marketValueNote?: string;

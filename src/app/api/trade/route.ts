@@ -10,6 +10,7 @@ import {
   spotPrice,
 } from "@/lib/bondingCurve";
 import { getAssetUsdRates } from "@/lib/serverAssetPrices";
+import { refreshSongAssetState } from "@/lib/assetState";
 
 export const dynamic = "force-dynamic";
 
@@ -188,29 +189,41 @@ export async function POST(req: NextRequest) {
       : Math.max(0, Number(song.circulating || 0) - tokenAmount);
     const rates = await getAssetUsdRates(["SOL"]);
     const solUsd = Number(rates.SOL || 0);
+    const currentPoolTokens = Number(song.liquidityTokenAmount || 0);
+    const currentPoolPair = Number(song.liquidityPairAmount || 0);
+    const pairAsset = String(song.liquidityPairAsset || "SOL").toUpperCase();
+    const nextPoolTokens = side === "BUY"
+      ? Math.max(0, currentPoolTokens - tokenAmount)
+      : Math.min(Number(song.supply || 0), currentPoolTokens + tokenAmount);
+    const nextPoolPair = pairAsset === "SOL"
+      ? side === "BUY"
+        ? currentPoolPair + solAmount
+        : Math.max(0, currentPoolPair - solAmount)
+      : currentPoolPair;
     await prisma.songToken.update({
       where: { id: song.id },
       data: {
         circulating: nextCirculating,
+        liquidityTokenAmount: nextPoolTokens,
+        liquidityPairAmount: nextPoolPair,
         volume24h: Number(song.volume24h || 0) + solAmount,
         price: tradePrice,
         currentPriceSol: tradePrice,
         currentPriceUsd: solUsd > 0 ? tradePrice * solUsd : song.currentPriceUsd,
-        marketCap: tradePrice * nextCirculating,
-        marketCapUsd: solUsd > 0 ? tradePrice * nextCirculating * solUsd : song.marketCapUsd,
       },
     }).catch(() => {});
+    const refreshed = await refreshSongAssetState(song.id).catch(() => null);
     await prisma.pricePoint.create({
       data: {
         songId: song.id,
-        open: tradePrice,
-        high: tradePrice,
-        low: tradePrice,
-        close: tradePrice,
+        open: refreshed?.state.priceSol || tradePrice,
+        high: refreshed?.state.priceSol || tradePrice,
+        low: refreshed?.state.priceSol || tradePrice,
+        close: refreshed?.state.priceSol || tradePrice,
         volume: solAmount,
       },
     }).catch(() => {});
-    return NextResponse.json({ ok: true, txSig, solAmount, tokenAmount });
+    return NextResponse.json({ ok: true, txSig, solAmount, tokenAmount, song: refreshed?.song });
   }
 
   try {

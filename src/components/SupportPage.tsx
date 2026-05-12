@@ -88,7 +88,7 @@ export function SupportPage() {
           <div className="grid gap-3 md:grid-cols-2">
             {quickFacts.map(([title, body]) => (
               <div key={title} className="rounded-2xl border border-edge bg-panel p-4">
-                <div className="text-[10px] uppercase tracking-[0.22em] font-black text-neon">{title}</div>
+                <div className="text-[11px] uppercase tracking-[0.22em] font-black text-neon">{title}</div>
                 <p className="mt-2 text-sm leading-relaxed text-ink/75 font-semibold">{body}</p>
               </div>
             ))}
@@ -126,7 +126,7 @@ export function SupportPage() {
           <p><strong className="text-ink">Royalty setup happens after the coin is created.</strong> Open your distributor dashboard, go to splits or royalty sharing, and add <span className="font-mono text-neon">{ROYALTY_EMAIL}</span> as the split recipient.</p>
           <p>Send the split invitation from inside the distributor platform, then return to song-daq and submit the verification form. Admin reviews it, then the coin can move from Royalty Verification In Progress to Royalty Verified.</p>
           <p>The artist does not manually email monthly royalty money. The distributor sends the royalty split to song-daq, and admin records what was received.</p>
-          <Link href="/splits" className="btn-primary mt-2 inline-flex h-11 px-4 text-[10px] uppercase tracking-widest font-black">
+          <Link href="/splits" className="btn-primary mt-2 inline-flex h-11 px-4 text-[11px] uppercase tracking-widest font-black">
             Set Up Royalty Split <ArrowRight size={14} />
           </Link>
         </SupportCard>
@@ -146,7 +146,7 @@ export function SupportPage() {
 
       <section className="panel-elevated p-6 md:p-10 space-y-5">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.28em] font-black text-mute">Plain-English Terms</div>
+          <div className="text-[11px] uppercase tracking-[0.28em] font-black text-mute">Plain-English Terms</div>
           <h2 className="text-3xl md:text-5xl font-black text-ink">The words users need to understand.</h2>
           <p className="mt-3 max-w-4xl text-sm md:text-base text-ink/70 font-medium leading-relaxed">
             song-daq should explain market language right where users make decisions. These terms show up during launch, trading, liquidity, and portfolio review.
@@ -181,7 +181,7 @@ export function SupportPage() {
 
       <section className="panel-elevated p-6 md:p-10 space-y-5">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.28em] font-black text-mute">Trading Guide</div>
+          <div className="text-[11px] uppercase tracking-[0.28em] font-black text-mute">Trading Guide</div>
           <h2 className="text-3xl md:text-5xl font-black text-ink">How buying and selling should feel.</h2>
           <p className="mt-3 max-w-4xl text-sm md:text-base text-mute leading-relaxed">
             song-daq should always tell users what they are about to do before money moves. A buy or sell confirmation should show token amount, crypto amount, fiat estimate, wallet address, estimated fees, and any slippage warning in plain English.
@@ -213,7 +213,7 @@ export function SupportPage() {
             <ShieldAlert size={20} />
           </div>
           <div>
-            <div className="text-[10px] uppercase tracking-[0.28em] font-black text-mute">Risk Notes</div>
+            <div className="text-[11px] uppercase tracking-[0.28em] font-black text-mute">Risk Notes</div>
             <h2 className="text-3xl md:text-5xl font-black text-ink">Be clear before money moves.</h2>
           </div>
         </div>
@@ -242,7 +242,7 @@ export function SupportPage() {
             <p className="text-sm text-mute">Support and royalty split review: <span className="font-mono text-neon">{ROYALTY_EMAIL}</span></p>
           </div>
         </div>
-        <Link href="/admin/login" className="text-[10px] uppercase tracking-widest font-black text-mute hover:text-neon">
+        <Link href="/admin/login" className="text-[11px] uppercase tracking-widest font-black text-mute hover:text-neon">
           Admin
         </Link>
       </section>
@@ -309,7 +309,7 @@ function StatusGrid() {
     <div className="grid gap-2">
       {statuses.map(([name, desc]) => (
         <div key={name} className="rounded-xl border border-edge bg-panel2/70 p-3">
-          <div className="text-[10px] uppercase tracking-widest font-black text-ink">{name}</div>
+          <div className="text-[11px] uppercase tracking-widest font-black text-ink">{name}</div>
           <p className="mt-1 text-xs text-ink/70 font-medium leading-relaxed">{desc}</p>
         </div>
       ))}

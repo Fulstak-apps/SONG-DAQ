@@ -12,7 +12,7 @@ export default function AdminPhantomPage() {
   return (
     <main className="space-y-6">
       <section className="panel-elevated p-6 md:p-10 space-y-4">
-        <div className="text-[10px] uppercase tracking-[0.3em] font-black text-neon">Admin · wallet trust</div>
+        <div className="text-[11px] uppercase tracking-[0.3em] font-black text-neon">Admin · wallet trust</div>
         <h1 className="text-4xl md:text-6xl font-black text-ink">Phantom review status</h1>
         <p className="max-w-3xl text-mute leading-relaxed">
           Phantom/Blowfish can block a live domain before users ever see the transaction. song-daq pauses live signing until this page shows approved.
@@ -62,7 +62,7 @@ export default function AdminPhantomPage() {
 function Status({ label, value, ok, warn = false }: { label: string; value: string; ok: boolean; warn?: boolean }) {
   return (
     <div className="panel p-5">
-      <div className="text-[10px] uppercase tracking-widest font-black text-mute">{label}</div>
+      <div className="text-[11px] uppercase tracking-widest font-black text-mute">{label}</div>
       <div className={`mt-2 text-xl font-black ${ok ? "text-neon" : warn ? "text-amber" : "text-red"}`}>{value}</div>
     </div>
   );

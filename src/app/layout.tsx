@@ -141,11 +141,11 @@ export default function RootLayout({
             <div className="border-t border-edge pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-neon shadow-[0_0_6px_rgba(0,229,114,0.5)] animate-pulseDot" />
-                <span className="text-[10px] tracking-[0.18em] font-black text-mute">
+                <span className="text-[11px] tracking-[0.18em] font-black text-mute">
                   song-daq <span className="text-mute mx-2">·</span> Institutional Music Exchange
                 </span>
               </div>
-              <div className="flex flex-wrap items-center justify-center gap-3 text-[10px] uppercase tracking-widest font-bold text-mute">
+              <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] uppercase tracking-widest font-bold text-mute">
                 <Link href="/faq" className="rounded-xl border border-edge bg-white/[0.04] px-3 py-2 text-ink hover:border-neon/30 hover:text-neon transition">
                   Support
                 </Link>

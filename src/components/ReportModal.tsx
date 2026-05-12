@@ -46,7 +46,7 @@ export function ReportModal({ mint, songId, onClose }: { mint?: string; songId?:
       <motion.div initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="w-full sm:w-[520px] max-w-full max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-2xl sm:rounded-3xl border border-edge bg-panel p-4 sm:p-5 text-ink shadow-depth" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-3 border-b border-edge pb-4">
           <div>
-            <div className="text-[10px] uppercase tracking-widest font-black text-red">Report / Takedown</div>
+            <div className="text-[11px] uppercase tracking-widest font-black text-red">Report / Takedown</div>
             <div className="mt-1 text-xl font-black">Flag suspicious coin</div>
           </div>
           <button className="btn h-9 w-9 p-0" onClick={onClose}><X size={14} /></button>
@@ -66,7 +66,7 @@ export function ReportModal({ mint, songId, onClose }: { mint?: string; songId?:
             <span className="label">Email optional</span>
             <input value={email} onChange={(e) => setEmail(e.target.value)} className="mt-2 w-full rounded-xl border border-edge bg-panel2 px-4 py-3 text-sm text-ink" placeholder="you@example.com" />
           </label>
-          <button disabled={busy} onClick={submit} className="btn-primary h-11 w-full text-[10px] uppercase tracking-widest font-black disabled:opacity-50">Submit Report</button>
+          <button disabled={busy} onClick={submit} className="btn-primary h-11 w-full text-[11px] uppercase tracking-widest font-black disabled:opacity-50">Submit Report</button>
         </div>
       </motion.div>
     </div>

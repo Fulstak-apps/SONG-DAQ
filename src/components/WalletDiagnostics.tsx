@@ -68,14 +68,14 @@ export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
     <section className={`panel ${compact ? "p-4" : "p-5"} space-y-4`}>
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="text-[10px] uppercase tracking-widest font-black text-neon flex items-center gap-2">
+          <div className="text-[11px] uppercase tracking-widest font-black text-neon flex items-center gap-2">
             <Wallet size={14} /> Wallet diagnostics
           </div>
           <p className="mt-1 text-xs leading-relaxed text-mute">
             Checks installed wallets, connected address, network, SOL balance, Audius wallet, RPC, and database status.
           </p>
         </div>
-        <button onClick={loadHealth} className="btn h-9 px-3 text-[10px]" disabled={busy}>
+        <button onClick={loadHealth} className="btn h-9 px-3 text-[11px]" disabled={busy}>
           <RefreshCw size={12} className={busy ? "animate-spin" : ""} /> Refresh
         </button>
       </div>
@@ -98,7 +98,7 @@ export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
         ))}
       </div>
 
-      <button onClick={reportIssue} disabled={reporting} className="btn-danger h-10 px-4 text-[10px] uppercase tracking-widest font-black">
+      <button onClick={reportIssue} disabled={reporting} className="btn-danger h-10 px-4 text-[11px] uppercase tracking-widest font-black">
         <Bug size={13} /> {reporting ? "Reporting…" : "Report wallet issue"}
       </button>
     </section>
@@ -108,7 +108,7 @@ export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
 function Diag({ label, value, ok }: { label: string; value: string; ok: boolean }) {
   return (
     <div className="rounded-xl border border-edge bg-panel2 p-3">
-      <div className="text-[9px] uppercase tracking-widest font-black text-mute">{label}</div>
+      <div className="text-[11px] uppercase tracking-widest font-black text-mute">{label}</div>
       <div className={`mt-1 text-sm font-black break-words ${ok ? "text-ink" : "text-amber"}`}>{value}</div>
     </div>
   );

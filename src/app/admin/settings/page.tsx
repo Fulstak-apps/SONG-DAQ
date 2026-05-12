@@ -33,7 +33,7 @@ export default function AdminSettingsPage() {
   return (
     <main className="space-y-6">
       <section className="panel-elevated p-6 md:p-10 space-y-4">
-        <div className="text-[10px] uppercase tracking-[0.3em] font-black text-neon">Admin settings</div>
+        <div className="text-[11px] uppercase tracking-[0.3em] font-black text-neon">Admin settings</div>
         <h1 className="text-4xl md:text-6xl font-black text-ink">song-daq control panel</h1>
         <p className="max-w-3xl text-mute leading-relaxed">
           Settings are server-driven for the MVP. Update env vars in Render, then redeploy. Live treasury execution should stay manual until automated treasury flows are audited.
@@ -84,7 +84,7 @@ export default function AdminSettingsPage() {
           <Readiness label="Phantom review submitted" value={phantomSubmitted ? "Submitted" : "Not submitted"} ok={phantomSubmitted} />
           <Readiness label="Phantom review approved" value={phantomApproved ? "Approved" : "Pending"} ok={phantomApproved} />
           <Readiness label="Jupiter route policy" value="Do not ask wallet to sign until route exists" ok />
-          <Link href="/admin/phantom" className="btn-primary h-11 px-4 text-[10px] uppercase tracking-widest font-black">
+          <Link href="/admin/phantom" className="btn-primary h-11 px-4 text-[11px] uppercase tracking-widest font-black">
             Open Phantom review page
           </Link>
           <div className="rounded-2xl border border-edge bg-panel2 p-4 text-sm text-mute leading-relaxed">
@@ -120,7 +120,7 @@ export default function AdminSettingsPage() {
 function Setting({ label, value }: { label: string; value: string }) {
   return (
     <div className="panel p-5">
-      <div className="text-[10px] uppercase tracking-widest font-black text-mute">{label}</div>
+      <div className="text-[11px] uppercase tracking-widest font-black text-mute">{label}</div>
       <div className="mt-2 text-lg font-black text-ink break-words">{value}</div>
     </div>
   );
@@ -130,7 +130,7 @@ function Readiness({ label, value, ok }: { label: string; value: string; ok: boo
   return (
     <div className="flex items-start justify-between gap-3 rounded-2xl border border-edge bg-panel2 px-4 py-3">
       <div className="min-w-0">
-        <div className="text-[10px] uppercase tracking-widest font-black text-mute">{label}</div>
+        <div className="text-[11px] uppercase tracking-widest font-black text-mute">{label}</div>
         <div className="mt-1 text-sm font-bold text-ink break-words">{value}</div>
       </div>
       <span className={`chip shrink-0 ${ok ? "text-neon border-neon/20 bg-neon/10" : "text-amber border-amber/20 bg-amber/10"}`}>{ok ? "OK" : "WAIT"}</span>

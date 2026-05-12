@@ -52,7 +52,7 @@ export default function ArtistPage() {
         <div className="text-mute text-sm leading-relaxed">
           Sign in with Audius to verify your artist identity and connect the launch to your real profile.
         </div>
-        <div className="text-[10px] text-mute uppercase tracking-widest font-bold border-t border-edge pt-4 mt-4">
+        <div className="text-[11px] text-mute uppercase tracking-widest font-bold border-t border-edge pt-4 mt-4">
           Verification unlocks automated royalty splitting and token launch capabilities.
         </div>
       </div>
@@ -86,13 +86,13 @@ export default function ArtistPage() {
         <div className="relative z-10">
           <h1 className="text-4xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 flex items-center gap-3">
             Song Studio
-            {audius.verified && <span className="text-[10px] uppercase tracking-widest text-black bg-neon px-2 py-0.5 rounded shadow-[0_0_10px_rgba(0,229,114,0.5)] font-bold">Verified</span>}
+            {audius.verified && <span className="text-[11px] uppercase tracking-widest text-black bg-neon px-2 py-0.5 rounded shadow-[0_0_10px_rgba(0,229,114,0.5)] font-bold">Verified</span>}
           </h1>
           <p className="text-mute mt-2 font-medium break-words whitespace-normal">
             Authenticated as <span className="text-white">{audius.name || `@${audius.handle}`}</span>
             {audius.handle ? <span className="text-mute"> (@{audius.handle})</span> : null}
-            <span className="text-mute"> · Status </span><span className={me?.role === "ARTIST" ? "text-neon drop-shadow-[0_0_5px_rgba(0,229,114,0.4)]" : "text-mute uppercase tracking-widest text-[10px]"}>{me?.role ?? "INVESTOR"}</span>
-            {tradingWallet && <span className="block mt-1 text-[10px] uppercase tracking-widest text-mute">Trading wallet connected separately</span>}
+            <span className="text-mute"> · Status </span><span className={me?.role === "ARTIST" ? "text-neon drop-shadow-[0_0_5px_rgba(0,229,114,0.4)]" : "text-mute uppercase tracking-widest text-[11px]"}>{me?.role ?? "INVESTOR"}</span>
+            {tradingWallet && <span className="block mt-1 text-[11px] uppercase tracking-widest text-mute">Trading wallet connected separately</span>}
           </p>
         </div>
       </header>
@@ -109,19 +109,19 @@ export default function ArtistPage() {
       <section className="panel overflow-hidden">
         <div className="px-6 py-5 border-b border-edge flex items-center justify-between bg-panel">
           <span className="text-white font-bold tracking-tight">Artist Token Dashboard</span>
-          <span className="text-[10px] uppercase tracking-widest font-bold text-mute">On-chain assets only</span>
+          <span className="text-[11px] uppercase tracking-widest font-bold text-mute">On-chain assets only</span>
         </div>
         
         {!mySongs.length ? (
           <div className="px-6 py-12 text-center relative">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-white/5 pointer-events-none" />
             <div className="text-mute uppercase tracking-widest font-bold text-xs relative z-10">No active assets</div>
-            <div className="text-mute text-[10px] mt-2 relative z-10">Use the studio above to tokenize your first track.</div>
+            <div className="text-mute text-[11px] mt-2 relative z-10">Use the studio above to tokenize your first track.</div>
           </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm text-left">
-              <thead className="bg-panel text-mute text-[10px] uppercase tracking-widest font-semibold border-b border-edge">
+              <thead className="bg-panel text-mute text-[11px] uppercase tracking-widest font-semibold border-b border-edge">
                 <tr>
                   <th className="px-6 py-4 font-medium w-1/3">Asset</th>
                   <th className="px-6 py-4 font-medium text-right">Metrics (SOL)</th>
@@ -150,7 +150,7 @@ export default function ArtistPage() {
                     <td className="px-6 py-4 text-right">
                       <div className="flex flex-col items-end gap-1">
                         <span className="num font-bold text-white shadow-sm">{formatCryptoWithFiat(s.price, "SOL", Number(s.price ?? 0) * solUsdRate, currency, 6)}</span>
-                        <div className="flex gap-2 text-[9px] uppercase tracking-widest text-mute font-mono">
+                        <div className="flex gap-2 text-[11px] uppercase tracking-widest text-mute font-mono">
                           <span>Cap {formatCryptoWithFiat(s.marketCap, "SOL", Number(s.marketCap ?? 0) * solUsdRate, currency, 2)}</span>
                           <span>|</span>
                           <span>Vol {formatCryptoWithFiat(s.volume24h, "SOL", Number(s.volume24h ?? 0) * solUsdRate, currency, 2)}</span>
@@ -159,22 +159,22 @@ export default function ArtistPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-center gap-1.5">
-                        <span className="text-[10px] uppercase tracking-widest font-bold bg-violet/10 text-violet border border-violet/20 px-2 py-0.5 rounded shadow-[0_0_5px_rgba(155,81,224,0.2)]">Artist {(s.artistShareBps/100).toFixed(0)}%</span>
-                        <span className="text-[10px] uppercase tracking-widest font-bold bg-neon/10 text-neon border border-neon/20 px-2 py-0.5 rounded shadow-[0_0_5px_rgba(0,229,114,0.2)]">Holders {(s.holderShareBps/100).toFixed(0)}%</span>
-                        <span className="text-[10px] uppercase tracking-widest font-bold bg-panel2 text-mute border border-edge px-2 py-0.5 rounded">Protocol {(s.protocolShareBps/100).toFixed(0)}%</span>
+                        <span className="text-[11px] uppercase tracking-widest font-bold bg-violet/10 text-violet border border-violet/20 px-2 py-0.5 rounded shadow-[0_0_5px_rgba(155,81,224,0.2)]">Artist {(s.artistShareBps/100).toFixed(0)}%</span>
+                        <span className="text-[11px] uppercase tracking-widest font-bold bg-neon/10 text-neon border border-neon/20 px-2 py-0.5 rounded shadow-[0_0_5px_rgba(0,229,114,0.2)]">Holders {(s.holderShareBps/100).toFixed(0)}%</span>
+                        <span className="text-[11px] uppercase tracking-widest font-bold bg-panel2 text-mute border border-edge px-2 py-0.5 rounded">Protocol {(s.protocolShareBps/100).toFixed(0)}%</span>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <Link className="px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-bold bg-panel2 border border-edge hover:bg-white/10 text-white hover:border-white/30 transition" href={`/song/${s.id}`}>
+                        <Link className="px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-widest font-bold bg-panel2 border border-edge hover:bg-white/10 text-white hover:border-white/30 transition" href={`/song/${s.id}`}>
                           Open
                         </Link>
                         {s.status === "PENDING_LIQUIDITY" && (
-                          <Link className="px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-bold bg-neon/10 border border-neon/20 hover:bg-neon/20 text-neon transition" href={`/song/${s.id}`}>
+                          <Link className="px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-widest font-bold bg-neon/10 border border-neon/20 hover:bg-neon/20 text-neon transition" href={`/song/${s.id}`}>
                             Add Liquidity
                           </Link>
                         )}
-                        <span className={`px-3 py-1.5 rounded-lg text-[10px] uppercase tracking-widest font-bold border ${statusClass}`}>
+                        <span className={`px-3 py-1.5 rounded-lg text-[11px] uppercase tracking-widest font-bold border ${statusClass}`}>
                           {statusLabel}
                         </span>
                       </div>

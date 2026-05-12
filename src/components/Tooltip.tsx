@@ -131,7 +131,7 @@ export function Glossary({
       content={
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <span className={`flex items-center gap-1 ${cat.color} text-[9px] uppercase tracking-widest font-black`}>
+            <span className={`flex items-center gap-1 ${cat.color} text-[11px] uppercase tracking-widest font-black`}>
               {cat.icon}
               {cat.label}
             </span>
@@ -140,7 +140,7 @@ export function Glossary({
           <div className="text-[12px] text-mute font-normal leading-relaxed">{def}</div>
           {learnMore && (
             <div className="pt-1 border-t border-edge">
-              <span className="text-[10px] text-mute uppercase tracking-widest">Tap to learn more</span>
+              <span className="text-[11px] text-mute uppercase tracking-widest">Tap to learn more</span>
             </div>
           )}
         </div>
@@ -163,7 +163,7 @@ export function InfoTooltip({ label, def, side = "top" }: { label?: string; def:
     >
       <span className="inline-flex items-center gap-1">
         {label ? <span>{label}</span> : null}
-        <span className="grid h-4 w-4 place-items-center rounded-full border border-white/15 bg-white/[0.055] text-[10px] font-black text-mute transition hover:border-neon/35 hover:text-neon">
+        <span className="grid h-4 w-4 place-items-center rounded-full border border-white/15 bg-white/[0.055] text-[11px] font-black text-mute transition hover:border-neon/35 hover:text-neon">
           ?
         </span>
       </span>
@@ -236,7 +236,7 @@ export function WhyDidThisMove({
     <div className="relative" ref={ref}>
       <button
         onClick={() => setOpen(v => !v)}
-        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all ${
+        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-bold uppercase tracking-widest transition-all ${
           open
             ? "bg-pure-white/10 border-pure-white/15 text-pure-white"
             : "bg-pure-white/5 border border-pure-white/10 text-pure-white/45 hover:text-pure-white/75 hover:bg-pure-white/10"
@@ -258,7 +258,7 @@ export function WhyDidThisMove({
             {/* Header */}
             <div className="px-5 py-4 border-b border-edge flex items-center justify-between bg-panel2">
               <div>
-                <div className="text-[10px] uppercase tracking-widest font-black text-mute mb-1">Price Intelligence</div>
+                <div className="text-[11px] uppercase tracking-widest font-black text-mute mb-1">Price Intelligence</div>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-ink">${symbol}</span>
                   <span className={`num text-sm font-bold ${isUp ? "text-neon" : "text-red"}`}>
@@ -293,7 +293,7 @@ export function WhyDidThisMove({
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-bold text-ink tracking-tight">{d.factor}</span>
-                      <span className="text-[9px] text-mute font-mono">{d.confidence}%</span>
+                      <span className="text-[11px] text-mute font-mono">{d.confidence}%</span>
                     </div>
                     <p className="text-[11px] text-mute leading-relaxed mt-1">{d.description}</p>
                     {/* Confidence bar */}
@@ -312,7 +312,7 @@ export function WhyDidThisMove({
 
             {/* Footer */}
             <div className="px-5 py-3 border-t border-edge bg-panel2">
-              <p className="text-[9px] text-mute uppercase tracking-widest font-bold text-center">
+              <p className="text-[11px] text-mute uppercase tracking-widest font-bold text-center">
                 AI-generated analysis · Not financial advice
               </p>
             </div>

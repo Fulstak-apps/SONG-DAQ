@@ -12,6 +12,7 @@ import { getSolPriceUsd } from "@/lib/balance";
 import { readJson } from "@/lib/safeJson";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 import { formatCryptoWithFiat, priceAgeText, useUsdToDisplayRate } from "@/lib/fiat";
+import { BadgeRail, MilestoneGrid, SongIPOPanel, UndervaluedSignalsPanel } from "@/components/GamificationLayer";
 
 interface TokenRow {
   mint: string;
@@ -246,6 +247,32 @@ export default function PortfolioPage() {
   const songTokens = useMemo(() => {
     return (portfolio?.holdings ?? []).filter((h: any) => (h.amount ?? 0) > 0);
   }, [portfolio?.holdings]);
+  const gamifiedPortfolioAssets = useMemo(() => {
+    const artistAssets = artistTokens.map((t) => ({
+      id: t.mint,
+      mint: t.mint,
+      ticker: t.ticker,
+      name: t.name,
+      title: t.name,
+      price: t.price ?? 0,
+      marketCap: t.valueUsd ?? 0,
+      holder: 0,
+    }));
+    const songAssets = songTokens.map((h: any) => ({
+      id: h.songId,
+      mint: h.song?.mintAddress || h.songId,
+      ticker: h.song?.symbol || "SONG",
+      title: h.song?.title || "Song Coin",
+      name: h.song?.title || "Song Coin",
+      artistName: h.song?.artistName,
+      artist_name: h.song?.artistName,
+      price: Number(h.song?.currentPriceUsd ?? h.song?.price ?? 0),
+      marketCap: Number(h.song?.marketCapUsd ?? h.song?.marketCap ?? 0),
+      v24hUSD: Number(h.song?.volume24h ?? 0),
+      holder: Number(h.song?.holder ?? 0),
+    }));
+    return [...artistAssets, ...songAssets];
+  }, [artistTokens, songTokens]);
 
   const totalUsd = (native.usd ?? 0) + (tradingTokens.data?.totalUsd ?? 0) + (audiusTokens.data?.totalUsd ?? 0);
   const tradingAudioBalance = tradingTokens.data?.audioBalance ?? 0;
@@ -309,20 +336,20 @@ export default function PortfolioPage() {
       <div className="space-y-6 max-w-[1280px] mx-auto text-ink">
         <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-5">
           <div>
-            <div className="text-[10px] uppercase tracking-[0.28em] font-black text-neon">Paper Trade / Demo Portfolio</div>
+            <div className="text-[11px] uppercase tracking-[0.28em] font-black text-neon">Paper Trade / Demo Portfolio</div>
             <h1 className="mt-2 text-4xl font-black tracking-tight">Practice Wallet</h1>
             <p className="text-mute text-sm mt-2">
               Demo mode gives you seeded fake balances so you can test buys, sells, and positions without connecting a live wallet.
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button onClick={paper.resetDemo} className="btn text-[10px] uppercase tracking-widest font-black">Reset Demo Balance</button>
-            <button onClick={() => paper.setEnabled(false)} className="btn text-[10px] uppercase tracking-widest font-black">Exit Demo</button>
-            <Link href="/market" className="btn text-[10px] uppercase tracking-widest font-black">Discover</Link>
+            <button onClick={paper.resetDemo} className="btn text-[11px] uppercase tracking-widest font-black">Reset Demo Balance</button>
+            <button onClick={() => paper.setEnabled(false)} className="btn text-[11px] uppercase tracking-widest font-black">Exit Demo</button>
+            <Link href="/market" className="btn text-[11px] uppercase tracking-widest font-black">Discover</Link>
           </div>
         </header>
 
-        <section className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
           <Metric label="Demo Cash" value={formatUsdDisplay(cashUsd)} sub={`Combined paper value in ${currency}`} />
           <Metric label="Demo SOL" value={formatCryptoWithFiat(paperSol, "SOL", convertUsd(paperUsd.sol ? paperSol * paperUsd.sol : null), currency)} sub="Simulated wallet SOL" />
           <Metric label="Demo AUDIO" value={formatCryptoWithFiat(paperAudio, "AUDIO", convertUsd(paperUsd.audio ? paperAudio * paperUsd.audio : null), currency)} sub="Simulated AUDIO balance" />
@@ -332,6 +359,11 @@ export default function PortfolioPage() {
           <Metric label="Risk Focus" value="Demo" sub="No blockchain transaction is sent" />
         </section>
 
+        <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+          <BadgeRail mode="paper" portfolioValueUsd={cashUsd} asset={paperPositions[0] ? { ticker: paperPositions[0].ticker, title: paperPositions[0].ticker, mint: paperPositions[0].mint, price: paperPositions[0].costUsd } : null} limit={3} />
+          <MilestoneGrid asset={paperPositions[0] ? { ticker: paperPositions[0].ticker, title: paperPositions[0].ticker, mint: paperPositions[0].mint } : null} compact />
+        </section>
+
         <section className="grid grid-cols-1 xl:grid-cols-[1.25fr_0.75fr] gap-4">
           <div className="panel-elevated p-5 grain">
             <div className="flex items-center justify-between mb-4">
@@ -339,7 +371,7 @@ export default function PortfolioPage() {
                 <h2 className="text-xl font-black tracking-tight">Paper Positions</h2>
                 <p className="text-mute text-xs mt-1">Seeded positions update as you paper trade around the app.</p>
               </div>
-              <span className="text-[10px] uppercase tracking-widest text-neon font-black">Demo</span>
+              <span className="text-[11px] uppercase tracking-widest text-neon font-black">Demo</span>
             </div>
             <div className="space-y-2">
               {paperPositions.length ? paperPositions.map((p) => (
@@ -349,11 +381,11 @@ export default function PortfolioPage() {
                   </div>
                   <div className="min-w-0 flex-1">
                     <div className="font-bold text-white truncate">{p.ticker}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-mute truncate">Paper holding</div>
+                    <div className="text-[11px] uppercase tracking-widest text-mute truncate">Paper holding</div>
                   </div>
                   <div className="text-right">
                     <div className="font-mono text-sm text-white">{fmtNum(p.amount ?? 0)}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-mute">{formatUsdDisplay(p.costUsd ?? 0)}</div>
+                    <div className="text-[11px] uppercase tracking-widest text-mute">{formatUsdDisplay(p.costUsd ?? 0)}</div>
                   </div>
                 </div>
               )) : (
@@ -372,9 +404,9 @@ export default function PortfolioPage() {
                 <div key={t.id} className="rounded-xl border border-edge bg-white/[0.045] p-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-bold text-white truncate">{t.side} {t.ticker}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-mute truncate">{formatUsdDisplay(t.totalUsd)} · {new Date(t.ts).toLocaleTimeString()}</div>
+                    <div className="text-[11px] uppercase tracking-widest text-mute truncate">{formatUsdDisplay(t.totalUsd)} · {new Date(t.ts).toLocaleTimeString()}</div>
                   </div>
-                  <div className={`text-[10px] uppercase tracking-widest font-black ${t.side === "BUY" ? "text-neon" : "text-red"}`}>{t.side}</div>
+                  <div className={`text-[11px] uppercase tracking-widest font-black ${t.side === "BUY" ? "text-neon" : "text-red"}`}>{t.side}</div>
                 </div>
               )) : (
                 <Empty icon={<Music2 size={18} />} title="No Paper Trades Yet" text="Use the paper button in the header to trade without funds." />
@@ -397,8 +429,8 @@ export default function PortfolioPage() {
           <p className="text-mute mt-2 text-sm">Browse the market freely. Connect only when you want wallet-specific balances or to trade.</p>
         </div>
         <div className="flex flex-col sm:flex-row justify-center gap-3">
-            <button onClick={openLoginModal} className="btn-primary px-6 py-3 text-[10px] uppercase tracking-widest font-black">Connect Solana Wallet</button>
-          <Link href="/market" className="btn px-6 py-3 text-[10px] uppercase tracking-widest font-black">Browse Market</Link>
+            <button onClick={openLoginModal} className="btn-primary px-6 py-3 text-[11px] uppercase tracking-widest font-black">Connect Solana Wallet</button>
+          <Link href="/market" className="btn px-6 py-3 text-[11px] uppercase tracking-widest font-black">Browse Market</Link>
         </div>
       </div>
     );
@@ -408,7 +440,7 @@ export default function PortfolioPage() {
     <div className="space-y-6 max-w-[1280px] mx-auto text-ink">
       <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-5">
         <div>
-          <div className="text-[10px] uppercase tracking-[0.28em] font-black text-neon">Real Wallet Portfolio</div>
+          <div className="text-[11px] uppercase tracking-[0.28em] font-black text-neon">Real Wallet Portfolio</div>
           <h1 className="mt-2 text-4xl font-black tracking-tight">
             {audius?.handle ? `@${audius.handle}` : externalAddress ? short(externalAddress) : "Audius Profile"}
           </h1>
@@ -423,21 +455,21 @@ export default function PortfolioPage() {
         <div className="flex flex-wrap gap-2">
           <button
             onClick={() => { tradingTokens.refresh(); audiusTokens.refresh(); }}
-            className="btn text-[10px] uppercase tracking-widest font-black"
+            className="btn text-[11px] uppercase tracking-widest font-black"
           >
             <RefreshCw size={12} /> Refresh Wallet
           </button>
           {!externalAddress && <WalletButton compact connectOnly />}
-          <Link href="/market" className="btn text-[10px] uppercase tracking-widest font-black">Discover</Link>
+          <Link href="/market" className="btn text-[11px] uppercase tracking-widest font-black">Discover</Link>
           {audius?.handle && (
-            <a href={`https://audius.co/${audius.handle}`} target="_blank" rel="noreferrer" className="btn text-[10px] uppercase tracking-widest font-black">
+            <a href={`https://audius.co/${audius.handle}`} target="_blank" rel="noreferrer" className="btn text-[11px] uppercase tracking-widest font-black">
               Audius <ArrowUpRight size={12} />
             </a>
           )}
         </div>
       </header>
 
-      <section className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
         <Metric label="Total Portfolio Value" value={formatUsdDisplay(totalIndexedValueUsd)} sub={issuerAllocationValueUsd > 0 ? "Liquid value; issuer allocation separated" : paperMode ? "Paper cash + wallet + AUDIO + coins" : "SOL + AUDIO + Song Coins + Artist Coins + other assets"} />
         <Metric label="SOL" value={externalAddress && native.balance != null ? formatCryptoWithFiat(native.balance, "SOL", convertUsd(native.usd), currency) : "Connect"} sub={externalAddress ? priceAgeText(displayFiatUpdatedAt || fiatUpdatedAt) : "Connect external wallet"} />
         <Metric label="AUDIO" value={formatCryptoWithFiat(audioBalance, "AUDIO", convertUsd(audioValueUsd || null), currency)} sub="Audius token value included in total" />
@@ -453,11 +485,21 @@ export default function PortfolioPage() {
         <Metric label="Risk Focus" value={artistTokens.length || songTokens.length ? "Active" : "Idle"} sub="Review liquidity and trust badges" />
       </section>
 
+      <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
+        <BadgeRail asset={gamifiedPortfolioAssets[0]} portfolioValueUsd={totalIndexedValueUsd} limit={3} />
+        <div className="space-y-4">
+          <SongIPOPanel assets={gamifiedPortfolioAssets} limit={2} />
+          <UndervaluedSignalsPanel assets={gamifiedPortfolioAssets} limit={2} />
+        </div>
+      </section>
+
+      <MilestoneGrid asset={gamifiedPortfolioAssets[0]} compact />
+
         <WalletDiagnostics compact />
 
       {issuerAllocationValueUsd > 0 && (
         <div className="rounded-2xl border border-amber/25 bg-amber/10 p-4 text-amber">
-          <div className="text-[10px] uppercase tracking-widest font-black">Issuer allocation is separated</div>
+          <div className="text-[11px] uppercase tracking-widest font-black">Issuer allocation is separated</div>
           <p className="mt-1 text-xs leading-relaxed text-amber/85">
             {formatUsdDisplay(issuerAllocationValueUsd)} of creator-held coin supply is not counted in your liquid portfolio total. That supply is your own issued token inventory, not cash you can spend. Fans buy from the public pool/curve after liquidity is added.
           </p>
@@ -470,7 +512,7 @@ export default function PortfolioPage() {
           <div className="flex items-start gap-3">
             <Eye size={16} className="mt-0.5 shrink-0" />
             <div className="min-w-0">
-              <div className="text-[10px] uppercase tracking-widest font-black">Wallet visibility note</div>
+              <div className="text-[11px] uppercase tracking-widest font-black">Wallet visibility note</div>
               <p className="mt-1 text-xs leading-relaxed text-neon/85">
                 Real trading uses your external Solana wallet. Your Audius vault is shown separately for identity and AUDIO visibility, but it cannot sign song-daq swaps yet. If Phantom hides a brand-new token as spam, open Phantom Hidden Tokens, mark it as Not Spam, then hit Refresh Wallet here.
               </p>
@@ -480,7 +522,7 @@ export default function PortfolioPage() {
 
         {portfolio?.databaseStatus === "unavailable" && (
           <div className="rounded-2xl border border-amber/25 bg-amber/10 p-4 text-amber">
-            <div className="text-[10px] uppercase tracking-widest font-black">Portfolio index is reconnecting</div>
+            <div className="text-[11px] uppercase tracking-widest font-black">Portfolio index is reconnecting</div>
             <p className="mt-1 text-xs leading-relaxed text-amber/85">
               Your wallet balances still load directly from Solana. song-daq trade history and cost basis will refresh when the database connection is available.
             </p>
@@ -493,7 +535,7 @@ export default function PortfolioPage() {
               <h2 className="text-xl font-black tracking-tight">Artist Coins</h2>
               <p className="text-mute text-xs mt-1">Read from Solana token accounts, Audius artist-token metadata, and confirmed song-daq trade records.</p>
             </div>
-            {(tradingTokens.loading || audiusTokens.loading) && <span className="text-[10px] uppercase tracking-widest text-neon animate-pulse">Syncing</span>}
+            {(tradingTokens.loading || audiusTokens.loading) && <span className="text-[11px] uppercase tracking-widest text-neon animate-pulse">Syncing</span>}
           </div>
           <div className="space-y-2">
             {artistTokens.length ? artistTokens.map((t) => <TokenRow key={t.mint} t={t} />) : (
@@ -508,7 +550,7 @@ export default function PortfolioPage() {
               <h2 className="text-xl font-black tracking-tight">External Wallet Assets</h2>
               <p className="text-mute text-xs mt-1">Everything visible in your connected Solana wallet, including meme coins and non-song-daq tokens. Fiat estimates use Jupiter prices when available.</p>
             </div>
-            <span className="text-[10px] uppercase tracking-widest text-neon font-black">{formatUsdDisplay(otherWalletValueUsd)}</span>
+            <span className="text-[11px] uppercase tracking-widest text-neon font-black">{formatUsdDisplay(otherWalletValueUsd)}</span>
           </div>
           <div className="space-y-2">
             {otherWalletAssets.length ? otherWalletAssets.map((t) => <WalletAssetRow key={t.mint} t={t} />) : (
@@ -532,11 +574,11 @@ export default function PortfolioPage() {
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="font-bold text-white truncate">{h.song?.symbol ?? "SONG"}</div>
-                  <div className="text-[10px] uppercase tracking-widest text-mute truncate">{h.song?.title ?? "Song token"}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-mute truncate">{h.song?.title ?? "Song token"}</div>
                 </div>
                 <div className="text-right">
                   <div className="font-mono text-sm text-white">{fmtNum(h.amount ?? 0)}</div>
-                  <div className="text-[10px] uppercase tracking-widest text-mute">{formatCryptoWithFiat((h.amount ?? 0) * (h.song?.price ?? 0), "SOL", convertUsd(((h.amount ?? 0) * (h.song?.price ?? 0)) * (solUsdPrice || 0)), currency)}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-mute">{formatCryptoWithFiat((h.amount ?? 0) * (h.song?.price ?? 0), "SOL", convertUsd(((h.amount ?? 0) * (h.song?.price ?? 0)) * (solUsdPrice || 0)), currency)}</div>
                 </div>
               </Link>
             )) : (
@@ -587,7 +629,7 @@ export default function PortfolioPage() {
               <div key={`${a.kind}-${a.id}`} className="flex items-center justify-between gap-4 py-3">
                 <div>
                   <div className="text-sm font-bold">{a.side} {a.label}</div>
-                  <div className="text-[10px] uppercase tracking-widest text-mute">{a.kind} · {new Date(a.createdAt).toLocaleString()}</div>
+                  <div className="text-[11px] uppercase tracking-widest text-mute">{a.kind} · {new Date(a.createdAt).toLocaleString()}</div>
                 </div>
                 <div className="font-mono text-sm text-ink">{a.total}</div>
               </div>
@@ -602,11 +644,12 @@ export default function PortfolioPage() {
 }
 
 function Metric({ label, value, sub }: { label: string; value: string; sub: string }) {
+  const longValue = value.length > 18;
   return (
     <div className="panel-elevated p-5 grain">
-      <div className="text-[10px] uppercase tracking-widest text-mute font-black">{label}</div>
-      <div className="mt-2 text-2xl font-mono font-black text-white">{value}</div>
-      <div className="mt-1 text-[10px] uppercase tracking-widest text-mute">{sub}</div>
+      <div className="text-[11px] uppercase tracking-widest text-mute font-black">{label}</div>
+      <div className={`mt-2 break-words font-mono font-black leading-tight text-white ${longValue ? "text-lg md:text-xl" : "text-2xl md:text-3xl"}`}>{value}</div>
+      <div className="mt-1 text-xs uppercase tracking-widest text-mute">{sub}</div>
     </div>
   );
 }
@@ -622,17 +665,17 @@ function TokenRow({ t }: { t: TokenRow }) {
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
           <div className="font-bold text-white truncate">${t.ticker}</div>
-          {t.issuerAllocation ? <span className="shrink-0 rounded-full border border-amber/25 bg-amber/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest text-amber">Issuer</span> : null}
+          {t.issuerAllocation ? <span className="shrink-0 rounded-full border border-amber/25 bg-amber/10 px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest text-amber">Issuer</span> : null}
         </div>
-        <div className="text-[10px] uppercase tracking-widest text-mute truncate">{t.name}</div>
-        {t.valuationNote ? <div className="mt-1 text-[10px] normal-case tracking-normal text-amber/80 line-clamp-2">{t.valuationNote}</div> : null}
+        <div className="text-[11px] uppercase tracking-widest text-mute truncate">{t.name}</div>
+        {t.valuationNote ? <div className="mt-1 text-xs normal-case tracking-normal text-amber/80 line-clamp-2">{t.valuationNote}</div> : null}
       </div>
       <div className="text-right">
         <div className="font-mono text-sm text-white">{fmtNum(t.amount)}</div>
-        <div className="text-[10px] uppercase tracking-widest text-mute">
+        <div className="text-[11px] uppercase tracking-widest text-mute">
           {t.issuerAllocation ? "Not counted" : liquidValue ? formatUsdDisplay(liquidValue) : "No price"}
         </div>
-        {t.issuerAllocation && t.valueUsd != null ? <div className="text-[9px] uppercase tracking-widest text-mute">{formatUsdDisplay(t.valueUsd)} estimated</div> : null}
+        {t.issuerAllocation && t.valueUsd != null ? <div className="text-[11px] uppercase tracking-widest text-mute">{formatUsdDisplay(t.valueUsd)} estimated</div> : null}
       </div>
     </Link>
   );
@@ -649,14 +692,14 @@ function WalletAssetRow({ t }: { t: TokenRow }) {
       <div className="min-w-0 flex-1">
         <div className="flex min-w-0 items-center gap-2">
           <div className="font-bold text-white truncate">${t.ticker}</div>
-          {t.isVerified ? <span className="shrink-0 rounded-full border border-neon/20 bg-neon/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest text-neon">Verified</span> : null}
+          {t.isVerified ? <span className="shrink-0 rounded-full border border-neon/20 bg-neon/10 px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest text-neon">Verified</span> : null}
         </div>
-        <div className="text-[10px] uppercase tracking-widest text-mute truncate">{t.name}</div>
-        <div className="mt-1 font-mono text-[9px] text-mute truncate">{short(t.mint)}</div>
+        <div className="text-[11px] uppercase tracking-widest text-mute truncate">{t.name}</div>
+        <div className="mt-1 font-mono text-[11px] text-mute truncate">{short(t.mint)}</div>
       </div>
       <div className="text-right shrink-0">
         <div className="font-mono text-sm text-white">{fmtNum(t.amount)}</div>
-        <div className="text-[10px] uppercase tracking-widest text-mute">
+        <div className="text-[11px] uppercase tracking-widest text-mute">
           {t.issuerAllocation ? "Not counted" : liquidValue ? formatUsdDisplay(liquidValue) : "No fiat price"}
         </div>
       </div>
@@ -690,8 +733,8 @@ function WalletAssetRow({ t }: { t: TokenRow }) {
 function Mini({ label, value }: { label: string; value: string }) {
   return (
     <div className="rounded-xl border border-edge bg-panel p-3">
-      <div className="text-[9px] uppercase tracking-widest text-mute font-black">{label}</div>
-      <div className="mt-1 font-mono text-sm font-bold text-white">{value}</div>
+      <div className="text-[11px] uppercase tracking-widest text-mute font-black">{label}</div>
+      <div className="mt-1 font-mono text-base font-bold text-white">{value}</div>
     </div>
   );
 }
@@ -701,7 +744,7 @@ function Empty({ icon, title, text }: { icon: ReactNode; title: string; text: st
     <div className="rounded-xl border border-dashed border-edge bg-panel p-8 text-center">
       <div className="mx-auto mb-3 w-10 h-10 rounded-xl bg-panel2 grid place-items-center text-mute">{icon}</div>
       <div className="text-sm font-bold text-ink">{title}</div>
-      <div className="mt-1 text-xs text-mute max-w-md mx-auto">{text}</div>
+      <div className="mt-1 text-sm text-mute max-w-md mx-auto">{text}</div>
     </div>
   );
 }

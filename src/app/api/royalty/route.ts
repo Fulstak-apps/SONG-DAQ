@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { appMode, fakeTransactionId } from "@/lib/appMode";
 import { requireAdmin } from "@/lib/auth";
 import { verifyAdminSession } from "@/lib/adminSession";
+import { refreshSongAssetState } from "@/lib/assetState";
 
 export const dynamic = "force-dynamic";
 
@@ -110,6 +111,7 @@ export async function POST(req: NextRequest) {
       },
     });
 
+    let refreshedSong = null;
     if (coinId) {
       await prisma.songToken.updateMany({
         where: { id: coinId },
@@ -120,6 +122,7 @@ export async function POST(req: NextRequest) {
           royaltyStatus: "PENDING",
         },
       });
+      refreshedSong = await refreshSongAssetState(coinId).catch(() => null);
     }
 
     await prisma.transaction.create({
@@ -137,6 +140,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       ok: true,
       request: reqRecord,
+      song: refreshedSong?.song,
       message: "Your royalty setup request has been submitted. Your coin now shows Royalty Verification In Progress.",
     });
   }
@@ -167,8 +171,9 @@ export async function POST(req: NextRequest) {
           },
         });
       }
+      const refreshedSong = request.coinId ? await refreshSongAssetState(request.coinId).catch(() => null) : null;
       await prisma.adminLog.create({ data: { mode, adminId: String(adminId), action: `royalty_${nextStatus}`, targetType: "RoyaltyRequest", targetId: requestId, notes: body.adminNotes ? String(body.adminNotes) : undefined } });
-      return NextResponse.json({ ok: true, request });
+      return NextResponse.json({ ok: true, request, song: refreshedSong?.song });
     }
 
     if (action === "record_payment") {
@@ -205,9 +210,10 @@ export async function POST(req: NextRequest) {
           lastRoyaltyPaymentDate: new Date(),
         },
       });
+      const refreshedSong = await refreshSongAssetState(coinId).catch(() => null);
       await prisma.transaction.create({ data: { mode, isSimulated: mode === "paper", fakeTransactionId: mode === "paper" ? fakeTransactionId("royalty_payment") : undefined, coinId, action: "Royalty Payment Received", usdAmount: amount, status: "confirmed" } });
       await prisma.adminLog.create({ data: { mode, adminId: String(adminId), action: "royalty_payment_received", targetType: "RoyaltyPayment", targetId: payment.id } });
-      return NextResponse.json({ ok: true, payment });
+      return NextResponse.json({ ok: true, payment, song: refreshedSong?.song });
     }
 
     if (action === "pool_contribution") {
@@ -242,9 +248,10 @@ export async function POST(req: NextRequest) {
           lastRoyaltyPoolContributionDate: new Date(),
         },
       });
+      const refreshedSong = await refreshSongAssetState(coinId).catch(() => null);
       await prisma.transaction.create({ data: { mode, isSimulated: mode === "paper", fakeTransactionId: contribution.fakeTransactionId, transactionSignature: contribution.transactionHash, coinId, action: "Royalty Pool Contribution", usdAmount: amount, solAmount: contribution.amountSol, status: "confirmed" } });
       await prisma.adminLog.create({ data: { mode, adminId: String(adminId), action: "royalty_pool_contribution", targetType: "RoyaltyPoolContribution", targetId: contribution.id } });
-      return NextResponse.json({ ok: true, contribution });
+      return NextResponse.json({ ok: true, contribution, song: refreshedSong?.song });
     }
 
     return NextResponse.json({ error: "Unknown royalty action" }, { status: 400 });

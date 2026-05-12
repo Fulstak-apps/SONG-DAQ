@@ -101,12 +101,12 @@ export function NewsFeed() {
             </Glossary>
           </span>
         </div>
-        <span className="text-[9px] text-mute num bg-white/[0.055] px-2 py-0.5 rounded-full border border-edge font-bold uppercase tracking-widest">{news.length} stories</span>
+        <span className="text-[11px] text-mute num bg-white/[0.055] px-2 py-0.5 rounded-full border border-edge font-bold uppercase tracking-widest">{news.length} stories</span>
       </div>
 
       <div className="relative z-10 flex gap-1.5 overflow-x-auto border-b border-edge px-5 py-2 no-scrollbar">
         {categoryCounts.map((item) => (
-          <span key={item.category} className={`shrink-0 rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-widest ${CAT_STYLE[item.category] ?? ""}`}>
+          <span key={item.category} className={`shrink-0 rounded-full border px-2.5 py-1 text-[11px] font-black uppercase tracking-widest ${CAT_STYLE[item.category] ?? ""}`}>
             {item.label} · {loaded ? item.count : "..."}
           </span>
         ))}
@@ -136,13 +136,13 @@ export function NewsFeed() {
               >
                 <a href={item.link} target="_blank" rel="noreferrer" className="flex items-start gap-3 px-5 py-3">
                   <div className="w-16 shrink-0">
-                    <span className={`chip w-full justify-center text-[8px] ${CAT_STYLE[item.category] ?? ""}`}>
+                    <span className={`chip w-full justify-center text-[11px] ${CAT_STYLE[item.category] ?? ""}`}>
                       {item.category}
                     </span>
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-[13px] font-semibold leading-snug text-ink hover:text-neon transition tracking-tight break-words line-clamp-3">{cleanNewsText(item.title)}</div>
-                    <div className="flex items-center gap-2 mt-1.5 text-[9px] text-mute uppercase tracking-widest font-bold">
+                    <div className="flex items-center gap-2 mt-1.5 text-[11px] text-mute uppercase tracking-widest font-bold">
                       <span className="max-w-[150px] truncate">{item.source}</span>
                       <span className="opacity-30">·</span>
                       <span className="num">{relTime(item.pubDate)}</span>

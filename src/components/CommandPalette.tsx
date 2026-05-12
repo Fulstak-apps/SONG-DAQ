@@ -107,7 +107,7 @@ export function CommandPalette() {
                 placeholder="Search assets, markets, protocols…"
                 className="flex-1 !bg-transparent !border-none !p-0 text-base font-medium text-ink placeholder-mute focus:!ring-0 focus:!shadow-none outline-none"
               />
-              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/[0.075] border border-edge text-[9px] uppercase tracking-widest font-black text-mute">
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-white/[0.075] border border-edge text-[11px] uppercase tracking-widest font-black text-mute">
                 <Command size={9} /> K
               </div>
             </div>
@@ -117,7 +117,7 @@ export function CommandPalette() {
               {!items.length && (
                 <li className="px-6 py-14 text-center space-y-2">
                   <div className="text-mute text-sm font-bold uppercase tracking-widest">No results found</div>
-                  <div className="text-mute text-[10px] uppercase tracking-widest">Try adjusting your search</div>
+                  <div className="text-mute text-[11px] uppercase tracking-widest">Try adjusting your search</div>
                 </li>
               )}
               {items.map((it, i) => {
@@ -147,7 +147,7 @@ export function CommandPalette() {
                         {it.subtitle && <div className="text-[11px] truncate transition text-mute">{it.subtitle}</div>}
                       </div>
                       {it.hint && (
-                        <div className={`text-[8px] uppercase tracking-widest font-black px-2 py-0.5 rounded-md border transition-all ${
+                        <div className={`text-[11px] uppercase tracking-widest font-black px-2 py-0.5 rounded-md border transition-all ${
                           isSelected ? "bg-neon/10 border-neon/20 text-neon" : "bg-white/[0.055] border-edge text-mute"
                         }`}>
                           {it.hint}
@@ -165,7 +165,7 @@ export function CommandPalette() {
             </ul>
 
             {/* Footer */}
-            <footer className="px-6 py-3 border-t border-edge flex items-center justify-between text-[9px] uppercase tracking-widest font-black text-mute">
+            <footer className="px-6 py-3 border-t border-edge flex items-center justify-between text-[11px] uppercase tracking-widest font-black text-mute">
               <div className="flex items-center gap-5">
                 <div className="flex items-center gap-1.5">
                   <ArrowUp size={9} /><ArrowDown size={9} />

@@ -26,7 +26,7 @@ export function LocalTimeToggle() {
     <button
       type="button"
       onClick={() => setHour12((v) => !v)}
-      className="rounded-lg border border-edge bg-panel px-3 py-2 text-[10px] uppercase tracking-widest font-black text-mute hover:text-ink hover:border-neon/30 transition"
+      className="rounded-lg border border-edge bg-panel px-3 py-2 text-[11px] uppercase tracking-widest font-black text-mute hover:text-ink hover:border-neon/30 transition"
       title="Toggle 12/24-hour Los Angeles time"
     >
       Los Angeles {label}

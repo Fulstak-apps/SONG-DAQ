@@ -78,28 +78,28 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
   }
 
   if (!mounted) {
-    return <button className="btn text-[10px] font-bold uppercase tracking-widest">{compact ? "Wallet" : "Connect"}</button>;
+    return <button className="btn text-[11px] font-bold uppercase tracking-widest">{compact ? "Wallet" : "Connect"}</button>;
   }
 
   if (hasExternalWallet) {
     return (
       <div className="flex items-center gap-2">
         {compact ? (
-          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-edge bg-white/[0.055] backdrop-blur-xl max-w-[122px]">
+          <div className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-edge bg-white/[0.055] backdrop-blur-xl max-w-[132px]">
             <span className="w-1.5 h-1.5 rounded-full bg-violet shadow-[0_0_4px_rgba(155,81,224,0.5)]" />
-            <span className="min-w-0 truncate text-[10px] font-mono text-ink font-bold">{shortAddr(address)}</span>
-            <span className="rounded-md border border-neon/20 bg-neon/10 px-1 py-0.5 text-[7px] uppercase tracking-widest font-black text-neon shrink-0">{network}</span>
+            <span className="min-w-0 truncate text-[11px] font-mono text-ink font-bold">{shortAddr(address)}</span>
+            <span className="rounded-md border border-neon/20 bg-neon/10 px-1 py-0.5 text-[11px] uppercase tracking-widest font-black text-neon shrink-0">{network}</span>
           </div>
         ) : (
           <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl border border-edge bg-white/[0.055] backdrop-blur-xl">
             <span className="w-1.5 h-1.5 rounded-full bg-violet shadow-[0_0_4px_rgba(155,81,224,0.5)]" />
-            <span className="text-[10px] text-mute uppercase tracking-widest font-black">Trading Wallet</span>
-            <span className="text-[10px] font-mono text-ink font-bold">{shortAddr(address)}</span>
-            <span className="rounded-md border border-neon/20 bg-neon/10 px-1.5 py-0.5 text-[8px] uppercase tracking-widest font-black text-neon">{network}</span>
+            <span className="text-[11px] text-mute uppercase tracking-widest font-black">Trading Wallet</span>
+            <span className="text-[11px] font-mono text-ink font-bold">{shortAddr(address)}</span>
+            <span className="rounded-md border border-neon/20 bg-neon/10 px-1.5 py-0.5 text-[11px] uppercase tracking-widest font-black text-neon">{network}</span>
           </div>
         )}
         <button
-          className="w-8 h-8 flex items-center justify-center rounded-xl bg-white/[0.055] border border-edge text-mute hover:text-red hover:bg-red/10 hover:border-red/25 transition"
+          className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.055] border border-edge text-mute hover:text-red hover:bg-red/10 hover:border-red/25 transition"
           onClick={onDisconnect}
           title="Disconnect all wallets"
         >
@@ -115,7 +115,7 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
         setOpen(false);
       }
     }}>
-      <button className={`btn-primary text-[10px] font-black tracking-widest ${compact ? "px-3 py-2" : "px-5 py-2"}`} onClick={() => setOpen((v) => !v)}>
+      <button className={`btn-primary text-[11px] font-black tracking-widest ${compact ? "px-3 py-2" : "px-5 py-2"}`} onClick={() => setOpen((v) => !v)}>
         <Wallet size={12} /> {compact ? "Wallet" : "Connect"}
       </button>
       <AnimatePresence>
@@ -136,7 +136,7 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
                 onConnect={() => onConnect(w.id)}
               />
             ))}
-            {err && <div className="text-red text-[10px] px-2 py-2 mt-1 bg-red/5 border border-red/10 rounded-lg font-bold">{err}</div>}
+            {err && <div className="text-red text-[11px] px-2 py-2 mt-1 bg-red/5 border border-red/10 rounded-lg font-bold">{err}</div>}
           </motion.div>
         )}
       </AnimatePresence>
@@ -161,7 +161,7 @@ function WalletRow({
       disabled={busy}
     >
       <span className="text-sm font-bold text-ink transition">{w.label}</span>
-      <span className="text-[9px] text-mute uppercase tracking-widest font-bold flex items-center gap-1">
+      <span className="text-[11px] text-mute uppercase tracking-widest font-bold flex items-center gap-1">
         {busy ? <Loader2 size={12} className="animate-spin" /> : installed ? "Connect →" : <><ExternalLink size={10} /> Install</>}
       </span>
     </button>
