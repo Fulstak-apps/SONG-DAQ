@@ -18,7 +18,7 @@ export async function GET(_req: Request, { params }: { params: { mint: string } 
   }).catch(() => null);
 
   const symbol = esc((song?.symbol || "$SONG").replace(/^\$/, "").slice(0, 10).toUpperCase());
-  const title = esc(song?.title || "SONG·DAQ");
+  const title = esc(song?.title || "song-daq");
   const artist = esc(song?.artistName || "Song Token");
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
@@ -40,7 +40,7 @@ export async function GET(_req: Request, { params }: { params: { mint: string } 
   <text x="512" y="394" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="72" font-weight="900" fill="#00E572">${symbol}</text>
   <text x="512" y="814" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="38" font-weight="800" fill="#FFFFFF">${title}</text>
   <text x="512" y="862" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="26" font-weight="700" fill="#C8D0D8">${artist}</text>
-  <text x="512" y="926" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="900" letter-spacing="8" fill="#020403">SONG·DAQ VERIFIED METADATA</text>
+  <text x="512" y="926" text-anchor="middle" font-family="Inter, Arial, sans-serif" font-size="22" font-weight="900" letter-spacing="8" fill="#020403">song-daq VERIFIED METADATA</text>
 </svg>`;
 
   return new NextResponse(svg, {

@@ -112,8 +112,8 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     } catch (e: any) {
       reportWalletError("wallet_connect_failed", e, id, address).catch(() => {});
       setErr(e.message ?? String(e));
-      console.error("SONG·DAQ wallet connect failed", e);
-      console.info("SONG·DAQ wallet diagnostics", walletDiagnosticsSnapshot());
+      console.error("song-daq wallet connect failed", e);
+      console.info("song-daq wallet diagnostics", walletDiagnosticsSnapshot());
     } finally {
       setBusy(null);
     }
@@ -194,7 +194,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               {step === "ROLE" && (
                 <motion.div key="role" {...fade} className="space-y-5">
                   <div className="text-center">
-                    <h2 className="text-xl font-semibold tracking-tight">Welcome to SONG·DAQ</h2>
+                    <h2 className="text-xl font-semibold tracking-tight">Welcome to song-daq</h2>
                     <p className="text-mute text-sm mt-1">How would you like to participate?</p>
                   </div>
                   <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">

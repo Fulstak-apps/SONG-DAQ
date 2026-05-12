@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Lightweight wallet balance helpers. SONG·DAQ settlement is Solana-only.
+ * Lightweight wallet balance helpers. song-daq settlement is Solana-only.
  */
 
 const SOL_RPC =

@@ -34,7 +34,7 @@ export default function AdminSettingsPage() {
     <main className="space-y-6">
       <section className="panel-elevated p-6 md:p-10 space-y-4">
         <div className="text-[10px] uppercase tracking-[0.3em] font-black text-neon">Admin settings</div>
-        <h1 className="text-4xl md:text-6xl font-black text-ink">SONG·DAQ control panel</h1>
+        <h1 className="text-4xl md:text-6xl font-black text-ink">song-daq control panel</h1>
         <p className="max-w-3xl text-mute leading-relaxed">
           Settings are server-driven for the MVP. Update env vars in Render, then redeploy. Live treasury execution should stay manual until automated treasury flows are audited.
         </p>

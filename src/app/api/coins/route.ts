@@ -36,7 +36,7 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
     decimals: 6,
     owner_id: song.artistWallet?.audiusUserId || song.artistWalletId || "",
     logo_uri: song.artworkUrl || song.artistWallet?.audiusAvatar || undefined,
-    description: `${song.title} by ${song.artistName}. SONG·DAQ song token.`,
+    description: `${song.title} by ${song.artistName}. song-daq song token.`,
     price: priceUsd || undefined,
     marketCap: Number(song.marketCapUsd || (priceUsd > 0 ? priceUsd * supply : 0)) || undefined,
     liquidity: Number(song.launchLiquidityUsd || (Number(song.liquidityPairAmount || 0) * Number(rates[String(song.liquidityPairAsset || "SOL").toUpperCase()] || 0)) || song.liquidityPairAmount || 0),
@@ -108,9 +108,9 @@ export async function GET(req: NextRequest) {
       recordTick(c.mint, c.price ?? 0, c.v24hUSD ?? 0, (c as any).history24hPrice ?? 0);
     }
     const sorted = [...combined].sort((a, b) => {
-      const aLocal = (a as any).isSongDaqLocal ? 1 : 0;
-      const bLocal = (b as any).isSongDaqLocal ? 1 : 0;
-      if (aLocal !== bLocal && sort === "new") return bLocal - aLocal;
+      const aSourceRank = (a as any).isSongDaqLocal ? 2 : ((a as any).isOpenAudioCoin || (a as any).source === "audius_public" || (a as any).source === "open_audio") ? 1 : 0;
+      const bSourceRank = (b as any).isSongDaqLocal ? 2 : ((b as any).isOpenAudioCoin || (b as any).source === "audius_public" || (b as any).source === "open_audio") ? 1 : 0;
+      if (aSourceRank !== bSourceRank && sort === "new") return bSourceRank - aSourceRank;
       if (sort === "new") {
         const ad = Date.parse(String((a as any).createdAt || "")) || 0;
         const bd = Date.parse(String((b as any).createdAt || "")) || 0;

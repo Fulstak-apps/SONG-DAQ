@@ -55,7 +55,7 @@ function ensurePolling(sort: string) {
   }, POLL_MS);
 }
 
-export function useCoins(sort: "quality" | "marketCap" | "volume" | "gainers" | "holders" = "quality") {
+export function useCoins(sort: "quality" | "new" | "marketCap" | "volume" | "gainers" | "holders" = "quality") {
   const e = getEntry(sort);
   const [coins, setCoins] = useState<AudiusCoin[]>(e.coins);
   const [loading, setLoading] = useState(!e.coins.length);

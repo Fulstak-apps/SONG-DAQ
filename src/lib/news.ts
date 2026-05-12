@@ -60,7 +60,7 @@ export async function getNews(): Promise<NewsStory[]> {
     title: "Audius Artist Tokens volume surging 200% today",
     link: "/",
     pubDate: new Date().toISOString(),
-    source: "SONG·DAQ Terminal",
+    source: "song-daq Terminal",
     category: "TRENDING",
     contentSnippet: "Unusual activity detected across several Artist Tokens as liquidity pools deepen."
   });

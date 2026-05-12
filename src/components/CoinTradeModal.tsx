@@ -327,7 +327,7 @@ export function CoinTradeModal({
     }
     if (!address || !canSignSolanaSwap) {
       openLoginModal();
-      setErr("Connect an external Solana wallet like Phantom, Solflare, or Backpack to buy or sell. Audius built-in wallet trading is coming later, but it cannot sign SONG·DAQ swaps yet.");
+      setErr("Connect an external Solana wallet like Phantom, Solflare, or Backpack to buy or sell. Audius built-in wallet trading is coming later, but it cannot sign song-daq swaps yet.");
       return;
     }
     if (!quote) {
@@ -579,7 +579,7 @@ export function CoinTradeModal({
               <div className="rounded-xl border border-amber/20 bg-amber/10 p-3 text-xs leading-relaxed text-amber/90">
                 <div className="text-[10px] uppercase tracking-widest font-black text-amber">Audius wallet support coming soon</div>
                 <p className="mt-1">
-                  Audius login proves identity and can show your built-in Audius wallet balance. Real SONG·DAQ trades currently require an external Solana wallet like Phantom, Solflare, or Backpack.
+                  Audius login proves identity and can show your built-in Audius wallet balance. Real song-daq trades currently require an external Solana wallet like Phantom, Solflare, or Backpack.
                 </p>
               </div>
 

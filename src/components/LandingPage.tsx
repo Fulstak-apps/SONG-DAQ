@@ -45,10 +45,10 @@ export function LandingPage() {
   const [stats, setStats] = useState({ tradingVolume: 0, activeArtists: 0, songsTokenized: 0 });
   const [statsLoaded, setStatsLoaded] = useState(false);
   const HERO_TEXT = [
-    { a: "Trade music", b: "coins.", color: "text-gradient-neon" },
-    { a: "Real artists.", b: "Real songs.", color: "text-gradient-violet" },
-    { a: "Charts meet", b: "catalogs.", color: "text-gradient-cyan" },
-    { a: "Royalty signals.", b: "Market flow.", color: "text-gradient-gold" },
+    { a: "Insurance and", b: "liquidity.", color: "text-gradient-neon" },
+    { a: "100% verified", b: "on-chain.", color: "text-gradient-violet" },
+    { a: "Earn stream", b: "royalties.", color: "text-gradient-cyan" },
+    { a: "Real-time", b: "audit protocol.", color: "text-gradient-gold" },
   ];
 
   useEffect(() => {
@@ -75,75 +75,93 @@ export function LandingPage() {
 
   return (
     <div className="space-y-20 pb-20 overflow-hidden">
-      {/* ═══ CINEMATIC HERO ═══════════════════════════════ */}
-      <section className="relative min-h-[70vh] flex items-center justify-center text-center pt-10">
-        {/* Ambient orbs */}
-        <div className="orb orb-neon w-[600px] h-[600px] -top-40 -left-40 opacity-60" />
-        <div className="orb orb-violet w-[500px] h-[500px] -top-20 -right-40 opacity-50" style={{ animationDelay: "-7s" }} />
-        <div className="orb orb-cyan w-[400px] h-[400px] bottom-0 left-1/3 opacity-30" style={{ animationDelay: "-14s" }} />
-        
-        <div className="relative z-10 max-w-3xl mx-auto space-y-8 px-4 h-full flex flex-col items-center justify-center">
-          <div className="h-[200px] md:h-[250px] relative w-full flex items-center justify-center">
+      {/* ═══ MARKET HERO ═══════════════════════════════ */}
+      <section className="relative rounded-2xl md:rounded-3xl overflow-hidden panel-elevated p-5 sm:p-7 md:p-12 2xl:p-14 flex flex-col lg:flex-row gap-6 md:gap-8 2xl:gap-12 items-center justify-between grain">
+        <div className="orb orb-neon w-[500px] h-[500px] -top-40 -right-40 opacity-40" />
+        <div className="orb orb-violet w-[400px] h-[400px] -bottom-40 -left-40 opacity-30" style={{ animationDelay: "-10s" }} />
+
+        <div className="relative z-10 flex-1 min-w-0 space-y-5 text-center lg:text-left">
+          <div className="space-y-2">
+            <div className="text-[10px] uppercase tracking-[0.22em] sm:tracking-[0.3em] font-black text-mute mb-3">Live Music Economy</div>
+            <div className="relative h-[92px] sm:h-[112px] md:h-[138px]">
             <AnimatePresence mode="wait">
               <motion.h1
                 key={heroIdx}
-                initial={false}
+                initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
-                exit={{ opacity: 0, y: -20, filter: "blur(8px)" }}
-                transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                className="text-5xl md:text-8xl font-black tracking-[-0.04em] leading-[0.85] absolute inset-0 flex flex-col items-center justify-center"
+                exit={{ opacity: 0, y: -12, filter: "blur(8px)" }}
+                transition={{ duration: 0.36, ease: [0.16, 1, 0.3, 1] }}
+                className="absolute inset-0 flex flex-col justify-center text-[2.35rem] sm:text-5xl md:text-6xl font-black tracking-tight leading-[0.9]"
               >
                 <span className="text-gradient-hero">{curr.a}</span>
                 <span className={curr.color}>{curr.b}</span>
               </motion.h1>
             </AnimatePresence>
+            </div>
           </div>
 
           <motion.p
             initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.35 }}
-            className="text-mute text-lg md:text-xl font-medium leading-relaxed max-w-xl mx-auto"
+            className="text-mute text-sm sm:text-base md:text-lg max-w-xl font-medium leading-relaxed mx-auto lg:mx-0"
           >
-            Buy and trade music coins tied to real artists and songs. Audius powers artist identity and catalog data; SONG·DAQ powers the market, portfolio, charts, and royalty transparency.
+            Buy and trade music coins tied to real artists and songs. Audius powers artist identity and catalog data; song-daq powers the market, portfolio, charts, and royalty transparency.
           </motion.p>
 
           <motion.div
             initial={false}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.7, delay: 0.5 }}
-            className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
+            className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2"
           >
             <PathButton href="/market" title="Fan / Investor" body="Browse coins, watch charts, buy, sell, and track your portfolio." tone="neon" />
             <PathButton href="/artist" title="Artist" body="Connect Audius, choose Artist Coin or Song Token, launch, add liquidity, and set up splits." tone="violet" />
           </motion.div>
+        </div>
 
-          {/* Live stats counter */}
-          <motion.div
-            initial={false}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.7, duration: 0.6 }}
-            className="flex items-center justify-center gap-8 md:gap-12 pt-8"
-          >
+        <motion.div
+          initial={false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.7, duration: 0.6 }}
+          className="relative z-10 w-full max-w-[380px] shrink-0"
+        >
+          <div className="panel p-5 rounded-[28px] border border-edge bg-panel2/70 backdrop-blur-3xl grain overflow-hidden relative">
+            <div className="absolute inset-x-0 bottom-0 h-16 wave-line opacity-20" />
+            <div className="absolute -right-14 -top-14 h-32 w-32 rounded-full bg-neon/10 blur-3xl" />
+            <div className="relative flex items-start justify-between gap-4">
+              <div>
+                <div className="text-[10px] uppercase tracking-[0.24em] font-black text-mute">Live Market</div>
+                <div className="mt-1 text-xl font-black tracking-tight text-ink">Pulse</div>
+              </div>
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-neon/25 bg-neon/10 px-2.5 py-1 text-[8px] uppercase tracking-widest font-black text-neon">
+                <span className="h-1.5 w-1.5 rounded-full bg-neon animate-pulseDot" /> Live
+              </span>
+            </div>
+            <div className="relative mt-5 grid gap-3">
             {!statsLoaded ? (
               <>
-                <LiveStatSkeleton label="Trading Volume" />
-                <div className="w-px h-8 bg-white/[0.06]" />
-                <LiveStatSkeleton label="Active Artists" />
-                <div className="w-px h-8 bg-white/[0.06] hidden sm:block" />
-                <LiveStatSkeleton label="Songs Tokenized" className="hidden sm:block" />
+                <div className="rounded-2xl border border-edge bg-neon/8 px-4 py-3 text-[10px] uppercase tracking-[0.2em] font-black text-neon">
+                  <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-neon animate-pulseDot" /> Loading market data...</span>
+                </div>
+                <HeroPulseStat label="Volume" loading />
+                <HeroPulseStat label="Active Artists" loading />
+                <HeroPulseStat label="Songs Tokenized" loading />
               </>
             ) : (
               <>
-                <LiveStat label="Trading Volume" value={fmtStatUsd(stats.tradingVolume)} />
-                <div className="w-px h-8 bg-white/[0.06]" />
-                <LiveStat label="Active Artists" value={fmtStat(stats.activeArtists)} />
-                <div className="w-px h-8 bg-white/[0.06] hidden sm:block" />
-                <LiveStat label="Songs Tokenized" value={fmtStat(stats.songsTokenized)} className="hidden sm:block" />
+                <HeroPulseStat label="Volume" value={fmtStatUsd(stats.tradingVolume)} accent="text-neon" />
+                <HeroPulseStat label="Active Artists" value={fmtStat(stats.activeArtists)} />
+                <HeroPulseStat label="Songs Tokenized" value={fmtStat(stats.songsTokenized)} accent="text-cyan" />
               </>
             )}
-          </motion.div>
-        </div>
+            </div>
+            <div className="relative mt-4 flex items-center justify-between gap-3 text-[9px] uppercase tracking-[0.18em] font-black text-mute">
+              <span>Audius synced</span>
+              <span className="text-neon/80">Every 60s</span>
+            </div>
+          </div>
+        </motion.div>
       </section>
 
       {/* ═══ HOW IT WORKS ═════════════════════════════════ */}
@@ -157,7 +175,7 @@ export function LandingPage() {
 
       <Section>
         <div className="text-center mb-12">
-          <div className="text-[10px] uppercase tracking-[0.3em] font-black text-mute mb-3">How SONG·DAQ Works</div>
+          <div className="text-[10px] uppercase tracking-[0.3em] font-black text-mute mb-3">How song-daq Works</div>
           <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gradient-hero">Six steps to ownership</h2>
         </div>
       </Section>
@@ -292,10 +310,10 @@ export function LandingPage() {
                 Built to make token launches and trades legible before anyone risks real money.
               </h3>
               <p className="mt-4 mb-8 text-base md:text-lg leading-relaxed text-mute max-w-2xl">
-                SONG·DAQ is designed so wallet approvals, artist identity, royalty status, liquidity protection, and contract visibility are understandable before anyone commits funds. The page should answer the trust questions first, not make you hunt for them in tiny hover states.
+                song-daq is designed so wallet approvals, artist identity, royalty status, liquidity protection, and contract visibility are understandable before anyone commits funds. The page should answer the trust questions first, not make you hunt for them in tiny hover states.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TrustCard title="Wallet approvals are required for every transaction" body="SONG·DAQ can prepare trades and launches, but user funds do not move unless the connected Solana wallet signs and approves the exact action." />
+                <TrustCard title="Wallet approvals are required for every transaction" body="song-daq can prepare trades and launches, but user funds do not move unless the connected Solana wallet signs and approves the exact action." />
                 <TrustCard title="Audius sign-in verifies artist identity" body="Artist launch access uses Sign in with Audius instead of pasted handles, reducing impersonation risk and tying the launch flow to a real public music identity." />
                 <TrustCard title="Locked split status is visible before trading" body="Coin pages and launch review screens show whether royalty split routing is locked, pending, or still unverified, so buyers can understand revenue status before they buy." />
                 <TrustCard title="Liquidity is required before launch" body="A token cannot go live, become tradable, or appear in the public market until starting liquidity is added and validated, so buyers are not dropped into a frozen market." />
@@ -421,6 +439,28 @@ function LiveStatSkeleton({ label, className = "" }: { label: string; className?
     <div className={`text-center ${className}`}>
       <div className="mx-auto h-7 w-24 rounded-lg skeleton" />
       <div className="text-[9px] uppercase tracking-[0.2em] font-bold text-mute mt-2">{label}</div>
+    </div>
+  );
+}
+
+function HeroPulseStat({ label, value, accent = "text-ink", loading = false }: { label: string; value?: string; accent?: string; loading?: boolean }) {
+  return (
+    <div className="rounded-2xl border border-edge bg-white/[0.045] px-4 py-3">
+      <div className="flex min-w-0 items-center justify-between gap-4">
+        <span className="min-w-0 truncate text-[10px] uppercase tracking-[0.2em] font-black text-mute">{label}</span>
+        {loading ? (
+          <span className="h-5 w-20 shrink-0 rounded-lg skeleton" />
+        ) : (
+          <motion.span
+            key={value}
+            initial={{ opacity: 0.65, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={`shrink-0 font-mono text-lg font-black tabular-nums ${accent}`}
+          >
+            {value}
+          </motion.span>
+        )}
+      </div>
     </div>
   );
 }
@@ -574,7 +614,7 @@ function TrustCard({ title, body }: { title: string; body: string }) {
 function supportDetail(text: string) {
   const details: Record<string, string> = {
     "Minimum 10% royalty commitment required": "Artists must commit a meaningful royalty share before launch. That protects buyers from empty tokens and makes the asset tied to real music revenue.",
-    "Wallet approvals are required for every transaction": "SONG·DAQ can prepare transactions, but user funds do not move unless the connected Solana wallet signs and approves the action.",
+    "Wallet approvals are required for every transaction": "song-daq can prepare transactions, but user funds do not move unless the connected Solana wallet signs and approves the action.",
     "Audius sign-in verifies artist identity": "Artist launch access uses Sign in with Audius rather than pasted handles, reducing impersonation risk and tying launches to a real content identity.",
     "External wallets stay optional for artists": "Artists can use an Audius-linked wallet when available and attach a separate Solana wallet only when they deliberately choose to.",
     "Locked split status is visible before trading": "Coin pages and previews show whether royalty split routing is locked, pending, or unavailable so investors understand the revenue status.",
@@ -586,13 +626,13 @@ function supportDetail(text: string) {
     "On-chain transparency — verify everything": "Mint addresses, wallets, launch data, and market activity should be inspectable on Solana. The UI summarizes it, but the chain remains the source of truth.",
     "Artist tokens are vested (no rug pulls)": "Artist allocations should release over time instead of all at once. Vesting helps prevent instant dumping and makes incentives line up with long-term fan support.",
     "Suspicious coin monitoring": "Large holder changes, unusual activity, and identity mismatches should be highlighted so users can judge risk before buying.",
-    "Real-time audit of distributor accounts": "When distributor or Audius signals update, SONG·DAQ should surface those changes quickly so the market can react to real artist activity.",
+    "Real-time audit of distributor accounts": "When distributor or Audius signals update, song-daq should surface those changes quickly so the market can react to real artist activity.",
     "Liquidity is required before launch": "A token cannot go live until the artist adds starting liquidity. That gives fans a working market on day one and stops frozen launches from appearing as tradable assets.",
     "Liquidity lock settings are visible": "The launch flow captures lock duration and displays it publicly so buyers can see whether liquidity is protected or still vulnerable to removal.",
     "Artist wallet caps limit concentration": "Wallet-cap settings can stop one address from absorbing too much supply during launch and make it harder for a single buyer to dominate early trading.",
-    "Launch review happens before minting": "Before the mint is created, SONG·DAQ shows supply, allocation, price, liquidity, and warnings so the artist must acknowledge the risk settings they are putting on-chain.",
+    "Launch review happens before minting": "Before the mint is created, song-daq shows supply, allocation, price, liquidity, and warnings so the artist must acknowledge the risk settings they are putting on-chain.",
   };
-  return details[text] ?? `${text}. This control exists to make SONG·DAQ easier to understand before committing money.`;
+  return details[text] ?? `${text}. This control exists to make song-daq easier to understand before committing money.`;
 }
 
 function WinCard({ icon, title, items, color }: { icon: React.ReactNode; title: string; items: string[]; color: string }) {

@@ -142,7 +142,7 @@ export function CoinPreviewModal({
   const activeCoin = coin;
   const isOpenAudio = Boolean(activeCoin.isOpenAudioCoin || activeCoin.source === "open_audio" || activeCoin.source === "audius_public");
   const isSongDaqLocal = !isOpenAudio && Boolean(activeCoin.isSongDaqLocal || activeCoin.songId || activeCoin.mintAddress);
-  const assetLabel = isSongDaqLocal ? "SONG·DAQ Song Token" : "Open Audio Artist Coin";
+  const assetLabel = isSongDaqLocal ? "song-daq Song Token" : "Open Audio Artist Coin";
   const chartPoints = points.length ? points : coin.price ? [{
     ts: new Date().toISOString(),
     open: coin.price,
@@ -251,7 +251,7 @@ export function CoinPreviewModal({
                 }`}>{assetLabel}</span>
                 <RiskBadge coin={coin as any} compact />
                 <span className="rounded-md border border-violet/20 bg-violet/10 px-2 py-0.5 text-[9px] uppercase tracking-widest font-black text-violet">
-                  {isSongDaqLocal ? "Created on SONG·DAQ" : "Imported public market"}
+                  {isSongDaqLocal ? "Created on song-daq" : "Imported public market"}
                 </span>
               </div>
               <div className="mt-1 text-xs uppercase tracking-widest text-mute whitespace-normal break-words">
@@ -344,7 +344,7 @@ export function CoinPreviewModal({
                   label="Why This Coin Exists"
                   value={coin.audius_track_title || "Artist market coin"}
                   body={isSongDaqLocal
-                    ? "This coin was created through SONG·DAQ and is tied to this artist/song setup in your app."
+                    ? "This coin was created through song-daq and is tied to this artist/song setup in your app."
                     : coin.audius_track_title
                     ? "This coin is connected to an Audius song signal, artist profile, and live Solana token market."
                     : "This is an artist token. The artist's songs below show what already has a linked coin and what does not yet."}

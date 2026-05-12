@@ -54,7 +54,7 @@ export async function getAssetUsdRates(assets: Array<string | null | undefined>)
         if (usd > 0) prices[asset] = usd;
       }
     } catch {
-      // Static fallbacks keep fresh SONG·DAQ launches from displaying as
+      // Static fallbacks keep fresh song-daq launches from displaying as
       // price-less while external price APIs or Render are slow.
     }
   }

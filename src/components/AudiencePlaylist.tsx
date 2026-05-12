@@ -128,7 +128,7 @@ export function AudiencePlaylist() {
             <div className="min-w-0 lg:mt-4">
               <h2 className="text-xl font-black tracking-tight text-ink leading-none">Open Audio Queue</h2>
               <p className="mt-2 text-xs text-mute leading-relaxed">
-                A live playlist from the Open Audio catalog. Playback stays running as you move around SONG·DAQ.
+                A live playlist from the Open Audio catalog. Playback stays running as you move around song-daq.
               </p>
               <div className="mt-3 flex items-center gap-2">
                 {queue[0] && (

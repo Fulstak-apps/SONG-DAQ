@@ -59,7 +59,7 @@ export async function GET() {
       updatedAt: new Date().toISOString(),
       sources: [
         "Audius live music tokens",
-        ...(liveSongs.length ? ["SONG·DAQ live song tokens"] : []),
+        ...(liveSongs.length ? ["song-daq live song tokens"] : []),
       ],
       databaseAvailable: canUseDatabaseForStats(),
     };

@@ -23,7 +23,7 @@ const investorSteps = [
 ];
 
 const launchChecklist = [
-  "Wallet connected globally across SONG·DAQ.",
+  "Wallet connected globally across song-daq.",
   "Song, artist name, ticker, artwork, and supply are filled in.",
   "Launch liquidity amount is reviewed in SOL and USD.",
   "Artist confirms they have the rights or authority to launch the coin.",
@@ -32,14 +32,14 @@ const launchChecklist = [
 ];
 
 const walletHelp = [
-  "If the wallet is not connected, SONG·DAQ should show a Connect Wallet button instead of zero balances.",
-  "If a wallet rejects a request, SONG·DAQ should show the real wallet error so it can be tested and fixed.",
+  "If the wallet is not connected, song-daq should show a Connect Wallet button instead of zero balances.",
+  "If a wallet rejects a request, song-daq should show the real wallet error so it can be tested and fixed.",
   "If a balance looks wrong, refresh the wallet connection and confirm the same wallet address is selected.",
   "Live buys use SOL right now. Audius wallet buying is coming later because Audius has platform restrictions.",
 ];
 
 const portfolioHelp = [
-  "Your portfolio should show song coins bought on SONG·DAQ.",
+  "Your portfolio should show song coins bought on song-daq.",
   "External wallet assets should show token names, images when available, token amounts, and USD value.",
   "Paper Mode portfolio stays separate from Live Mode.",
   "If Phantom marks a token as spam, open Phantom and report it as not spam so it becomes visible.",
@@ -48,7 +48,7 @@ const portfolioHelp = [
 const adminFlow = [
   "Review new users, wallets, coins, royalty requests, and failed transactions.",
   "Verify or reject distributor split requests.",
-  "Record royalty payments received by SONG·DAQ.",
+  "Record royalty payments received by song-daq.",
   "Record Royalty Pool contributions or liquidity support.",
   "Keep notes so every important admin action has history.",
 ];
@@ -58,10 +58,10 @@ export function SupportPage() {
     <main className="space-y-6">
       <section className="panel-elevated overflow-hidden p-6 md:p-10">
         <div className="max-w-4xl space-y-5">
-          <div className="text-[11px] tracking-[0.22em] font-black text-neon">SONG·DAQ support</div>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-ink">Everything you need to use SONG·DAQ.</h1>
+          <div className="text-[11px] tracking-[0.22em] font-black text-neon">song-daq support</div>
+          <h1 className="text-4xl md:text-6xl font-black tracking-tight text-ink">Everything you need to use song-daq.</h1>
           <p className="text-base md:text-lg text-mute leading-relaxed">
-            SONG·DAQ is a song coin marketplace. Artists launch coins tied to songs, and fans can buy or sell those coins. Prices can move based on demand, trading, song activity, and verified royalty activity.
+            song-daq is a song coin marketplace. Artists launch coins tied to songs, and fans can buy or sell those coins. Prices can move based on demand, trading, song activity, and verified royalty activity.
           </p>
           <p className="text-sm md:text-base text-mute leading-relaxed">
             The goal is simple: make music feel investable without making the app confusing. Normal users get clean charts, clear wallet prompts, SOL plus USD values, and plain-English explanations. Advanced users can open deeper chart tools when they want them.
@@ -91,7 +91,7 @@ export function SupportPage() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <SupportCard icon={<Landmark />} title="What Is Launch Liquidity?">
-          <p>Launch liquidity is required to make a song coin tradable. SONG·DAQ separates the supply into artist hold, launch liquidity, and reserve. The launch-liquidity portion may stage in the artist wallet briefly, then the artist approves a second transaction that moves those coins plus SOL, USDC, or AUDIO into the public trading pool.</p>
+          <p>Launch liquidity is required to make a song coin tradable. song-daq separates the supply into artist hold, launch liquidity, and reserve. The launch-liquidity portion may stage in the artist wallet briefly, then the artist approves a second transaction that moves those coins plus SOL, USDC, or AUDIO into the public trading pool.</p>
           <p>This is separate from royalties. A coin can launch without royalty verification, but it still needs liquidity to trade.</p>
           <p>Think of launch liquidity like opening the first market for the coin. Without it, people can see the coin, but there is no real pool for buys and sells.</p>
           <p>Once the pool is verified, fans can buy with SOL. Fans may profit if demand rises and they later sell higher, but profit is never guaranteed and prices can go down.</p>
@@ -99,8 +99,8 @@ export function SupportPage() {
 
         <SupportCard icon={<FileCheck2 />} title="How Royalty Splits Work">
           <p>Royalty setup happens after the coin is created. Open your distributor dashboard, go to splits or royalty sharing, and add <span className="font-mono text-neon">{ROYALTY_EMAIL}</span> as the split recipient.</p>
-          <p>Send the split invitation from inside the distributor platform, then return to SONG·DAQ and submit the verification form. Admin reviews it, then the coin can move from Royalty Verification In Progress to Royalty Verified.</p>
-          <p>The artist does not manually email monthly royalty money. The distributor sends the royalty split to SONG·DAQ, and admin records what was received.</p>
+          <p>Send the split invitation from inside the distributor platform, then return to song-daq and submit the verification form. Admin reviews it, then the coin can move from Royalty Verification In Progress to Royalty Verified.</p>
+          <p>The artist does not manually email monthly royalty money. The distributor sends the royalty split to song-daq, and admin records what was received.</p>
           <Link href="/splits" className="btn-primary mt-2 inline-flex h-11 px-4 text-[10px] uppercase tracking-widest font-black">
             Set Up Royalty Split <ArrowRight size={14} />
           </Link>
@@ -115,13 +115,13 @@ export function SupportPage() {
           <p><strong className="text-ink">Automatic:</strong> the app can show coin pages, charts, Paper Mode, wallet state, portfolio records, submitted royalty requests, and admin dashboard data.</p>
           <p><strong className="text-ink">Manual:</strong> royalty verification, royalty payments received from distributors, Royalty Pool contributions, and any treasury movement are admin-reviewed for the MVP.</p>
           <p>Manual royalty and treasury controls live in the admin dashboard. They do not stop users from testing the public launch, buy, sell, and wallet flows.</p>
-          <p>If a launch or trade fails, SONG·DAQ should show the real backend or wallet error instead of a fake paused state.</p>
+          <p>If a launch or trade fails, song-daq should show the real backend or wallet error instead of a fake paused state.</p>
         </SupportCard>
       </section>
 
       <section className="grid gap-4 lg:grid-cols-3">
         <SupportCard icon={<Lock />} title="When Royalties Come In">
-          <p>The distributor pays SONG·DAQ based on the split invitation. Admin records the payment and can add that value into the coin’s Royalty Pool / liquidity support system.</p>
+          <p>The distributor pays song-daq based on the split invitation. Admin records the payment and can add that value into the coin’s Royalty Pool / liquidity support system.</p>
           <p>Royalty activity may support the ecosystem, but it does not guarantee price increases, profits, or liquidity.</p>
           <p>When recorded, the coin page can show the amount received, the month covered, and whether it was added to the Royalty Pool.</p>
         </SupportCard>
@@ -132,7 +132,7 @@ export function SupportPage() {
         <SupportCard icon={<BarChart3 />} title="Advanced Chart">
           <p>The coin chart uses advanced market tools by default, including volume, liquidity, slippage, and deeper market data.</p>
           <p>The goal is to make every coin feel like a real trading screen while still keeping the labels clear for music fans.</p>
-          <p>When a new pool is created, Jupiter may need time to index the route. During that time, SONG·DAQ shows a route waiting state and will not ask your wallet to approve a swap.</p>
+          <p>When a new pool is created, Jupiter may need time to index the route. During that time, song-daq shows a route waiting state and will not ask your wallet to approve a swap.</p>
         </SupportCard>
       </section>
 
@@ -141,7 +141,7 @@ export function SupportPage() {
           <div className="text-[10px] uppercase tracking-[0.28em] font-black text-mute">Trading Guide</div>
           <h2 className="text-3xl md:text-5xl font-black text-ink">How buying and selling should feel.</h2>
           <p className="mt-3 max-w-4xl text-sm md:text-base text-mute leading-relaxed">
-            SONG·DAQ should always tell users what they are about to do before money moves. A buy or sell confirmation should show token amount, SOL amount, USD estimate, wallet address, estimated fees, and any slippage warning in plain English.
+            song-daq should always tell users what they are about to do before money moves. A buy or sell confirmation should show token amount, SOL amount, USD estimate, wallet address, estimated fees, and any slippage warning in plain English.
           </p>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
@@ -176,7 +176,7 @@ export function SupportPage() {
         </div>
         <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {[
-            "SONG·DAQ is not a bank, broker, exchange, or financial advisor.",
+            "song-daq is not a bank, broker, exchange, or financial advisor.",
             "Song coins are risky and speculative.",
             "Royalty activity does not guarantee returns.",
             "Prices can go down.",
@@ -259,7 +259,7 @@ function StatusGrid() {
     ["Royalty Verification In Progress", "Artist submitted the form and admin is reviewing the distributor split."],
     ["Royalty Verified", "Admin confirmed the distributor split information."],
     ["Needs Update", "Something is missing or does not match."],
-    ["Payment Received", "SONG·DAQ received royalty money, but it has not been added to the pool yet."],
+    ["Payment Received", "song-daq received royalty money, but it has not been added to the pool yet."],
     ["Royalty Added To Coin Pool", "Admin recorded that royalty value was added to the coin ecosystem."],
   ];
   return (

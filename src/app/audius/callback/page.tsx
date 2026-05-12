@@ -37,7 +37,7 @@ export default function AudiusCallback() {
 
       const codeVerifier = sessionStorage.getItem("audius-pkce-verifier") || localStorage.getItem("audius-pkce-verifier");
       const redirectUri = sessionStorage.getItem("audius-pkce-redirect") || localStorage.getItem("audius-pkce-redirect") || `${window.location.origin}/audius/callback`;
-      if (!codeVerifier) throw new Error("Missing Audius login verifier. Please return to SONG·DAQ and retry sign-in.");
+      if (!codeVerifier) throw new Error("Missing Audius login verifier. Please return to song-daq and retry sign-in.");
 
       const ctrl = new AbortController();
       const id = setTimeout(() => ctrl.abort(), 22_000);
@@ -113,12 +113,12 @@ export default function AudiusCallback() {
 
       if (!code) {
         setStatus("error");
-        setMsg("Audius did not return a login code. Please retry sign-in from SONG·DAQ.");
+        setMsg("Audius did not return a login code. Please retry sign-in from song-daq.");
         return;
       }
 
       if (!window.opener || window.opener.closed) {
-        setMsg("Audius connected. Finalizing your SONG·DAQ session...");
+        setMsg("Audius connected. Finalizing your song-daq session...");
         const profile = await exchangeInCallback(String(code), state ? String(state) : null);
         if (cancelled) return;
         const sol = profile.wallets?.sol ?? null;
@@ -133,13 +133,13 @@ export default function AudiusCallback() {
         if (linkWallet) linkAudiusInBackground(linkWallet, profile);
         cleanupOAuthStorage();
         setStatus("success");
-        setMsg("Audius connected. Returning to SONG·DAQ...");
+        setMsg("Audius connected. Returning to song-daq...");
         setTimeout(() => {
           window.location.replace("/market?artistWallet=1");
         }, 700);
       } else {
         setStatus("success");
-        setMsg("Audius connected. Returning control to SONG·DAQ...");
+        setMsg("Audius connected. Returning control to song-daq...");
         try { window.opener.postMessage(payload, window.location.origin); } catch {}
         // Do not exchange the code here when an opener exists. OAuth codes are
         // one-use only; the parent window owns the exchange to avoid racing and
@@ -191,7 +191,7 @@ export default function AudiusCallback() {
               <div>
                 <div className="text-sm font-black text-white tracking-tight">Why this window exists</div>
                 <p className="mt-1 text-sm text-mute leading-relaxed">
-                  SONG·DAQ uses your Audius identity to verify artist access and pass the result back to the app. This window should close automatically once the handshake completes.
+                  song-daq uses your Audius identity to verify artist access and pass the result back to the app. This window should close automatically once the handshake completes.
                 </p>
               </div>
             </div>
@@ -206,14 +206,14 @@ export default function AudiusCallback() {
               <div className="rounded-xl border border-edge bg-panel2 p-4">
                 <div className="text-[10px] uppercase tracking-widest font-black text-neon">Next Step</div>
                 <div className="mt-2 text-sm font-bold text-white">
-                  {status === "error" ? "Retry sign-in" : "Return to SONG·DAQ"}
+                  {status === "error" ? "Retry sign-in" : "Return to song-daq"}
                 </div>
               </div>
             </div>
           </div>
 
           <div className="mt-6 text-[11px] uppercase tracking-widest font-bold text-mute">
-            SONG·DAQ · Audius · Solana
+            song-daq · Audius · Solana
           </div>
 
           {status === "error" && (
@@ -223,7 +223,7 @@ export default function AudiusCallback() {
                 onClick={() => window.location.replace("/market")}
                 className="btn-primary px-5 py-3 text-[10px] uppercase tracking-widest font-black"
               >
-                Return to SONG·DAQ
+                Return to song-daq
               </button>
               <button
                 type="button"

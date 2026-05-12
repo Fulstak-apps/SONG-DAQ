@@ -131,7 +131,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "side must be BUY or SELL" }, { status: 400 });
   }
   if (walletType !== "solana") {
-    return NextResponse.json({ error: "SONG·DAQ trading is Solana-only" }, { status: 400 });
+    return NextResponse.json({ error: "song-daq trading is Solana-only" }, { status: 400 });
   }
   const song = await prisma.songToken.findUnique({ where: { id: songId } });
   if (!song) return NextResponse.json({ error: "not found" }, { status: 404 });

@@ -8,7 +8,7 @@ export default function InvestorOnboardingPage() {
         <div className="text-[10px] uppercase tracking-[0.3em] font-black text-neon">Investor onboarding</div>
         <h1 className="text-4xl md:text-6xl font-black text-ink">Trade song coins with clear risk signals.</h1>
         <p className="max-w-3xl text-mute leading-relaxed">
-          Before buying, SONG·DAQ shows wallet, SOL and USD values, token amount, slippage, fees, royalty status, and risk acknowledgments in plain English.
+          Before buying, song-daq shows wallet, SOL and USD values, token amount, slippage, fees, royalty status, and risk acknowledgments in plain English.
         </p>
       </section>
       <section className="grid gap-4 md:grid-cols-3">

@@ -458,7 +458,7 @@ export function AdminConsole() {
             <Panel title="Launch Notes" icon={<BellRing size={16} />} meta="What still needs setup">
               <ul className="space-y-2 text-sm text-ink/80 leading-relaxed">
                 <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />Confirm Audius redirect URLs and OAuth app settings.</li>
-                <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />After the live domain deploys, submit SONG·DAQ to Phantom/Blowfish review with token launch, liquidity, and swap examples.</li>
+                <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />After the live domain deploys, submit song-daq to Phantom/Blowfish review with token launch, liquidity, and swap examples.</li>
                 <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />Expect brand-new liquidity pools to wait for Jupiter indexing; the UI must show route waiting states instead of asking wallets to sign.</li>
                 <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />Keep royalty payout and holder reward automation manual until legal review and treasury automation audit are complete.</li>
                 <li className="flex gap-2"><ShieldCheck size={14} className="text-neon shrink-0 mt-1" />Set the split inbox provider to forward confirmations into your ops workflow.</li>

@@ -23,7 +23,7 @@ import { Star, LayoutGrid, List, Flame, TrendingUp, BarChart3, Music, ShieldChec
 import { calculateCoinRisk } from "@/lib/risk/calculateCoinRisk";
 
 type Market = "coins" | "songs";
-type CoinSort = "quality" | "marketCap" | "volume" | "gainers" | "holders";
+type CoinSort = "quality" | "new" | "marketCap" | "volume" | "gainers" | "holders";
 type SongSort = "trending" | "gainers" | "volume" | "new";
 type ViewMode = "grid" | "list" | "heat";
 type MarketFilter = "all" | "verified" | "locked" | "lowRisk" | "rising" | "new" | "holders";
@@ -31,6 +31,7 @@ type MarketSource = "all" | "songdaq" | "open_audio" | "mine";
 
 const COIN_SORTS: { id: CoinSort; label: string }[] = [
   { id: "quality", label: "QUALITY" },
+  { id: "new", label: "NEW LAUNCHES" },
   { id: "marketCap", label: "MKT CAP" },
   { id: "volume", label: "VOLUME" },
   { id: "gainers", label: "GAINERS" },
@@ -126,6 +127,14 @@ function fmtUsdCompact(n: number) {
   return `$${n.toFixed(0)}`;
 }
 
+function isOpenAudioMarketCoin(c: AudiusCoin) {
+  return Boolean((c as any).isOpenAudioCoin || (c as any).source === "open_audio" || (c as any).source === "audius_public");
+}
+
+function isSongDaqMarketCoin(c: AudiusCoin) {
+  return !isOpenAudioMarketCoin(c) && Boolean((c as any).isSongDaqLocal || (c as any).songId || (c as any).mintAddress);
+}
+
 function HeroPulseRow({ label, value, accent = "text-ink" }: { label: string; value: string; accent?: string }) {
   return (
     <div className="rounded-2xl border border-edge bg-white/[0.045] px-4 py-3">
@@ -166,7 +175,7 @@ function MarketPrimer({ onConnect }: { onConnect: () => void }) {
     {
       icon: <Music size={18} />,
       title: "Artists connect Audius first",
-      text: "Artist mode starts with your Audius identity. If your Audius profile has a Solana wallet, SONG·DAQ can use it; external wallets are optional.",
+      text: "Artist mode starts with your Audius identity. If your Audius profile has a Solana wallet, song-daq can use it; external wallets are optional.",
       tone: "text-violet border-violet/20 bg-violet/8",
     },
     {
@@ -310,8 +319,8 @@ export default function DiscoveryEngine() {
     let list = showWatchlistOnly ? coins.filter(c => watchlist.items.includes(c.mint)) : coins;
     if (marketSource !== "all") {
       list = list.filter((c) => {
-        const openAudio = Boolean((c as any).isOpenAudioCoin || (c as any).source === "open_audio" || (c as any).source === "audius_public");
-        const songDaq = !openAudio && Boolean((c as any).isSongDaqLocal || (c as any).songId || (c as any).mintAddress);
+        const openAudio = isOpenAudioMarketCoin(c);
+        const songDaq = isSongDaqMarketCoin(c);
         if (marketSource === "songdaq") return songDaq;
         if (marketSource === "open_audio") return openAudio;
         if (marketSource === "mine") {
@@ -344,8 +353,8 @@ export default function DiscoveryEngine() {
         const risk = calculateCoinRisk(c as any);
         const liquidity = Number((c as any).liquidity ?? (c as any).reserveSol ?? (c as any).liquidityPairAmount ?? 0);
         const verified = Boolean((c as any).artist_handle || (c as any).audiusVerified || (c as any).audius_track_id);
-        const openAudio = Boolean((c as any).isOpenAudioCoin || (c as any).source === "open_audio" || (c as any).source === "audius_public");
-        const localLaunch = !openAudio && Boolean((c as any).isSongDaqLocal || (c as any).songId || (c as any).createdAt);
+        const openAudio = isOpenAudioMarketCoin(c);
+        const localLaunch = isSongDaqMarketCoin(c);
         switch (marketFilter) {
           case "verified":
             return verified;
@@ -356,7 +365,7 @@ export default function DiscoveryEngine() {
           case "rising":
             return (c.priceChange24hPercent ?? 0) > 0 || (c.v24hUSD ?? 0) > (c.marketCap ?? 0) * 0.01;
           case "new":
-            return localLaunch || (liquidity > 0 && (c.marketCap ?? 0) < 25_000);
+            return localLaunch || openAudio || (liquidity > 0 && (c.marketCap ?? 0) < 25_000);
           case "holders":
             return Number((c as any).uniqueWallet24h ?? c.holder ?? 0) > 10;
           default:
@@ -368,8 +377,8 @@ export default function DiscoveryEngine() {
       if (marketFilter === "new") {
         const ad = Date.parse(String((a as any).createdAt || "")) || 0;
         const bd = Date.parse(String((b as any).createdAt || "")) || 0;
-        const al = (a as any).isSongDaqLocal ? 1 : 0;
-        const bl = (b as any).isSongDaqLocal ? 1 : 0;
+        const al = isSongDaqMarketCoin(a) ? 2 : isOpenAudioMarketCoin(a) ? 1 : 0;
+        const bl = isSongDaqMarketCoin(b) ? 2 : isOpenAudioMarketCoin(b) ? 1 : 0;
         if (al !== bl) return bl - al;
         if (ad !== bd) return bd - ad;
       }
@@ -667,7 +676,7 @@ export default function DiscoveryEngine() {
               ["locked", "Locked"],
               ["lowRisk", "Low Risk"],
               ["rising", "Rising"],
-              ["new", "SONG·DAQ Launches"],
+              ["new", "New Launches"],
               ["holders", "Holder Growth"],
             ].map(([id, label]) => (
               <button
@@ -687,8 +696,8 @@ export default function DiscoveryEngine() {
           <div className="flex w-full flex-wrap items-center gap-1.5 xl:w-auto">
             {[
               ["all", "All Sources"],
-              ["songdaq", "SONG·DAQ"],
-              ["open_audio", "Open Audio"],
+              ["songdaq", "song-daq"],
+              ["open_audio", "Audius"],
               ["mine", "My Coins"],
             ].map(([id, label]) => (
               <button
@@ -714,10 +723,10 @@ export default function DiscoveryEngine() {
             />
           </div>
 
-          <div className="w-full xl:w-auto xl:ml-auto">
-            <div className="px-3 py-2 rounded-xl bg-white/[0.055] border border-edge flex items-center justify-center gap-2 whitespace-nowrap">
-              <span className="w-1.5 h-1.5 rounded-full bg-neon shadow-[0_0_6px_rgba(0,229,114,0.5)] animate-pulseDot" />
-              <span className="text-[10px] text-mute uppercase tracking-widest font-black">
+          <div className="w-full min-w-0 sm:w-auto xl:ml-auto">
+            <div className="max-w-full min-w-0 overflow-hidden px-3 py-2 rounded-xl bg-white/[0.055] border border-edge flex items-center justify-center gap-2 whitespace-nowrap">
+              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-neon shadow-[0_0_6px_rgba(0,229,114,0.5)] animate-pulseDot" />
+              <span className="min-w-0 truncate text-[10px] text-mute uppercase tracking-widest font-black">
                 {loading ? "SYNCING..." : market === "coins" ? `${filteredCoins.length} ASSETS` : `${filteredSongs.length} ASSETS`}
               </span>
             </div>
@@ -738,9 +747,9 @@ export default function DiscoveryEngine() {
                 animate={{ opacity: 1 }}
                 className="grid grid-cols-2 md:grid-cols-4 gap-3"
               >
-                <Stat k="Listed" v={fmtNum(coins.length)} tooltip="Public Open Audio/Audius market coins plus any SONG·DAQ coins launched through this app." />
-                <Stat k="Combined Cap" v={`$${fmtNum(coinTotals.cap)}`} tooltip="Combined market capitalization for public Open Audio listings and local SONG·DAQ launches currently visible here." />
-                <Stat k="24h Volume" v={`$${fmtNum(coinTotals.vol)}`} tooltip="Total dollar volume from the public coin index and local SONG·DAQ market records." />
+                <Stat k="Listed" v={fmtNum(coins.length)} tooltip="Public Open Audio/Audius market coins plus any song-daq coins launched through this app." />
+                <Stat k="Combined Cap" v={`$${fmtNum(coinTotals.cap)}`} tooltip="Combined market capitalization for public Open Audio listings and local song-daq launches currently visible here." />
+                <Stat k="24h Volume" v={`$${fmtNum(coinTotals.vol)}`} tooltip="Total dollar volume from the public coin index and local song-daq market records." />
                 <Stat k="Holders" v={fmtNum(coinTotals.holders)} tooltip="Total unique holder count reported by the public coin index where available." />
               </motion.section>
             ) : (

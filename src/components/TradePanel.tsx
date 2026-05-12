@@ -123,7 +123,7 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
 
       <div className="space-y-5 relative z-10">
         <div className="rounded-xl border border-amber/20 bg-amber/5 px-4 py-3 text-[10px] uppercase tracking-widest font-bold text-amber leading-relaxed">
-          SONG·DAQ will never ask for a message signature as a fake trade. Wallet approval appears only when Jupiter returns a real on-chain swap transaction for this exact order.
+          song-daq will never ask for a message signature as a fake trade. Wallet approval appears only when Jupiter returns a real on-chain swap transaction for this exact order.
         </div>
         
         <div className="space-y-2">
@@ -227,7 +227,7 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
         {ok && <div className="text-neon text-[10px] uppercase tracking-widest font-bold text-center bg-neon/10 border border-neon/20 py-2 rounded-lg">{ok}</div>}
         {!swapRouteReady && quote?.routeError && (
           <div className="text-amber text-[10px] uppercase tracking-widest font-bold text-center bg-amber/10 border border-amber/20 py-2 rounded-lg leading-relaxed">
-            New pools can take time to appear in Jupiter. SONG·DAQ will not ask your wallet to sign until a live route exists.
+            New pools can take time to appear in Jupiter. song-daq will not ask your wallet to sign until a live route exists.
           </div>
         )}
         {!address && <div className="text-mute text-[10px] uppercase tracking-widest font-bold text-center">Authorization required to transact.</div>}

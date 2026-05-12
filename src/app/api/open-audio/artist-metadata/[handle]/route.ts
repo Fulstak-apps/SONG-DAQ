@@ -37,7 +37,7 @@ export async function GET(req: NextRequest, ctx: { params: { handle: string } })
   return NextResponse.json({
     name,
     symbol,
-    description: `${name} is an Open Audio-style Artist Coin launched through SONG·DAQ. It is paired against $AUDIO on a Meteora Dynamic Bonding Curve, with artist vesting and reward-pool mechanics based on the Open Audio Artist Coin standard.`,
+    description: `${name} is an Open Audio-style Artist Coin launched through song-daq. It is paired against $AUDIO on a Meteora Dynamic Bonding Curve, with artist vesting and reward-pool mechanics based on the Open Audio Artist Coin standard.`,
     image,
     external_url: user?.audiusHandle ? `https://audius.co/${user.audiusHandle}` : "https://song-daq.onrender.com",
     attributes: [
