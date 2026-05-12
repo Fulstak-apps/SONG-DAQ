@@ -283,9 +283,11 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               {step === "WALLET" && (
                 <motion.div key="wallet" {...fade} className="space-y-5">
                   <div className="text-center">
-                    <h2 className="text-2xl font-semibold tracking-tight">{role === "ARTIST" ? "Optional Wallet" : "Investor Wallet"}</h2>
+                    <h2 className="text-2xl font-semibold tracking-tight">{role === "ARTIST" ? "External Wallet" : "Investor Wallet"}</h2>
                     <p className="text-mute text-base mt-1">
-                      {role === "ARTIST" ? "Attach an external Solana wallet if you do not want to use your Audius wallet." : "Choose a Solana wallet to trade"}
+                      {role === "ARTIST"
+                        ? "Connect Phantom, Solflare, or Backpack so you can launch coins, add liquidity, and trade from this device."
+                        : "Choose a Solana wallet to trade"}
                     </p>
                   </div>
                   <div className="space-y-2">

@@ -344,6 +344,7 @@ function MobileWalletSummary({
   hasExternalWallet: boolean;
 }) {
   const { formatUsd } = useUsdToDisplayRate();
+  const { openLoginModal, setUserMode } = useUI();
   const native = useNativeBalance(hasExternalWallet ? address : null, hasExternalWallet ? "solana" : null);
   const audioBalance = useAudiusAudioBalance(audius?.handle);
   if (!mounted) return null;
@@ -351,6 +352,17 @@ function MobileWalletSummary({
 
   const short = address ? `${address.slice(0, 4)}…${address.slice(-4)}` : null;
   const audio = audioBalance ?? audius?.audioBalance ?? null;
+  const openArtistWalletConnect = () => {
+    setUserMode("ARTIST");
+    if (typeof window !== "undefined") {
+      const url = new URL(window.location.href);
+      url.searchParams.set("walletConnect", "phantom");
+      url.searchParams.set("walletRole", "ARTIST");
+      url.searchParams.set("walletConnectSource", "mobile-header");
+      window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+    }
+    openLoginModal();
+  };
 
   return (
     <div className="md:hidden border-t border-edge/60 py-1.5">
@@ -393,9 +405,13 @@ function MobileWalletSummary({
         ) : null}
 
         {audius && !hasExternalWallet ? (
-          <div className="shrink-0">
-            <WalletButton compact connectOnly />
-          </div>
+          <button
+            type="button"
+            onClick={openArtistWalletConnect}
+            className="btn-primary min-h-11 shrink-0 px-3 text-[10px] font-black uppercase tracking-[0.16em]"
+          >
+            Connect wallet
+          </button>
         ) : null}
       </div>
     </div>
