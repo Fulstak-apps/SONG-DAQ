@@ -40,7 +40,7 @@ export default function Image() {
         </div>
         <div>
           <div style={{ fontSize: 76, lineHeight: 0.95, fontWeight: 950, letterSpacing: -3, maxWidth: 900 }}>
-            Own music markets like stock.
+            Launch and trade music coins.
           </div>
           <div style={{ marginTop: 28, fontSize: 28, lineHeight: 1.35, color: "rgba(255,255,255,0.76)", maxWidth: 860 }}>
             Launch, trade, and track song coins and artist coins with price, liquidity, wallet, and royalty signals.

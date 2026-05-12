@@ -66,10 +66,10 @@ export default function HowItWorksPage() {
           <div>
             <div className="text-[11px] uppercase tracking-[0.3em] font-black text-neon">How song-daq works</div>
             <h1 className="mt-4 max-w-4xl text-4xl font-black leading-[0.95] tracking-tight text-ink md:text-6xl">
-              A music market where songs trade like assets.
+              A music coin marketplace for artists and fans.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-relaxed text-mute md:text-lg">
-              Artists launch music coins. Fans and investors buy from a public pool or curve. The app tracks price, liquidity, portfolio value, royalty status, and artist momentum in one place.
+              Artists launch coins tied to songs or artist profiles. Fans and investors buy from a public pool or curve, then song-daq tracks price, liquidity, portfolio value, royalty status, and artist momentum in one place.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Link href="/market" className="btn-primary h-11 px-4 text-[11px] font-black uppercase tracking-widest">

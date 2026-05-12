@@ -77,10 +77,10 @@ export function SupportPage() {
           <div className="text-[11px] tracking-[0.22em] font-black text-neon">song-daq support</div>
           <h1 className="text-4xl md:text-6xl font-black tracking-tight text-ink">Everything you need to use song-daq with confidence.</h1>
           <p className="text-base md:text-xl text-ink/85 leading-relaxed font-semibold">
-            song-daq is a music market where artists launch coins tied to artists and songs, and fans can buy, sell, track, and test those markets with clear wallet, liquidity, price, and royalty signals.
+            song-daq is a music coin marketplace where artists launch coins tied to artists and songs, and fans can buy, sell, track, and test those coins with clear wallet, liquidity, price, and royalty signals.
           </p>
           <p className="text-sm md:text-base text-ink/70 leading-relaxed font-medium">
-            The goal is simple: make music markets understandable. New users see clean charts, direct wallet prompts, crypto plus fiat values, and plain-English explanations. Power users can go deeper into liquidity, volume, slippage, holder activity, and royalty records.
+            The goal is simple: make song coins understandable. New users see clean charts, direct wallet prompts, crypto plus fiat values, and plain-English explanations. Power users can go deeper into liquidity, volume, slippage, holder activity, and royalty records.
           </p>
           <div className="rounded-2xl border border-neon/25 bg-neon/10 p-4 text-sm text-neon font-black leading-relaxed shadow-[inset_0_0_24px_rgba(193,255,0,0.05)]">
             Launch works in two clear approvals: create the fixed-supply coin, then add launch liquidity. Fans buy from the liquidity pool, not from a hidden mint. Royalty money supports the coin after launch.

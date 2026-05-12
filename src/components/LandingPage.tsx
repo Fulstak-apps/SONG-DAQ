@@ -135,7 +135,7 @@ export function LandingPage() {
             transition={{ duration: 0.7, delay: 0.35 }}
             className="text-mute text-sm sm:text-base md:text-lg max-w-xl font-medium leading-relaxed mx-auto lg:mx-0"
           >
-            Song-daq lets artists launch music markets and lets fans buy song coins with clear price, liquidity, wallet, and royalty signals before money moves.
+            Song-daq lets artists launch song coins and artist coins, then lets fans buy, sell, and track them with clear price, liquidity, wallet, and royalty signals before money moves.
           </motion.p>
 
           <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
@@ -234,7 +234,7 @@ export function LandingPage() {
       <Section>
         <div className="text-center mb-12">
           <div className="text-[11px] uppercase tracking-[0.3em] font-black text-mute mb-3">How song-daq Works</div>
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gradient-hero">Six steps to a music market</h2>
+          <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gradient-hero">Six steps to a song coin</h2>
         </div>
       </Section>
 

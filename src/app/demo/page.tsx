@@ -59,7 +59,7 @@ export default function InvestorDemoPage() {
             </div>
             <div className="space-y-3">
               <h1 className="max-w-4xl text-4xl font-black leading-[0.95] tracking-tight text-ink md:text-6xl">
-                Learn the music market flow before you trade.
+                Learn how buying a song coin works before you trade.
               </h1>
               <p className="max-w-2xl text-base leading-relaxed text-mute md:text-lg">
                 This guided demo turns on a simulated paper wallet, opens the market, and shows the exact investor path:
