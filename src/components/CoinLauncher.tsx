@@ -1374,6 +1374,16 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <div className="rounded-xl border border-edge bg-panel p-3 text-left text-xs leading-relaxed text-mute">
                       Fans buy from the liquidity pool, not from a hidden artist wallet. The artist hold is separate. The launch-liquidity portion moves into the public pool with paired SOL, USDC, or AUDIO so buyers have a market to trade against.
                     </div>
+                    <LaunchPoolSummary
+                      result={result}
+                      launchKind={launchKind}
+                      liquidityStage={liquidityStage}
+                      liquidityPairAsset={liquidityPairAsset}
+                      liquidityPairAmount={liquidityPairAmount}
+                      liquidityTokenAmount={launchLiquidityTokenAmount}
+                      liquidityPairUsd={liquidityPairUsd}
+                      currency={currency}
+                    />
                     <LaunchSuccessChecklist result={result} liquidityStage={liquidityStage} launchKind={launchKind} />
                   </div>
                   <a className="btn-primary block w-full py-4 text-sm font-black tracking-widest" href={`/song/${result.song?.id}`}>
@@ -1537,6 +1547,83 @@ function LaunchReadinessChecklist({
         ))}
       </div>
     </section>
+  );
+}
+
+function shortId(value: string | null | undefined) {
+  if (!value) return "";
+  return value.length > 18 ? `${value.slice(0, 8)}…${value.slice(-6)}` : value;
+}
+
+function LaunchPoolSummary({
+  result,
+  launchKind,
+  liquidityStage,
+  liquidityPairAsset,
+  liquidityPairAmount,
+  liquidityTokenAmount,
+  liquidityPairUsd,
+  currency,
+}: {
+  result: any;
+  launchKind: LaunchKind;
+  liquidityStage: "idle" | "preparing" | "signing" | "confirming" | "live" | "failed";
+  liquidityPairAsset: PairAsset;
+  liquidityPairAmount: number;
+  liquidityTokenAmount: number;
+  liquidityPairUsd: number | null;
+  currency: string;
+}) {
+  const poolId = result?.launch?.poolId || result?.song?.fakeLiquidityPoolAddress || "";
+  const lpMint = result?.launch?.lpMint || "";
+  const liquidityTxSig = result?.launch?.liquidityTxSig || "";
+  const pairLabel = launchKind === "ARTIST" ? `$${result?.song?.symbol || "ARTIST"} / AUDIO` : `$${result?.song?.symbol || "SONG"} / ${liquidityPairAsset}`;
+  const statusLabel = liquidityStage === "live" ? "Public pool recorded" : liquidityTxSig ? "Transaction sent, indexing" : "Pool details pending";
+  const statusTone = liquidityStage === "live" ? "text-neon border-neon/30 bg-neon/10" : liquidityTxSig ? "text-violet border-violet/30 bg-violet/10" : "text-amber border-amber/30 bg-amber/10";
+
+  return (
+    <div className="rounded-xl border border-neon/20 bg-panel p-3 text-left">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>
+          <div className="text-[10px] uppercase tracking-widest font-black text-neon">Public Trading Pool</div>
+          <div className="mt-1 text-sm font-black text-white">{pairLabel}</div>
+        </div>
+        <span className={`rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-widest ${statusTone}`}>{statusLabel}</span>
+      </div>
+      <p className="mt-3 text-xs leading-relaxed text-mute">
+        This is the market fans trade against. The liquidity transaction pairs the launch song coins with {liquidityPairAsset}, creating the public place where buy and sell quotes come from.
+      </p>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        <div className="rounded-xl border border-edge bg-panel2 p-2.5">
+          <div className="text-[8px] uppercase tracking-widest font-black text-mute">Coin side</div>
+          <div className="mt-1 font-mono text-xs font-black text-white">{fmtNum(liquidityTokenAmount)}</div>
+        </div>
+        <div className="rounded-xl border border-edge bg-panel2 p-2.5">
+          <div className="text-[8px] uppercase tracking-widest font-black text-mute">Payment side</div>
+          <div className="mt-1 font-mono text-xs font-black text-white">{formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)}</div>
+        </div>
+        <div className="rounded-xl border border-edge bg-panel2 p-2.5">
+          <div className="text-[8px] uppercase tracking-widest font-black text-mute">Pool address</div>
+          <div className="mt-1 break-all font-mono text-[10px] font-black text-white">{poolId ? shortId(poolId) : "Waiting for router"}</div>
+        </div>
+        <div className="rounded-xl border border-edge bg-panel2 p-2.5">
+          <div className="text-[8px] uppercase tracking-widest font-black text-mute">LP mint</div>
+          <div className="mt-1 break-all font-mono text-[10px] font-black text-white">{lpMint ? shortId(lpMint) : "Pending"}</div>
+        </div>
+      </div>
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+        {liquidityTxSig ? (
+          <a className="btn h-9 flex-1 px-3 text-center text-[9px] uppercase tracking-widest font-black" href={`https://solscan.io/tx/${liquidityTxSig}`} target="_blank" rel="noreferrer">
+            View Liquidity Tx
+          </a>
+        ) : null}
+        {result?.song?.id ? (
+          <a className="btn-primary h-9 flex-1 px-3 text-center text-[9px] uppercase tracking-widest font-black" href={`/song/${result.song.id}?liquidity=1#liquidity`}>
+            Add More Liquidity
+          </a>
+        ) : null}
+      </div>
+    </div>
   );
 }
 

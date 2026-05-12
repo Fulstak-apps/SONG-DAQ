@@ -68,6 +68,13 @@ export interface AudiusCoin {
   liquidityPairAmount?: number;
   liquidityTokenAmount?: number;
   liquidityLocked?: boolean;
+  poolId?: string | null;
+  poolAddress?: string | null;
+  lpMint?: string | null;
+  liquidityTxSig?: string | null;
+  liquidityEventAt?: string | null;
+  mintTx?: string | null;
+  metadataUri?: string | null;
   royaltyVerificationStatus?: string;
   royaltyBacked?: boolean;
   tradableSupply?: number;

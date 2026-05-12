@@ -40,6 +40,13 @@ function shortMint(m: string) {
   return m.length > 14 ? `${m.slice(0, 6)}…${m.slice(-4)}` : m;
 }
 
+function firstText(...values: unknown[]) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
+
 function trackArtwork(track: any, fallback?: string | null) {
   return pickAudiusArtwork(track, fallback ?? null);
 }
@@ -567,6 +574,7 @@ export default function CoinPage() {
                 <KV k="Risk / Trust" v={isOwner ? "Creator" : "Review"} />
               </div>
             </div>
+            <MarketPoolPanel coin={coin} localSongId={localSongId} isOwner={isOwner} isSongDaqLocal={isSongDaqLocal} />
             <WhyFansCanBuy compact />
             {isSongDaqLocal ? (
               <div className="w-full rounded-2xl border border-neon/20 bg-neon/5 p-4 text-left">
@@ -1135,6 +1143,84 @@ function CoinPageAudioPlayer({
             10 <RotateCw size={13} />
           </button>
         </div>
+      </div>
+    </div>
+  );
+}
+
+function MarketPoolPanel({
+  coin,
+  localSongId,
+  isOwner,
+  isSongDaqLocal,
+}: {
+  coin: AudiusCoin;
+  localSongId: string;
+  isOwner: boolean;
+  isSongDaqLocal: boolean;
+}) {
+  const pairAsset = firstText((coin as any).liquidityPairAsset, (coin as any).pairAsset, (coin as any).source === "open_audio" ? "AUDIO" : "SOL").toUpperCase();
+  const poolAddress = firstText(coin.poolAddress, coin.poolId, (coin as any).liquidityPoolAddress, (coin as any).fakeLiquidityPoolAddress);
+  const lpMint = firstText(coin.lpMint, (coin as any).lp_mint);
+  const txSig = firstText(coin.liquidityTxSig, (coin as any).liquidityTransaction, (coin as any).liquidityTx, (coin as any).launchTransactionHash);
+  const tokenAmount = Number(coin.liquidityTokenAmount || 0);
+  const pairAmount = Number(coin.liquidityPairAmount || 0);
+  const poolUsd = Number(coin.liquidity || 0);
+  const startingPrice = pairAmount > 0 && tokenAmount > 0 ? pairAmount / tokenAmount : 0;
+  const hasLiquidity = Boolean(poolAddress || txSig || pairAmount > 0 || tokenAmount > 0 || poolUsd > 0);
+  const status = hasLiquidity
+    ? poolAddress
+      ? "Public pool live"
+      : "Pool indexing"
+    : "Liquidity needed";
+  const statusTone = hasLiquidity ? "border-neon/30 bg-neon/10 text-neon" : "border-amber/30 bg-amber/10 text-amber";
+
+  return (
+    <div className="w-full rounded-2xl border border-neon/20 bg-[linear-gradient(135deg,rgba(183,255,0,0.08),rgba(20,22,28,0.92))] p-4 text-left shadow-[0_0_30px_rgba(183,255,0,0.08)]">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-[10px] uppercase tracking-widest font-black text-neon">Market / Liquidity Pool</div>
+          <div className="mt-1 text-sm font-black text-white">Where fans buy and sell</div>
+        </div>
+        <span className={`rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-widest ${statusTone}`}>{status}</span>
+      </div>
+      <p className="mt-3 text-xs leading-relaxed text-mute">
+        The public trading pool is the on-chain market. It holds song coins plus {pairAsset || "SOL"} so fans buy from the pool and sell back into it. That is separate from the artist hold.
+      </p>
+      <div className="mt-4 grid grid-cols-2 gap-3">
+        <KV k="Pair" v={`$${coin.ticker}/${pairAsset || "SOL"}`} tooltip="The pair is the two assets inside the public trading pool. Fans swap between the song coin and the payment coin." />
+        <KV k="Pool Value" v={poolUsd > 0 ? fmtUsd(poolUsd, 2) : "Indexing"} tooltip="Pool value is the visible public liquidity depth. Tiny pools may show as indexing until the router or price index catches up." />
+        <KV k="Coin Side" v={tokenAmount > 0 ? fmtNum(tokenAmount) : "Pending"} tooltip="The amount of song coins placed into the public pool for buyers and sellers." />
+        <KV k="Payment Side" v={pairAmount > 0 ? `${fmtNum(pairAmount)} ${pairAsset || "SOL"}` : "Pending"} tooltip="The SOL, USDC, or AUDIO paired with the song coins so the market can quote a price." />
+        <KV k="Starting Price" v={startingPrice > 0 ? `${startingPrice.toExponential(3)} ${pairAsset || "SOL"}` : "Needs liquidity"} tooltip="The first pool price comes from payment side divided by song coins in the pool." />
+        <KV k="LP Mint" v={lpMint ? shortMint(lpMint) : "Pending"} tooltip="The LP mint represents the liquidity position created for this pool." />
+      </div>
+      <div className="mt-4 space-y-2 rounded-xl border border-edge bg-black/20 p-3">
+        <div className="flex items-start justify-between gap-3">
+          <span className="shrink-0 text-[9px] uppercase tracking-widest font-black text-mute">Pool</span>
+          <span className="min-w-0 break-all text-right font-mono text-[10px] text-white/80">{poolAddress || "Waiting for pool address / router indexing"}</span>
+        </div>
+        <div className="flex items-start justify-between gap-3">
+          <span className="shrink-0 text-[9px] uppercase tracking-widest font-black text-mute">Liquidity Tx</span>
+          <span className="min-w-0 break-all text-right font-mono text-[10px] text-white/80">{txSig || "No liquidity transaction recorded yet"}</span>
+        </div>
+      </div>
+      <div className="mt-4 flex flex-col gap-2">
+        {txSig ? (
+          <a href={`https://solscan.io/tx/${txSig}`} target="_blank" rel="noreferrer" className="btn h-9 px-3 text-center text-[9px] uppercase tracking-widest font-black">
+            View Liquidity Tx
+          </a>
+        ) : null}
+        {poolAddress ? (
+          <a href={`https://solscan.io/account/${poolAddress}`} target="_blank" rel="noreferrer" className="btn h-9 px-3 text-center text-[9px] uppercase tracking-widest font-black">
+            View Pool Address
+          </a>
+        ) : null}
+        {isSongDaqLocal && isOwner && localSongId ? (
+          <Link href={`/song/${localSongId}?liquidity=1#liquidity`} className="btn-primary h-10 px-3 text-center text-[9px] uppercase tracking-widest font-black">
+            Add More Liquidity
+          </Link>
+        ) : null}
       </div>
     </div>
   );

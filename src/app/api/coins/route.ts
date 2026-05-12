@@ -22,6 +22,15 @@ function normalizeSymbol(value: string) {
   return String(value || "").replace(/^\$/, "").toUpperCase();
 }
 
+function parseEventPayload(event: any) {
+  if (!event?.payload) return {};
+  try {
+    return typeof event.payload === "string" ? JSON.parse(event.payload) : event.payload;
+  } catch {
+    return {};
+  }
+}
+
 function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusCoin {
   const mint = song.mintAddress || song.fakeTokenAddress || song.id;
   const valuation = valueLocalSongCoin(song, rates);
@@ -29,6 +38,13 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
   const isOpenAudio = String(song.distributor || "").includes("Open Audio")
     || String(song.riskLevel || "").startsWith("OPEN_AUDIO")
     || String(song.audiusTrackId || "").startsWith("artist-coin:");
+  const events = Array.isArray(song.events) ? song.events : [];
+  const latestLiquidityEvent = events.find((event: any) => event?.kind === "LIQUIDITY");
+  const latestLaunchEvent = events.find((event: any) => event?.kind === "LAUNCH");
+  const liquidityPayload = parseEventPayload(latestLiquidityEvent);
+  const liquidityDetails = liquidityPayload.liquidity || liquidityPayload;
+  const launchPayload = parseEventPayload(latestLaunchEvent);
+  const poolId = liquidityDetails.poolId || song.fakeLiquidityPoolAddress || null;
   return {
     name: song.coinName || `${song.title} Song Coin`,
     ticker: normalizeSymbol(song.symbol || song.title || "SONG"),
@@ -62,6 +78,13 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
     liquidityPairAmount: Number(song.liquidityPairAmount || 0),
     liquidityTokenAmount: Number(song.liquidityTokenAmount || 0),
     liquidityLocked: Boolean(song.liquidityLocked),
+    poolId,
+    poolAddress: poolId,
+    lpMint: liquidityDetails.lpMint || null,
+    liquidityTxSig: liquidityDetails.liquidityTxSig || null,
+    liquidityEventAt: latestLiquidityEvent?.createdAt ? new Date(latestLiquidityEvent.createdAt).toISOString() : null,
+    ...(launchPayload?.mintTx ? { mintTx: launchPayload.mintTx } : {}),
+    ...(launchPayload?.metadataUri ? { metadataUri: launchPayload.metadataUri } : {}),
     royaltyVerificationStatus: song.royaltyVerificationStatus || "not_submitted",
     royaltyBacked: Boolean(song.royaltyBacked),
     tradableSupply: valuation.tradableSupply,
@@ -87,6 +110,12 @@ async function listLocalSongCoins(limit: number) {
           audiusAvatar: true,
           wallet: true,
         },
+      },
+      events: {
+        where: { kind: { in: ["LIQUIDITY", "LAUNCH"] } },
+        orderBy: { createdAt: "desc" },
+        take: 6,
+        select: { kind: true, payload: true, createdAt: true },
       },
     },
   }).catch(() => []);
