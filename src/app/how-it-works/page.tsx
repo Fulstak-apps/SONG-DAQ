@@ -5,13 +5,16 @@ import {
   BarChart3,
   Coins,
   Disc3,
+  FileCheck2,
+  HelpCircle,
+  LifeBuoy,
   LineChart,
-  Lock,
   Music,
   Repeat2,
   ShieldCheck,
   Wallet,
 } from "lucide-react";
+import { ROYALTY_EMAIL } from "@/lib/appMode";
 import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
 
 const artistSteps = [
@@ -38,6 +41,22 @@ const glossary = [
   ["Undervalued signal", "A discovery prompt when attention appears to be rising faster than price or investor activity."],
   ["Song IPO", "A market-debut event for a new song coin launch."],
 ];
+
+const supportTopics = [
+  ["Launch help", "Create the coin, review supply, then add liquidity so the public market can open. song-daq shows crypto and fiat estimates before money moves."],
+  ["Wallet help", "Live mode uses your connected Solana wallet. Paper Mode gives you a simulated wallet so you can test launching, buying, selling, and portfolio changes."],
+  ["Royalty help", `Royalty splits happen after launch. Artists add ${ROYALTY_EMAIL} inside their distributor dashboard, then submit the setup request in song-daq.`],
+  ["Portfolio help", "Portfolio should roll up SOL, AUDIO, Song Coins, Artist Coins, other wallet assets, profit/loss, and recent activity in one place."],
+  ["Liquidity help", "Liquidity is still called liquidity, but the app explains it as the public market money that lets fans buy and sell without waiting for a private buyer."],
+  ["Admin help", "Admin-only review, royalty verification, payment records, and asset sync health live inside the admin dashboard, not in the public launch flow."],
+] as const;
+
+const supportGraphs = [
+  ["Coin minted", "Fixed supply created", "text-violet"],
+  ["Liquidity added", "Public pool opens", "text-neon"],
+  ["Market visible", "Fans can buy/sell", "text-cyan"],
+  ["Royalties optional", "Verified later", "text-gold"],
+] as const;
 
 export default function HowItWorksPage() {
   return (
@@ -69,6 +88,41 @@ export default function HowItWorksPage() {
         <HeroMetric icon={<Music />} label="Artist Identity" value="Audius-first" text="Catalog, profile, artwork, and song data come from Audius/Open Audio whenever available." />
         <HeroMetric icon={<Coins />} label="Market Structure" value="Public pool" text="Fans buy from a visible market, not from a hidden artist wallet." />
         <HeroMetric icon={<ShieldCheck />} label="Trading Clarity" value="Fiat + crypto" text="Amounts show crypto and fiat estimates before launch, liquidity, buy, and sell actions." />
+      </section>
+
+      <section className="panel-elevated grain p-5 md:p-7">
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.28em] text-neon">
+              <LifeBuoy size={18} /> Support + product guide
+            </div>
+            <h2 className="mt-3 max-w-4xl text-3xl font-black leading-tight text-ink md:text-5xl">
+              One page for how it works, what to do next, and what each market signal means.
+            </h2>
+            <p className="mt-3 max-w-4xl text-base font-semibold leading-relaxed text-mute md:text-lg">
+              This page now combines the how-it-works guide with support details so beginners can understand launch, trading, liquidity, wallets, royalties, and portfolio updates without hunting through different pages.
+            </p>
+          </div>
+          <Link href="/admin/login" className="btn h-11 px-4 text-xs font-black uppercase tracking-widest">
+            Admin
+          </Link>
+        </div>
+        <div className="mt-6 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {supportTopics.map(([title, body]) => (
+            <SupportTopic key={title} title={title} body={body} />
+          ))}
+        </div>
+        <div className="mt-5 grid gap-3 lg:grid-cols-4">
+          {supportGraphs.map(([title, body, color], index) => (
+            <div key={title} className="rounded-2xl border border-edge bg-panel p-4">
+              <div className={`grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/[0.055] ${color}`}>
+                {index === 0 ? <Coins size={22} /> : index === 1 ? <LineChart size={22} /> : index === 2 ? <BarChart3 size={22} /> : <FileCheck2 size={22} />}
+              </div>
+              <div className="mt-4 text-lg font-black text-ink">{title}</div>
+              <p className="mt-1 text-base font-semibold leading-relaxed text-mute">{body}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[1fr_0.9fr]">
@@ -117,15 +171,15 @@ export default function HowItWorksPage() {
         </div>
         <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {glossary.map(([term, body]) => (
-            <article key={term} className="rounded-2xl border border-edge bg-panel p-4">
-              <h3 className="text-base font-black text-ink">{term}</h3>
-              <p className="mt-2 text-sm leading-relaxed text-mute">{body}</p>
+            <article key={term} className="rounded-2xl border border-edge bg-panel p-5">
+              <h3 className="text-lg font-black text-ink">{term}</h3>
+              <p className="mt-2 text-base font-semibold leading-relaxed text-mute">{body}</p>
             </article>
           ))}
         </div>
       </section>
 
-      <section className="rounded-2xl border border-amber/25 bg-amber/10 p-5 text-sm leading-relaxed text-amber/90">
+      <section className="rounded-2xl border border-amber/25 bg-amber/10 p-5 text-base font-semibold leading-relaxed text-amber/90">
         song-daq shows market data, music signals, liquidity, royalties, and portfolio estimates to help users understand the asset. Prices can move down or up, and users are responsible for their own decisions.
       </section>
     </main>
@@ -134,15 +188,31 @@ export default function HowItWorksPage() {
 
 function HeroMetric({ icon, label, value, text }: { icon: React.ReactNode; label: string; value: string; text: string }) {
   return (
-    <article className="panel-elevated grain p-5">
+    <article className="panel-elevated grain p-5 md:p-6">
       <div className="flex items-center gap-3">
-        <div className="grid h-11 w-11 place-items-center rounded-2xl border border-neon/25 bg-neon/10 text-neon">{icon}</div>
+        <div className="grid h-12 w-12 place-items-center rounded-2xl border border-neon/25 bg-neon/10 text-neon [&>svg]:h-6 [&>svg]:w-6">{icon}</div>
         <div>
-          <div className="text-[11px] font-black uppercase tracking-widest text-mute">{label}</div>
-          <div className="text-xl font-black text-ink">{value}</div>
+          <div className="text-xs font-black uppercase tracking-widest text-mute">{label}</div>
+          <div className="text-2xl font-black text-ink">{value}</div>
         </div>
       </div>
-      <p className="mt-4 text-sm leading-relaxed text-mute">{text}</p>
+      <p className="mt-4 text-base font-semibold leading-relaxed text-mute">{text}</p>
+    </article>
+  );
+}
+
+function SupportTopic({ title, body }: { title: string; body: string }) {
+  return (
+    <article className="rounded-2xl border border-edge bg-panel p-5">
+      <div className="flex items-start gap-3">
+        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl border border-neon/20 bg-neon/10 text-neon">
+          <HelpCircle size={20} />
+        </div>
+        <div>
+          <h3 className="text-lg font-black text-ink">{title}</h3>
+          <p className="mt-2 text-base font-semibold leading-relaxed text-mute">{body}</p>
+        </div>
+      </div>
     </article>
   );
 }
@@ -151,19 +221,19 @@ function FlowPanel({ title, eyebrow, icon, items }: { title: string; eyebrow: st
   return (
     <section className="panel-elevated grain p-5 md:p-6">
       <div className="flex items-center gap-3">
-        <div className="grid h-11 w-11 place-items-center rounded-2xl border border-neon/25 bg-neon/10 text-neon">{icon}</div>
+        <div className="grid h-12 w-12 place-items-center rounded-2xl border border-neon/25 bg-neon/10 text-neon [&>svg]:h-6 [&>svg]:w-6">{icon}</div>
         <div>
-          <div className="text-[11px] font-black uppercase tracking-[0.24em] text-mute">{eyebrow}</div>
-          <h2 className="text-2xl font-black text-ink">{title}</h2>
+          <div className="text-xs font-black uppercase tracking-[0.24em] text-mute">{eyebrow}</div>
+          <h2 className="text-3xl font-black text-ink">{title}</h2>
         </div>
       </div>
       <div className="mt-5 space-y-3">
         {items.map(([name, body], index) => (
-          <div key={name} className="flex gap-3 rounded-2xl border border-edge bg-panel p-4">
-            <div className="grid h-8 w-8 shrink-0 place-items-center rounded-xl bg-white/[0.055] font-mono text-xs font-black text-neon">{index + 1}</div>
+          <div key={name} className="flex gap-3 rounded-2xl border border-edge bg-panel p-4 md:p-5">
+            <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-white/[0.055] font-mono text-sm font-black text-neon">{index + 1}</div>
             <div>
-              <h3 className="font-black text-ink">{name}</h3>
-              <p className="mt-1 text-sm leading-relaxed text-mute">{body}</p>
+              <h3 className="text-lg font-black text-ink">{name}</h3>
+              <p className="mt-1 text-base font-semibold leading-relaxed text-mute">{body}</p>
             </div>
           </div>
         ))}
@@ -174,14 +244,18 @@ function FlowPanel({ title, eyebrow, icon, items }: { title: string; eyebrow: st
 
 function InfoRow({ title, body }: { title: string; body: string }) {
   return (
-    <div className="rounded-2xl border border-edge bg-panel p-4">
-      <h3 className="text-base font-black text-ink">{title}</h3>
-      <p className="mt-1 text-sm leading-relaxed text-mute">{body}</p>
+    <div className="rounded-2xl border border-edge bg-panel p-5">
+      <h3 className="text-lg font-black text-ink">{title}</h3>
+      <p className="mt-2 text-base font-semibold leading-relaxed text-mute">{body}</p>
     </div>
   );
 }
 
 function MarketGraph() {
+  const curve =
+    "M24,226 C104,220 134,230 184,206 C229,185 244,125 289,132 C339,140 334,220 384,214 C439,208 436,154 482,148 C539,140 544,232 592,226 C642,220 632,116 700,86";
+  const area = `${curve} L700,300 L24,300 Z`;
+
   return (
     <div className="rounded-[2rem] border border-edge bg-[#05070a] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
       <div className="mb-4 flex items-center justify-between gap-3">
@@ -191,11 +265,16 @@ function MarketGraph() {
         </div>
         <span className="rounded-full border border-neon/25 bg-neon/10 px-3 py-1.5 text-[11px] font-black uppercase tracking-widest text-neon">+18.4%</span>
       </div>
-      <svg viewBox="0 0 720 300" className="h-64 w-full overflow-visible">
+      <svg viewBox="0 0 760 300" className="h-60 w-full overflow-visible sm:h-64" role="img" aria-label="Animated live value curve">
         <defs>
           <linearGradient id="how-gradient" x1="0" x2="0" y1="0" y2="1">
             <stop offset="0%" stopColor="#b7ff00" stopOpacity="0.28" />
             <stop offset="100%" stopColor="#b7ff00" stopOpacity="0" />
+          </linearGradient>
+          <linearGradient id="how-line-gradient" x1="0" x2="1" y1="0" y2="0">
+            <stop offset="0%" stopColor="#8fdc35" />
+            <stop offset="55%" stopColor="#b7ff00" />
+            <stop offset="100%" stopColor="#e0ff7a" />
           </linearGradient>
           <filter id="how-glow">
             <feGaussianBlur stdDeviation="5" result="blur" />
@@ -205,12 +284,44 @@ function MarketGraph() {
             </feMerge>
           </filter>
         </defs>
-        {[60, 120, 180, 240].map((y) => <line key={y} x1="0" x2="720" y1={y} y2={y} stroke="rgba(255,255,255,0.08)" strokeDasharray="8 10" />)}
-        <path d="M0,226 C80,220 110,230 160,206 C205,185 220,125 265,132 C315,140 310,220 360,214 C415,208 412,154 458,148 C515,140 520,232 568,226 C620,220 610,116 720,86 L720,300 L0,300 Z" fill="url(#how-gradient)" />
-        <path d="M0,226 C80,220 110,230 160,206 C205,185 220,125 265,132 C315,140 310,220 360,214 C415,208 412,154 458,148 C515,140 520,232 568,226 C620,220 610,116 720,86" fill="none" stroke="#b7ff00" strokeWidth="8" strokeLinecap="round" filter="url(#how-glow)" />
-        <text x="0" y="286" fill="rgba(255,255,255,0.5)" fontSize="24" fontFamily="monospace">Launch</text>
-        <text x="295" y="286" fill="rgba(255,255,255,0.5)" fontSize="24" fontFamily="monospace">Trading</text>
-        <text x="600" y="286" fill="rgba(255,255,255,0.5)" fontSize="24" fontFamily="monospace">Signals</text>
+        {[54, 108, 162, 216].map((y) => <line key={y} x1="56" x2="640" y1={y} y2={y} stroke="rgba(255,255,255,0.08)" strokeDasharray="8 10" />)}
+        {[
+          [18, 174, 86, "#58d64f"],
+          [28, 188, 72, "#58d64f"],
+          [38, 206, 54, "#58d64f"],
+          [48, 226, 34, "#ff3366"],
+          [58, 240, 20, "#58d64f"],
+        ].map(([x, y, h, color]) => (
+          <rect key={`${x}-${y}`} x={x as number} y={y as number} width="5" height={h as number} rx="2.5" fill={color as string} opacity="0.34" />
+        ))}
+        <path id="how-live-curve" d={curve} fill="none" stroke="none" />
+        <path d={area} fill="url(#how-gradient)" opacity="0.95" />
+        <path d={curve} fill="none" stroke="url(#how-line-gradient)" strokeWidth="8" strokeLinecap="round" filter="url(#how-glow)" />
+        <path d={curve} fill="none" stroke="#efffb5" strokeWidth="3" strokeLinecap="round" opacity="0.75" strokeDasharray="90 720">
+          <animate attributeName="stroke-dashoffset" values="740;0;-740" dur="5.5s" repeatCount="indefinite" />
+        </path>
+        <circle r="7" fill="#d8ff52" opacity="0.95" filter="url(#how-glow)">
+          <animateMotion dur="6s" repeatCount="indefinite">
+            <mpath href="#how-live-curve" />
+          </animateMotion>
+        </circle>
+        <circle cx="700" cy="86" r="7" fill="#b7ff00" opacity="0.88" filter="url(#how-glow)">
+          <animate attributeName="r" values="7;13;7" dur="1.8s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.9;0.35;0.9" dur="1.8s" repeatCount="indefinite" />
+        </circle>
+        <line x1="56" x2="640" y1="86" y2="86" stroke="rgba(88,214,79,0.42)" strokeDasharray="7 8" />
+        <rect x="384" y="28" width="150" height="42" rx="21" fill="rgba(0,0,0,0.62)" stroke="rgba(255,255,255,0.16)" />
+        <text x="404" y="55" fill="#58d64f" fontSize="15" fontWeight="900" fontFamily="monospace" letterSpacing="3">HIGH $13.09K</text>
+        <rect x="498" y="224" width="134" height="36" rx="18" fill="rgba(0,0,0,0.62)" stroke="rgba(255,255,255,0.16)" />
+        <text x="515" y="247" fill="rgba(255,255,255,0.82)" fontSize="14" fontWeight="900" fontFamily="monospace" letterSpacing="3">LOW $11.88K</text>
+        <rect x="642" y="72" width="94" height="42" rx="21" fill="#58d64f" />
+        <text x="659" y="99" fill="#041006" fontSize="17" fontWeight="900" fontFamily="monospace">$12.84K</text>
+        <text x="656" y="54" fill="rgba(255,255,255,0.62)" fontSize="16" fontWeight="800" fontFamily="monospace">$13.20K</text>
+        <text x="656" y="142" fill="rgba(255,255,255,0.58)" fontSize="16" fontWeight="800" fontFamily="monospace">$12.60K</text>
+        <text x="656" y="216" fill="rgba(255,255,255,0.58)" fontSize="16" fontWeight="800" fontFamily="monospace">$12.05K</text>
+        <text x="24" y="286" fill="rgba(255,255,255,0.56)" fontSize="21" fontFamily="monospace">Launch</text>
+        <text x="310" y="286" fill="rgba(255,255,255,0.56)" fontSize="21" fontFamily="monospace">Trading</text>
+        <text x="612" y="286" fill="rgba(255,255,255,0.56)" fontSize="21" fontFamily="monospace">Signals</text>
       </svg>
     </div>
   );
@@ -225,15 +336,15 @@ function AllocationGraph() {
   ];
   return (
     <section className="panel-elevated grain p-5 md:p-6">
-      <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.24em] text-mute">
-        <BarChart3 size={15} /> Example supply graph
+      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.24em] text-mute">
+        <BarChart3 size={18} /> Example supply graph
       </div>
       <h2 className="mt-2 text-2xl font-black text-ink">Where the coins go</h2>
-      <p className="mt-2 text-sm leading-relaxed text-mute">The exact split depends on the launch preset, but the core idea is simple: artist inventory, public trading supply, liquidity, and reserves are separate buckets.</p>
+      <p className="mt-2 text-base font-semibold leading-relaxed text-mute">The exact split depends on the launch preset, but the core idea is simple: artist inventory, public trading supply, liquidity, and reserves are separate buckets.</p>
       <div className="mt-5 space-y-3">
         {rows.map(([label, value, color]) => (
           <div key={label}>
-            <div className="mb-1 flex items-center justify-between text-xs font-black uppercase tracking-widest text-mute">
+            <div className="mb-1 flex items-center justify-between text-sm font-black uppercase tracking-widest text-mute">
               <span>{label}</span>
               <span>{value}</span>
             </div>
@@ -250,8 +361,8 @@ function AllocationGraph() {
 function LiquidityGraph() {
   return (
     <section className="panel-elevated grain p-5 md:p-6">
-      <div className="flex items-center gap-2 text-[11px] font-black uppercase tracking-[0.24em] text-mute">
-        <LineChart size={15} /> Liquidity depth
+      <div className="flex items-center gap-2 text-xs font-black uppercase tracking-[0.24em] text-mute">
+        <LineChart size={18} /> Liquidity depth
       </div>
       <h2 className="mt-2 text-2xl font-black text-ink">Why liquidity matters</h2>
       <div className="mt-5 grid gap-3 sm:grid-cols-2">

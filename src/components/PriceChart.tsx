@@ -280,7 +280,6 @@ export function PriceChart({
     return Math.max(3, Math.min(94, ((time - tMin) / Math.max(tMax - tMin, 1)) * 100));
   };
   const priceScaleTicks = [domainMax, domainMin + domainSpan * 0.75, domainMin + domainSpan * 0.5, domainMin + domainSpan * 0.25, domainMin];
-  const currentPrice = data[data.length - 1].close;
   const currentDisplayPrice = data[data.length - 1].displayClose;
   const currentY = yPctFor(currentDisplayPrice);
   const highPoint = data.reduce((best, d) => d.displayHigh > best.displayHigh ? d : best, data[0]);
@@ -482,7 +481,7 @@ export function PriceChart({
       ) : null}
       {investing ? (
         <div className="pointer-events-none absolute inset-0 z-[3]">
-          <div className="absolute inset-y-4 right-3 hidden w-[102px] flex-col justify-between text-right font-mono text-xs font-bold text-white/55 sm:flex">
+          <div className="absolute inset-y-4 right-1 flex w-[78px] flex-col justify-between text-right font-mono text-[10px] font-bold text-white/55 sm:right-3 sm:w-[102px] sm:text-xs">
             {priceScaleTicks.map((tick, i) => (
               <span key={`${tick}-${i}`} className="rounded-md bg-black/35 px-1 py-0.5 tabular-nums backdrop-blur-sm">
                 {fmtPrice(tick)}
@@ -491,28 +490,28 @@ export function PriceChart({
           </div>
 
           <div
-            className="absolute left-6 right-[98px] border-t border-dashed border-[#58d64f]/45 sm:right-[122px]"
+            className="absolute left-4 right-[76px] border-t border-dashed border-[#58d64f]/45 sm:left-6 sm:right-[122px]"
             style={{ top: `${currentY}%` }}
           >
-            <span className="absolute right-[-98px] top-1/2 -translate-y-1/2 rounded-full border border-[#58d64f]/45 bg-[#58d64f] px-2 py-1 font-mono text-[11px] font-black text-black shadow-[0_0_18px_rgba(88,214,79,0.45)] sm:right-[-122px] sm:text-xs">
-              {fmtPrice(currentPrice)}
+            <span className="absolute right-[-76px] top-1/2 -translate-y-1/2 rounded-full border border-[#58d64f]/45 bg-[#58d64f] px-1.5 py-1 font-mono text-[10px] font-black text-black shadow-[0_0_18px_rgba(88,214,79,0.45)] sm:right-[-122px] sm:px-2 sm:text-xs">
+              {fmtPrice(currentDisplayPrice)}
             </span>
           </div>
 
           <div
-            className="absolute hidden -translate-x-1/2 rounded-full border border-white/15 bg-black/55 px-2 py-1 font-mono text-[11px] font-black uppercase tracking-widest text-[#58d64f] backdrop-blur-sm sm:block"
-            style={{ left: `${Math.min(66, xPctFor(highPoint.t))}%`, top: `${Math.max(6, yPctFor(highPoint.displayHigh) - 7)}%` }}
+            className="absolute max-w-[140px] -translate-x-1/2 truncate rounded-full border border-white/15 bg-black/60 px-2 py-1 font-mono text-[10px] font-black uppercase tracking-[0.18em] text-[#58d64f] backdrop-blur-sm sm:text-[11px] sm:tracking-widest"
+            style={{ left: `${Math.min(64, xPctFor(highPoint.t))}%`, top: `${Math.max(6, yPctFor(highPoint.displayHigh) - 7)}%` }}
           >
             High {fmtPrice(highPoint.displayHigh)}
           </div>
           <div
-            className="absolute hidden -translate-x-1/2 rounded-full border border-white/15 bg-black/55 px-2 py-1 font-mono text-[11px] font-black uppercase tracking-widest text-white/70 backdrop-blur-sm sm:block"
-            style={{ left: `${Math.min(66, xPctFor(lowPoint.t))}%`, top: `${Math.min(88, yPctFor(lowPoint.displayLow) + 4)}%` }}
+            className="absolute max-w-[140px] -translate-x-1/2 truncate rounded-full border border-white/15 bg-black/60 px-2 py-1 font-mono text-[10px] font-black uppercase tracking-[0.18em] text-white/75 backdrop-blur-sm sm:text-[11px] sm:tracking-widest"
+            style={{ left: `${Math.min(64, xPctFor(lowPoint.t))}%`, top: `${Math.min(88, yPctFor(lowPoint.displayLow) + 4)}%` }}
           >
             Low {fmtPrice(Math.max(0, lowPoint.displayLow))}
           </div>
 
-          <div className="absolute bottom-1 left-6 right-[98px] flex justify-between font-mono text-[11px] font-bold text-white/45 sm:right-[122px]">
+          <div className="absolute bottom-1 left-4 right-[76px] flex justify-between font-mono text-[10px] font-bold text-white/50 sm:left-6 sm:right-[122px] sm:text-[11px]">
             <span>{formatTime(startTime)}</span>
             <span>{formatTime(midTime)}</span>
             <span>{formatTime(endTime)}</span>

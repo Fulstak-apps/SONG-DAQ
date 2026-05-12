@@ -143,15 +143,15 @@ export function Navbar() {
       {/* Top highlight line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
       
-      <div className="mx-auto w-full max-w-[1680px] px-2 sm:px-3 lg:px-4 2xl:px-6 relative">
-        <div className="flex min-w-0 items-center gap-1 sm:gap-1.5 lg:gap-2 min-h-14 py-1 xl:min-h-16">
+      <div className="mx-auto w-full max-w-[1680px] px-3 sm:px-3 lg:px-4 2xl:px-6 relative">
+        <div className="flex min-w-0 items-center gap-1.5 sm:gap-1.5 lg:gap-2 min-h-14 py-1 xl:min-h-16">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group shrink-0 mr-0.5 sm:mr-1">
+          <Link href="/" className="flex min-w-0 items-center gap-1.5 sm:gap-2 group shrink-0 mr-0.5 sm:mr-1">
             <div className="relative">
-              <span className="w-2 h-2 rounded-full bg-neon block shadow-[0_0_8px_rgba(0,229,114,0.6)] animate-pulseDot" />
-              <span className="absolute inset-0 w-2 h-2 rounded-full bg-neon animate-pulseRing" />
+              <span className="block h-2.5 w-2.5 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.6)] animate-pulseDot sm:h-2 sm:w-2" />
+              <span className="absolute inset-0 h-2.5 w-2.5 rounded-full bg-neon animate-pulseRing sm:h-2 sm:w-2" />
             </div>
-            <span className="font-mono font-black tracking-tight text-ink text-sm sm:text-base xl:text-lg">
+            <span className="whitespace-nowrap font-mono text-[15px] font-black tracking-tight text-ink min-[390px]:text-base xl:text-lg">
               SONG<span className="text-neon">·</span>DAQ
             </span>
             {/* Prestige badge */}
@@ -210,7 +210,7 @@ export function Navbar() {
               {(address || paperMode) ? <div className="hidden 2xl:block shrink-0"><RoleToggle /></div> : null}
           </div>
 
-          <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
+          <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
             {mounted && audius && !hasSeparateExternalWallet ? (
               <div className="shrink-0">
                 <WalletButton compact connectOnly />
@@ -220,14 +220,14 @@ export function Navbar() {
             {mounted && (address || audius || paperMode) ? (
               <button
                 onClick={toggleSound}
-                className="w-9 h-9 xl:h-10 xl:w-10 flex items-center justify-center rounded-xl bg-white/[0.055] border border-edge text-mute hover:text-ink hover:bg-white/[0.09] transition-all"
+                className="flex h-9 w-9 items-center justify-center rounded-xl border border-edge bg-white/[0.055] text-mute transition-all hover:bg-white/[0.09] hover:text-ink xl:h-10 xl:w-10"
                 title={soundEnabled ? "Mute" : "Unmute"}
               >
                 {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
               </button>
             ) : (
               <button 
-                className="btn-primary min-h-10 px-3 py-2 text-[11px] font-black tracking-widest shadow-neon-glow sm:px-5 sm:text-xs"
+                className="btn-primary h-10 min-h-0 px-3 py-0 text-[10px] font-black tracking-widest shadow-neon-glow min-[390px]:px-4 sm:px-5 sm:text-xs"
                 onClick={openLoginModal}
               >
                 <span className="relative z-10">CONNECT</span>
@@ -244,7 +244,7 @@ export function Navbar() {
 
             <button
               onClick={togglePaperMode}
-              className={`h-9 xl:h-10 rounded-xl border px-2.5 xl:px-3 text-[11px] font-black uppercase tracking-widest transition-all shrink-0 ${
+              className={`h-10 shrink-0 rounded-xl border px-2.5 text-[10px] font-black uppercase tracking-widest transition-all min-[390px]:px-3 sm:text-[11px] xl:h-10 xl:px-3 ${
                 paperMode
                   ? "border-neon/40 bg-neon text-[#020403] shadow-[0_0_18px_rgba(0,229,114,0.22)]"
                   : "border-neon/20 bg-neon/10 text-neon hover:bg-neon/15"
@@ -256,42 +256,44 @@ export function Navbar() {
 
             <button
               onClick={toggleTheme}
-              className="w-9 h-9 xl:h-10 xl:w-10 flex items-center justify-center rounded-xl bg-white/[0.055] border border-edge text-mute hover:text-ink hover:bg-white/[0.09] transition-all"
+              className="flex h-10 w-10 items-center justify-center rounded-xl border border-edge bg-white/[0.055] text-mute transition-all hover:bg-white/[0.09] hover:text-ink xl:h-10 xl:w-10"
               title="Toggle theme"
             >
               {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
             </button>
           </div>
         </div>
-        <nav className="md:hidden grid grid-cols-2 min-[390px]:grid-cols-3 gap-1 border-t border-edge/70 px-1 pb-2 pt-2">
-          {navItems.map((n) => {
-            if (n.reqArtistMode && userMode !== "ARTIST") return null;
-            const active = path === n.href || (n.href !== "/" && path.startsWith(n.href));
-            return (
-              <Link
-                key={n.href}
-                href={n.href}
-                prefetch={false}
-                onClick={navigate(n.href)}
-                aria-current={active ? "page" : undefined}
-                className={`min-w-0 truncate rounded-xl border px-2.5 py-3 text-center text-[11px] font-black uppercase tracking-widest transition min-[390px]:text-[11px] ${
-                  active
-                    ? "border-neon/45 bg-neon/15 text-neon shadow-[0_0_16px_rgba(0,229,114,0.16)]"
-                    : "border-edge bg-white/[0.045] text-mute hover:text-ink"
-                }`}
-              >
-                {n.label}
-              </Link>
-            );
-          })}
-          {paperMode && (
-            <span className="col-span-2 min-[390px]:col-span-3 rounded-xl border border-neon/25 bg-neon/10 px-3 py-2 text-center text-[11px] font-black uppercase tracking-widest text-neon">
-              Paper wallet active · simulated funds
+        <nav className="md:hidden border-t border-edge/70 py-2">
+          <div className="no-scrollbar flex items-center gap-2 overflow-x-auto px-0.5">
+            {navItems.map((n) => {
+              if (n.reqArtistMode && userMode !== "ARTIST") return null;
+              const active = path === n.href || (n.href !== "/" && path.startsWith(n.href));
+              return (
+                <Link
+                  key={n.href}
+                  href={n.href}
+                  prefetch={false}
+                  onClick={navigate(n.href)}
+                  aria-current={active ? "page" : undefined}
+                  className={`flex h-10 shrink-0 items-center justify-center rounded-xl border px-3.5 text-center text-[10px] font-black uppercase tracking-[0.18em] transition min-[390px]:px-4 ${
+                    active
+                      ? "border-neon/45 bg-neon/15 text-neon shadow-[0_0_16px_rgba(0,229,114,0.16)]"
+                      : "border-edge bg-white/[0.045] text-mute hover:text-ink"
+                  }`}
+                >
+                  {n.label}
+                </Link>
+              );
+            })}
+            <span className="shrink-0">
+              <CurrencySelector compact />
             </span>
-          )}
-          <span className="col-span-2 min-[390px]:col-span-3 flex justify-center">
-            <CurrencySelector compact />
-          </span>
+            {paperMode && (
+              <span className="flex h-10 shrink-0 items-center rounded-xl border border-neon/25 bg-neon/10 px-3 text-[10px] font-black uppercase tracking-[0.16em] text-neon">
+                Paper wallet
+              </span>
+            )}
+          </div>
         </nav>
       </div>
 

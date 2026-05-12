@@ -1,5 +1,1 @@
-import { LandingPage } from "@/components/LandingPage";
-
-export default function FAQPage() {
-  return <LandingPage />;
-}
+export { default } from "../how-it-works/page";
