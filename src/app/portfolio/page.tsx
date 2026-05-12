@@ -104,7 +104,7 @@ export default function PortfolioPage() {
   const { openLoginModal } = useUI();
   const paper = usePaperTrading();
   const { enabled: paperMode } = paper;
-  const hasExternalWallet = !!address && provider !== "audius";
+  const hasExternalWallet = !!address && provider !== "audius" && provider !== "paper";
   const externalAddress = hasExternalWallet ? address : null;
   const portfolioWallet = externalAddress ?? audius?.wallets?.sol ?? null;
   const native = useNativeBalance(externalAddress, hasExternalWallet ? kind : null);

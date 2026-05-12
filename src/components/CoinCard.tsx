@@ -232,9 +232,8 @@ export function CoinCard({
           onClick={(e) => { e.stopPropagation(); onTrade?.("BUY", c); }}
         >Buy</button>
         <button
-          disabled={isOwner}
-          className={`btn h-10 px-5 text-[10px] font-black uppercase tracking-widest ${isOwner ? "opacity-20 cursor-not-allowed" : "hover:bg-red/8 hover:text-red hover:border-red/20"}`}
-          onClick={(e) => { e.stopPropagation(); if (!isOwner) onTrade?.("SELL", c); }}
+          className="btn h-10 px-5 text-[10px] font-black uppercase tracking-widest hover:bg-red/8 hover:text-red hover:border-red/20"
+          onClick={(e) => { e.stopPropagation(); onTrade?.("SELL", c); }}
         >Sell</button>
       </div>
     </motion.div>

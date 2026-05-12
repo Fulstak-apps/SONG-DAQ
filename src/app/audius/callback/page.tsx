@@ -123,7 +123,7 @@ export default function AudiusCallback() {
         if (cancelled) return;
         const sol = profile.wallets?.sol ?? null;
         const current = useSession.getState();
-        const hasExternalWallet = !!current.address && current.provider !== "audius";
+        const hasExternalWallet = !!current.address && current.provider !== "audius" && current.provider !== "paper";
         const linkWallet = hasExternalWallet ? current.address : sol;
         setSession(hasExternalWallet ? { audius: profile } : { audius: profile, address: null, kind: null, provider: null });
         setUserMode("ARTIST");

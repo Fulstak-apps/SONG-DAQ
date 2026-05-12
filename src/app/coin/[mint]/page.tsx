@@ -781,7 +781,7 @@ export default function CoinPage() {
           </div>
           <div className="flex flex-col gap-3 shrink-0 relative z-10 w-full md:w-44 md:self-stretch md:justify-center">
             <button className="btn-primary py-3 font-bold tracking-widest text-xs shadow-[0_0_20px_rgba(0,229,114,0.4)]" onClick={() => setTradeSide("BUY")}>EXECUTE BUY</button>
-            <button className="bg-red/10 border border-red/30 text-red py-3 rounded-lg font-bold tracking-widest text-xs hover:bg-red/20 transition disabled:opacity-50" disabled={isOwner} onClick={() => setTradeSide("SELL")}>EXECUTE SELL</button>
+            <button className="bg-red/10 border border-red/30 text-red py-3 rounded-lg font-bold tracking-widest text-xs hover:bg-red/20 transition" onClick={() => setTradeSide("SELL")}>EXECUTE SELL</button>
             <button className="btn py-3 font-bold tracking-widest text-xs" onClick={() => setReportOpen(true)}>REPORT</button>
           </div>
         </header>

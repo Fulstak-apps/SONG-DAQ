@@ -2,7 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSession } from "@/lib/store";
+import { PAPER_WALLET_ADDRESS, PAPER_WALLET_PROVIDER, usePaperTrading, useSession } from "@/lib/store";
 import { api } from "@/lib/api";
 import { fmtNum } from "@/lib/pricing";
 import { spotPrice } from "@/lib/bondingCurve";
@@ -75,8 +75,9 @@ const LAUNCH_PRESETS: Array<{
 
 export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const { address, kind, provider, audius } = useSession();
-  const externalWalletAddress = kind === "solana" && provider && provider !== "audius" ? address : null;
-  const externalWalletProvider = provider && provider !== "audius" ? provider : null;
+  const paperMode = usePaperTrading((s) => s.enabled);
+  const externalWalletAddress = paperMode ? PAPER_WALLET_ADDRESS : kind === "solana" && provider && provider !== "audius" && provider !== PAPER_WALLET_PROVIDER ? address : null;
+  const externalWalletProvider = paperMode ? PAPER_WALLET_PROVIDER : provider && provider !== "audius" && provider !== PAPER_WALLET_PROVIDER ? provider : null;
   const audiusWalletAddress = audius?.wallets?.sol ?? null;
   const launchIdentityWallet = externalWalletAddress || audiusWalletAddress;
   const [step, setStep] = useState<Step>(1);
@@ -262,6 +263,10 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   }, [launchKind]);
 
   async function deploy() {
+    if (paperMode) {
+      simulatePaperLaunch();
+      return;
+    }
     if (!externalWalletAddress || !externalWalletProvider) {
       setErr("Connect Phantom, Solflare, or Backpack before launching. Audius verifies the artist, but an external Solana wallet must sign the mint.");
       return;
@@ -444,6 +449,34 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
     } finally {
       setBusy(false);
     }
+  }
+
+  function simulatePaperLaunch() {
+    const now = Date.now();
+    const cleanTitle = launchKind === "ARTIST"
+      ? String(audius?.name || audius?.handle || "Artist")
+      : String(pick?.title || "Paper Song");
+    const cleanSymbol = cleanTitle.replace(/[^a-z0-9]/gi, "").slice(0, 10).toUpperCase() || (launchKind === "ARTIST" ? "ARTIST" : "SONG");
+    const fakeMint = `paper_${cleanSymbol}_${now.toString(36)}`;
+    setBusy(false);
+    setErr(null);
+    setLiquidityStage("live");
+    setLiquidityMessage("Paper launch simulated with a fake wallet. No wallet prompt, blockchain transaction, or real money was used.");
+    setResult({
+      song: {
+        id: fakeMint,
+        symbol: `$${cleanSymbol}`,
+        mintAddress: fakeMint,
+        title: cleanTitle,
+        artworkUrl: launchKind === "ARTIST" ? audius?.avatar : (pick?.artwork?.["480x480"] || pick?.artwork?.["150x150"] || null),
+      },
+      launch: {
+        mintTx: `paper_launch_${now.toString(36)}`,
+        tradingStatus: "PAPER",
+        metadataUri: "paper://song-daq/demo-launch",
+      },
+    });
+    onLaunched?.();
   }
 
   async function deployOpenAudioArtistCoin() {
@@ -1175,7 +1208,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Review + Launch</h3>
                     <p className="text-mute text-sm font-medium">
                       {!externalWalletAddress
-                        ? "Your Audius wallet is recognized for identity and setup. Connect Phantom, Solflare, or Backpack when you are ready to sign the live Solana mint transaction."
+                        ? paperMode
+                          ? "Paper Mode is using a fake funded wallet. You can run the launch flow without a wallet prompt or real transaction."
+                          : "Your Audius wallet is recognized for identity and setup. Connect Phantom, Solflare, or Backpack when you are ready to sign the live Solana mint transaction."
                         : launchKind === "ARTIST"
                         ? "Your connected artist wallet signs the Open Audio Artist Coin launch. The coin is paired against $AUDIO on a Meteora bonding curve so fans buy from the public market."
                         : "Your connected artist wallet signs a clear launch flow. The coin is not tradable until the public curve/pool has verified liquidity, so fans can buy from the market instead of from the artist directly."}
@@ -1276,7 +1311,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     onClick={deploy}
                     disabled={!externalWalletAddress || !canLaunchReview || !ownershipConfirmed || !riskAcknowledged}
                   >
-                    {!externalWalletAddress ? "CONNECT EXTERNAL WALLET TO SIGN" : launchKind === "ARTIST" ? "SIGN AUDIO ARTIST COIN LAUNCH" : "SIGN LAUNCH + ADD LIQUIDITY"}
+                    {paperMode ? "SIMULATE LAUNCH + LIQUIDITY" : !externalWalletAddress ? "CONNECT EXTERNAL WALLET TO SIGN" : launchKind === "ARTIST" ? "SIGN AUDIO ARTIST COIN LAUNCH" : "SIGN LAUNCH + ADD LIQUIDITY"}
                   </button>
                 </div>
               )}

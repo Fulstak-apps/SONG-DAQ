@@ -43,7 +43,7 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
   const [mounted, setMounted] = useState(false);
   useWalletDiscoveryVersion();
   const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet";
-  const hasExternalWallet = !!address && provider !== "audius";
+  const hasExternalWallet = !!address && provider !== "audius" && provider !== "paper";
 
   useEffect(() => setMounted(true), []);
 

@@ -96,7 +96,7 @@ export function CoinTradeModal({
   const fiatIds = useMemo(() => ["SOL", "AUDIO", coin?.mint], [coin?.mint]);
   const { currency, prices: fiatPrices, updatedAt: fiatUpdatedAt } = useLiveFiatPrices(fiatIds);
 
-  const canSignSolanaSwap = kind === "solana" && !!provider && provider !== "audius";
+  const canSignSolanaSwap = kind === "solana" && !!provider && provider !== "audius" && provider !== "paper";
   const needsExternalWallet = !paperMode && !canSignSolanaSwap;
 
   useEffect(() => {
@@ -252,7 +252,7 @@ export function CoinTradeModal({
   const priceImpact = quote?.priceImpactPct != null ? `${(Number(quote.priceImpactPct) * 100).toFixed(2)}%` : "—";
   const priceImpactUsd = quote?.priceImpactPct != null ? Math.abs(inputUsd * Number(quote.priceImpactPct)) : null;
   const routeProblem = isRouteProblem(err);
-  const canSubmit = !busy && !quoteLoading && !isSameAssetRoute && !(side === "SELL" && isOwner) && Number(amount) > 0;
+  const canSubmit = !busy && !quoteLoading && !isSameAssetRoute && Number(amount) > 0;
   const paperTokens = coin.price && coin.price > 0 ? inputUsd / coin.price : 0;
   const estimatedNetworkFeeSol = 0.003;
   const estimatedNetworkFeeUsd = settleUsd.SOL ? estimatedNetworkFeeSol * settleUsd.SOL : null;
@@ -504,11 +504,9 @@ export function CoinTradeModal({
                 >Buy</button>
                 <button
                   onClick={() => setSide("SELL")}
-                  disabled={isOwner}
                   className={`flex-1 px-4 py-2.5 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
-                    isOwner ? "opacity-30 cursor-not-allowed" : side === "SELL" ? "bg-red text-pure-white" : "text-mute hover:text-ink"
+                    side === "SELL" ? "bg-red text-pure-white" : "text-mute hover:text-ink"
                   }`}
-                  title={isOwner ? "Artists cannot sell their own coin" : ""}
                 >Sell</button>
               </div>
 

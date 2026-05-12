@@ -102,7 +102,7 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
   const displayAvgPriceUsd = displayAvgPrice != null && solUsdRate > 0 ? Number(displayAvgPrice) * solUsdRate : null;
   const feeUsd = quote?.fee != null && solUsdRate > 0 ? Number(quote.fee) * solUsdRate : null;
   const slippageUsd = displayTotalUsd != null ? displayTotalUsd * (Number(maxSlippageBps || 0) / 10_000) : null;
-  const walletCanTransact = kind === "solana" && provider !== "audius";
+  const walletCanTransact = kind === "solana" && provider !== "audius" && provider !== "paper";
   const canExecute = !busy && walletCanTransact && swapRouteReady && Number(tokens || solIn) > 0 && !!quote;
 
   return (

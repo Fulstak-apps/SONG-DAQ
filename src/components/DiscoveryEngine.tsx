@@ -233,7 +233,7 @@ export default function DiscoveryEngine() {
   const [artistResults, setArtistResults] = useState<any[]>([]);
   const [artistSearching, setArtistSearching] = useState(false);
   const [heroIdx, setHeroIdx] = useState(0);
-  const [networkStats, setNetworkStats] = useState({ tradingVolume: 0, activeArtists: 0, songsTokenized: 0 });
+  const [networkStats, setNetworkStats] = useState({ tradingVolume: 0, activeArtists: 0, artistCoins: 0, songCoins: 0, songsTokenized: 0 });
   const [networkStatsLoaded, setNetworkStatsLoaded] = useState(false);
   const heroText = [
     { a: "Own Music", b: "Like Stock.", color: "text-gradient-neon" },
@@ -260,6 +260,8 @@ export default function DiscoveryEngine() {
         setNetworkStats({
           tradingVolume: Number(j.tradingVolume ?? 0),
           activeArtists: Number(j.activeArtists ?? 0),
+          artistCoins: Number(j.artistCoins ?? j.activeArtists ?? 0),
+          songCoins: Number(j.songCoins ?? Math.max(Number(j.songsTokenized ?? 0) - Number(j.artistCoins ?? 0), 0)),
           songsTokenized: Number(j.songsTokenized ?? 0),
         });
         setNetworkStatsLoaded(true);
@@ -310,8 +312,8 @@ export default function DiscoveryEngine() {
 
   const heroPulse = useMemo(() => ({
     volume: networkStatsLoaded ? networkStats.tradingVolume : coinTotals.vol + songTotals.vol,
-    artists: networkStatsLoaded ? networkStats.activeArtists : coins.length,
-    songs: networkStatsLoaded ? Math.max(networkStats.songsTokenized, songs.length, coins.length) : Math.max(songs.length, coins.length),
+    artists: networkStatsLoaded ? networkStats.artistCoins : coins.length,
+    songs: networkStatsLoaded ? networkStats.songCoins : songs.length,
   }), [networkStatsLoaded, networkStats, coinTotals.vol, songTotals.vol, coins.length, songs.length]);
 
   // Filter by watchlist
@@ -532,13 +534,13 @@ export default function DiscoveryEngine() {
                     <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-neon animate-pulseDot" /> Loading market data…</span>
                   </div>
                   <HeroPulseLoadingRow label="Volume" />
-                  <HeroPulseLoadingRow label="Active Artists" />
+                  <HeroPulseLoadingRow label="Artist Coins" />
                   <HeroPulseLoadingRow label="Song Coins" />
                 </>
               ) : (
                 <>
                   <HeroPulseRow label="Volume" value={fmtUsdCompact(heroPulse.volume)} accent="text-neon" />
-                  <HeroPulseRow label="Active Artists" value={fmtStatCompact(heroPulse.artists)} />
+                  <HeroPulseRow label="Artist Coins" value={fmtStatCompact(heroPulse.artists)} />
                   <HeroPulseRow label="Song Coins" value={fmtStatCompact(heroPulse.songs)} accent="text-cyan" />
                 </>
               )}

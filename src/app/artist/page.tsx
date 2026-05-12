@@ -14,7 +14,7 @@ export default function ArtistPage() {
   const [mySongs, setMySongs] = useState<any[]>([]);
   const [loadingMe, setLoadingMe] = useState(false);
   const [checkedMe, setCheckedMe] = useState(false);
-  const tradingWallet = address && provider !== "audius" ? address : null;
+  const tradingWallet = address && provider !== "audius" && provider !== "paper" ? address : null;
   const artistIdentityWallet = tradingWallet || audius?.wallets?.sol || address || null;
   const activeWallet = artistIdentityWallet;
   const { currency, prices: fiatPrices, updatedAt: fiatUpdatedAt } = useLiveFiatPrices(["SOL"]);

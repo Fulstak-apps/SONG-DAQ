@@ -42,7 +42,7 @@ export default function RootLayout({
         <ThemeProvider>
           <Navbar />
           <MarketTicker />
-          <main className="mx-auto w-full max-w-[1680px] px-3 py-4 sm:px-4 sm:py-6 md:px-6 md:py-8 2xl:px-8 relative">
+          <main className="mx-auto w-full max-w-[1680px] px-3 pb-36 pt-4 sm:px-4 sm:pb-32 sm:pt-6 md:px-6 md:pb-28 md:pt-8 2xl:px-8 relative">
             {/* Ambient page glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] bg-gradient-to-b from-neon/5 to-transparent pointer-events-none rounded-full blur-3xl" />
             {children}
@@ -66,7 +66,9 @@ export default function RootLayout({
                 <span className="text-mute">·</span>
                 <span>On-Chain Verified</span>
                 <span className="text-mute">·</span>
-                <span>Bloomberg × Apple</span>
+                <Link href="/admin/login" className="rounded-xl border border-edge bg-white/[0.04] px-3 py-2 text-ink hover:border-violet/40 hover:text-violet transition">
+                  Admin
+                </Link>
                 <LocalTimeToggle />
               </div>
             </div>

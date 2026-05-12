@@ -9,7 +9,7 @@ import { AudiusLoginButton } from "./AudiusLoginButton";
 import { RoleToggle } from "./RoleToggle";
 import { LoginModal } from "./LoginModal";
 import { WalletButton } from "./WalletButton";
-import { usePaperTrading, useSession, useUI, usePrestige, useAlerts } from "@/lib/store";
+import { PAPER_WALLET_ADDRESS, PAPER_WALLET_PROVIDER, isPaperWalletAddress, usePaperTrading, useSession, useUI, usePrestige, useAlerts } from "@/lib/store";
 import { safeJson } from "@/lib/safeJson";
 import { getCurrentWalletAddress, subscribeWalletChanges, type WalletId } from "@/lib/wallet";
 
@@ -45,7 +45,7 @@ export function Navbar() {
   const [adminSession, setAdminSession] = useState(false);
   useEffect(() => setMounted(true), []);
   useEffect(() => {
-    if (!address) {
+    if (!address || isPaperWalletAddress(address)) {
       setRole(null);
       return;
     }
@@ -60,6 +60,16 @@ export function Navbar() {
       });
     return () => { alive = false; };
   }, [address]);
+  useEffect(() => {
+    if (!mounted) return;
+    if (paperMode && !address) {
+      setSession({ address: PAPER_WALLET_ADDRESS, kind: "solana", provider: PAPER_WALLET_PROVIDER });
+      return;
+    }
+    if (!paperMode && isPaperWalletAddress(address)) {
+      setSession({ address: null, kind: null, provider: null });
+    }
+  }, [address, mounted, paperMode, setSession]);
   useEffect(() => {
     let alive = true;
     fetch("/api/admin/session", { cache: "no-store" })
@@ -76,7 +86,7 @@ export function Navbar() {
     return () => { alive = false; window.removeEventListener("focus", onFocus); };
   }, []);
   useEffect(() => {
-    if (!provider || provider === "audius") return;
+    if (!provider || provider === "audius" || provider === PAPER_WALLET_PROVIDER) return;
     const walletId = provider as WalletId;
     const syncAddress = (nextAddress: string | null) => {
       if (nextAddress) {
@@ -107,7 +117,18 @@ export function Navbar() {
 
   const isDarnellAudius = audius?.name?.trim().toLowerCase() === "darnell williams";
   const navItems = role === "ADMIN" || adminSession || isDarnellAudius ? [...NAV, { href: "/admin", label: "ADMIN", icon: "⚙" }] : NAV;
-  const hasSeparateExternalWallet = !!(address && provider !== "audius");
+  const isPaperWallet = isPaperWalletAddress(address);
+  const hasSeparateExternalWallet = !!(address && provider !== "audius" && provider !== PAPER_WALLET_PROVIDER && !isPaperWallet);
+  const togglePaperMode = () => {
+    const next = !paperMode;
+    setPaperMode(next);
+    if (next && !address) {
+      setSession({ address: PAPER_WALLET_ADDRESS, kind: "solana", provider: PAPER_WALLET_PROVIDER });
+    }
+    if (!next && isPaperWallet) {
+      setSession({ address: null, kind: null, provider: null });
+    }
+  };
   const navigate = (href: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
     event.preventDefault();
@@ -183,7 +204,7 @@ export function Navbar() {
 
           <div className="ml-auto hidden lg:flex items-center justify-end gap-1.5 min-w-0">
               {audius ? <div className="shrink-0"><AudiusLoginButton compact /></div> : null}
-              {(address || audius) ? <WalletBalance compact /> : null}
+              {(hasSeparateExternalWallet || audius) ? <WalletBalance compact /> : paperMode ? <PaperWalletPill /> : null}
               {(address || paperMode) ? <div className="hidden xl:block shrink-0"><RoleToggle /></div> : null}
           </div>
 
@@ -194,7 +215,7 @@ export function Navbar() {
               </div>
             ) : null}
 
-            {mounted && (address || audius) ? (
+            {mounted && (address || audius || paperMode) ? (
               <button
                 onClick={toggleSound}
                 className="w-9 h-9 xl:h-10 xl:w-10 flex items-center justify-center rounded-xl bg-white/[0.055] border border-edge text-mute hover:text-ink hover:bg-white/[0.09] transition-all"
@@ -220,7 +241,7 @@ export function Navbar() {
             </button>
 
             <button
-              onClick={() => setPaperMode(!paperMode)}
+              onClick={togglePaperMode}
               className={`h-9 xl:h-10 rounded-xl border px-2.5 xl:px-3 text-[9px] font-black uppercase tracking-widest transition-all shrink-0 ${
                 paperMode
                   ? "border-neon/40 bg-neon text-[#020403] shadow-[0_0_18px_rgba(0,229,114,0.22)]"
@@ -240,7 +261,7 @@ export function Navbar() {
             </button>
           </div>
         </div>
-        <nav className="md:hidden -mx-1 flex items-center gap-1 overflow-x-auto no-scrollbar border-t border-edge/70 px-1 pb-2 pt-1">
+        <nav className="md:hidden grid grid-cols-2 min-[390px]:grid-cols-3 gap-1 border-t border-edge/70 px-1 pb-2 pt-2">
           {navItems.map((n) => {
             if (n.reqArtistMode && userMode !== "ARTIST") return null;
             const active = path === n.href || (n.href !== "/" && path.startsWith(n.href));
@@ -251,7 +272,7 @@ export function Navbar() {
                 prefetch={false}
                 onClick={navigate(n.href)}
                 aria-current={active ? "page" : undefined}
-                className={`shrink-0 rounded-xl border px-3 py-2.5 text-[9px] font-black uppercase tracking-widest transition ${
+                className={`min-w-0 truncate rounded-xl border px-2 py-2.5 text-center text-[8px] font-black uppercase tracking-widest transition min-[390px]:text-[9px] ${
                   active
                     ? "border-neon/45 bg-neon/15 text-neon shadow-[0_0_16px_rgba(0,229,114,0.16)]"
                     : "border-edge bg-white/[0.045] text-mute hover:text-ink"
@@ -262,8 +283,8 @@ export function Navbar() {
             );
           })}
           {paperMode && (
-            <span className="shrink-0 rounded-xl border border-neon/25 bg-neon/10 px-3 py-2 text-[8px] font-black uppercase tracking-widest text-neon">
-              Demo Paper Trading
+            <span className="col-span-2 min-[390px]:col-span-3 rounded-xl border border-neon/25 bg-neon/10 px-3 py-2 text-center text-[8px] font-black uppercase tracking-widest text-neon">
+              Paper wallet active · simulated funds
             </span>
           )}
         </nav>
@@ -271,5 +292,15 @@ export function Navbar() {
 
       <LoginModal isOpen={loginModalOpen} onClose={closeLoginModal} />
     </header>
+  );
+}
+
+function PaperWalletPill() {
+  return (
+    <div className="hidden items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3 py-2 text-[9px] font-black uppercase tracking-widest text-neon lg:flex">
+      <span className="h-1.5 w-1.5 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.8)]" />
+      Paper Wallet
+      <span className="font-mono text-[8px] text-neon/75">100 SOL · 2.5K AUDIO</span>
+    </div>
   );
 }

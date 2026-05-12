@@ -31,7 +31,7 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
     try {
       const profile = await loginWithAudius();
       const solWallet = profile.wallets?.sol || null;
-      const hasExternalWallet = !!address && provider !== "audius";
+      const hasExternalWallet = !!address && provider !== "audius" && provider !== "paper";
       const linkWallet = hasExternalWallet ? address : solWallet;
       setSession(hasExternalWallet ? { audius: profile } : { audius: profile, address: null, kind: null, provider: null });
       setUserMode("ARTIST");

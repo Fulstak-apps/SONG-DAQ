@@ -187,7 +187,7 @@ export function useAudiusAudioBalance(handle: string | null | undefined) {
 
 export function WalletBalance({ compact = false }: { compact?: boolean } = {}) {
   const { address, kind, provider, audius, setSession } = useSession();
-  const hasTradingWallet = !!address && provider !== "audius";
+  const hasTradingWallet = !!address && provider !== "audius" && provider !== "paper";
   const trading = useNativeBalance(hasTradingWallet ? address : null, hasTradingWallet ? kind ?? null : null);
   const [audioUsdPrice, setAudioUsdPrice] = useState(0);
 

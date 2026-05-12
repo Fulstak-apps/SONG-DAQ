@@ -125,7 +125,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     try {
       const profile = await loginWithAudius();
       const solWallet = profile.wallets?.sol || null;
-      const hasExternalWallet = !!address && provider !== "audius";
+      const hasExternalWallet = !!address && provider !== "audius" && provider !== "paper";
       const linkWallet = hasExternalWallet ? address : solWallet;
       setSession(hasExternalWallet ? { audius: profile } : { audius: profile, address: null, kind: null, provider: null });
       setUserMode("ARTIST");
@@ -276,7 +276,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                         </div>
                       </div>
                       <div className="mt-3 text-[10px] uppercase tracking-widest font-bold text-mute">
-                        External trading wallet: <span className="font-mono text-ink">{address && provider !== "audius" ? `${address.slice(0, 6)}…${address.slice(-4)}` : "Connect Phantom, Solflare, or Backpack before live launch/trading"}</span>
+                        External trading wallet: <span className="font-mono text-ink">{address && provider !== "audius" && provider !== "paper" ? `${address.slice(0, 6)}…${address.slice(-4)}` : "Connect Phantom, Solflare, or Backpack before live launch/trading"}</span>
                       </div>
                     </div>
                   )}

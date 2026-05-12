@@ -3,6 +3,12 @@ import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
 export type WalletKind = "solana";
+export const PAPER_WALLET_ADDRESS = "11111111111111111111111111111111";
+export const PAPER_WALLET_PROVIDER = "paper";
+
+export function isPaperWalletAddress(address: unknown) {
+  return address === PAPER_WALLET_ADDRESS;
+}
 
 function isPersistedSolanaAddress(address: unknown) {
   return typeof address === "string" &&
@@ -199,7 +205,8 @@ export const usePaperTrading = create<PaperTradeState>()(
     }),
     {
       name: "songdaq-paper-trading",
-      version: 2,
+      storage: createJSONStorage(() => sessionStorage),
+      version: 3,
       migrate: (persisted) => ({
         ...(persisted as any),
         enabled: false,

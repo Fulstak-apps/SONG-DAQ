@@ -11,7 +11,7 @@ import { useWalletDiscoveryVersion } from "@/lib/useWalletDiscovery";
 
 export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
   const { address, kind, provider, audius } = useSession();
-  const hasExternal = !!address && provider !== "audius";
+  const hasExternal = !!address && provider !== "audius" && provider !== "paper";
   const native = useNativeBalance(hasExternal ? address : null, hasExternal ? kind : null);
   const [health, setHealth] = useState<any>(null);
   const [busy, setBusy] = useState(false);

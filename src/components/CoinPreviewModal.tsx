@@ -400,7 +400,7 @@ export function CoinPreviewModal({
 
               <div className="grid grid-cols-2 gap-2">
                 <button className="btn-primary h-11 text-[10px] font-black uppercase tracking-widest" onClick={() => trade("BUY")}>Buy</button>
-                <button className="btn h-11 text-[10px] font-black uppercase tracking-widest" disabled={isOwner} onClick={() => trade("SELL")}>Sell</button>
+                <button className="btn h-11 text-[10px] font-black uppercase tracking-widest" onClick={() => trade("SELL")}>Sell</button>
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <button

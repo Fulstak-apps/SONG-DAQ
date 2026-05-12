@@ -42,7 +42,7 @@ export function LandingPage() {
   const { openLoginModal } = useUI();
 
   const [heroIdx, setHeroIdx] = useState(0);
-  const [stats, setStats] = useState({ tradingVolume: 0, activeArtists: 0, songsTokenized: 0 });
+  const [stats, setStats] = useState({ tradingVolume: 0, activeArtists: 0, artistCoins: 0, songCoins: 0, songsTokenized: 0 });
   const [statsLoaded, setStatsLoaded] = useState(false);
   const HERO_TEXT = [
     { a: "Own Music", b: "Like Stock.", color: "text-gradient-neon" },
@@ -64,6 +64,8 @@ export function LandingPage() {
       .then((j) => { if (alive) setStats({
         tradingVolume: Number(j.tradingVolume ?? 0),
         activeArtists: Number(j.activeArtists ?? 0),
+        artistCoins: Number(j.artistCoins ?? j.activeArtists ?? 0),
+        songCoins: Number(j.songCoins ?? Math.max(Number(j.songsTokenized ?? 0) - Number(j.artistCoins ?? 0), 0)),
         songsTokenized: Number(j.songsTokenized ?? 0),
       }); if (alive) setStatsLoaded(true); })
       .catch(() => { if (alive) setStatsLoaded(false); });
@@ -154,14 +156,14 @@ export function LandingPage() {
                   <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-neon animate-pulseDot" /> Loading market data...</span>
                 </div>
                 <HeroPulseStat label="Volume" loading />
-                <HeroPulseStat label="Active Artists" loading />
+                <HeroPulseStat label="Artist Coins" loading />
                 <HeroPulseStat label="Song Coins" loading />
               </>
             ) : (
               <>
                 <HeroPulseStat label="Volume" value={fmtStatUsd(stats.tradingVolume)} accent="text-neon" />
-                <HeroPulseStat label="Active Artists" value={fmtStat(stats.activeArtists)} />
-                <HeroPulseStat label="Song Coins" value={fmtStat(stats.songsTokenized)} accent="text-cyan" />
+                <HeroPulseStat label="Artist Coins" value={fmtStat(stats.artistCoins)} />
+                <HeroPulseStat label="Song Coins" value={fmtStat(stats.songCoins || Math.max(stats.songsTokenized - stats.artistCoins, 0))} accent="text-cyan" />
               </>
             )}
             </div>
