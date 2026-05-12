@@ -13,7 +13,7 @@ interface CoinTick {
 }
 interface NewsTick {
   kind: "news";
-  category: "TECH" | "MUSIC" | "AI" | "TRENDING";
+  category: "TECH" | "MUSIC" | "AI" | "CREATOR" | "TRENDING";
   title: string;
   link: string;
   source: string;
@@ -25,8 +25,33 @@ const CAT_COLOR: Record<string, string> = {
   TECH: "text-cyan bg-cyan/5 border-cyan/15",
   MUSIC: "text-violet bg-violet/5 border-violet/15",
   AI: "text-gold bg-gold/5 border-gold/15",
+  CREATOR: "text-neon bg-neon/5 border-neon/15",
   TRENDING: "text-neon bg-neon/5 border-neon/15",
 };
+
+const SYNCING_TICKS: NewsTick[] = [
+  {
+    kind: "news",
+    category: "TRENDING",
+    title: "Syncing live song coin, artist coin, and Open Audio market data",
+    link: "/market",
+    source: "song-daq",
+  },
+  {
+    kind: "news",
+    category: "MUSIC",
+    title: "Music news and creator market intelligence are loading",
+    link: "/social",
+    source: "song-daq",
+  },
+  {
+    kind: "news",
+    category: "TECH",
+    title: "Wallet, liquidity, and price feeds are refreshing",
+    link: "/portfolio",
+    source: "song-daq",
+  },
+];
 
 export function MarketTicker() {
   const { coins } = useCoins("volume");
@@ -71,20 +96,14 @@ export function MarketTicker() {
     return mixed;
   }, [coins, news]);
 
-  if (!ticks.length) {
-    return (
-      <div className="ticker-wrap py-2 text-[11px] uppercase tracking-widest font-bold text-mute text-center bg-bg/90 border-b border-edge backdrop-blur-xl">
-        <span className="animate-pulse">Loading market intelligence…</span>
-      </div>
-    );
-  }
-  const doubled = [...ticks, ...ticks];
+  const displayTicks: Tick[] = ticks.length ? ticks : SYNCING_TICKS;
+  const doubled = [...displayTicks, ...displayTicks, ...displayTicks];
   return (
     <div className="ticker-wrap bg-bg/90 border-b border-edge backdrop-blur-xl relative overflow-hidden">
       <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-bg to-transparent z-10 pointer-events-none" />
       <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-bg to-transparent z-10 pointer-events-none" />
       
-      <div className="flex animate-ticker py-2 pl-2 pr-2 whitespace-nowrap items-center [animation-play-state:running] hover:[animation-play-state:paused]" style={{ animationDuration: "150s" }}>
+      <div className="flex animate-ticker py-2 pl-2 pr-2 whitespace-nowrap items-center [animation-play-state:running] hover:[animation-play-state:paused]" style={{ animationDuration: ticks.length ? "150s" : "70s" }}>
         {doubled.map((t, i) => {
           if (t.kind === "coin") {
             return (

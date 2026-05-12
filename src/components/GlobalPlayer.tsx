@@ -15,9 +15,11 @@ export function GlobalPlayer() {
   const lastSrcRef = useRef<string | null>(null);
   const commandRef = useRef<"play" | "pause">("pause");
   const fadeRef = useRef<number | null>(null);
+  const scrollHideRef = useRef<number | null>(null);
   const targetVolumeRef = useRef(0.05);
   const { current, playing, userPaused, toggle, next, previous, setPlaying, volume, setVolume, setPlaybackTime, seekRequest } = usePlayer();
   const [blocked, setBlocked] = useState(false);
+  const [hiddenForScroll, setHiddenForScroll] = useState(false);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -93,21 +95,41 @@ export function GlobalPlayer() {
     setPlaybackTime(nextTime, audio.duration);
   }, [seekRequest, setPlaybackTime]);
 
+  useEffect(() => {
+    if (!current) return;
+    const onScroll = () => {
+      setHiddenForScroll(true);
+      if (scrollHideRef.current != null) window.clearTimeout(scrollHideRef.current);
+      scrollHideRef.current = window.setTimeout(() => setHiddenForScroll(false), 850);
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (scrollHideRef.current != null) window.clearTimeout(scrollHideRef.current);
+      scrollHideRef.current = null;
+    };
+  }, [current]);
+
   if (!current) return <audio ref={audioRef} className="hidden" preload="none" />;
 
   return (
-    <div className="global-player-safe fixed inset-x-0 bottom-[calc(4.65rem+env(safe-area-inset-bottom,0px))] z-50 border-t border-edge bg-bg/95 px-3 pt-2 shadow-[0_-14px_42px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:px-4 md:bottom-0">
-      <div className="mx-auto flex w-full max-w-[1680px] items-center gap-2.5">
-        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-edge bg-panel2">
+    <div
+      aria-hidden={hiddenForScroll}
+      className={`global-player-safe fixed inset-x-0 bottom-[calc(4.65rem+env(safe-area-inset-bottom,0px))] z-50 border-t border-edge bg-bg/95 px-2.5 pt-1.5 shadow-[0_-14px_42px_rgba(0,0,0,0.34)] backdrop-blur-2xl transition-all duration-300 sm:px-4 md:bottom-0 ${
+        hiddenForScroll ? "translate-y-[calc(100%+1rem)] opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
+      }`}
+    >
+      <div className="mx-auto flex w-full max-w-[1680px] items-center gap-2">
+        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-edge bg-panel2">
           <SafeImage src={current.artwork} alt={current.title} fill sizes="40px" fallback={current.title} className="object-cover" />
         </div>
         <div className="min-w-0 flex-1">
           {current.href ? (
-            <Link href={current.href} className="block truncate text-sm font-bold text-ink transition hover:text-neon">
+            <Link href={current.href} className="block truncate text-xs font-bold text-ink transition hover:text-neon sm:text-sm">
               {current.title}
             </Link>
           ) : (
-            <div className="truncate text-sm font-bold text-ink">{current.title}</div>
+            <div className="truncate text-xs font-bold text-ink sm:text-sm">{current.title}</div>
           )}
           <div className="truncate text-[10px] uppercase tracking-widest text-mute">{current.artist}</div>
           {blocked && (
@@ -119,21 +141,21 @@ export function GlobalPlayer() {
 
         <div className="flex items-center gap-1">
           <button
-            className="grid h-8 w-8 place-items-center rounded-xl border border-edge bg-white/[0.055] text-mute transition hover:bg-white/[0.1] hover:text-ink sm:h-9 sm:w-9"
+            className="grid h-8 w-8 place-items-center rounded-xl border border-edge bg-white/[0.055] text-mute transition hover:bg-white/[0.1] hover:text-ink"
             onClick={previous}
             title="Previous"
           >
             <SkipBack size={15} />
           </button>
           <button
-            className="grid h-10 w-10 place-items-center rounded-xl bg-neon text-pure-black shadow-neon-glow transition hover:bg-neondim"
+            className="grid h-9 w-9 place-items-center rounded-xl bg-neon text-pure-black shadow-neon-glow transition hover:bg-neondim sm:h-10 sm:w-10"
             onClick={toggle}
             title={playing ? "Pause" : "Play"}
           >
             {playing ? <Pause size={18} /> : <Play size={18} />}
           </button>
           <button
-            className="grid h-8 w-8 place-items-center rounded-xl border border-edge bg-white/[0.055] text-mute transition hover:bg-white/[0.1] hover:text-ink sm:h-9 sm:w-9"
+            className="grid h-8 w-8 place-items-center rounded-xl border border-edge bg-white/[0.055] text-mute transition hover:bg-white/[0.1] hover:text-ink"
             onClick={next}
             title="Next"
           >

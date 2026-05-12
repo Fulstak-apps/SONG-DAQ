@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSession } from "@/lib/store";
+import { usePaperTrading, useSession } from "@/lib/store";
 import { CoinLauncher } from "@/components/CoinLauncher";
 import { fmtNum } from "@/lib/pricing";
 import { formatCryptoWithFiat, priceAgeText, useLiveFiatPrices } from "@/lib/fiat";
@@ -10,6 +10,7 @@ import { Glossary } from "@/components/Tooltip";
 
 export default function ArtistPage() {
   const { address, provider, audius } = useSession();
+  const { enabled: paperMode } = usePaperTrading();
   const [me, setMe] = useState<any>(null);
   const [mySongs, setMySongs] = useState<any[]>([]);
   const [loadingMe, setLoadingMe] = useState(false);
@@ -44,7 +45,7 @@ export default function ArtistPage() {
   if (!activeWallet) {
     return <div className="panel p-10 text-center text-mute text-sm uppercase tracking-widest font-bold">Connect a wallet to access artist tools.</div>;
   }
-  if (!audius) {
+  if (!audius && !paperMode) {
     return (
       <div className="panel p-10 text-center space-y-4 max-w-lg mx-auto mt-10 shadow-2xl relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-tr from-violet/5 to-transparent pointer-events-none" />
@@ -63,7 +64,7 @@ export default function ArtistPage() {
     return <div className="panel p-10 text-center text-mute text-sm uppercase tracking-widest font-bold">Verifying artist access...</div>;
   }
 
-  if (me?.role && me.role !== "ARTIST") {
+  if (!paperMode && me?.role && me.role !== "ARTIST") {
     return (
       <div className="panel p-10 text-center space-y-4 max-w-lg mx-auto mt-10 shadow-2xl relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-tr from-red/5 to-transparent pointer-events-none" />
@@ -78,6 +79,8 @@ export default function ArtistPage() {
   const artistRevenue = mySongs.reduce((acc, s) => acc + (s.royaltyPool * s.artistShareBps) / 10_000, 0);
   const totalCap = mySongs.reduce((acc, s) => acc + s.marketCap, 0);
   const totalHolders = 0;
+  const artistDisplayName = audius?.name || (paperMode ? "Paper Artist" : "Artist");
+  const artistHandle = audius?.handle ? ` (@${audius.handle})` : paperMode ? " (Paper Mode)" : "";
 
   return (
     <div className="space-y-6 max-w-[1200px] mx-auto">
@@ -86,13 +89,15 @@ export default function ArtistPage() {
         <div className="relative z-10">
           <h1 className="text-4xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 flex items-center gap-3">
             Song Studio
-            {audius.verified && <span className="text-[11px] uppercase tracking-widest text-black bg-neon px-2 py-0.5 rounded shadow-[0_0_10px_rgba(0,229,114,0.5)] font-bold">Verified</span>}
+            {audius?.verified && <span className="text-[11px] uppercase tracking-widest text-black bg-neon px-2 py-0.5 rounded shadow-[0_0_10px_rgba(0,229,114,0.5)] font-bold">Verified</span>}
+            {paperMode && !audius && <span className="text-[11px] uppercase tracking-widest text-black bg-neon px-2 py-0.5 rounded shadow-[0_0_10px_rgba(0,229,114,0.5)] font-bold">Paper Mode</span>}
           </h1>
           <p className="text-mute mt-2 font-medium break-words whitespace-normal">
-            Authenticated as <span className="text-white">{audius.name || `@${audius.handle}`}</span>
-            {audius.handle ? <span className="text-mute"> (@{audius.handle})</span> : null}
-            <span className="text-mute"> · Status </span><span className={me?.role === "ARTIST" ? "text-neon drop-shadow-[0_0_5px_rgba(0,229,114,0.4)]" : "text-mute uppercase tracking-widest text-[11px]"}>{me?.role ?? "INVESTOR"}</span>
+            Authenticated as <span className="text-white">{artistDisplayName}</span>
+            <span className="text-mute">{artistHandle}</span>
+            <span className="text-mute"> · Status </span><span className={me?.role === "ARTIST" || paperMode ? "text-neon drop-shadow-[0_0_5px_rgba(0,229,114,0.4)]" : "text-mute uppercase tracking-widest text-[11px]"}>{paperMode && !audius ? "PAPER ARTIST" : me?.role ?? "INVESTOR"}</span>
             {tradingWallet && <span className="block mt-1 text-[11px] uppercase tracking-widest text-mute">Trading wallet connected separately</span>}
+            {paperMode && !audius && <span className="block mt-1 text-[11px] uppercase tracking-widest text-neon">Simulated launch flow. No real wallet transaction is sent.</span>}
           </p>
         </div>
       </header>

@@ -191,7 +191,7 @@ export function Navbar() {
 
           <nav className="hidden lg:flex flex-1 min-w-0 items-center gap-0.5 overflow-x-auto no-scrollbar">
             {navItems.map((n) => {
-              if (n.reqArtistMode && userMode !== "ARTIST") return null;
+              if (n.reqArtistMode && userMode !== "ARTIST" && !paperMode) return null;
               const active = path === n.href || (n.href !== "/" && path.startsWith(n.href));
               return (
                 <Link
@@ -299,7 +299,7 @@ export function Navbar() {
 
       <LoginModal isOpen={loginModalOpen} onClose={closeLoginModal} />
     </header>
-    <MobileBottomNav navItems={navItems} userMode={userMode} path={path} navigate={navigate} setUserMode={setUserMode} />
+    <MobileBottomNav navItems={navItems} userMode={userMode} paperMode={paperMode} path={path} navigate={navigate} setUserMode={setUserMode} />
     </>
   );
 }
@@ -323,17 +323,19 @@ function MobileNavIcon({ item }: { item: NavItem }) {
 function MobileBottomNav({
   navItems,
   userMode,
+  paperMode,
   path,
   navigate,
   setUserMode,
 }: {
   navItems: NavItem[];
   userMode: string;
+  paperMode: boolean;
   path: string;
   navigate: (href: string) => (event: React.MouseEvent<HTMLAnchorElement>) => void;
   setUserMode: (mode: "ARTIST" | "INVESTOR") => void;
 }) {
-  const visibleItems = navItems.filter((item) => !item.reqArtistMode || userMode === "ARTIST");
+  const visibleItems = navItems.filter((item) => !item.reqArtistMode || userMode === "ARTIST" || paperMode);
   if (!visibleItems.length) return null;
 
   return (
