@@ -267,7 +267,7 @@ export default function SongTradingPage() {
             {isTradable ? (
               <>
                 <TradePanel song={song} onTraded={load} />
-                {isOwner ? <LiveLiquidityPanel song={song} /> : null}
+                {isOwner ? <LiveLiquidityPanel song={song} onChanged={load} /> : null}
               </>
             ) : <PendingLiquidityPanel song={song} isOwner={isOwner} />}
             
@@ -436,7 +436,7 @@ export default function SongTradingPage() {
         {isTradable ? (
           <>
             <TradePanel song={song} onTraded={load} />
-            {isOwner ? <LiveLiquidityPanel song={song} /> : null}
+            {isOwner ? <LiveLiquidityPanel song={song} onChanged={load} /> : null}
           </>
         ) : <PendingLiquidityPanel song={song} isOwner={isOwner} />}
         <TokenTrustPanel song={song} isTradable={isTradable} />
@@ -632,7 +632,7 @@ function PendingLiquidityPanel({ song, isOwner = false }: { song: any; isOwner?:
   );
 }
 
-function LiveLiquidityPanel({ song }: { song: any }) {
+function LiveLiquidityPanel({ song, onChanged }: { song: any; onChanged?: () => void }) {
   const mint = song.mintAddress ? `${song.mintAddress.slice(0, 6)}…${song.mintAddress.slice(-6)}` : "Mint pending";
   const pairAsset = song.liquidityPairAsset || "SOL";
   const pairAmount = Number(song.liquidityPairAmount || 0);
@@ -679,6 +679,123 @@ function LiveLiquidityPanel({ song }: { song: any }) {
       </div>
 
       <LiquidityTopUp song={song} mintLabel={mint} />
+      <BurnTokensPanel song={song} onBurned={onChanged} />
+    </div>
+  );
+}
+
+function BurnTokensPanel({ song, onBurned }: { song: any; onBurned?: () => void }) {
+  const { address } = useSession();
+  const [open, setOpen] = useState(false);
+  const [amount, setAmount] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const { currency, prices, updatedAt } = useLiveFiatPrices(["SOL"]);
+  const amountNumber = Number(amount || 0);
+  const tokenUsd = Number(song.currentPriceUsd || song.launchPriceUsd || 0);
+  const estimatedValueUsd = amountNumber > 0 && tokenUsd > 0 ? amountNumber * tokenUsd : null;
+  const estimatedFeeSol = 0.002;
+  const solUsd = Number(prices.SOL?.usd || 0);
+  const estimatedFeeUsd = solUsd > 0 ? estimatedFeeSol * solUsd : null;
+  const canSubmit = !!address && amountNumber > 0 && confirm.trim().toUpperCase() === "BURN";
+
+  async function submit() {
+    if (!address || !canSubmit) return;
+    setBusy(true);
+    setErr(null);
+    setStatus(null);
+    let sig: string | null = null;
+    try {
+      const prepared = await api<{ transaction: string; message: string }>(`/api/songs/${song.id}/burn/onchain`, {
+        method: "POST",
+        json: { wallet: address, amount: amountNumber },
+      });
+      const walletId = getConnectedWalletId();
+      if (!walletId) throw new Error("No connected Solana wallet found");
+      setStatus(prepared.message);
+      sig = await sendSerializedTransaction(walletId, prepared.transaction);
+      setStatus("Burn transaction sent. Verifying the supply update.");
+
+      let verified = false;
+      let lastError: any = null;
+      for (let attempt = 0; attempt < 8; attempt++) {
+        try {
+          await api(`/api/songs/${song.id}/burn`, {
+            method: "POST",
+            json: { wallet: address, amount: amountNumber, burnTxSig: sig },
+          });
+          verified = true;
+          break;
+        } catch (e: any) {
+          lastError = e;
+          await new Promise((resolve) => setTimeout(resolve, 1600 + attempt * 900));
+        }
+      }
+      if (!verified) {
+        setStatus(`Burn transaction was sent, but SONG·DAQ is still waiting for confirmation. Transaction: ${sig}. Refresh in a moment.`);
+        setErr(lastError?.message || null);
+        return;
+      }
+      setAmount("");
+      setConfirm("");
+      setOpen(false);
+      onBurned?.();
+    } catch (e: any) {
+      if (sig) {
+        setStatus(`Burn transaction was sent, but SONG·DAQ could not finish verification yet. Transaction: ${sig}. Refresh in a moment.`);
+        setErr(e.message ?? null);
+      } else {
+        setErr(e.message ?? "Failed to burn tokens");
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="rounded-2xl border border-red/20 bg-red/5 p-4 space-y-3">
+      <button
+        className="btn w-full h-11 border-red/25 bg-red/10 text-red hover:bg-red/15 text-[10px] font-black uppercase tracking-widest"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? "Close Burn Tool" : "Burn Tokens"}
+      </button>
+      <div className="text-[10px] uppercase tracking-widest font-bold text-red/80">
+        Permanently remove coins from your wallet
+      </div>
+      {open && (
+        <div className="space-y-3">
+          <div className="rounded-xl border border-red/20 bg-red/10 p-3 text-[11px] leading-relaxed text-red/90">
+            Burning destroys tokens forever. Use it only when you want to reduce supply or remove tokens you own. This is not the same as selling, and you will not receive SOL back.
+          </div>
+          <label className="space-y-2 text-[10px] uppercase tracking-widest font-bold text-mute">
+            <span>Amount to burn</span>
+            <input value={amount} onChange={(e) => setAmount(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-edge bg-panel px-4 py-3 text-sm text-ink outline-none focus:border-red/50" placeholder="1000" />
+          </label>
+          <div className="grid gap-2 sm:grid-cols-2">
+            <div className="rounded-xl border border-edge bg-panel p-3">
+              <div className="text-[9px] uppercase tracking-widest font-black text-mute">Estimated value removed</div>
+              <div className="mt-1 font-mono text-xs font-bold text-white">{formatFiatEstimate(estimatedValueUsd, currency)}</div>
+            </div>
+            <div className="rounded-xl border border-edge bg-panel p-3">
+              <div className="text-[9px] uppercase tracking-widest font-black text-mute">Network fee estimate</div>
+              <div className="mt-1 font-mono text-xs font-bold text-white">{formatCryptoWithFiat(estimatedFeeSol, "SOL", estimatedFeeUsd, currency)}</div>
+            </div>
+          </div>
+          <label className="space-y-2 text-[10px] uppercase tracking-widest font-bold text-mute">
+            <span>Type BURN to confirm</span>
+            <input value={confirm} onChange={(e) => setConfirm(e.target.value)} className="w-full rounded-xl border border-edge bg-panel px-4 py-3 text-sm text-ink outline-none focus:border-red/50" placeholder="BURN" />
+          </label>
+          <div className="text-[9px] uppercase tracking-widest text-mute">{priceAgeText(updatedAt)}</div>
+          {status && <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-xs text-neon">{status}</div>}
+          {err && <div className="rounded-xl border border-red/20 bg-red/10 p-3 text-xs text-red">{err}</div>}
+          <button className="btn-primary w-full h-11 text-[10px] font-black uppercase tracking-widest disabled:opacity-50" disabled={busy || !canSubmit} onClick={submit}>
+            {busy ? "Burning…" : `Permanently Burn ${amountNumber > 0 ? amountNumber.toLocaleString() : ""} $${song.symbol}`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
