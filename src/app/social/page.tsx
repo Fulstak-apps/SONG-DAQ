@@ -140,7 +140,7 @@ export default function SocialPage() {
             Live music industry, creator economy, technology, AI, and worldwide trending signals from real news feeds.
           </p>
         </div>
-        <div className="flex max-w-full bg-panel border border-edge rounded-xl p-1 overflow-x-auto no-scrollbar">
+        <div className="flex w-full max-w-full flex-wrap bg-panel border border-edge rounded-xl p-1 lg:w-auto lg:flex-nowrap lg:overflow-x-auto lg:no-scrollbar">
           {FILTERS.map((f) => (
             <button
               key={f}

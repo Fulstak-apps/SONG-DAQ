@@ -22,9 +22,9 @@ export function Toaster() {
         {toasts.map((t) => (
           <motion.div
             key={t.id}
-            initial={{ opacity: 0, x: 24, y: 0 }}
+            initial={{ opacity: 0, x: 0, y: -12 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
-            exit={{ opacity: 0, x: 24, scale: 0.96 }}
+            exit={{ opacity: 0, x: 0, y: -12, scale: 0.98 }}
             className={`toast-card pointer-events-auto flex w-full items-start gap-3 overflow-hidden rounded-2xl border bg-panel text-ink shadow-lg backdrop-blur-2xl ${COLORS[t.kind]}`}
             onClick={() => dismiss(t.id)}
           >

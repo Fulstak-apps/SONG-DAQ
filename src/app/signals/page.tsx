@@ -1,5 +1,5 @@
-import { GamifiedSignalsPage } from "@/components/GamifiedSignalsPage";
+import { redirect } from "next/navigation";
 
 export default function SignalsPage() {
-  return <GamifiedSignalsPage />;
+  redirect("/market");
 }

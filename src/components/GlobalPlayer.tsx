@@ -5,6 +5,11 @@ import { Pause, Play, SkipBack, SkipForward, Volume2 } from "lucide-react";
 import { usePlayer } from "@/lib/store";
 import { SafeImage } from "./SafeImage";
 
+function clampVolume(value: number) {
+  if (!Number.isFinite(value)) return 0;
+  return Math.max(0, Math.min(1, value));
+}
+
 export function GlobalPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastSrcRef = useRef<string | null>(null);
@@ -27,9 +32,9 @@ export function GlobalPlayer() {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    targetVolumeRef.current = Math.max(0, Math.min(1, volume));
+    targetVolumeRef.current = clampVolume(volume);
     if (fadeRef.current == null) {
-      audio.volume = targetVolumeRef.current;
+      audio.volume = clampVolume(targetVolumeRef.current);
     }
   }, [volume]);
 
@@ -62,13 +67,13 @@ export function GlobalPlayer() {
           const startedAt = performance.now();
           const duration = 450;
           const fade = (now: number) => {
-            const pct = Math.min(1, (now - startedAt) / duration);
-            audio.volume = targetVolumeRef.current * pct;
+            const pct = Math.max(0, Math.min(1, (now - startedAt) / duration));
+            audio.volume = clampVolume(targetVolumeRef.current * pct);
             if (pct < 1) {
               fadeRef.current = requestAnimationFrame(fade);
             } else {
               fadeRef.current = null;
-              audio.volume = targetVolumeRef.current;
+              audio.volume = clampVolume(targetVolumeRef.current);
             }
           };
           if (fadeRef.current != null) cancelAnimationFrame(fadeRef.current);
@@ -91,22 +96,22 @@ export function GlobalPlayer() {
   if (!current) return <audio ref={audioRef} className="hidden" preload="none" />;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-edge bg-bg/95 backdrop-blur-2xl px-4 py-3 shadow-[0_-20px_60px_rgba(0,0,0,0.35)]">
-      <div className="mx-auto flex w-full max-w-[1680px] items-center gap-3">
-        <div className="relative w-11 h-11 rounded-lg overflow-hidden border border-edge bg-panel2 shrink-0">
-          <SafeImage src={current.artwork} alt={current.title} fill sizes="44px" fallback={current.title} className="object-cover" />
+    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-edge bg-bg/95 px-3 py-2 shadow-[0_-14px_42px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:px-4">
+      <div className="mx-auto flex w-full max-w-[1680px] items-center gap-2.5">
+        <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-edge bg-panel2">
+          <SafeImage src={current.artwork} alt={current.title} fill sizes="40px" fallback={current.title} className="object-cover" />
         </div>
         <div className="min-w-0 flex-1">
           {current.href ? (
-            <Link href={current.href} className="block text-sm font-bold text-ink truncate hover:text-neon transition">
+            <Link href={current.href} className="block truncate text-sm font-bold text-ink transition hover:text-neon">
               {current.title}
             </Link>
           ) : (
-            <div className="text-sm font-bold text-ink truncate">{current.title}</div>
+            <div className="truncate text-sm font-bold text-ink">{current.title}</div>
           )}
-          <div className="text-[11px] uppercase tracking-widest text-mute truncate">{current.artist}</div>
+          <div className="truncate text-[10px] uppercase tracking-widest text-mute">{current.artist}</div>
           {blocked && (
-            <div className="text-[11px] uppercase tracking-widest text-neon mt-0.5">
+            <div className="mt-0.5 text-[10px] uppercase tracking-widest text-neon">
               Press play once to enable browser audio
             </div>
           )}
@@ -114,21 +119,21 @@ export function GlobalPlayer() {
 
         <div className="flex items-center gap-1">
           <button
-            className="w-9 h-9 rounded-xl border border-edge bg-white/[0.055] text-mute hover:text-ink hover:bg-white/[0.1] transition grid place-items-center"
+            className="grid h-8 w-8 place-items-center rounded-xl border border-edge bg-white/[0.055] text-mute transition hover:bg-white/[0.1] hover:text-ink sm:h-9 sm:w-9"
             onClick={previous}
             title="Previous"
           >
             <SkipBack size={15} />
           </button>
           <button
-            className="w-11 h-11 rounded-xl bg-neon text-pure-black hover:bg-neondim transition grid place-items-center shadow-neon-glow"
+            className="grid h-10 w-10 place-items-center rounded-xl bg-neon text-pure-black shadow-neon-glow transition hover:bg-neondim"
             onClick={toggle}
             title={playing ? "Pause" : "Play"}
           >
             {playing ? <Pause size={18} /> : <Play size={18} />}
           </button>
           <button
-            className="w-9 h-9 rounded-xl border border-edge bg-white/[0.055] text-mute hover:text-ink hover:bg-white/[0.1] transition grid place-items-center"
+            className="grid h-8 w-8 place-items-center rounded-xl border border-edge bg-white/[0.055] text-mute transition hover:bg-white/[0.1] hover:text-ink sm:h-9 sm:w-9"
             onClick={next}
             title="Next"
           >

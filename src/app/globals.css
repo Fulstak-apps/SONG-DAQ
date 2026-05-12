@@ -115,10 +115,12 @@ textarea {
   top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
   left: max(0.75rem, env(safe-area-inset-left, 0px));
   right: max(0.75rem, env(safe-area-inset-right, 0px));
+  box-sizing: border-box;
   z-index: 10000;
   display: flex;
   max-height: min(72dvh, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem));
-  max-width: calc(100vw - 1.5rem);
+  width: auto;
+  max-width: none;
   flex-direction: column;
   gap: 0.5rem;
   overflow-y: auto;

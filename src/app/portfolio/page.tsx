@@ -12,7 +12,6 @@ import { getSolPriceUsd } from "@/lib/balance";
 import { readJson } from "@/lib/safeJson";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 import { formatCryptoWithFiat, priceAgeText, useUsdToDisplayRate } from "@/lib/fiat";
-import { BadgeRail, MilestoneGrid, SongIPOPanel, UndervaluedSignalsPanel } from "@/components/GamificationLayer";
 
 interface TokenRow {
   mint: string;
@@ -291,32 +290,6 @@ export default function PortfolioPage() {
   const songTokens = useMemo(() => {
     return (portfolio?.holdings ?? []).filter((h: any) => (h.amount ?? 0) > 0);
   }, [portfolio?.holdings]);
-  const gamifiedPortfolioAssets = useMemo(() => {
-    const artistAssets = artistTokens.map((t) => ({
-      id: t.mint,
-      mint: t.mint,
-      ticker: t.ticker,
-      name: t.name,
-      title: t.name,
-      price: t.price ?? 0,
-      marketCap: t.valueUsd ?? 0,
-      holder: 0,
-    }));
-    const songAssets = songTokens.map((h: any) => ({
-      id: h.songId,
-      mint: h.song?.mintAddress || h.songId,
-      ticker: h.song?.symbol || "SONG",
-      title: h.song?.title || "Song Coin",
-      name: h.song?.title || "Song Coin",
-      artistName: h.song?.artistName,
-      artist_name: h.song?.artistName,
-      price: Number(h.song?.currentPriceUsd ?? h.song?.price ?? 0),
-      marketCap: Number(h.song?.marketCapUsd ?? h.song?.marketCap ?? 0),
-      v24hUSD: Number(h.song?.volume24h ?? 0),
-      holder: Number(h.song?.holder ?? 0),
-    }));
-    return [...artistAssets, ...songAssets];
-  }, [artistTokens, songTokens]);
 
   const totalUsd = (native.usd ?? 0) + (tradingTokens.data?.totalUsd ?? 0) + (audiusTokens.data?.totalUsd ?? 0);
   const tradingAudioBalance = tradingTokens.data?.audioBalance ?? 0;
@@ -377,12 +350,12 @@ export default function PortfolioPage() {
   if (!hasExternalWallet && paperMode) {
     const paperPositions = Object.values(paper.holdings);
     return (
-      <div className="space-y-6 max-w-[1280px] mx-auto text-ink">
-        <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-5">
+      <div className="mx-auto max-w-[1280px] space-y-4 text-ink">
+        <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
           <div>
             <div className="text-[11px] uppercase tracking-[0.28em] font-black text-neon">Paper Trade / Demo Portfolio</div>
-            <h1 className="mt-2 text-4xl font-black tracking-tight">Practice Wallet</h1>
-            <p className="text-mute text-sm mt-2">
+            <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">Practice Wallet</h1>
+            <p className="mt-2 max-w-2xl text-sm text-mute">
               Demo mode gives you seeded fake balances so you can test buys, sells, and positions without connecting a live wallet.
             </p>
           </div>
@@ -393,14 +366,11 @@ export default function PortfolioPage() {
           </div>
         </header>
 
-        <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+        <section className="grid grid-cols-2 gap-2 lg:grid-cols-4">
           <Metric label="Demo Cash" value={formatUsdDisplay(cashUsd)} sub={`Combined paper value in ${currency}`} />
           <Metric label="Demo SOL" value={formatCryptoWithFiat(paperSol, "SOL", convertUsd(paperUsd.sol ? paperSol * paperUsd.sol : null), currency)} sub="Simulated wallet SOL" />
           <Metric label="Demo AUDIO" value={formatCryptoWithFiat(paperAudio, "AUDIO", convertUsd(paperUsd.audio ? paperAudio * paperUsd.audio : null), currency)} sub="Simulated AUDIO balance" />
-          <Metric label="Artist Coins" value={fmtNum(paperPositions.length)} sub="Paper holdings" />
-          <Metric label="Song Coins" value="0" sub="Use the market to add positions" />
-          <Metric label="PnL / Net Change" value="—" sub="Demo mode starts neutral" />
-          <Metric label="Risk Focus" value="Demo" sub="No blockchain transaction is sent" />
+          <Metric label="Paper Positions" value={fmtNum(paperPositions.length)} sub="Demo holdings" />
         </section>
 
         <PortfolioPerformanceChart
@@ -408,14 +378,10 @@ export default function PortfolioPage() {
           totalValueUsd={cashUsd}
           pnlUsd={paper.trades.reduce((sum, trade) => sum + (trade.side === "SELL" ? trade.totalUsd : -trade.totalUsd * 0.02), 0)}
           formatUsd={formatUsdDisplay}
+          compact
         />
 
-        <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-          <BadgeRail mode="paper" portfolioValueUsd={cashUsd} asset={paperPositions[0] ? { ticker: paperPositions[0].ticker, title: paperPositions[0].ticker, mint: paperPositions[0].mint, price: paperPositions[0].costUsd } : null} limit={3} />
-          <MilestoneGrid asset={paperPositions[0] ? { ticker: paperPositions[0].ticker, title: paperPositions[0].ticker, mint: paperPositions[0].mint } : null} compact />
-        </section>
-
-        <section className="grid grid-cols-1 xl:grid-cols-[1.25fr_0.75fr] gap-4">
+        <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.25fr_0.75fr]">
           <div className="panel-elevated p-5 grain">
             <div className="flex items-center justify-between mb-4">
               <div>
@@ -488,11 +454,11 @@ export default function PortfolioPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-[1280px] mx-auto text-ink">
-      <header className="flex flex-col lg:flex-row lg:items-end justify-between gap-5">
+    <div className="mx-auto max-w-[1280px] space-y-4 text-ink">
+      <header className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <div className="text-[11px] uppercase tracking-[0.28em] font-black text-neon">Real Wallet Portfolio</div>
-          <h1 className="mt-2 text-4xl font-black tracking-tight">
+          <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
             {audius?.handle ? `@${audius.handle}` : externalAddress ? short(externalAddress) : "Audius Profile"}
           </h1>
           <p className="text-mute text-sm mt-2">
@@ -520,7 +486,7 @@ export default function PortfolioPage() {
         </div>
       </header>
 
-      <section className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-7">
+      <section className="grid grid-cols-2 gap-2 lg:grid-cols-4 xl:grid-cols-7">
         <Metric label="Total Portfolio Value" value={formatUsdDisplay(totalIndexedValueUsd)} sub={issuerAllocationValueUsd > 0 ? "Liquid value; issuer allocation separated" : paperMode ? "Paper cash + wallet + AUDIO + coins" : "SOL + AUDIO + Song Coins + Artist Coins + other assets"} />
         <Metric label="SOL" value={externalAddress && native.balance != null ? formatCryptoWithFiat(native.balance, "SOL", convertUsd(native.usd), currency) : "Connect"} sub={externalAddress ? priceAgeText(displayFiatUpdatedAt || fiatUpdatedAt) : "Connect external wallet"} />
         <Metric label="AUDIO" value={formatCryptoWithFiat(audioBalance, "AUDIO", convertUsd(audioValueUsd || null), currency)} sub="Audius token value included in total" />
@@ -530,30 +496,13 @@ export default function PortfolioPage() {
         <Metric label="P/L" value={`${pnl >= 0 ? "+" : ""}${formatUsdDisplay(pnl)}`} sub="Indexed portfolio delta" />
       </section>
 
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <Metric label="PnL / Net Change" value={`${pnl >= 0 ? "+" : ""}${formatUsdDisplay(pnl)}`} sub="Indexed portfolio delta" />
-        <Metric label="Concentration" value={`${concentration}%`} sub="Lower is broader" />
-        <Metric label="Risk Focus" value={artistTokens.length || songTokens.length ? "Active" : "Idle"} sub="Review liquidity and trust badges" />
-      </section>
-
       <PortfolioPerformanceChart
         wallet={portfolioWallet}
         totalValueUsd={totalIndexedValueUsd}
         pnlUsd={pnl}
         formatUsd={formatUsdDisplay}
+        compact
       />
-
-      <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-        <BadgeRail asset={gamifiedPortfolioAssets[0]} portfolioValueUsd={totalIndexedValueUsd} limit={3} />
-        <div className="space-y-4">
-          <SongIPOPanel assets={gamifiedPortfolioAssets} limit={2} />
-          <UndervaluedSignalsPanel assets={gamifiedPortfolioAssets} limit={2} />
-        </div>
-      </section>
-
-      <MilestoneGrid asset={gamifiedPortfolioAssets[0]} compact />
-
-        <WalletDiagnostics compact />
 
       {issuerAllocationValueUsd > 0 && (
         <div className="rounded-2xl border border-amber/25 bg-amber/10 p-4 text-amber">
@@ -564,7 +513,7 @@ export default function PortfolioPage() {
         </div>
       )}
 
-      <section className="grid grid-cols-1 xl:grid-cols-[1.25fr_0.75fr] gap-4">
+      <section className="grid grid-cols-1 gap-4 xl:grid-cols-[1.25fr_0.75fr]">
         <div className="space-y-4">
         <div className="rounded-2xl border border-neon/20 bg-neon/8 p-4 text-neon">
           <div className="flex items-start gap-3">
@@ -647,6 +596,8 @@ export default function PortfolioPage() {
         </div>
 
         <div className="space-y-4">
+          <WalletDiagnostics compact />
+
           <div className="panel-elevated p-5 grain">
             <div className="flex items-center gap-2 mb-4">
               <Radio size={16} className="text-violet" />
@@ -676,6 +627,17 @@ export default function PortfolioPage() {
               <Mini label="Royalty" value={formatCryptoWithFiat(royaltySol, "SOL", convertUsd(royaltyUsd), currency)} />
             </div>
           </div>
+
+          <div className="panel-elevated grain p-5">
+            <h2 className="text-lg font-black tracking-tight">Portfolio Health</h2>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <Mini label="Concentration" value={`${concentration}%`} />
+              <Mini label="Status" value={artistTokens.length || songTokens.length ? "Active" : "Idle"} />
+            </div>
+            <p className="mt-3 text-xs leading-relaxed text-mute">
+              Keep an eye on liquidity, pricing source, and issuer allocation before treating any balance as spendable value.
+            </p>
+          </div>
         </div>
       </section>
 
@@ -704,10 +666,10 @@ export default function PortfolioPage() {
 function Metric({ label, value, sub }: { label: string; value: string; sub: string }) {
   const longValue = value.length > 18;
   return (
-    <div className="panel-elevated p-5 grain">
-      <div className="text-[11px] uppercase tracking-widest text-mute font-black">{label}</div>
-      <div className={`mt-2 break-words font-mono font-black leading-tight text-white ${longValue ? "text-lg md:text-xl" : "text-2xl md:text-3xl"}`}>{value}</div>
-      <div className="mt-1 text-xs uppercase tracking-widest text-mute">{sub}</div>
+    <div className="panel-elevated grain p-3.5 sm:p-4">
+      <div className="text-[10px] uppercase tracking-widest text-mute font-black sm:text-[11px]">{label}</div>
+      <div className={`mt-2 break-words font-mono font-black leading-tight text-white ${longValue ? "text-base sm:text-lg" : "text-xl sm:text-2xl"}`}>{value}</div>
+      <div className="mt-1 text-[11px] uppercase leading-snug tracking-widest text-mute">{sub}</div>
     </div>
   );
 }
@@ -718,12 +680,14 @@ function PortfolioPerformanceChart({
   pnlUsd,
   formatUsd,
   demo = false,
+  compact = false,
 }: {
   wallet?: string | null;
   totalValueUsd: number;
   pnlUsd: number;
   formatUsd: (value: number) => string;
   demo?: boolean;
+  compact?: boolean;
 }) {
   const [range, setRange] = useState<PortfolioRange>("LIVE");
   const [livePoints, setLivePoints] = useState<PortfolioPoint[]>([]);
@@ -771,7 +735,7 @@ function PortfolioPerformanceChart({
   const gradientId = positive ? "portfolioGain" : "portfolioLoss";
 
   return (
-    <section className="panel-elevated grain overflow-hidden p-5 md:p-6">
+    <section className="panel-elevated grain overflow-hidden p-4 md:p-5">
       <div className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <div className="text-[11px] font-black uppercase tracking-[0.24em] text-mute">{demo ? "Paper performance" : "Portfolio performance"}</div>
@@ -786,7 +750,7 @@ function PortfolioPerformanceChart({
               key={option.id}
               type="button"
               onClick={() => setRange(option.id)}
-              className={`rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-widest transition ${
+              className={`rounded-xl px-2.5 py-2 text-[10px] font-black uppercase tracking-widest transition sm:px-3 sm:text-[11px] ${
                 range === option.id
                   ? "bg-neon text-[#020403]"
                   : "text-mute hover:bg-white/[0.06] hover:text-ink"
@@ -798,8 +762,8 @@ function PortfolioPerformanceChart({
         </div>
       </div>
 
-      <div className="mt-5 rounded-[1.75rem] border border-edge bg-[#05070a] p-3 md:p-5">
-        <svg viewBox="0 0 1000 390" className="h-[260px] w-full overflow-visible md:h-[320px]" role="img" aria-label="Portfolio value line chart">
+      <div className="mt-4 rounded-[1.5rem] border border-edge bg-[#05070a] p-2.5 md:p-4">
+        <svg viewBox="0 0 1000 390" className={`${compact ? "h-[165px] sm:h-[190px] md:h-[215px]" : "h-[260px] md:h-[320px]"} w-full overflow-visible`} role="img" aria-label="Portfolio value line chart">
           <defs>
             <linearGradient id="portfolioGain" x1="0" x2="0" y1="0" y2="1">
               <stop offset="0%" stopColor="#b7ff00" stopOpacity="0.28" />
@@ -825,7 +789,7 @@ function PortfolioPerformanceChart({
           <text x="780" y="382" fill="rgba(255,255,255,0.55)" fontSize="24" fontFamily="monospace">{loading ? "Syncing..." : "Live index"}</text>
         </svg>
       </div>
-      <p className="mt-3 text-xs leading-relaxed text-mute">
+      <p className={`mt-2 text-xs leading-relaxed text-mute ${compact ? "hidden" : "hidden md:block"}`}>
         This chart combines wallet value, AUDIO, Song Coins, Artist Coins, and indexed song-daq positions when data is available. If historical wallet data is still syncing, song-daq anchors the chart to the current portfolio value.
       </p>
     </section>

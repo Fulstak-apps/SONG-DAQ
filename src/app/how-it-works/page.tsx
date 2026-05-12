@@ -59,9 +59,6 @@ export default function HowItWorksPage() {
               <Link href="/artist" className="btn h-11 px-4 text-[11px] font-black uppercase tracking-widest">
                 Launch Coin
               </Link>
-              <Link href="/signals" className="btn h-11 px-4 text-[11px] font-black uppercase tracking-widest">
-                View Signals
-              </Link>
             </div>
           </div>
           <MarketGraph />

@@ -113,7 +113,7 @@ export function LandingPage() {
           <div className="space-y-2">
             <div className="text-[11px] uppercase tracking-[0.22em] sm:tracking-[0.3em] font-black text-mute mb-3">Live Music Economy</div>
             <div className="relative h-[92px] sm:h-[112px] md:h-[138px]">
-            <AnimatePresence mode="wait">
+            <AnimatePresence initial={false}>
               <motion.h1
                 key={heroIdx}
                 initial={{ opacity: 0, y: 12 }}
