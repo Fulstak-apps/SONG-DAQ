@@ -17,7 +17,7 @@ const COLORS: Record<string, string> = {
 export function Toaster() {
   const { toasts, dismiss } = useToasts();
   return (
-    <div className="fixed left-3 right-3 top-[calc(env(safe-area-inset-top)+0.75rem)] z-[9999] flex max-h-[calc(100dvh-1.5rem)] max-w-[calc(100vw-1.5rem)] flex-col gap-2 overflow-y-auto pointer-events-none sm:left-auto sm:right-4 sm:top-4 sm:w-[min(420px,90vw)]">
+    <div className="toast-viewport" data-testid="toast-viewport" aria-live="polite" aria-atomic="false">
       <AnimatePresence>
         {toasts.map((t) => (
           <motion.div
@@ -25,18 +25,18 @@ export function Toaster() {
             initial={{ opacity: 0, x: 24, y: 0 }}
             animate={{ opacity: 1, x: 0, y: 0 }}
             exit={{ opacity: 0, x: 24, scale: 0.96 }}
-            className={`pointer-events-auto w-full overflow-hidden rounded-2xl border p-3.5 flex items-start gap-3 bg-panel text-ink shadow-lg backdrop-blur-2xl ${COLORS[t.kind]}`}
+            className={`toast-card pointer-events-auto flex w-full items-start gap-3 overflow-hidden rounded-2xl border bg-panel text-ink shadow-lg backdrop-blur-2xl ${COLORS[t.kind]}`}
             onClick={() => dismiss(t.id)}
           >
-            <span className="grid place-items-center w-6 h-6 rounded-full bg-white/10 border border-current font-bold text-sm shrink-0">
+            <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full border border-current bg-white/10 text-sm font-bold">
               {ICON[t.kind]}
             </span>
-            <div className="flex-1 min-w-0">
-              <div className="text-base font-black text-ink break-words">{t.title}</div>
-              {t.body && <div className="text-sm text-mute mt-0.5 leading-snug break-words">{t.body}</div>}
+            <div className="min-w-0 flex-1">
+              <div className="toast-title text-base font-black text-ink">{t.title}</div>
+              {t.body && <div className="toast-body mt-0.5 text-sm leading-snug text-mute">{t.body}</div>}
             </div>
             <button
-              className="text-mute hover:text-ink text-sm"
+              className="toast-close grid shrink-0 place-items-center rounded-full text-sm text-mute transition hover:bg-white/10 hover:text-ink"
               onClick={(e) => { e.stopPropagation(); dismiss(t.id); }}
               aria-label="Dismiss"
             >×</button>

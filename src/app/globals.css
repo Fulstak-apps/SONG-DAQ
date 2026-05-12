@@ -110,6 +110,47 @@ textarea {
   -webkit-tap-highlight-color: transparent;
 }
 
+.toast-viewport {
+  position: fixed;
+  top: calc(env(safe-area-inset-top, 0px) + 0.75rem);
+  left: max(0.75rem, env(safe-area-inset-left, 0px));
+  right: max(0.75rem, env(safe-area-inset-right, 0px));
+  z-index: 10000;
+  display: flex;
+  max-height: min(72dvh, calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem));
+  max-width: calc(100vw - 1.5rem);
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 1px;
+  pointer-events: none;
+  scrollbar-width: thin;
+}
+
+.toast-card {
+  padding: 0.875rem;
+  overflow-wrap: anywhere;
+}
+
+.toast-title,
+.toast-body {
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+
+.toast-close {
+  width: 2rem;
+  height: 2rem;
+  margin: -0.25rem -0.25rem 0 0;
+}
+
+@supports not (height: 100dvh) {
+  .toast-viewport {
+    max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 1.5rem);
+  }
+}
+
 @media (min-width: 1536px) {
   .panel,
   .panel-elevated {
@@ -123,6 +164,23 @@ textarea {
     font-size: 15.5px;
   }
 
+  .toast-card {
+    border-radius: 1rem;
+    padding: 0.8rem;
+  }
+
+  .toast-title {
+    font-size: 0.95rem;
+    line-height: 1.25;
+  }
+
+  .toast-body {
+    max-height: 8rem;
+    overflow-y: auto;
+    font-size: 0.86rem;
+    line-height: 1.35;
+  }
+
   main {
     animation-duration: 0.12s;
   }
@@ -134,6 +192,17 @@ textarea {
 
   .panel-hover:hover {
     transform: none;
+  }
+}
+
+@media (min-width: 640px) {
+  .toast-viewport {
+    top: calc(env(safe-area-inset-top, 0px) + 1rem);
+    left: auto;
+    right: max(1rem, env(safe-area-inset-right, 0px));
+    width: min(420px, calc(100vw - 2rem));
+    max-width: min(420px, calc(100vw - 2rem));
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px) - 2rem);
   }
 }
 
