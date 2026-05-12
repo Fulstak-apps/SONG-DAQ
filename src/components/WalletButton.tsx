@@ -2,7 +2,17 @@
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, useUI } from "@/lib/store";
-import { WALLETS, connectWallet, disconnectWallet, reportWalletError, walletDiagnosticsSnapshot, type WalletId } from "@/lib/wallet";
+import {
+  WALLETS,
+  connectWallet,
+  disconnectWallet,
+  isMobileWalletBrowser,
+  openMobileWalletBrowser,
+  reportWalletError,
+  shouldOpenMobileWalletBrowser,
+  walletDiagnosticsSnapshot,
+  type WalletId,
+} from "@/lib/wallet";
 import { safeJson } from "@/lib/safeJson";
 import { Loader2, Wallet, LogOut, ExternalLink } from "lucide-react";
 import { toast } from "@/lib/toast";
@@ -44,6 +54,7 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
   useWalletDiscoveryVersion();
   const network = process.env.NEXT_PUBLIC_SOLANA_NETWORK || "devnet";
   const hasExternalWallet = !!address && provider !== "audius" && provider !== "paper";
+  const mobileWallet = mounted && isMobileWalletBrowser();
 
   useEffect(() => setMounted(true), []);
 
@@ -137,6 +148,11 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
               />
             ))}
             {err && <div className="text-red text-[11px] px-2 py-2 mt-1 bg-red/5 border border-red/10 rounded-lg font-bold">{err}</div>}
+            {mobileWallet && (
+              <div className="mt-2 rounded-xl border border-edge bg-panel2 px-3 py-2 text-[11px] font-bold leading-relaxed text-mute">
+                Mobile wallets connect inside their wallet app browser. Tap a wallet to open this page there, then tap Connect again.
+              </div>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -154,15 +170,17 @@ function WalletRow({
   onConnect: () => void;
 }) {
   const installed = w.installed();
+  const openMobile = shouldOpenMobileWalletBrowser(w.id);
+  const action = openMobile ? () => openMobileWalletBrowser(w.id) : installed ? onConnect : () => window.open(w.installUrl, "_blank");
   return (
     <button
-      onClick={installed ? onConnect : () => window.open(w.installUrl, "_blank")}
+      onClick={action}
       className="w-full text-left px-3 py-2.5 rounded-xl flex items-center justify-between hover:bg-white/[0.08] transition group"
       disabled={busy}
     >
       <span className="text-sm font-bold text-ink transition">{w.label}</span>
       <span className="text-[11px] text-mute uppercase tracking-widest font-bold flex items-center gap-1">
-        {busy ? <Loader2 size={12} className="animate-spin" /> : installed ? "Connect →" : <><ExternalLink size={10} /> Install</>}
+        {busy ? <Loader2 size={12} className="animate-spin" /> : openMobile ? <><ExternalLink size={10} /> Open</> : installed ? "Connect →" : <><ExternalLink size={10} /> Install</>}
       </span>
     </button>
   );

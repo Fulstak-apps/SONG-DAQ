@@ -136,6 +136,34 @@ function walletLabel(id: WalletId) {
   return WALLETS.find((wallet) => wallet.id === id)?.label || "Wallet";
 }
 
+export function isMobileWalletBrowser() {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod|Mobile|CriOS|FxiOS|EdgiOS/i.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
+}
+
+export function mobileWalletBrowseUrl(id: WalletId, targetUrl?: string) {
+  if (typeof window === "undefined") return null;
+  const rawTarget = targetUrl || window.location.href;
+  const target = encodeURIComponent(rawTarget);
+  const ref = encodeURIComponent(window.location.origin);
+  if (id === "phantom") return `https://phantom.app/ul/browse/${target}?ref=${ref}`;
+  if (id === "solflare") return `https://solflare.com/ul/v1/browse/${target}?ref=${ref}`;
+  if (id === "backpack") return `https://backpack.app/ul/v1/browse/${target}?ref=${ref}`;
+  return null;
+}
+
+export function shouldOpenMobileWalletBrowser(id: WalletId) {
+  return isMobileWalletBrowser() && !providerFor(id);
+}
+
+export function openMobileWalletBrowser(id: WalletId) {
+  const url = mobileWalletBrowseUrl(id);
+  if (!url) return false;
+  window.location.href = url;
+  return true;
+}
+
 export function requestWalletBalanceRefresh(address?: string | null) {
   if (typeof window === "undefined") return;
   window.dispatchEvent(new CustomEvent("songdaq:wallet-refresh", { detail: { address, ts: Date.now() } }));

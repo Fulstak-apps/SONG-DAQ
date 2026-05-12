@@ -2,7 +2,16 @@
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, useUI } from "@/lib/store";
-import { WALLETS, connectWallet, reportWalletError, walletDiagnosticsSnapshot, type WalletId } from "@/lib/wallet";
+import {
+  WALLETS,
+  connectWallet,
+  isMobileWalletBrowser,
+  openMobileWalletBrowser,
+  reportWalletError,
+  shouldOpenMobileWalletBrowser,
+  walletDiagnosticsSnapshot,
+  type WalletId,
+} from "@/lib/wallet";
 import { loginWithAudius } from "@/lib/audiusOAuth";
 import { safeJson } from "@/lib/safeJson";
 import { Music, TrendingUp, ShieldCheck, ChevronLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
@@ -48,6 +57,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
   useWalletDiscoveryVersion();
+  const mobileWallet = isOpen && isMobileWalletBrowser();
 
   // Reset on open
   useEffect(() => {
@@ -230,6 +240,11 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                       <WalletRow key={w.id} w={w} busy={busy === w.id} onConnect={() => handleWallet(w.id)} />
                     ))}
                   </div>
+                  {mobileWallet && (
+                    <div className="rounded-xl border border-edge bg-panel2 px-3 py-2 text-[12px] font-bold leading-relaxed text-mute">
+                      On mobile, external wallets connect from inside the wallet app browser. Tap a wallet to open song-daq there, then tap Connect again.
+                    </div>
+                  )}
                   {err && <ErrorBanner message={err} />}
                 </motion.div>
               )}
@@ -338,9 +353,11 @@ function RoleCard({ icon, label, desc, color, onClick }: {
 
 function WalletRow({ w, busy, onConnect }: { w: any; busy: boolean; onConnect: () => void }) {
   const installed = w.installed();
+  const openMobile = shouldOpenMobileWalletBrowser(w.id);
+  const action = openMobile ? () => openMobileWalletBrowser(w.id) : installed ? onConnect : () => window.open(w.installUrl, "_blank");
   return (
     <button
-      onClick={installed ? onConnect : () => window.open(w.installUrl, "_blank")}
+      onClick={action}
       className="w-full bg-panel2 border border-edge hover:border-neon/40 text-left px-4 py-3 rounded-xl flex items-center justify-between transition-all group active:scale-[0.98]"
       disabled={busy}
     >
@@ -348,7 +365,7 @@ function WalletRow({ w, busy, onConnect }: { w: any; busy: boolean; onConnect: (
       <span className="text-sm text-mute">
         {busy ? (
           <Loader2 size={14} className="animate-spin" />
-        ) : installed ? "Connect →" : "Install ↗"}
+        ) : openMobile ? "Open app →" : installed ? "Connect →" : "Install ↗"}
       </span>
     </button>
   );
