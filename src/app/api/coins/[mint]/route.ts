@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCoin, hydrateArtists, type AudiusCoin } from "@/lib/audiusCoins";
 import { prisma } from "@/lib/db";
-import { estimateSongTokenUsd, getAssetUsdRates } from "@/lib/serverAssetPrices";
+import { getAssetUsdRates, valueLocalSongCoin } from "@/lib/serverAssetPrices";
 
 export const dynamic = "force-dynamic";
 
@@ -11,9 +11,8 @@ function normalizeSymbol(value: string) {
 
 function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusCoin {
   const mint = song.mintAddress || song.fakeTokenAddress || song.id;
-  const priceUsd = estimateSongTokenUsd(song, rates);
-  const supply = Number(song.supply || 0);
-  const marketCap = Number(song.marketCapUsd || (priceUsd > 0 ? priceUsd * supply : 0));
+  const valuation = valueLocalSongCoin(song, rates);
+  const supply = valuation.totalSupply;
   const isOpenAudio = String(song.distributor || "").includes("Open Audio")
     || String(song.riskLevel || "").startsWith("OPEN_AUDIO")
     || String(song.audiusTrackId || "").startsWith("artist-coin:");
@@ -25,13 +24,13 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
     owner_id: song.artistWallet?.audiusUserId || song.artistWalletId || "",
     logo_uri: song.artworkUrl || song.artistWallet?.audiusAvatar || undefined,
     description: `${song.title} by ${song.artistName}. song-daq song coin.`,
-    price: priceUsd || undefined,
-    marketCap: marketCap || undefined,
-    liquidity: Number(song.launchLiquidityUsd || (Number(song.liquidityPairAmount || 0) * Number(rates[String(song.liquidityPairAsset || "SOL").toUpperCase()] || 0)) || song.liquidityPairAmount || 0),
+    price: valuation.priceUsd || undefined,
+    marketCap: valuation.marketValueUsd || undefined,
+    liquidity: valuation.liquidityUsd || undefined,
     totalSupply: supply || undefined,
-    circulatingSupply: Number(song.circulating || song.supply || 0),
+    circulatingSupply: valuation.circulatingSupply || undefined,
     holder: undefined,
-    v24hUSD: Number(song.volume24h || 0),
+    v24hUSD: valuation.volumeUsd,
     priceChange24hPercent: 0,
     artist_handle: song.artistWallet?.audiusHandle || song.artistWallet?.handle || undefined,
     artist_name: song.artistName,
@@ -52,6 +51,11 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
     liquidityLocked: Boolean(song.liquidityLocked),
     royaltyVerificationStatus: song.royaltyVerificationStatus || "not_submitted",
     royaltyBacked: Boolean(song.royaltyBacked),
+    tradableSupply: valuation.tradableSupply,
+    fullyDilutedValue: valuation.fullyDilutedValueUsd,
+    marketValueBasis: valuation.basis,
+    marketValueNote: valuation.note,
+    isMarketValueReliable: valuation.isMarketValueReliable,
   };
 }
 

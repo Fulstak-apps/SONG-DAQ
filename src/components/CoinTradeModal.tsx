@@ -266,6 +266,10 @@ export function CoinTradeModal({
   const selectedSong = coin.audius_track_title || visibleTracks[0]?.title || "Artist token";
   const marketPulse = Number(coin.buy24h ?? 0) >= Number(coin.sell24h ?? 0) ? "More buys than sells" : "More sells than buys";
   const royaltyStatus = (coin as any).splitsLocked ? "Royalty split locked" : "Royalty not verified yet";
+  const localCoin = Boolean((coin as any).isSongDaqLocal || (coin as any).source === "songdaq");
+  const marketValueReliable = !localCoin || (coin as any).isMarketValueReliable !== false;
+  const marketValueLabel = marketValueReliable && Number(coin.marketCap ?? 0) > 0 ? fmtUsd(coin.marketCap ?? 0, 0) : "Not priced yet";
+  const marketValueNote = String((coin as any).marketValueNote || "Market value appears after public liquidity and real trading data are available.");
 
   function trackArtwork(track: any) {
     return pickAudiusArtwork(track, coin?.audius_track_artwork ?? coin?.logo_uri ?? coin?.artist_avatar ?? null);
@@ -484,7 +488,7 @@ export function CoinTradeModal({
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
-                <ChartStat k="MKT CAP" v={fmtUsd(coin.marketCap ?? 0, 0)} tooltip="Total market capitalization indexed by Audius." />
+                <ChartStat k="MARKET VALUE" v={marketValueLabel} tooltip={marketValueNote} />
                 <ChartStat k="24H VOL" v={fmtUsd(coin.v24hUSD ?? 0, 0)} tooltip="24 hour trading volume." />
                 <ChartStat k="HOLDERS" v={fmtNum(coin.holder ?? 0)} tooltip="Unique wallets holding this token." />
               </div>
@@ -549,7 +553,7 @@ export function CoinTradeModal({
                   <TradeInfo label="Song" value={selectedSong} />
                   <TradeInfo label="Price" value={fmtUsd(coin.price ?? 0, 6)} />
                   <TradeInfo label="24h Move" value={`${change >= 0 ? "+" : ""}${fmtPct(change)}`} accent={change >= 0 ? "text-neon" : "text-red"} />
-                  <TradeInfo label="Market Cap" value={fmtUsd(coin.marketCap ?? 0, 0)} />
+                  <TradeInfo label="Market Value" value={marketValueLabel} />
                   <TradeInfo label="Liquidity" value={fmtUsd(coin.liquidity ?? 0, 0)} />
                   <TradeInfo label="Holders" value={fmtNum(coin.holder ?? 0)} />
                 </div>

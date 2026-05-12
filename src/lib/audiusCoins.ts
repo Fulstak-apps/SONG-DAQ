@@ -70,6 +70,11 @@ export interface AudiusCoin {
   liquidityLocked?: boolean;
   royaltyVerificationStatus?: string;
   royaltyBacked?: boolean;
+  tradableSupply?: number;
+  fullyDilutedValue?: number;
+  marketValueBasis?: string;
+  marketValueNote?: string;
+  isMarketValueReliable?: boolean;
 }
 
 function firstString(...values: unknown[]) {

@@ -233,6 +233,16 @@ export default function CoinPage() {
     : "Imported from the public Audius/Open Audio coin index. This was not minted by a song-daq user.";
   const watching = isWatched(coin.mint);
   const livePrice = coin.price ?? 0;
+  const marketValueReliable = !isSongDaqLocal || (coin as any).isMarketValueReliable !== false;
+  const marketValueLabel = marketValueReliable && Number(coin.marketCap ?? 0) > 0
+    ? fmtUsd(coin.marketCap ?? 0, 0)
+    : "Not priced yet";
+  const marketValueNote = String((coin as any).marketValueNote || "Market value appears after public liquidity and real trading data are available.");
+  const tradableSupply = Number((coin as any).tradableSupply ?? coin.circulatingSupply ?? 0);
+  const tradableSupplyLabel = tradableSupply > 0 ? fmtNum(tradableSupply) : "Pending";
+  const fullSupplyLabel = Number(coin.totalSupply ?? 0) > 0 ? fmtNum(coin.totalSupply ?? 0) : "Pending";
+  const volumeLabel = Number(coin.v24hUSD ?? 0) > 0 ? fmtUsd(coin.v24hUSD ?? 0, 0) : "$0.00";
+  const holderLabel = isSongDaqLocal && coin.holder == null ? "Indexing" : fmtNum(coin.holder ?? 0);
   const histPrice = (coin as any).history24hPrice ?? livePrice;
   const high24 = Math.max(livePrice, histPrice);
   const low24 = Math.min(livePrice, histPrice);
@@ -310,8 +320,8 @@ export default function CoinPage() {
               </span>
             </div>
             <div className="flex gap-3 sm:gap-4 sm:ml-6 text-xs text-mute font-mono">
-              <div>MC: <span className="text-white">${fmtNum(coin.marketCap ?? 0)}</span></div>
-              <div>Vol: <span className="text-white">${fmtNum((coin.marketCap ?? 0) * 0.14)}</span></div>
+              <div>Value: <span className="text-white">{marketValueLabel}</span></div>
+              <div>Vol: <span className="text-white">{volumeLabel}</span></div>
             </div>
           </div>
           
@@ -431,10 +441,11 @@ export default function CoinPage() {
                   <div className="mt-4 grid grid-cols-2 gap-3">
                     <KV k="Price" v={fmtUsd(coin.price ?? 0, 6)} />
                     <KV k="24h Change" v={`${change >= 0 ? "+" : ""}${change.toFixed(2)}%`} accent={change >= 0 ? "gain" : "lose"} />
-                    <KV k="Market Cap" v={fmtUsd(coin.marketCap ?? 0, 0)} />
+                    <KV k="Market Value" v={marketValueLabel} tooltip={marketValueNote} />
                     <KV k="Liquidity" v={fmtUsd(coin.liquidity ?? 0, 0)} />
-                    <KV k="Holders" v={fmtNum(coin.holder ?? 0)} />
-                    <KV k="Supply" v={fmtNum(coin.totalSupply ?? 0)} />
+                    <KV k="Holders" v={holderLabel} />
+                    <KV k="Tradable" v={tradableSupplyLabel} tooltip="This is the public supply currently set aside for the market route. It is not the artist's full minted supply." />
+                    <KV k="Supply" v={fullSupplyLabel} tooltip="Total supply is the full amount minted. song-daq does not count every minted coin as market value until it is actually in the public market." />
                   </div>
                 </div>
               </section>
@@ -1188,7 +1199,9 @@ function KV({ k, v, tooltip, accent }: { k: string; v: string; tooltip?: string;
   const fallbackTooltips: Record<string, string> = {
     "Mkt Cap": "Market cap is the current coin price multiplied by the circulating supply.",
     "Market Cap": "Market cap is the current coin price multiplied by the circulating supply.",
+    "Market Value": "Market value uses the public tradable market supply, not the full minted supply. Fresh coins may show Not priced yet until liquidity and trading are real.",
     Liquidity: "Liquidity shows how easily people can buy or sell without moving the price too much.",
+    Tradable: "Tradable supply is the coin amount currently available in the public market route or liquidity pool.",
     "Total Supply": "Total supply is the full amount of coins created for this asset.",
     Circulating: "Circulating supply is the amount of coins currently active in the market.",
     Reserve: "Reserve is the backing or liquidity connected to the trading curve or pool.",

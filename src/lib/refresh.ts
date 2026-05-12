@@ -9,7 +9,7 @@ import { fetchMetrics } from "./audius";
 import { computePerformance } from "./pricing";
 import { spotPrice, marketCap } from "./bondingCurve";
 import { cacheGet, cacheSet } from "./redis";
-import { getAssetUsdRates } from "./serverAssetPrices";
+import { getAssetUsdRates, valueLocalSongCoin } from "./serverAssetPrices";
 
 export async function refreshSong(songId: string, force = false): Promise<void> {
   const cacheKey = `song:refresh:${songId}`;
@@ -38,20 +38,23 @@ export async function refreshSong(songId: string, force = false): Promise<void> 
     prevPerformance: song.performance,
     hoursSinceLaunch: hours,
   });
-  const price = spotPrice({
+  const curvePrice = spotPrice({
     basePrice: song.basePrice,
     slope: song.curveSlope,
     circulating: song.circulating,
     performance,
   });
-  const cap = marketCap({
+  const curveCap = marketCap({
     basePrice: song.basePrice,
     slope: song.curveSlope,
     circulating: song.circulating,
     performance,
   });
-  const rates = await getAssetUsdRates(["SOL"]);
+  const rates = await getAssetUsdRates(["SOL", "AUDIO", "USDC", song.liquidityPairAsset]);
   const solUsd = Number(rates.SOL || 0);
+  const valuation = valueLocalSongCoin({ ...(song as any), price: curvePrice }, rates);
+  const price = valuation.priceSol > 0 ? valuation.priceSol : curvePrice;
+  const cap = valuation.marketValueSol > 0 ? valuation.marketValueSol : curveCap;
   await prisma.songToken.update({
     where: { id: songId },
     data: {
@@ -62,8 +65,8 @@ export async function refreshSong(songId: string, force = false): Promise<void> 
       price,
       marketCap: cap,
       currentPriceSol: price,
-      currentPriceUsd: solUsd > 0 ? price * solUsd : song.currentPriceUsd,
-      marketCapUsd: solUsd > 0 ? cap * solUsd : song.marketCapUsd,
+      currentPriceUsd: valuation.priceUsd > 0 ? valuation.priceUsd : solUsd > 0 ? price * solUsd : song.currentPriceUsd,
+      marketCapUsd: valuation.marketValueUsd > 0 ? valuation.marketValueUsd : solUsd > 0 ? cap * solUsd : song.marketCapUsd,
     },
   });
   await cacheSet(cacheKey, Date.now(), 60);

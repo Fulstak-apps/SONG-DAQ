@@ -91,6 +91,7 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
         ? currentPriceUsd / solUsdRate
         : Number(song.currentPriceSol || song.launchPriceSol || song.price || 0);
     const supply = Number(song.supply || 0);
+    const publicMarketSupply = Math.max(0, Math.min(normalized.tokenAmount, supply || normalized.tokenAmount));
     const launchLiquidityUsd = pairUsdRate > 0 ? normalized.pairAmount * pairUsdRate : Number(song.launchLiquidityUsd || 0);
 
     const updated = await prisma.songToken.update({
@@ -107,8 +108,8 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
         currentPriceSol: currentPriceSol || song.currentPriceSol,
         currentPriceUsd: currentPriceUsd || song.currentPriceUsd,
         price: currentPriceSol || song.price,
-        marketCap: currentPriceSol > 0 && supply > 0 ? currentPriceSol * supply : song.marketCap,
-        marketCapUsd: currentPriceUsd > 0 && supply > 0 ? currentPriceUsd * supply : song.marketCapUsd,
+        marketCap: currentPriceSol > 0 && publicMarketSupply > 0 ? currentPriceSol * publicMarketSupply : song.marketCap,
+        marketCapUsd: currentPriceUsd > 0 && publicMarketSupply > 0 ? currentPriceUsd * publicMarketSupply : song.marketCapUsd,
         launchLiquiditySol: normalized.pairAsset === "SOL" ? normalized.pairAmount : song.launchLiquiditySol,
         launchLiquidityUsd: launchLiquidityUsd || song.launchLiquidityUsd,
         status: "LIVE",

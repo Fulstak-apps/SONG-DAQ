@@ -168,6 +168,9 @@ export function CoinPreviewModal({
   const linkedTrackCount = visibleTracks.filter((track) => !!linkedCoinForTrack(track)).length;
   const activeSide = Number(coin.buy24h ?? 0) >= Number(coin.sell24h ?? 0) ? "Buy pressure" : "Sell pressure";
   const royaltyStatus = (coin as any).splitsLocked ? "Royalty split locked" : "Royalty pending";
+  const marketValueReliable = !isSongDaqLocal || (coin as any).isMarketValueReliable !== false;
+  const marketValueLabel = marketValueReliable && Number(coin.marketCap ?? 0) > 0 ? fmtUsd(coin.marketCap ?? 0, 0) : "Not priced yet";
+  const tradableSupply = Number((coin as any).tradableSupply ?? coin.circulatingSupply ?? 0);
 
   function trackToPlayerTrack(track: any): PlayerTrack {
     const artwork = pickAudiusArtwork(
@@ -330,12 +333,12 @@ export function CoinPreviewModal({
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Metric label="Market Value" value={fmtUsd(coin.marketCap ?? 0, 0)} />
+                <Metric label="Market Value" value={marketValueLabel} />
                 <Metric label="Volume" value={fmtUsd(coin.v24hUSD ?? 0, 0)} />
                 <Metric label="Holders" value={fmtNum(coin.holder ?? 0)} />
                 <Metric label="Liquidity" value={fmtUsd(coin.liquidity ?? 0, 0)} />
                 <Metric label="Supply" value={fmtNum(coin.totalSupply ?? 0)} />
-                <Metric label="Available" value={fmtNum(coin.circulatingSupply ?? 0)} />
+                <Metric label="Tradable" value={tradableSupply > 0 ? fmtNum(tradableSupply) : "Pending"} />
                 <Metric label="Markets" value={String((coin as any).numberMarkets ?? 1)} />
                 <Metric label="Royalty" value={(coin as any).splitsLocked ? "Locked" : "Pending"} accent={(coin as any).splitsLocked ? "text-neon" : "text-amber"} />
               </div>

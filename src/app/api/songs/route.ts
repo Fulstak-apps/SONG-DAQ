@@ -8,7 +8,7 @@ import { validateRoyalty, DEFAULT_ROYALTY } from "@/lib/royaltyConfig";
 import { assertAudiusTrackOwnership, AuthError } from "@/lib/auth";
 import { moderateCoinText } from "@/lib/risk/contentModeration";
 import { databaseReadiness } from "@/lib/appMode";
-import { getAssetUsdRates } from "@/lib/serverAssetPrices";
+import { getAssetUsdRates, valueLocalSongCoin } from "@/lib/serverAssetPrices";
 import { PublicKey } from "@solana/web3.js";
 
 export const dynamic = "force-dynamic";
@@ -56,7 +56,26 @@ export async function GET(req: NextRequest) {
   const realSongs = songs
     .filter((song) => !song.events.some((e) => (safeParse(e.payload) as any)?.mock))
     .map(({ events, ...song }) => song);
-  return NextResponse.json({ songs: realSongs });
+  const rates = await getAssetUsdRates(["SOL", "AUDIO", "USDC", ...realSongs.map((song) => song.liquidityPairAsset)]);
+  const normalizedSongs = realSongs.map((song) => {
+    const valuation = valueLocalSongCoin(song, rates);
+    return {
+      ...song,
+      price: valuation.priceSol || song.price,
+      currentPriceSol: valuation.priceSol || song.currentPriceSol,
+      currentPriceUsd: valuation.priceUsd || song.currentPriceUsd,
+      marketCap: valuation.marketValueSol || 0,
+      marketCapUsd: valuation.marketValueUsd || 0,
+      launchLiquidityUsd: valuation.liquidityUsd || song.launchLiquidityUsd,
+      circulating: valuation.circulatingSupply || song.circulating,
+      tradableSupply: valuation.tradableSupply,
+      fullyDilutedValueUsd: valuation.fullyDilutedValueUsd,
+      marketValueBasis: valuation.basis,
+      marketValueNote: valuation.note,
+      isMarketValueReliable: valuation.isMarketValueReliable,
+    };
+  });
+  return NextResponse.json({ songs: normalizedSongs });
 }
 
 export async function POST(req: NextRequest) {
@@ -221,8 +240,9 @@ export async function POST(req: NextRequest) {
   const price = spotPrice({ basePrice: effectiveBasePrice, slope: curveSlope, circulating: 0, performance });
   const currentPriceUsd = solUsdRate > 0 ? price * solUsdRate : startingPriceUsd;
   const launchLiquidityUsd = pairUsdRate > 0 ? liq.pairAmount * pairUsdRate : 0;
-  const marketCapSol = price * supplyNumber;
-  const marketCapUsd = currentPriceUsd > 0 ? currentPriceUsd * supplyNumber : 0;
+  const publicMarketSupply = Math.max(0, Math.min(launchLiquiditySupply, supplyNumber));
+  const marketCapSol = price > 0 && publicMarketSupply > 0 ? price * publicMarketSupply : 0;
+  const marketCapUsd = currentPriceUsd > 0 && publicMarketSupply > 0 ? currentPriceUsd * publicMarketSupply : 0;
 
   const song = await prisma.songToken.create({
     data: {

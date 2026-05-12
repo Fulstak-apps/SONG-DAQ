@@ -51,6 +51,8 @@ export function CoinCard({
   const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || null;
   const isOpenAudio = Boolean(c.isOpenAudioCoin || c.source === "open_audio" || c.source === "audius_public");
   const isSongDaqLocal = !isOpenAudio && Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
+  const marketValueReliable = !isSongDaqLocal || (c as any).isMarketValueReliable !== false;
+  const marketValueLabel = marketValueReliable && Number(c.marketCap ?? 0) > 0 ? fmtUsd(c.marketCap ?? 0, 0) : "Not priced";
   const assetLabel = isSongDaqLocal ? "song-daq Song Coin" : "Open Audio Artist Coin";
   const sourceHelp = isSongDaqLocal
     ? "This coin was created through song-daq."
@@ -159,7 +161,7 @@ export function CoinCard({
         content={
           <div className="space-y-2 text-[12px] leading-relaxed text-mute">
             <div><span className="font-black text-neon">Price:</span> what one coin costs right now.</div>
-            <div><span className="font-black text-neon">Market cap:</span> coin price multiplied by the active supply.</div>
+            <div><span className="font-black text-neon">Market value:</span> coin price multiplied by the public tradable supply, not the whole minted supply.</div>
             <div><span className="font-black text-neon">Holders:</span> wallets that currently hold the coin.</div>
             <div><span className="font-black text-neon">Liquidity:</span> the public market money that lets fans buy and sell.</div>
           </div>
@@ -181,7 +183,7 @@ export function CoinCard({
           <span className="num text-xl font-black tracking-tight text-ink">{fmtUsd(c.price ?? 0, 6)}</span>
           <div className="flex items-center gap-3 mt-1.5">
             <span className="text-[9px] text-mute uppercase tracking-widest font-bold">
-              Cap <span className="text-ink ml-1">{fmtUsd(c.marketCap ?? 0, 0)}</span>
+              Value <span className="text-ink ml-1">{marketValueLabel}</span>
             </span>
             <span className="w-0.5 h-0.5 rounded-full bg-white/[0.06]" />
             <span className="text-[9px] text-mute uppercase tracking-widest font-bold">
@@ -257,6 +259,8 @@ export function CoinListRow({
   const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || null;
   const isOpenAudio = Boolean(c.isOpenAudioCoin || c.source === "open_audio" || c.source === "audius_public");
   const isSongDaqLocal = !isOpenAudio && Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
+  const marketValueReliable = !isSongDaqLocal || (c as any).isMarketValueReliable !== false;
+  const marketValueLabel = marketValueReliable && Number(c.marketCap ?? 0) > 0 ? fmtUsd(c.marketCap ?? 0, 0) : "Not priced";
 
   return (
     <motion.div
@@ -292,8 +296,8 @@ export function CoinListRow({
         <div className="text-[10px] text-mute truncate uppercase tracking-widest mt-0.5">{c.artist_name || c.name}</div>
       </div>
       <div className="w-[calc(50%-0.375rem)] sm:w-28 text-left sm:text-right rounded-xl sm:rounded-none border border-edge sm:border-0 bg-white/[0.035] sm:bg-transparent px-3 py-2 sm:p-0">
-        <div className="num text-xs font-bold text-ink tracking-wider">{fmtUsd(c.marketCap ?? 0, 0)}</div>
-        <div className="text-[9px] text-mute uppercase tracking-widest mt-0.5">Market Cap</div>
+        <div className="num text-xs font-bold text-ink tracking-wider">{marketValueLabel}</div>
+        <div className="text-[9px] text-mute uppercase tracking-widest mt-0.5">Market Value</div>
       </div>
       <div className="w-[calc(50%-0.375rem)] sm:w-28 text-left sm:text-right rounded-xl sm:rounded-none border border-edge sm:border-0 bg-white/[0.035] sm:bg-transparent px-3 py-2 sm:p-0">
         <div className="num text-xs font-bold text-ink tracking-wider">{fmtUsd(c.price ?? 0, 6)}</div>

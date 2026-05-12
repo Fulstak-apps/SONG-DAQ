@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCoin } from "@/lib/audiusCoins";
 import { getConnection } from "@/lib/solana";
+import { getAssetUsdRates } from "@/lib/serverAssetPrices";
 
 export const dynamic = "force-dynamic";
 
@@ -88,6 +89,48 @@ export async function POST(req: NextRequest) {
     update: { amount: nextAmount, costBasis: nextCost, ticker: cleanTicker },
     create: { userId: user.id, mint: String(mint), ticker: cleanTicker, amount: nextAmount, costBasis: nextCost },
   });
+
+  const localSong = await prisma.songToken.findFirst({
+    where: {
+      OR: [
+        { mintAddress: String(mint) },
+        { fakeTokenAddress: String(mint) },
+        { symbol: cleanTicker },
+        { symbol: `$${cleanTicker.replace(/^\$/, "")}` },
+      ],
+    },
+  }).catch(() => null);
+  if (localSong) {
+    const nextCirculating = side === "BUY"
+      ? Math.min(Number(localSong.supply || 0), Number(localSong.circulating || 0) + cleanAmount)
+      : Math.max(0, Number(localSong.circulating || 0) - cleanAmount);
+    const rates = await getAssetUsdRates(["SOL"]);
+    const solUsd = Number(rates.SOL || 0);
+    const totalSol = cleanTotal > 0 && solUsd > 0 ? cleanTotal / solUsd : 0;
+    const nextPriceSol = cleanPrice > 0 && solUsd > 0 ? cleanPrice / solUsd : Number(localSong.currentPriceSol || localSong.price || 0);
+    await prisma.songToken.update({
+      where: { id: localSong.id },
+      data: {
+        circulating: nextCirculating,
+        volume24h: Number(localSong.volume24h || 0) + totalSol,
+        price: nextPriceSol,
+        currentPriceSol: nextPriceSol,
+        currentPriceUsd: cleanPrice,
+        marketCap: nextPriceSol > 0 ? nextPriceSol * nextCirculating : Number(localSong.marketCap || 0),
+        marketCapUsd: cleanPrice > 0 ? cleanPrice * nextCirculating : Number(localSong.marketCapUsd || 0),
+      },
+    }).catch(() => {});
+    await prisma.pricePoint.create({
+      data: {
+        songId: localSong.id,
+        open: nextPriceSol,
+        high: nextPriceSol,
+        low: nextPriceSol,
+        close: nextPriceSol,
+        volume: cleanTotal,
+      },
+    }).catch(() => {});
+  }
 
   return NextResponse.json({ trade });
 }

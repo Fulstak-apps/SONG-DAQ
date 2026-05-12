@@ -9,6 +9,7 @@ import {
   quoteSellByTokens,
   spotPrice,
 } from "@/lib/bondingCurve";
+import { getAssetUsdRates } from "@/lib/serverAssetPrices";
 
 export const dynamic = "force-dynamic";
 
@@ -155,16 +156,58 @@ export async function POST(req: NextRequest) {
     const q = quoteResponse || {};
     const solAmount = side === "BUY" ? fromRaw(q.inAmount || 0, 9) : fromRaw(q.outAmount || 0, 9);
     const tokenAmount = side === "BUY" ? fromRaw(q.outAmount || 0, 6) : fromRaw(q.inAmount || 0, 6);
+    const tradePrice = tokenAmount > 0 ? solAmount / tokenAmount : song.price;
     await prisma.trade.create({
       data: {
         userId: user.id,
         songId: song.id,
         side,
         amount: tokenAmount,
-        price: tokenAmount > 0 ? solAmount / tokenAmount : song.price,
+        price: tradePrice,
         total: solAmount,
         fee: 0,
         txSig: String(txSig),
+      },
+    }).catch(() => {});
+    const holding = await prisma.holding.findUnique({
+      where: { userId_songId: { userId: user.id, songId: song.id } },
+    }).catch(() => null);
+    const nextAmount = side === "BUY"
+      ? (holding?.amount ?? 0) + tokenAmount
+      : Math.max(0, (holding?.amount ?? 0) - tokenAmount);
+    const nextCost = side === "BUY"
+      ? (holding?.costBasis ?? 0) + solAmount
+      : Math.max(0, (holding?.costBasis ?? 0) - solAmount);
+    await prisma.holding.upsert({
+      where: { userId_songId: { userId: user.id, songId: song.id } },
+      update: { amount: nextAmount, costBasis: nextCost },
+      create: { userId: user.id, songId: song.id, amount: nextAmount, costBasis: nextCost },
+    }).catch(() => {});
+    const nextCirculating = side === "BUY"
+      ? Math.min(Number(song.supply || 0), Number(song.circulating || 0) + tokenAmount)
+      : Math.max(0, Number(song.circulating || 0) - tokenAmount);
+    const rates = await getAssetUsdRates(["SOL"]);
+    const solUsd = Number(rates.SOL || 0);
+    await prisma.songToken.update({
+      where: { id: song.id },
+      data: {
+        circulating: nextCirculating,
+        volume24h: Number(song.volume24h || 0) + solAmount,
+        price: tradePrice,
+        currentPriceSol: tradePrice,
+        currentPriceUsd: solUsd > 0 ? tradePrice * solUsd : song.currentPriceUsd,
+        marketCap: tradePrice * nextCirculating,
+        marketCapUsd: solUsd > 0 ? tradePrice * nextCirculating * solUsd : song.marketCapUsd,
+      },
+    }).catch(() => {});
+    await prisma.pricePoint.create({
+      data: {
+        songId: song.id,
+        open: tradePrice,
+        high: tradePrice,
+        low: tradePrice,
+        close: tradePrice,
+        volume: solAmount,
       },
     }).catch(() => {});
     return NextResponse.json({ ok: true, txSig, solAmount, tokenAmount });

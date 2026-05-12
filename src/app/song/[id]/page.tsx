@@ -169,8 +169,8 @@ export default function SongTradingPage() {
               </span>
             </div>
             <div className="flex gap-3 sm:gap-4 sm:ml-6 text-xs text-mute font-mono">
-              <div>MC: <span className="text-white">${fmtNum(song.marketCap)}</span></div>
-              <div>Vol: <span className="text-white">${fmtNum(song.marketCap * 0.14)}</span></div>
+              <div>Value: <span className="text-white">{song.isMarketValueReliable ? `${fmtNum(song.marketCap)} SOL` : "Not priced"}</span></div>
+              <div>Vol: <span className="text-white">{fmtNum(song.volume24h || 0)} SOL</span></div>
               <div>Holders: <span className="text-white">{fmtNum(holders.length)}</span></div>
             </div>
           </div>
@@ -377,7 +377,11 @@ export default function SongTradingPage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Stat k="Market Cap" v={`${fmtSol(song.marketCap, 2)} SOL`} tooltip="Total network valuation based on current spot price." />
+          <Stat
+            k="Market Value"
+            v={song.isMarketValueReliable ? `${fmtSol(song.marketCap, 2)} SOL` : "Not priced yet"}
+            tooltip={song.marketValueNote || "Market value uses public tradable supply, not the full minted supply."}
+          />
           <Stat k="Circulating" v={`${fmtNum(song.circulating)} / ${fmtNum(song.supply)}`} tooltip="Tokens actively trading versus total minted supply." />
           <Stat k="Reserve" v={`${fmtSol(song.reserveSol, 2)} SOL`} tooltip="Liquidity pool backing the bonding curve." />
           <Stat k="Royalty Pool" v={`${fmtSol(song.royaltyPool, 4)} SOL`} tooltip="Accumulated streaming royalties awaiting distribution." />

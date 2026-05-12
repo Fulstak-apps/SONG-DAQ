@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { refreshSong } from "@/lib/refresh";
 import { getTrack } from "@/lib/audius";
 import { cacheGet, cacheSet } from "@/lib/redis";
+import { getAssetUsdRates, valueLocalSongCoin } from "@/lib/serverAssetPrices";
 
 export const dynamic = "force-dynamic";
 
@@ -26,5 +27,24 @@ export async function GET(_req: NextRequest, ctx: { params: { id: string } }) {
     duration = Number(track?.duration || 0);
     if (duration > 0) await cacheSet(durationKey, duration, 60 * 60 * 24).catch(() => {});
   }
-  return NextResponse.json({ song: { ...song, duration: duration || null } });
+  const rates = await getAssetUsdRates(["SOL", "AUDIO", "USDC", song.liquidityPairAsset]);
+  const valuation = valueLocalSongCoin(song, rates);
+  return NextResponse.json({
+    song: {
+      ...song,
+      duration: duration || null,
+      price: valuation.priceSol || song.price,
+      currentPriceSol: valuation.priceSol || song.currentPriceSol,
+      currentPriceUsd: valuation.priceUsd || song.currentPriceUsd,
+      marketCap: valuation.marketValueSol || 0,
+      marketCapUsd: valuation.marketValueUsd || 0,
+      launchLiquidityUsd: valuation.liquidityUsd || song.launchLiquidityUsd,
+      circulating: valuation.circulatingSupply || song.circulating,
+      tradableSupply: valuation.tradableSupply,
+      fullyDilutedValueUsd: valuation.fullyDilutedValueUsd,
+      marketValueBasis: valuation.basis,
+      marketValueNote: valuation.note,
+      isMarketValueReliable: valuation.isMarketValueReliable,
+    },
+  });
 }

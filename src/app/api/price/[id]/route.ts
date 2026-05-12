@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { refreshSong } from "@/lib/refresh";
-import { spotPrice } from "@/lib/bondingCurve";
+import { getAssetUsdRates, valueLocalSongCoin } from "@/lib/serverAssetPrices";
 
 export const dynamic = "force-dynamic";
 
@@ -10,22 +10,20 @@ export async function GET(req: NextRequest, ctx: { params: { id: string } }) {
   await refreshSong(id).catch(() => undefined);
   const song = await prisma.songToken.findUnique({ where: { id } });
   if (!song) return NextResponse.json({ error: "not found" }, { status: 404 });
-  const params = {
-    basePrice: song.basePrice,
-    slope: song.curveSlope,
-    circulating: song.circulating,
-    performance: song.performance,
-  };
   const points = await prisma.pricePoint.findMany({
     where: { songId: id },
     orderBy: { ts: "asc" },
     take: 240,
   });
+  const rates = await getAssetUsdRates(["SOL", "AUDIO", "USDC", song.liquidityPairAsset]);
+  const valuation = valueLocalSongCoin(song, rates);
   return NextResponse.json({
-    price: spotPrice(params),
+    price: valuation.priceSol || song.price,
+    priceUsd: valuation.priceUsd,
     performance: song.performance,
-    marketCap: song.marketCap,
-    circulating: song.circulating,
+    marketCap: valuation.marketValueSol || 0,
+    marketCapUsd: valuation.marketValueUsd || 0,
+    circulating: valuation.circulatingSupply || song.circulating,
     supply: song.supply,
     volume24h: song.volume24h,
     streams: song.streams,
