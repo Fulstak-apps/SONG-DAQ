@@ -13,6 +13,7 @@ import {
   Cell,
 } from "recharts";
 import { fmtSol } from "@/lib/pricing";
+import { fmtUsdDisplay } from "@/lib/formatters";
 
 export interface PricePointDTO {
   ts: string | Date;
@@ -40,10 +41,7 @@ type ChartDatum = {
 };
 
 function fmtUsd(n: number, d = 6) {
-  if (!isFinite(n)) return "—";
-  if (Math.abs(n) >= 1) return `$${n.toFixed(2)}`;
-  if (Math.abs(n) > 0 && Math.abs(n) < 0.0001) return `$${n.toFixed(8)}`;
-  return `$${n.toFixed(d)}`;
+  return fmtUsdDisplay(n, d);
 }
 
 export function PriceChart({

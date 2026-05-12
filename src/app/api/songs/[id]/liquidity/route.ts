@@ -4,6 +4,7 @@ import { requireArtist, AuthError } from "@/lib/auth";
 import { getConnection, isValidPubkey } from "@/lib/solana";
 import { canMarkLive, riskLevelForLiquidity, validateLaunchLiquidity } from "@/lib/launchState";
 import { databaseReadiness } from "@/lib/appMode";
+import { getAssetUsdRates } from "@/lib/serverAssetPrices";
 
 export const dynamic = "force-dynamic";
 
@@ -79,6 +80,19 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
       return NextResponse.json({ error: "Liquidity is not confirmed yet.", details: liveCheck.errors }, { status: 409 });
     }
 
+    const rates = await getAssetUsdRates(["SOL", "AUDIO", "USDC", normalized.pairAsset]);
+    const pairUsdRate = normalized.pairAsset === "USDC" ? 1 : Number(rates[normalized.pairAsset] || 0);
+    const solUsdRate = Number(rates.SOL || 0);
+    const startingPairPrice = normalized.pairAmount / Math.max(normalized.tokenAmount, 1);
+    const currentPriceUsd = pairUsdRate > 0 ? startingPairPrice * pairUsdRate : Number(song.currentPriceUsd || song.launchPriceUsd || 0);
+    const currentPriceSol = normalized.pairAsset === "SOL"
+      ? startingPairPrice
+      : currentPriceUsd > 0 && solUsdRate > 0
+        ? currentPriceUsd / solUsdRate
+        : Number(song.currentPriceSol || song.launchPriceSol || song.price || 0);
+    const supply = Number(song.supply || 0);
+    const launchLiquidityUsd = pairUsdRate > 0 ? normalized.pairAmount * pairUsdRate : Number(song.launchLiquidityUsd || 0);
+
     const updated = await prisma.songToken.update({
       where: { id: song.id },
       data: {
@@ -88,6 +102,15 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
         liquidityLockDays: normalized.lockDays,
         liquidityLocked: true,
         liquidityHealth: liveCheck.health,
+        launchPriceSol: currentPriceSol || song.launchPriceSol,
+        launchPriceUsd: currentPriceUsd || song.launchPriceUsd,
+        currentPriceSol: currentPriceSol || song.currentPriceSol,
+        currentPriceUsd: currentPriceUsd || song.currentPriceUsd,
+        price: currentPriceSol || song.price,
+        marketCap: currentPriceSol > 0 && supply > 0 ? currentPriceSol * supply : song.marketCap,
+        marketCapUsd: currentPriceUsd > 0 && supply > 0 ? currentPriceUsd * supply : song.marketCapUsd,
+        launchLiquiditySol: normalized.pairAsset === "SOL" ? normalized.pairAmount : song.launchLiquiditySol,
+        launchLiquidityUsd: launchLiquidityUsd || song.launchLiquidityUsd,
         status: "LIVE",
         riskLevel: riskLevelForLiquidity(liveCheck.health),
       },
@@ -121,6 +144,7 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
         coinId: song.id,
         action: "Add Launch Liquidity",
         solAmount: normalized.pairAsset === "SOL" ? normalized.pairAmount : undefined,
+        usdAmount: launchLiquidityUsd || undefined,
         tokenAmount: normalized.tokenAmount,
         status: "confirmed",
       },

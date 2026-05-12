@@ -20,6 +20,7 @@ import { readJson } from "@/lib/safeJson";
 import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 import { pickAudiusArtwork } from "@/lib/audiusArtwork";
+import { fmtUsdDisplay } from "@/lib/formatters";
 
 const CoinTradeModal = dynamic(() => import("@/components/CoinTradeModal").then((m) => m.CoinTradeModal), { ssr: false });
 const TradeFeed = dynamic(() => import("@/components/TradeFeed").then((m) => m.TradeFeed), { ssr: false });
@@ -31,12 +32,7 @@ const MarketIntelligenceGrid = dynamic(() => import("@/components/MarketIntellig
 import { CHART_RANGE_LABELS, CHART_RANGES, CHART_RANGE_MS, isFastRange, type ChartRange } from "@/lib/chartRanges";
 
 function fmtUsd(n: number, d = 4) {
-  if (!isFinite(n)) return "—";
-  if (Math.abs(n) >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(2)}B`;
-  if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
-  if (Math.abs(n) >= 1) return `$${n.toFixed(2)}`;
-  return `$${n.toFixed(d)}`;
+  return fmtUsdDisplay(n, d);
 }
 
 function shortMint(m: string) {

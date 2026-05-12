@@ -640,6 +640,10 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
   const solUsdRate = Number(prices.SOL?.usd ?? 0);
   const estimatedFeeUsd = solUsdRate > 0 ? estimatedFeeSol * solUsdRate : null;
   const poolValueUsd = pairUsd != null ? pairUsd * 2 : null;
+  const totalSpendUsd = pairUsd != null && estimatedFeeUsd != null ? pairUsd + estimatedFeeUsd : null;
+  const totalSpendLabel = pairAsset === "SOL"
+    ? formatCryptoWithFiat(pairAmountNumber + estimatedFeeSol, "SOL", totalSpendUsd, currency)
+    : `${formatCryptoWithFiat(pairAmountNumber, pairAsset, pairUsd, currency)} + ${formatCryptoWithFiat(estimatedFeeSol, "SOL", estimatedFeeUsd, currency)}`;
 
   async function submit() {
     if (!address) return;
@@ -667,7 +671,7 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
       });
       const walletId = getConnectedWalletId();
       if (!walletId) throw new Error("No connected Solana wallet found");
-      setStatus(`Approve liquidity: ${formatCryptoWithFiat(pairAmountNumber, pairAsset, pairUsd, currency)} plus ${Number(tokenAmount).toLocaleString()} song coins.`);
+      setStatus(`Approve liquidity: ${formatCryptoWithFiat(pairAmountNumber, pairAsset, pairUsd, currency)} plus ${Number(tokenAmount).toLocaleString()} song coins. Estimated total wallet spend: ${formatFiatEstimate(totalSpendUsd, currency)}.`);
       sig = await sendSerializedTransaction(walletId, prepared.transaction);
       setStatus("Liquidity transaction sent. Verifying the public pool. This can take a little while after wallet approval.");
 
@@ -761,6 +765,17 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
           <div className="rounded-xl border border-edge bg-panel p-3 text-xs text-mute">
             This sends the reserved launch coins plus paired SOL/USDC into the public pool. Once the transaction is verified, SONG·DAQ marks the coin live so fans can buy and sell.
           </div>
+          <div className="rounded-2xl border border-neon/25 bg-neon/10 p-4">
+            <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-widest font-black text-neon">
+              Full estimated spend
+              <InfoTooltip
+                side="bottom"
+                def="This is the real-world estimate before you sign: the paired asset you add to liquidity plus the Solana network fee. Your wallet may show a tiny final fee difference."
+              />
+            </div>
+            <div className="mt-2 font-mono text-sm font-black text-white break-words">{totalSpendLabel}</div>
+            <div className="mt-1 text-xs font-bold text-neon">{formatFiatEstimate(totalSpendUsd, currency)}</div>
+          </div>
           <div className="grid gap-2 sm:grid-cols-3">
             <div className="rounded-xl border border-edge bg-panel p-3">
               <div className="text-[9px] uppercase tracking-widest font-black text-mute">Payment side</div>
@@ -779,7 +794,7 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
           {status && <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-xs text-neon">{status}</div>}
           {err && <div className="rounded-xl border border-red/20 bg-red/10 p-3 text-xs text-red">{err}</div>}
           <button className="btn-primary w-full h-11 text-[10px] font-black uppercase tracking-widest disabled:opacity-50" disabled={busy} onClick={submit}>
-            {busy ? "Saving Liquidity…" : "Confirm Liquidity"}
+            {busy ? "Saving Liquidity…" : `Confirm Liquidity · ${formatFiatEstimate(totalSpendUsd, currency)}`}
           </button>
         </div>
       )}

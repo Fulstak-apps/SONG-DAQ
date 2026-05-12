@@ -14,6 +14,7 @@ import type { AudiusCoin } from "@/lib/audiusCoins";
 import { readJson } from "@/lib/safeJson";
 import { useCoins } from "@/lib/useCoins";
 import { pickAudiusArtwork } from "@/lib/audiusArtwork";
+import { fmtUsdDisplay } from "@/lib/formatters";
 
 interface RecentTradeDTO {
   id: string;
@@ -28,12 +29,7 @@ interface RecentTradeDTO {
 }
 
 function fmtUsd(n: number, digits = 4) {
-  if (!isFinite(n)) return "-";
-  if (Math.abs(n) >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(2)}B`;
-  if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
-  if (Math.abs(n) >= 1) return `$${n.toFixed(2)}`;
-  return `$${n.toFixed(digits)}`;
+  return fmtUsdDisplay(n, digits);
 }
 
 function short(addr: string) {

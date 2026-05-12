@@ -23,12 +23,21 @@ export function assetIdForSymbol(symbol: string | null | undefined) {
 export function formatFiat(value: number | null | undefined, currency = DEFAULT_DISPLAY_CURRENCY, digits = 2) {
   if (value == null || !Number.isFinite(Number(value))) return "Fiat estimate unavailable";
   const amount = Number(value);
-  const maxDigits = Math.abs(amount) >= 1 ? digits : Math.max(digits, 4);
+  const abs = Math.abs(amount);
+  if (abs > 0 && abs < 0.000001) {
+    const tiny = amount.toFixed(12).replace(/0+$/, "").replace(/\.$/, "");
+    if (tiny === "0") return `<${new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 12 }).format(0.000000000001)}`;
+    const symbol = new Intl.NumberFormat(undefined, { style: "currency", currency, maximumFractionDigits: 0 })
+      .formatToParts(0)
+      .find((part) => part.type === "currency")?.value ?? "$";
+    return `${amount < 0 ? "-" : ""}${symbol}${tiny.replace(/^-?0?/, "0")}`;
+  }
+  const maxDigits = abs >= 1 ? digits : Math.max(digits, 4);
   return new Intl.NumberFormat(undefined, {
     style: "currency",
     currency,
     maximumFractionDigits: maxDigits,
-    minimumFractionDigits: Math.abs(amount) >= 1 ? Math.min(digits, 2) : 0,
+    minimumFractionDigits: abs >= 1 ? Math.min(digits, 2) : 0,
   }).format(amount);
 }
 

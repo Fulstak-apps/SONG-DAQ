@@ -4,6 +4,7 @@ import { recordTick, getTicks } from "@/lib/coinTicks";
 import { calculateCoinRisk } from "@/lib/risk/calculateCoinRisk";
 import { prisma } from "@/lib/db";
 import { hasProductionDatabaseUrl } from "@/lib/appMode";
+import { estimateSongTokenUsd, getAssetUsdRates } from "@/lib/serverAssetPrices";
 
 export const dynamic = "force-dynamic";
 
@@ -21,9 +22,9 @@ function normalizeSymbol(value: string) {
   return String(value || "").replace(/^\$/, "").toUpperCase();
 }
 
-function localSongToCoin(song: any): AudiusCoin {
+function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusCoin {
   const mint = song.mintAddress || song.fakeTokenAddress || song.id;
-  const priceUsd = Number(song.currentPriceUsd || song.launchPriceUsd || 0);
+  const priceUsd = estimateSongTokenUsd(song, rates);
   const supply = Number(song.supply || 0);
   const isOpenAudio = String(song.distributor || "").includes("Open Audio")
     || String(song.riskLevel || "").startsWith("OPEN_AUDIO")
@@ -38,7 +39,7 @@ function localSongToCoin(song: any): AudiusCoin {
     description: `${song.title} by ${song.artistName}. SONG·DAQ song token.`,
     price: priceUsd || undefined,
     marketCap: Number(song.marketCapUsd || (priceUsd > 0 ? priceUsd * supply : 0)) || undefined,
-    liquidity: Number(song.launchLiquidityUsd || song.liquidityPairAmount || 0),
+    liquidity: Number(song.launchLiquidityUsd || (Number(song.liquidityPairAmount || 0) * Number(rates[String(song.liquidityPairAsset || "SOL").toUpperCase()] || 0)) || song.liquidityPairAmount || 0),
     totalSupply: supply || undefined,
     circulatingSupply: Number(song.circulating || song.supply || 0),
     holder: undefined,
@@ -84,7 +85,8 @@ async function listLocalSongCoins(limit: number) {
       },
     },
   }).catch(() => []);
-  return songs.map(localSongToCoin);
+  const rates = await getAssetUsdRates(["SOL", "AUDIO", "USDC", ...songs.map((song) => song.liquidityPairAsset)]);
+  return songs.map((song) => localSongToCoin(song, rates));
 }
 
 export async function GET(req: NextRequest) {

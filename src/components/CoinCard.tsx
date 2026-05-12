@@ -12,13 +12,10 @@ import { usePlayer, useWatchlist, type PlayerTrack } from "@/lib/store";
 import { toast } from "@/lib/toast";
 import { RiskBadge } from "./RiskBadge";
 import type { AudiusCoin } from "@/lib/audiusCoins";
+import { fmtUsdDisplay } from "@/lib/formatters";
 
 function fmtUsd(n: number, digits = 4) {
-  if (!isFinite(n)) return "—";
-  if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
-  if (Math.abs(n) >= 1) return `$${n.toFixed(2)}`;
-  return `$${n.toFixed(digits)}`;
+  return fmtUsdDisplay(n, digits);
 }
 
 /* Prestige tier based on market cap */

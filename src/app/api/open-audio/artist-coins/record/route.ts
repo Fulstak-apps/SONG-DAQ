@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db";
 import { requireArtist, AuthError } from "@/lib/auth";
 import { databaseReadiness } from "@/lib/appMode";
 import { getConnection, isValidPubkey } from "@/lib/solana";
+import { getAssetUsdRates } from "@/lib/serverAssetPrices";
 import {
   AUDIO_MINT,
   OPEN_AUDIO_ARTIST_DECIMALS,
@@ -63,6 +64,15 @@ export async function POST(req: NextRequest) {
     });
     if (existing) return NextResponse.json({ song: existing, existing: true });
 
+    const rates = await getAssetUsdRates(["AUDIO", "SOL"]);
+    const audioUsd = Number(rates.AUDIO || 0);
+    const solUsd = Number(rates.SOL || 0);
+    const initialMarketCapUsd = audioUsd > 0 ? OPEN_AUDIO_INITIAL_MARKET_CAP_AUDIO * audioUsd : 0;
+    const initialPriceUsd = initialMarketCapUsd > 0 ? initialMarketCapUsd / OPEN_AUDIO_ARTIST_SUPPLY : 0;
+    const initialPriceSol = initialPriceUsd > 0 && solUsd > 0 ? initialPriceUsd / solUsd : 0;
+    const optionalFirstBuyAudio = Number(body.initialBuyAmountAudio || 0);
+    const optionalFirstBuyUsd = audioUsd > 0 ? optionalFirstBuyAudio * audioUsd : 0;
+
     const song = await prisma.songToken.create({
       data: {
         mode: "live",
@@ -81,15 +91,21 @@ export async function POST(req: NextRequest) {
         circulating: 0,
         reserveSol: 0,
         curveSlope: 0,
-        basePrice: 0,
+        basePrice: initialPriceSol,
         performance: 1,
-        price: 0,
-        marketCap: 0,
+        price: initialPriceSol,
+        marketCap: initialPriceSol > 0 ? initialPriceSol * OPEN_AUDIO_ARTIST_SUPPLY : 0,
+        launchPriceSol: initialPriceSol,
+        launchPriceUsd: initialPriceUsd,
+        currentPriceSol: initialPriceSol,
+        currentPriceUsd: initialPriceUsd,
+        marketCapUsd: initialMarketCapUsd,
+        launchLiquidityUsd: optionalFirstBuyUsd,
         distributor: "Open Audio / Audius Artist Coin",
         royaltyVault: "admin@song-daq.com",
         status: "LIVE",
         liquidityTokenAmount: OPEN_AUDIO_ARTIST_SUPPLY * (OPEN_AUDIO_PUBLIC_CURVE_BPS / 10_000),
-        liquidityPairAmount: Number(body.initialBuyAmountAudio || 0),
+        liquidityPairAmount: optionalFirstBuyAudio,
         liquidityPairAsset: "AUDIO",
         liquidityLockDays: 365 * 5,
         liquidityLocked: true,
@@ -113,6 +129,7 @@ export async function POST(req: NextRequest) {
         coinId: song.id,
         action: "Launch Open Audio Artist Coin",
         tokenAmount: OPEN_AUDIO_ARTIST_SUPPLY,
+        usdAmount: initialMarketCapUsd || undefined,
         status: "confirmed",
       },
     }).catch(() => {});

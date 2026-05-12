@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchJson } from "@/lib/fetchTimeout";
 import { prisma } from "@/lib/db";
 import { hasProductionDatabaseUrl } from "@/lib/appMode";
+import { estimateSongTokenUsd, getAssetUsdRates } from "@/lib/serverAssetPrices";
 
 export const dynamic = "force-dynamic";
 
@@ -241,8 +242,13 @@ export async function GET(req: NextRequest) {
         artworkUrl: true,
         price: true,
         currentPriceUsd: true,
+        launchPriceUsd: true,
+        currentPriceSol: true,
+        launchPriceSol: true,
         status: true,
         liquidityPairAmount: true,
+        liquidityTokenAmount: true,
+        liquidityPairAsset: true,
       },
     });
     for (const song of localSongs) {
@@ -252,13 +258,15 @@ export async function GET(req: NextRequest) {
     /* Database metadata is best-effort; Jupiter metadata still renders. */
   }
 
+  const localRates = await getAssetUsdRates(["SOL", "AUDIO", "USDC", ...Array.from(songMap.values()).map((song: any) => song.liquidityPairAsset)]);
+
   const enriched = all.map((t) => {
     const coin = coinMap.get(t.mint);
     const song = songMap.get(t.mint);
     const isAudio = t.mint === AUDIO_MINT;
     const jupiterPrice = priceMap.get(t.mint);
     const meta = metaMap.get(t.mint);
-    const songPrice = Number(song?.currentPriceUsd ?? song?.price ?? 0);
+    const songPrice = song ? estimateSongTokenUsd(song, localRates) : 0;
     const price = Number(songPrice || coin?.price || jupiterPrice?.usdPrice || jupiterPrice?.price || 0);
     return {
       mint: t.mint,

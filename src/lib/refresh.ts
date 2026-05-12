@@ -9,6 +9,7 @@ import { fetchMetrics } from "./audius";
 import { computePerformance } from "./pricing";
 import { spotPrice, marketCap } from "./bondingCurve";
 import { cacheGet, cacheSet } from "./redis";
+import { getAssetUsdRates } from "./serverAssetPrices";
 
 export async function refreshSong(songId: string, force = false): Promise<void> {
   const cacheKey = `song:refresh:${songId}`;
@@ -49,6 +50,8 @@ export async function refreshSong(songId: string, force = false): Promise<void> 
     circulating: song.circulating,
     performance,
   });
+  const rates = await getAssetUsdRates(["SOL"]);
+  const solUsd = Number(rates.SOL || 0);
   await prisma.songToken.update({
     where: { id: songId },
     data: {
@@ -58,6 +61,9 @@ export async function refreshSong(songId: string, force = false): Promise<void> 
       performance,
       price,
       marketCap: cap,
+      currentPriceSol: price,
+      currentPriceUsd: solUsd > 0 ? price * solUsd : song.currentPriceUsd,
+      marketCapUsd: solUsd > 0 ? cap * solUsd : song.marketCapUsd,
     },
   });
   await cacheSet(cacheKey, Date.now(), 60);

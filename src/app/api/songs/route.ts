@@ -8,6 +8,7 @@ import { validateRoyalty, DEFAULT_ROYALTY } from "@/lib/royaltyConfig";
 import { assertAudiusTrackOwnership, AuthError } from "@/lib/auth";
 import { moderateCoinText } from "@/lib/risk/contentModeration";
 import { databaseReadiness } from "@/lib/appMode";
+import { getAssetUsdRates } from "@/lib/serverAssetPrices";
 import { PublicKey } from "@solana/web3.js";
 
 export const dynamic = "force-dynamic";
@@ -204,7 +205,24 @@ export async function POST(req: NextRequest) {
     volume24h: 0,
     hoursSinceLaunch: 1,
   });
-  const price = spotPrice({ basePrice, slope: curveSlope, circulating: 0, performance });
+  const rates = await getAssetUsdRates(["SOL", "AUDIO", "USDC", liq.pairAsset]);
+  const pairUsdRate = liq.pairAsset === "USDC" ? 1 : Number(rates[liq.pairAsset] || 0);
+  const solUsdRate = Number(rates.SOL || 0);
+  const startingPairPrice = liq.pairAmount / Math.max(liq.tokenAmount, 1);
+  const startingPriceUsd = pairUsdRate > 0 ? startingPairPrice * pairUsdRate : 0;
+  const startingPriceSol = liq.pairAsset === "SOL"
+    ? startingPairPrice
+    : startingPriceUsd > 0 && solUsdRate > 0
+      ? startingPriceUsd / solUsdRate
+      : Number(basePrice);
+  const effectiveBasePrice = Number.isFinite(startingPriceSol) && startingPriceSol > 0
+    ? startingPriceSol
+    : Number(basePrice);
+  const price = spotPrice({ basePrice: effectiveBasePrice, slope: curveSlope, circulating: 0, performance });
+  const currentPriceUsd = solUsdRate > 0 ? price * solUsdRate : startingPriceUsd;
+  const launchLiquidityUsd = pairUsdRate > 0 ? liq.pairAmount * pairUsdRate : 0;
+  const marketCapSol = price * supplyNumber;
+  const marketCapUsd = currentPriceUsd > 0 ? currentPriceUsd * supplyNumber : 0;
 
   const song = await prisma.songToken.create({
     data: {
@@ -218,7 +236,7 @@ export async function POST(req: NextRequest) {
       artworkUrl: artwork,
       streamUrl: stream,
       supply: Number(supply),
-      basePrice: Number(basePrice),
+      basePrice: effectiveBasePrice,
       curveSlope: Number(curveSlope),
       artistShareBps: cfg.artistShareBps,
       holderShareBps: cfg.holderShareBps,
@@ -231,9 +249,14 @@ export async function POST(req: NextRequest) {
       reposts: track.repost_count ?? 0,
       performance,
       price,
-      launchPriceSol: Number(basePrice),
+      launchPriceSol: effectiveBasePrice,
+      launchPriceUsd: startingPriceUsd,
       currentPriceSol: price,
+      currentPriceUsd,
+      marketCap: marketCapSol,
+      marketCapUsd,
       launchLiquiditySol: liq.pairAsset === "SOL" ? liq.pairAmount : 0,
+      launchLiquidityUsd,
       ath: price,
       athAt: new Date(),
       distributor: distributor ? String(distributor) : null,
@@ -264,6 +287,7 @@ export async function POST(req: NextRequest) {
       coinId: song.id,
       action: "Launch",
       solAmount: liq.pairAsset === "SOL" ? liq.pairAmount : undefined,
+      usdAmount: launchLiquidityUsd || undefined,
       tokenAmount: liq.tokenAmount,
       status: "pending_liquidity",
     },
