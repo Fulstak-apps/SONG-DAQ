@@ -145,7 +145,7 @@ export function Navbar() {
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
       
       <div className="mx-auto w-full max-w-[1680px] px-2 sm:px-3 lg:px-4 2xl:px-6 relative">
-        <div className="flex min-w-0 items-center gap-1.5 sm:gap-2 lg:gap-2.5 h-14 xl:h-16">
+        <div className="flex min-w-0 items-center gap-1 sm:gap-1.5 lg:gap-2 min-h-14 py-1 xl:min-h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center gap-1.5 sm:gap-2 group shrink-0 mr-0.5 sm:mr-1">
             <div className="relative">
@@ -167,7 +167,7 @@ export function Navbar() {
             )}
           </Link>
 
-          <nav className="hidden md:flex min-w-0 items-center gap-0.5 overflow-x-auto no-scrollbar">
+          <nav className="hidden lg:flex flex-1 min-w-0 items-center gap-0.5 overflow-x-auto no-scrollbar">
             {navItems.map((n) => {
               if (n.reqArtistMode && userMode !== "ARTIST") return null;
               const active = path === n.href || (n.href !== "/" && path.startsWith(n.href));
@@ -178,7 +178,7 @@ export function Navbar() {
                   prefetch={false}
                   onClick={navigate(n.href)}
                   aria-current={active ? "page" : undefined}
-                  className={`relative shrink-0 px-2.5 lg:px-3 xl:px-3.5 py-2.5 rounded-xl text-[11px] lg:text-[11px] xl:text-xs font-black tracking-widest transition-all duration-300 ${
+                  className={`relative shrink-0 px-2 py-2.5 rounded-xl text-[10px] font-black tracking-[0.14em] transition-all duration-300 2xl:px-3 2xl:text-xs 2xl:tracking-widest ${
                     active
                       ? "text-neon shadow-[0_0_18px_rgba(0,229,114,0.16)]"
                       : "text-mute hover:text-ink hover:bg-white/[0.045]"
@@ -204,11 +204,11 @@ export function Navbar() {
             )}
           </nav>
 
-          <div className="ml-auto hidden lg:flex items-center justify-end gap-1.5 min-w-0">
+          <div className="ml-auto hidden xl:flex max-w-[46vw] min-w-0 items-center justify-end gap-1 overflow-hidden 2xl:max-w-[54vw] 2xl:gap-1.5">
               {audius ? <div className="shrink-0"><AudiusLoginButton compact /></div> : null}
               {(hasSeparateExternalWallet || audius) ? <WalletBalance compact /> : paperMode ? <PaperWalletPill /> : null}
               <CurrencySelector compact />
-              {(address || paperMode) ? <div className="hidden xl:block shrink-0"><RoleToggle /></div> : null}
+              {(address || paperMode) ? <div className="hidden 2xl:block shrink-0"><RoleToggle /></div> : null}
           </div>
 
           <div className="flex shrink-0 items-center gap-1 sm:gap-1.5">
@@ -237,7 +237,7 @@ export function Navbar() {
 
             <button
               onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
-              className="hidden lg:flex w-9 h-9 xl:h-10 xl:w-10 items-center justify-center rounded-xl bg-white/[0.055] border border-edge text-mute hover:text-ink hover:bg-white/[0.09] transition shrink-0"
+              className="hidden 2xl:flex w-9 h-9 xl:h-10 xl:w-10 items-center justify-center rounded-xl bg-white/[0.055] border border-edge text-mute hover:text-ink hover:bg-white/[0.09] transition shrink-0"
               title="Search assets"
             >
               <Search size={13} />

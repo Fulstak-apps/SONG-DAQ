@@ -254,7 +254,7 @@ export function WalletBalance({ compact = false }: { compact?: boolean } = {}) {
 
   if (compact) {
     return (
-      <div className="hidden sm:flex items-center gap-1 relative min-w-0" ref={ref}>
+      <div className="hidden max-w-[300px] items-center gap-1 overflow-hidden sm:flex 2xl:max-w-[440px] relative min-w-0" ref={ref}>
         {showTrading && (
           <div
             className="h-8 px-2 rounded-xl border border-edge bg-panel2 text-ink flex items-center gap-1 min-w-0 shadow-inner"
@@ -264,7 +264,7 @@ export function WalletBalance({ compact = false }: { compact?: boolean } = {}) {
             <span className="num font-bold text-ink tracking-wider text-[11px] whitespace-nowrap">
               {trading.error ? "—" : trading.balance != null ? trading.balance.toFixed(3) : "…"} <span className="text-[11px] uppercase tracking-widest font-bold text-mute">SOL</span>
             </span>
-            <span className="text-[11px] uppercase tracking-widest font-bold text-mute whitespace-nowrap">
+            <span className="hidden text-[11px] uppercase tracking-widest font-bold text-mute whitespace-nowrap 2xl:inline">
               {trading.error ? shortAddr(address) : trading.usd != null ? `~${formatUsd(trading.usd)}` : shortAddr(address)}
             </span>
           </div>
@@ -278,7 +278,7 @@ export function WalletBalance({ compact = false }: { compact?: boolean } = {}) {
           >
             <span className="w-1.5 h-1.5 rounded-full bg-violet shadow-[0_0_5px_rgba(155,81,224,0.8)]" />
             <span className="num font-bold text-ink tracking-wider text-[11px] whitespace-nowrap">{audioBalance != null ? fmtNum(audioBalance) : "—"} <span className="text-[11px] uppercase tracking-widest font-bold text-violet">$AUDIO</span></span>
-            <span className="text-[11px] uppercase tracking-widest text-mute whitespace-nowrap">~{formatUsd(audioValueUsd)}</span>
+            <span className="hidden text-[11px] uppercase tracking-widest text-mute whitespace-nowrap 2xl:inline">~{formatUsd(audioValueUsd)}</span>
           </button>
         )}
         <AnimatePresence>

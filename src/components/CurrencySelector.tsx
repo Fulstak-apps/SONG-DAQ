@@ -11,7 +11,7 @@ export function CurrencySelector({ compact = false }: { compact?: boolean }) {
       }`}
       title={error || priceAgeText(updatedAt)}
     >
-      <span className="font-black uppercase tracking-widest">Fiat</span>
+      <span className={`font-black uppercase tracking-widest ${compact ? "hidden 2xl:inline" : ""}`}>Fiat</span>
       <select
         value={currency}
         onChange={(event) => setCurrency(event.target.value)}

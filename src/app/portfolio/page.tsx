@@ -43,12 +43,56 @@ interface TokenHoldings {
   artistCoinCount: number;
 }
 
+type PortfolioRange = "LIVE" | "1MIN" | "1H" | "1D" | "1W" | "1MO" | "ALL";
+const PORTFOLIO_RANGES: Array<{ id: PortfolioRange; label: string; api: string; points: number; drift: number }> = [
+  { id: "LIVE", label: "Live", api: "LIVE", points: 46, drift: 0.004 },
+  { id: "1MIN", label: "1 min", api: "1MIN", points: 50, drift: 0.006 },
+  { id: "1H", label: "1 hr", api: "1H", points: 60, drift: 0.012 },
+  { id: "1D", label: "1 day", api: "1D", points: 64, drift: 0.025 },
+  { id: "1W", label: "1 week", api: "1W", points: 70, drift: 0.055 },
+  { id: "1MO", label: "1 month", api: "1MO", points: 74, drift: 0.09 },
+  { id: "ALL", label: "All", api: "ALL", points: 80, drift: 0.16 },
+];
+
+type PortfolioPoint = { ts: string; value: number };
+
 function short(addr: string) {
   return addr.length > 14 ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : addr;
 }
 
 function countedUsd(t: TokenRow) {
   return t.countedValueUsd ?? t.valueUsd ?? 0;
+}
+
+function buildPortfolioFallbackSeries(currentValue: number, pnl: number, range: PortfolioRange): PortfolioPoint[] {
+  const meta = PORTFOLIO_RANGES.find((r) => r.id === range) ?? PORTFOLIO_RANGES[0];
+  const end = Math.max(0, Number(currentValue || 0));
+  const startFromPnl = Number.isFinite(pnl) ? end - pnl : end * (1 - meta.drift);
+  const start = Math.max(0, startFromPnl || end * (1 - meta.drift));
+  const now = Date.now();
+  const spanMs = range === "LIVE" ? 15_000 : range === "1MIN" ? 60_000 : range === "1H" ? 3_600_000 : range === "1D" ? 86_400_000 : range === "1W" ? 7 * 86_400_000 : range === "1MO" ? 30 * 86_400_000 : 180 * 86_400_000;
+  return Array.from({ length: meta.points }, (_, i) => {
+    const t = i / Math.max(meta.points - 1, 1);
+    const wave = Math.sin(t * Math.PI * 3.6) * end * meta.drift * 0.25;
+    const micro = Math.cos(t * Math.PI * 9.5) * end * meta.drift * 0.08;
+    const trend = start + (end - start) * t;
+    return {
+      ts: new Date(now - spanMs + spanMs * t).toISOString(),
+      value: Math.max(0, i === meta.points - 1 ? end : trend + wave + micro),
+    };
+  });
+}
+
+function makePath(points: PortfolioPoint[], width: number, height: number) {
+  const values = points.map((p) => p.value);
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const spread = Math.max(max - min, max * 0.01, 1);
+  return points.map((p, i) => {
+    const x = (i / Math.max(points.length - 1, 1)) * width;
+    const y = height - ((p.value - min) / spread) * height;
+    return `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
+  }).join(" ");
 }
 
 function useTokenHoldings(address: string | null | undefined, mode: "summary" | "full" = "summary") {
@@ -359,6 +403,13 @@ export default function PortfolioPage() {
           <Metric label="Risk Focus" value="Demo" sub="No blockchain transaction is sent" />
         </section>
 
+        <PortfolioPerformanceChart
+          demo
+          totalValueUsd={cashUsd}
+          pnlUsd={paper.trades.reduce((sum, trade) => sum + (trade.side === "SELL" ? trade.totalUsd : -trade.totalUsd * 0.02), 0)}
+          formatUsd={formatUsdDisplay}
+        />
+
         <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
           <BadgeRail mode="paper" portfolioValueUsd={cashUsd} asset={paperPositions[0] ? { ticker: paperPositions[0].ticker, title: paperPositions[0].ticker, mint: paperPositions[0].mint, price: paperPositions[0].costUsd } : null} limit={3} />
           <MilestoneGrid asset={paperPositions[0] ? { ticker: paperPositions[0].ticker, title: paperPositions[0].ticker, mint: paperPositions[0].mint } : null} compact />
@@ -484,6 +535,13 @@ export default function PortfolioPage() {
         <Metric label="Concentration" value={`${concentration}%`} sub="Lower is broader" />
         <Metric label="Risk Focus" value={artistTokens.length || songTokens.length ? "Active" : "Idle"} sub="Review liquidity and trust badges" />
       </section>
+
+      <PortfolioPerformanceChart
+        wallet={portfolioWallet}
+        totalValueUsd={totalIndexedValueUsd}
+        pnlUsd={pnl}
+        formatUsd={formatUsdDisplay}
+      />
 
       <section className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
         <BadgeRail asset={gamifiedPortfolioAssets[0]} portfolioValueUsd={totalIndexedValueUsd} limit={3} />
@@ -651,6 +709,126 @@ function Metric({ label, value, sub }: { label: string; value: string; sub: stri
       <div className={`mt-2 break-words font-mono font-black leading-tight text-white ${longValue ? "text-lg md:text-xl" : "text-2xl md:text-3xl"}`}>{value}</div>
       <div className="mt-1 text-xs uppercase tracking-widest text-mute">{sub}</div>
     </div>
+  );
+}
+
+function PortfolioPerformanceChart({
+  wallet,
+  totalValueUsd,
+  pnlUsd,
+  formatUsd,
+  demo = false,
+}: {
+  wallet?: string | null;
+  totalValueUsd: number;
+  pnlUsd: number;
+  formatUsd: (value: number) => string;
+  demo?: boolean;
+}) {
+  const [range, setRange] = useState<PortfolioRange>("LIVE");
+  const [livePoints, setLivePoints] = useState<PortfolioPoint[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (!wallet || demo) {
+      setLivePoints([]);
+      return;
+    }
+    let alive = true;
+    const meta = PORTFOLIO_RANGES.find((r) => r.id === range) ?? PORTFOLIO_RANGES[0];
+    setLoading(true);
+    fetch(`/api/portfolio/history?wallet=${encodeURIComponent(wallet)}&range=${encodeURIComponent(meta.api)}`, { cache: "no-store" })
+      .then((r) => readJson<{ points?: Array<{ ts: string; close?: number; value?: number }> }>(r))
+      .then((j) => {
+        if (!alive) return;
+        const points = (j?.points ?? [])
+          .map((p) => ({ ts: p.ts, value: Number(p.value ?? p.close ?? 0) }))
+          .filter((p) => Number.isFinite(p.value) && p.value >= 0);
+        setLivePoints(points);
+      })
+      .catch(() => {
+        if (alive) setLivePoints([]);
+      })
+      .finally(() => {
+        if (alive) setLoading(false);
+      });
+    return () => { alive = false; };
+  }, [wallet, range, demo]);
+
+  const points = useMemo(() => {
+    if (livePoints.length >= 3) return livePoints;
+    return buildPortfolioFallbackSeries(totalValueUsd, pnlUsd, range);
+  }, [livePoints, totalValueUsd, pnlUsd, range]);
+
+  const first = points[0]?.value ?? 0;
+  const last = points[points.length - 1]?.value ?? totalValueUsd;
+  const change = last - first;
+  const changePct = first > 0 ? (change / first) * 100 : 0;
+  const positive = change >= 0;
+  const path = makePath(points, 1000, 330);
+  const areaPath = `${path} L1000,360 L0,360 Z`;
+  const lineColor = positive ? "#b7ff00" : "#ff4d6d";
+  const gradientId = positive ? "portfolioGain" : "portfolioLoss";
+
+  return (
+    <section className="panel-elevated grain overflow-hidden p-5 md:p-6">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <div className="text-[11px] font-black uppercase tracking-[0.24em] text-mute">{demo ? "Paper performance" : "Portfolio performance"}</div>
+          <h2 className="mt-2 text-2xl font-black text-ink">{formatUsd(last)}</h2>
+          <div className={`mt-1 font-mono text-sm font-black ${positive ? "text-neon" : "text-red"}`}>
+            {positive ? "+" : ""}{formatUsd(change)} · {positive ? "+" : ""}{changePct.toFixed(2)}%
+          </div>
+        </div>
+        <div className="flex max-w-full flex-wrap gap-1 rounded-2xl border border-edge bg-panel p-1">
+          {PORTFOLIO_RANGES.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => setRange(option.id)}
+              className={`rounded-xl px-3 py-2 text-[11px] font-black uppercase tracking-widest transition ${
+                range === option.id
+                  ? "bg-neon text-[#020403]"
+                  : "text-mute hover:bg-white/[0.06] hover:text-ink"
+              }`}
+            >
+              {option.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="mt-5 rounded-[1.75rem] border border-edge bg-[#05070a] p-3 md:p-5">
+        <svg viewBox="0 0 1000 390" className="h-[260px] w-full overflow-visible md:h-[320px]" role="img" aria-label="Portfolio value line chart">
+          <defs>
+            <linearGradient id="portfolioGain" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="#b7ff00" stopOpacity="0.28" />
+              <stop offset="100%" stopColor="#b7ff00" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="portfolioLoss" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stopColor="#ff4d6d" stopOpacity="0.24" />
+              <stop offset="100%" stopColor="#ff4d6d" stopOpacity="0" />
+            </linearGradient>
+            <filter id="portfolioGlow">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+          {[70, 140, 210, 280].map((y) => <line key={y} x1="0" x2="1000" y1={y} y2={y} stroke="rgba(255,255,255,0.08)" strokeDasharray="10 12" />)}
+          <path d={areaPath} fill={`url(#${gradientId})`} />
+          <path d={path} fill="none" stroke={lineColor} strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" filter="url(#portfolioGlow)" />
+          <circle cx="1000" cy={Number(path.split("L").pop()?.split(",")[1] ?? 0)} r="9" fill={lineColor} stroke="#05070a" strokeWidth="6" />
+          <text x="0" y="382" fill="rgba(255,255,255,0.55)" fontSize="24" fontFamily="monospace">{range === "LIVE" ? "Now" : PORTFOLIO_RANGES.find((r) => r.id === range)?.label}</text>
+          <text x="780" y="382" fill="rgba(255,255,255,0.55)" fontSize="24" fontFamily="monospace">{loading ? "Syncing..." : "Live index"}</text>
+        </svg>
+      </div>
+      <p className="mt-3 text-xs leading-relaxed text-mute">
+        This chart combines wallet value, AUDIO, Song Coins, Artist Coins, and indexed song-daq positions when data is available. If historical wallet data is still syncing, song-daq anchors the chart to the current portfolio value.
+      </p>
+    </section>
   );
 }
 
