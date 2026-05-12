@@ -157,15 +157,33 @@ textarea {
 }
 
 .app-main-safe {
-  padding-bottom: calc(9rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(12rem + env(safe-area-inset-bottom, 0px));
 }
 
 .app-footer-safe {
-  padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px));
 }
 
 .global-player-safe {
-  padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: 0.5rem;
+}
+
+.mobile-bottom-nav-safe {
+  padding-bottom: calc(0.55rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (min-width: 768px) {
+  .app-main-safe {
+    padding-bottom: calc(9rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .app-footer-safe {
+    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .global-player-safe {
+    padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 .chart-fullscreen-height {

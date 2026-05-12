@@ -3,7 +3,19 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Sun, Moon, Volume2, VolumeX, Search } from "lucide-react";
+import {
+  BarChart3,
+  CircleHelp,
+  Moon,
+  Music2,
+  Radio,
+  Search,
+  ShieldCheck,
+  Sun,
+  Volume2,
+  VolumeX,
+  WalletCards,
+} from "lucide-react";
 import { WalletBalance, useAudiusAudioBalance, useNativeBalance } from "./WalletBalance";
 import { CurrencySelector } from "./CurrencySelector";
 import { AudiusLoginButton } from "./AudiusLoginButton";
@@ -147,6 +159,7 @@ export function Navbar() {
   };
 
   return (
+    <>
     <header className="mobile-header-safe sticky top-0 z-40 border-b border-edge transition-colors duration-500">
       {/* Glass background with premium blur */}
       <div className="absolute inset-0 bg-bg/92 backdrop-blur-2xl" />
@@ -282,37 +295,79 @@ export function Navbar() {
           isPaperWallet={isPaperWallet}
           hasExternalWallet={hasSeparateExternalWallet}
         />
-        <nav className="md:hidden border-t border-edge/70 py-1.5">
-          <div className="no-scrollbar flex items-center gap-2 overflow-x-auto px-0.5">
-            {navItems.map((n) => {
-              if (n.reqArtistMode && userMode !== "ARTIST") return null;
-              const active = path === n.href || (n.href !== "/" && path.startsWith(n.href));
-              return (
-                <Link
-                  key={n.href}
-                  href={n.href}
-                  prefetch={false}
-                  onClick={navigate(n.href)}
-                  aria-current={active ? "page" : undefined}
-                  className={`flex h-9 shrink-0 items-center justify-center rounded-xl border px-3 text-center text-[10px] font-black uppercase tracking-[0.16em] transition min-[390px]:px-3.5 ${
-                    active
-                      ? "border-neon/45 bg-neon/15 text-neon shadow-[0_0_16px_rgba(0,229,114,0.16)]"
-                      : "border-edge bg-white/[0.045] text-mute hover:text-ink"
-                  }`}
-                >
-                  {n.label}
-                </Link>
-              );
-            })}
-            <span className="shrink-0">
-              <CurrencySelector compact />
-            </span>
-          </div>
-        </nav>
       </div>
 
       <LoginModal isOpen={loginModalOpen} onClose={closeLoginModal} />
     </header>
+    <MobileBottomNav navItems={navItems} userMode={userMode} path={path} navigate={navigate} setUserMode={setUserMode} />
+    </>
+  );
+}
+
+function mobileNavLabel(label: string) {
+  if (label === "LAUNCH COIN") return "Launch";
+  if (label === "PORTFOLIO") return "Portfolio";
+  return label.charAt(0) + label.slice(1).toLowerCase();
+}
+
+function MobileNavIcon({ item }: { item: NavItem }) {
+  const baseClass = "h-[21px] w-[21px]";
+  if (item.href === "/market") return <BarChart3 className={baseClass} strokeWidth={2.35} />;
+  if (item.href === "/portfolio") return <WalletCards className={baseClass} strokeWidth={2.35} />;
+  if (item.href === "/artist") return <Music2 className={baseClass} strokeWidth={2.35} />;
+  if (item.href === "/social") return <Radio className={baseClass} strokeWidth={2.35} />;
+  if (item.href === "/admin") return <ShieldCheck className={baseClass} strokeWidth={2.35} />;
+  return <CircleHelp className={baseClass} strokeWidth={2.35} />;
+}
+
+function MobileBottomNav({
+  navItems,
+  userMode,
+  path,
+  navigate,
+  setUserMode,
+}: {
+  navItems: NavItem[];
+  userMode: string;
+  path: string;
+  navigate: (href: string) => (event: React.MouseEvent<HTMLAnchorElement>) => void;
+  setUserMode: (mode: "ARTIST" | "INVESTOR") => void;
+}) {
+  const visibleItems = navItems.filter((item) => !item.reqArtistMode || userMode === "ARTIST");
+  if (!visibleItems.length) return null;
+
+  return (
+    <nav className="mobile-bottom-nav-safe fixed inset-x-0 bottom-0 z-[60] border-t border-edge/85 bg-bg/96 px-2 pt-2 shadow-[0_-18px_42px_rgba(0,0,0,0.44)] backdrop-blur-2xl md:hidden">
+      <div className="mx-auto flex max-w-[560px] items-stretch gap-1 overflow-x-auto no-scrollbar">
+        {visibleItems.map((item) => {
+          const active = path === item.href || (item.href !== "/" && path.startsWith(item.href));
+          return (
+            <Link
+              key={item.href}
+              href={item.href}
+              prefetch={false}
+              onClick={(event) => {
+                if (item.href === "/artist") setUserMode("ARTIST");
+                navigate(item.href)(event);
+              }}
+              aria-current={active ? "page" : undefined}
+              className={`group flex min-h-[54px] min-w-[62px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl border px-1.5 text-center transition ${
+                active
+                  ? "border-neon/45 bg-neon/13 text-neon shadow-[inset_0_0_16px_rgba(0,229,114,0.08),0_0_18px_rgba(0,229,114,0.13)]"
+                  : "border-transparent text-mute hover:border-edge hover:bg-white/[0.045] hover:text-ink"
+              }`}
+            >
+              <span className={`grid h-6 place-items-center transition ${active ? "scale-105" : "group-active:scale-95"}`}>
+                <MobileNavIcon item={item} />
+              </span>
+              <span className="max-w-full whitespace-nowrap text-[9px] font-black uppercase leading-none tracking-[0.04em] min-[390px]:text-[9.5px]">
+                {mobileNavLabel(item.label)}
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </nav>
   );
 }
 
