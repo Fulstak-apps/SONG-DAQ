@@ -164,8 +164,33 @@ export function CoinPreviewModal({
   } : null;
   const isPlayingThis = !!playerTrack && current?.id === playerTrack.id && playing;
   const watched = watchlist.items.includes(coin.mint);
-  const visibleTracks = tracks.slice(0, 5);
+  const primaryLinkedTrack = activeCoin.audius_track_id || activeCoin.audius_track_title
+    ? {
+        id: activeCoin.audius_track_id || `song-daq-${activeCoin.songId || activeCoin.mint}`,
+        title: activeCoin.audius_track_title || activeCoin.name,
+        artwork: activeCoin.audius_track_artwork || activeCoin.logo_uri || activeCoin.artist_avatar || null,
+        play_count: activeCoin.audius_play_count ?? 0,
+        streamUrl: activeCoin.audius_track_id ? `https://api.audius.co/v1/tracks/${activeCoin.audius_track_id}/stream?app_name=songdaq` : "",
+        user: { name: activeCoin.artist_name || activeCoin.name },
+        songDaqLinkedCoin: true,
+      }
+    : null;
+  const visibleTracks = [
+    ...(primaryLinkedTrack ? [primaryLinkedTrack] : []),
+    ...tracks.filter((track) => {
+      const trackId = String(track?.id ?? "");
+      const trackTitle = String(track?.title ?? "").trim().toLowerCase();
+      if (primaryLinkedTrack && trackId && trackId === String(primaryLinkedTrack.id)) return false;
+      if (primaryLinkedTrack && trackTitle && trackTitle === String(primaryLinkedTrack.title).trim().toLowerCase()) return false;
+      return true;
+    }),
+  ].slice(0, 5);
   const linkedTrackCount = visibleTracks.filter((track) => !!linkedCoinForTrack(track)).length;
+  const linkedSongSnapshot = activeCoin.audius_track_title
+    ? `1 linked · ${activeCoin.audius_track_title}`
+    : linkedTrackCount > 0
+      ? `${linkedTrackCount}/${visibleTracks.length || linkedTrackCount} linked`
+      : "No linked song yet";
   const activeSide = Number(coin.buy24h ?? 0) >= Number(coin.sell24h ?? 0) ? "Buy pressure" : "Sell pressure";
   const royaltyStatus = (coin as any).splitsLocked ? "Royalty split locked" : "Royalty pending";
   const marketValueReliable = !isSongDaqLocal || (coin as any).isMarketValueReliable !== false;
@@ -182,7 +207,7 @@ export function CoinPreviewModal({
       title: track.title ?? "Untitled",
       artist: track.user?.name ?? activeCoin.artist_name ?? activeCoin.name,
       artwork,
-      streamUrl: `https://api.audius.co/v1/tracks/${track.id}/stream?app_name=songdaq`,
+      streamUrl: track.streamUrl || `https://api.audius.co/v1/tracks/${track.id}/stream?app_name=songdaq`,
       href: track.permalink ?? (activeCoin.artist_handle ? `https://audius.co/${activeCoin.artist_handle}` : undefined),
     };
   }
@@ -190,6 +215,11 @@ export function CoinPreviewModal({
   function linkedCoinForTrack(track: any) {
     const title = String(track.title ?? "").trim().toLowerCase();
     const trackId = String(track.id ?? "");
+    const activeTrackId = String(activeCoin.audius_track_id ?? "");
+    const activeTrackTitle = String(activeCoin.audius_track_title ?? "").trim().toLowerCase();
+    if ((activeTrackId && trackId === activeTrackId) || (activeTrackTitle && title === activeTrackTitle) || track.songDaqLinkedCoin) {
+      return activeCoin;
+    }
     return allCoins.find((item) => {
       if (item.audius_track_id && String(item.audius_track_id) === trackId) return true;
       return !!title
@@ -391,7 +421,7 @@ export function CoinPreviewModal({
                 <div className="grid gap-2">
                   <SnapshotRow label="Token" value={`$${coin.ticker}`} />
                   <SnapshotRow label="Artist" value={coin.artist_name ?? coin.name} />
-                  <SnapshotRow label="Linked songs" value={`${linkedTrackCount}/${visibleTracks.length || 0} shown`} />
+                  <SnapshotRow label="Linked song" value={linkedSongSnapshot} />
                   <SnapshotRow label="24h buys" value={fmtNum(coin.buy24h ?? 0)} />
                   <SnapshotRow label="24h sells" value={fmtNum(coin.sell24h ?? 0)} />
                   <SnapshotRow label="Wallets today" value={fmtNum(coin.uniqueWallet24h ?? 0)} />
