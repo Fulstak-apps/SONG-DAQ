@@ -49,7 +49,7 @@ function trackArtwork(track: any, fallback?: string | null) {
 
 export default function CoinPage() {
   const { mint } = useParams<{ mint: string }>();
-  const { audius } = useSession();
+  const { audius, address } = useSession();
   const { current, playing, playTrack, toggle } = usePlayer();
   const [coin, setCoin] = useState<AudiusCoin | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -212,7 +212,23 @@ export default function CoinPage() {
 
   const change = coin.priceChange24hPercent ?? 0;
   const coinArtwork = coin.logo_uri || coin.audius_track_artwork || coin.artist_avatar || null;
-  const isOwner = !!(audius && audius.userId === coin.owner_id);
+  const ownerWallet = String((coin as any).artistWallet?.wallet || "");
+  const localSongId = String((coin as any).songId || (coin as any).id || "");
+  const isSongDaqLocal = Boolean((coin as any).isSongDaqLocal || localSongId || (coin as any).mintAddress);
+  const isOwner = Boolean(
+    (audius?.userId && (
+      audius.userId === coin.owner_id ||
+      audius.userId === (coin as any).artistWallet?.audiusUserId
+    )) ||
+    (address && ownerWallet && address === ownerWallet)
+  );
+  const splitsHref = `/splits?${new URLSearchParams({
+    coinId: localSongId || coin.mint,
+    symbol: coin.ticker || "",
+    title: coin.audius_track_title || coin.name || "",
+    artist: coin.artist_name || "",
+    wallet: ownerWallet || address || "",
+  }).toString()}`;
   const watching = isWatched(coin.mint);
   const livePrice = coin.price ?? 0;
   const histPrice = (coin as any).history24hPrice ?? livePrice;
@@ -516,6 +532,30 @@ export default function CoinPage() {
             </div>
             <button onClick={() => setTradeSide("BUY")} className="btn-primary w-full py-4 text-lg">BUY</button>
             <button onClick={() => setTradeSide("SELL")} className="btn-danger w-full py-4 text-lg">SELL</button>
+            {isSongDaqLocal ? (
+              <div className="w-full rounded-2xl border border-neon/20 bg-neon/5 p-4 text-left">
+                <div className="text-[10px] uppercase tracking-widest font-black text-neon">Creator Tools</div>
+                <div className="mt-2 text-sm font-black text-white">Manage this SONG·DAQ coin</div>
+                <p className="mt-2 text-xs leading-relaxed text-mute">
+                  Look up this coin anytime by symbol, song name, artist, or mint. Add liquidity to make the market tradable, or submit royalty splits after your distributor invitation is sent.
+                </p>
+                {isOwner ? (
+                  <div className="mt-3 grid grid-cols-1 gap-2">
+                    {localSongId ? (
+                      <>
+                        <Link href={`/song/${localSongId}`} className="btn-primary h-10 px-3 text-center text-[9px] uppercase tracking-widest font-black">Open Song Dashboard</Link>
+                        <Link href={`/song/${localSongId}#liquidity`} className="btn h-10 px-3 text-center text-[9px] uppercase tracking-widest font-black">Add Liquidity</Link>
+                      </>
+                    ) : null}
+                    <Link href={splitsHref} className="btn h-10 px-3 text-center text-[9px] uppercase tracking-widest font-black">Set Up Splits</Link>
+                  </div>
+                ) : (
+                  <div className="mt-3 rounded-xl border border-edge bg-panel2 p-3 text-xs text-mute">
+                    Connect the artist wallet or Audius account that created this coin to add liquidity or submit royalty splits.
+                  </div>
+                )}
+              </div>
+            ) : null}
             <div className="w-full rounded-2xl border border-edge bg-panel p-4 text-left">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-[10px] uppercase tracking-widest font-black text-mute">Issuer Discography</div>
@@ -939,7 +979,7 @@ export default function CoinPage() {
             <TrustCheck label="Artist" value={coin.artist_name || "Unknown"} ok={Boolean(coin.artist_name)} />
             <TrustCheck label="Royalty" value={String((coin as any).royalty_status ?? (coin as any).royaltyVerificationStatus ?? "Not submitted")} ok={String((coin as any).royalty_status ?? (coin as any).royaltyVerificationStatus ?? "").toLowerCase().includes("verified")} />
             <TrustCheck label="Risk" value={String((coin as any).riskLevel ?? "Review")} ok={String((coin as any).riskLevel ?? "").toLowerCase() === "low"} />
-            <TrustCheck label="Trading" value={Number(coin.liquidity ?? 0) > 0 ? "Market route expected" : "Paused"} ok={Number(coin.liquidity ?? 0) > 0} />
+            <TrustCheck label="Trading" value={Number(coin.liquidity ?? 0) > 0 ? "Market route expected" : "Needs liquidity"} ok={Number(coin.liquidity ?? 0) > 0} />
             <TrustCheck label="Fan model" value="Public curve/pool" ok />
           </div>
         </section>

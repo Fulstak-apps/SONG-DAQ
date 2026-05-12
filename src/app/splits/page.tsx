@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Copy, ExternalLink } from "lucide-react";
 
@@ -24,6 +24,7 @@ const DISTRIBUTORS = [
 ];
 
 export default function SplitsPage() {
+  const [searchParams, setSearchParams] = useState(() => new URLSearchParams());
   const [selected, setSelected] = useState("UnitedMasters");
   const [sent, setSent] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -35,6 +36,10 @@ export default function SplitsPage() {
     if (selected === "Other") return otherUrl || "https://www.google.com/search?q=music+distributor+royalty+splits";
     return DISTRIBUTORS.find(([name]) => name === selected)?.[1] ?? "#";
   }, [selected, otherUrl]);
+
+  useEffect(() => {
+    setSearchParams(new URLSearchParams(window.location.search));
+  }, []);
 
   const copy = () => {
     navigator.clipboard.writeText(ROYALTY_EMAIL);
@@ -54,6 +59,15 @@ export default function SplitsPage() {
         <p className="max-w-4xl text-base text-mute leading-relaxed">
           Do not send a personal email. Open your distributor dashboard, go to splits or royalty sharing, and add <span className="font-mono text-neon">{ROYALTY_EMAIL}</span> as the royalty split recipient. Then return here and submit the verification form.
         </p>
+        {searchParams.get("symbol") || searchParams.get("title") ? (
+          <div className="rounded-2xl border border-edge bg-panel p-4">
+            <div className="text-[10px] uppercase tracking-widest font-black text-mute">Selected coin</div>
+            <div className="mt-1 text-lg font-black text-white break-words">
+              {searchParams.get("symbol") ? `$${searchParams.get("symbol")}` : "Song coin"}
+              {searchParams.get("title") ? <span className="text-mute"> · {searchParams.get("title")}</span> : null}
+            </div>
+          </div>
+        ) : null}
         <div className="flex flex-col gap-3 rounded-2xl border border-neon/20 bg-neon/10 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <div className="text-[10px] uppercase tracking-widest font-black text-neon">Split recipient</div>
@@ -119,6 +133,7 @@ export default function SplitsPage() {
               const form = new FormData(e.currentTarget);
               const payload = {
                 action: "submit_request",
+                coinId: searchParams.get("coinId") || undefined,
                 artistName: form.get("artistName"),
                 legalName: form.get("legalName"),
                 email: form.get("email"),
@@ -160,7 +175,18 @@ export default function SplitsPage() {
             ].map(([field, name]) => (
               <label key={field} className="space-y-2">
                 <span className="text-[10px] uppercase tracking-widest font-black text-mute">{field}</span>
-                <input name={name} required={field !== "ISRC" && field !== "UPC"} className="w-full rounded-xl border border-edge bg-panel px-4 py-3 text-ink outline-none focus:border-neon/40" />
+                <input
+                  name={name}
+                  required={field !== "ISRC" && field !== "UPC"}
+                  defaultValue={
+                    name === "artistName" ? searchParams.get("artist") || "" :
+                    name === "walletAddress" ? searchParams.get("wallet") || "" :
+                    name === "songTitle" ? searchParams.get("title") || "" :
+                    name === "coinToken" ? searchParams.get("symbol") || "" :
+                    ""
+                  }
+                  className="w-full rounded-xl border border-edge bg-panel px-4 py-3 text-ink outline-none focus:border-neon/40"
+                />
               </label>
             ))}
             <label className="space-y-2 md:col-span-2">

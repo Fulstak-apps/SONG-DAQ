@@ -582,7 +582,7 @@ function PendingLiquidityPanel({ song, isOwner = false }: { song: any; isOwner?:
   const status = song.status === "LIVE" ? "Liquidity missing" : "Pending liquidity";
 
   return (
-    <div className="panel p-5 space-y-4 border border-orange-500/25 bg-orange-500/5 shadow-xl relative overflow-hidden">
+    <div id="liquidity" className="panel p-5 space-y-4 border border-orange-500/25 bg-orange-500/5 shadow-xl relative overflow-hidden scroll-mt-28">
       <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-orange-500/60 to-transparent" />
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-xl bg-orange-500/15 border border-orange-500/25 flex items-center justify-center shrink-0">

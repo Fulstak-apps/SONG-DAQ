@@ -36,6 +36,16 @@ function localSongToCoin(song: any): AudiusCoin {
     audius_track_title: song.title,
     audius_track_artwork: song.artworkUrl || undefined,
     audius_play_count: Number(song.streams || 0),
+    isSongDaqLocal: true,
+    songId: song.id,
+    mintAddress: song.mintAddress || null,
+    createdAt: song.createdAt ? new Date(song.createdAt).toISOString() : undefined,
+    status: song.status,
+    liquidityPairAmount: Number(song.liquidityPairAmount || 0),
+    liquidityTokenAmount: Number(song.liquidityTokenAmount || 0),
+    liquidityLocked: Boolean(song.liquidityLocked),
+    royaltyVerificationStatus: song.royaltyVerificationStatus || "not_submitted",
+    royaltyBacked: Boolean(song.royaltyBacked),
   };
 }
 
@@ -60,6 +70,7 @@ async function getLocalCoin(id: string) {
           audiusName: true,
           audiusAvatar: true,
           audiusVerified: true,
+          wallet: true,
         },
       },
     },
@@ -100,6 +111,20 @@ export async function GET(_req: NextRequest, ctx: { params: { mint: string } }) 
         nextExpectedRoyaltyPaymentDate: true,
         mode: true,
         isSimulated: true,
+        mintAddress: true,
+        fakeTokenAddress: true,
+        status: true,
+        liquidityPairAmount: true,
+        liquidityTokenAmount: true,
+        liquidityLocked: true,
+        artistWallet: {
+          select: {
+            wallet: true,
+            audiusUserId: true,
+            audiusHandle: true,
+            audiusName: true,
+          },
+        },
       },
     }).catch(() => null);
     const localCoin = localFirst ? localSongToCoin(localFirst) : {};

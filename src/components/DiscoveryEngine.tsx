@@ -217,6 +217,7 @@ export default function DiscoveryEngine() {
   const [view, setView] = useState<ViewMode>("grid");
   const [showWatchlistOnly, setShowWatchlistOnly] = useState(false);
   const [marketFilter, setMarketFilter] = useState<MarketFilter>("all");
+  const [coinQuery, setCoinQuery] = useState("");
   const [artistQuery, setArtistQuery] = useState("");
   const [artistResults, setArtistResults] = useState<any[]>([]);
   const [artistSearching, setArtistSearching] = useState(false);
@@ -305,11 +306,28 @@ export default function DiscoveryEngine() {
   // Filter by watchlist
   const filteredCoins = useMemo(() => {
     let list = showWatchlistOnly ? coins.filter(c => watchlist.items.includes(c.mint)) : coins;
+    const q = coinQuery.trim().toLowerCase().replace(/^\$/, "");
+    if (q) {
+      list = list.filter((c) => {
+        const fields = [
+          c.ticker,
+          c.name,
+          c.artist_name,
+          c.artist_handle,
+          c.mint,
+          c.audius_track_title,
+          (c as any).songId,
+          (c as any).mintAddress,
+        ];
+        return fields.some((field) => String(field || "").toLowerCase().includes(q));
+      });
+    }
     if (marketFilter !== "all") {
       list = list.filter((c) => {
         const risk = calculateCoinRisk(c as any);
         const liquidity = Number((c as any).liquidity ?? (c as any).reserveSol ?? (c as any).liquidityPairAmount ?? 0);
         const verified = Boolean((c as any).artist_handle || (c as any).audiusVerified || (c as any).audius_track_id);
+        const localLaunch = Boolean((c as any).isSongDaqLocal || (c as any).songId || (c as any).createdAt);
         switch (marketFilter) {
           case "verified":
             return verified;
@@ -320,7 +338,7 @@ export default function DiscoveryEngine() {
           case "rising":
             return (c.priceChange24hPercent ?? 0) > 0 || (c.v24hUSD ?? 0) > (c.marketCap ?? 0) * 0.01;
           case "new":
-            return liquidity > 0 && (c.marketCap ?? 0) < 25_000;
+            return localLaunch || (liquidity > 0 && (c.marketCap ?? 0) < 25_000);
           case "holders":
             return Number((c as any).uniqueWallet24h ?? c.holder ?? 0) > 10;
           default:
@@ -329,6 +347,14 @@ export default function DiscoveryEngine() {
       });
     }
     return [...list].sort((a, b) => {
+      if (marketFilter === "new") {
+        const ad = Date.parse(String((a as any).createdAt || "")) || 0;
+        const bd = Date.parse(String((b as any).createdAt || "")) || 0;
+        const al = (a as any).isSongDaqLocal ? 1 : 0;
+        const bl = (b as any).isSongDaqLocal ? 1 : 0;
+        if (al !== bl) return bl - al;
+        if (ad !== bd) return bd - ad;
+      }
       const ar = calculateCoinRisk(a as any).score;
       const br = calculateCoinRisk(b as any).score;
       const av = Number(a.v24hUSD ?? 0);
@@ -337,7 +363,7 @@ export default function DiscoveryEngine() {
       const bl = Number((b as any).liquidity ?? 0);
       return (br * 1000 + bv * 0.002 + bl * 0.2) - (ar * 1000 + av * 0.002 + al * 0.2);
     });
-  }, [coins, showWatchlistOnly, watchlist.items, marketFilter]);
+  }, [coins, showWatchlistOnly, watchlist.items, marketFilter, coinQuery]);
 
   const filteredSongs = useMemo(() => {
     if (!showWatchlistOnly) return songs;
@@ -638,6 +664,15 @@ export default function DiscoveryEngine() {
                 {label}
               </button>
             ))}
+          </div>
+
+          <div className="w-full xl:max-w-[360px]">
+            <input
+              value={coinQuery}
+              onChange={(e) => setCoinQuery(e.target.value)}
+              placeholder="Search ticker, artist, song, or mint..."
+              className="h-10 w-full rounded-xl border border-edge bg-white/[0.045] px-3 text-xs font-bold text-ink outline-none placeholder:text-mute/70 focus:border-neon/45"
+            />
           </div>
 
           <div className="w-full xl:w-auto xl:ml-auto">

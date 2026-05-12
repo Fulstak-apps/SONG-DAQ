@@ -48,6 +48,16 @@ function localSongToCoin(song: any): AudiusCoin {
     audius_track_title: song.title,
     audius_track_artwork: song.artworkUrl || undefined,
     audius_play_count: Number(song.streams || 0),
+    isSongDaqLocal: true,
+    songId: song.id,
+    mintAddress: song.mintAddress || null,
+    createdAt: song.createdAt ? new Date(song.createdAt).toISOString() : undefined,
+    status: song.status,
+    liquidityPairAmount: Number(song.liquidityPairAmount || 0),
+    liquidityTokenAmount: Number(song.liquidityTokenAmount || 0),
+    liquidityLocked: Boolean(song.liquidityLocked),
+    royaltyVerificationStatus: song.royaltyVerificationStatus || "not_submitted",
+    royaltyBacked: Boolean(song.royaltyBacked),
   };
 }
 
@@ -64,6 +74,7 @@ async function listLocalSongCoins(limit: number) {
           audiusUserId: true,
           audiusHandle: true,
           audiusAvatar: true,
+          wallet: true,
         },
       },
     },
@@ -89,7 +100,15 @@ export async function GET(req: NextRequest) {
     for (const c of combined) {
       recordTick(c.mint, c.price ?? 0, c.v24hUSD ?? 0, (c as any).history24hPrice ?? 0);
     }
-    const sorted = [...enriched].sort((a, b) => {
+    const sorted = [...combined].sort((a, b) => {
+      const aLocal = (a as any).isSongDaqLocal ? 1 : 0;
+      const bLocal = (b as any).isSongDaqLocal ? 1 : 0;
+      if (aLocal !== bLocal && sort === "new") return bLocal - aLocal;
+      if (sort === "new") {
+        const ad = Date.parse(String((a as any).createdAt || "")) || 0;
+        const bd = Date.parse(String((b as any).createdAt || "")) || 0;
+        if (ad !== bd) return bd - ad;
+      }
       const qualityA = calculateCoinRisk(a as any).score * 1000 + Number(a.liquidity ?? 0) * 0.25 + Number(a.holder ?? 0) * 4 + Number(a.v24hUSD ?? 0) * 0.002;
       const qualityB = calculateCoinRisk(b as any).score * 1000 + Number(b.liquidity ?? 0) * 0.25 + Number(b.holder ?? 0) * 4 + Number(b.v24hUSD ?? 0) * 0.002;
       switch (sort) {
