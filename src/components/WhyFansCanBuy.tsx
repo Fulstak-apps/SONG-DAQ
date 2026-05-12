@@ -47,7 +47,7 @@ export function WhyFansCanBuy({ compact = false }: { compact?: boolean }) {
       <div className="text-[10px] uppercase tracking-[0.18em] font-black">Why fans can buy</div>
       <p className="mt-2 max-w-3xl text-sm leading-relaxed text-neon/80 sm:text-base">
         Artists do not sell every coin straight from their wallet. Part of the supply goes into a public market pool, the artist share stays separate, and liquidity is what lets fans buy and sell.
-        <span className="block pt-1 text-neon/65">Fans can profit only if demand and liquidity support a higher market price. Profit is not guaranteed.</span>
+        <span className="block pt-1 text-neon/65">Fans can profit only if demand and liquidity support a higher market price.</span>
       </p>
       <div className="mt-4 grid min-w-0 grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-3">
         {items.map((item) => (

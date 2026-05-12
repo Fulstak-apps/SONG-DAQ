@@ -216,7 +216,7 @@ export function LandingPage() {
           <SimpleStep
             num="03"
             title="Earn From Activity + Growth"
-            body="Portfolio value can move with demand, market activity, and verified royalty signals. Profit is never guaranteed."
+            body="Portfolio value can move with demand, market activity, and verified royalty signals."
           />
         </div>
       </Section>

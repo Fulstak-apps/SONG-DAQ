@@ -1297,7 +1297,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   </label>
                   <label className="flex items-start gap-3 rounded-xl border border-edge bg-panel p-3 text-left text-xs text-mute">
                     <input type="checkbox" checked={riskAcknowledged} onChange={(e) => setRiskAcknowledged(e.target.checked)} className="mt-1" />
-                    <span>I understand that fans can potentially profit only if demand pushes the coin price higher, but profit is not guaranteed and prices can go down.</span>
+                    <span>I understand that fans can potentially profit only if demand pushes the coin price higher, and prices can go down.</span>
                   </label>
                   <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-left text-xs leading-relaxed text-neon/85">
                     <div className="mb-1 text-[10px] uppercase tracking-widest font-black text-neon">{fiatAge}</div>

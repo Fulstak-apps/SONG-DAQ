@@ -94,7 +94,7 @@ export function SupportPage() {
           <p>Launch liquidity is required to make a song coin tradable. song-daq separates the supply into artist hold, launch liquidity, and reserve. The launch-liquidity portion may stage in the artist wallet briefly, then the artist approves a second transaction that moves those coins plus SOL, USDC, or AUDIO into the public trading pool.</p>
           <p>This is separate from royalties. A coin can launch without royalty verification, but it still needs liquidity to trade.</p>
           <p>Think of launch liquidity like opening the first market for the coin. Without it, people can see the coin, but there is no real pool for buys and sells.</p>
-          <p>Once the pool is verified, fans can buy with SOL. Fans may profit if demand rises and they later sell higher, but profit is never guaranteed and prices can go down.</p>
+          <p>Once the pool is verified, fans can buy with SOL. Fans may profit if demand rises and they later sell higher, and prices can also go down.</p>
         </SupportCard>
 
         <SupportCard icon={<FileCheck2 />} title="How Royalty Splits Work">
