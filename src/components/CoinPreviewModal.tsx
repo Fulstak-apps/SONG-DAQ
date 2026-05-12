@@ -144,6 +144,8 @@ export function CoinPreviewModal({
 
   if (!coin) return null;
   const activeCoin = coin;
+  const isSongDaqLocal = Boolean(activeCoin.isSongDaqLocal || activeCoin.songId || activeCoin.mintAddress);
+  const assetLabel = isSongDaqLocal ? "SONG·DAQ Song Token" : "Open Audio Artist Coin";
   const chartPoints = points.length ? points : coin.price ? [{
     ts: new Date().toISOString(),
     open: coin.price,
@@ -247,10 +249,12 @@ export function CoinPreviewModal({
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">
                 <div className="text-2xl sm:text-3xl font-black tracking-tight text-ink">${coin.ticker}</div>
-                <span className="rounded-md border border-neon/20 bg-neon/10 px-2 py-0.5 text-[9px] uppercase tracking-widest font-black text-neon">Artist Token</span>
+                <span className={`rounded-md border px-2 py-0.5 text-[9px] uppercase tracking-widest font-black ${
+                  isSongDaqLocal ? "border-neon/20 bg-neon/10 text-neon" : "border-violet/20 bg-violet/10 text-violet"
+                }`}>{assetLabel}</span>
                 <RiskBadge coin={coin as any} compact />
                 <span className="rounded-md border border-violet/20 bg-violet/10 px-2 py-0.5 text-[9px] uppercase tracking-widest font-black text-violet">
-                  {coin.audius_track_id ? "Audius linked" : "Artist coin"}
+                  {isSongDaqLocal ? "Created on SONG·DAQ" : "Imported public market"}
                 </span>
               </div>
               <div className="mt-1 text-xs uppercase tracking-widest text-mute whitespace-normal break-words">
@@ -342,7 +346,9 @@ export function CoinPreviewModal({
                 <InsightCard
                   label="Why This Coin Exists"
                   value={coin.audius_track_title || "Artist market coin"}
-                  body={coin.audius_track_title
+                  body={isSongDaqLocal
+                    ? "This coin was created through SONG·DAQ and is tied to this artist/song setup in your app."
+                    : coin.audius_track_title
                     ? "This coin is connected to an Audius song signal, artist profile, and live Solana token market."
                     : "This is an artist token. The artist's songs below show what already has a linked coin and what does not yet."}
                 />

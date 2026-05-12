@@ -649,7 +649,7 @@ export default function DiscoveryEngine() {
               ["locked", "Locked"],
               ["lowRisk", "Low Risk"],
               ["rising", "Rising"],
-              ["new", "New Launches"],
+              ["new", "SONG·DAQ Launches"],
               ["holders", "Holder Growth"],
             ].map(([id, label]) => (
               <button
@@ -699,10 +699,10 @@ export default function DiscoveryEngine() {
                 animate={{ opacity: 1 }}
                 className="grid grid-cols-2 md:grid-cols-4 gap-3"
               >
-                <Stat k="Listed" v={fmtNum(coins.length)} tooltip="Total number of Artist Tokens currently trading on the exchange." />
-                <Stat k="Combined Cap" v={`$${fmtNum(coinTotals.cap)}`} tooltip="The total market capitalization of all Artist Tokens on the network." />
-                <Stat k="24h Volume" v={`$${fmtNum(coinTotals.vol)}`} tooltip="Total dollar volume traded across all Artist Tokens in the last 24 hours." />
-                <Stat k="Holders" v={fmtNum(coinTotals.holders)} tooltip="Total number of unique wallets holding Artist Tokens across the platform." />
+                <Stat k="Listed" v={fmtNum(coins.length)} tooltip="Public Open Audio/Audius market coins plus any SONG·DAQ coins launched through this app." />
+                <Stat k="Combined Cap" v={`$${fmtNum(coinTotals.cap)}`} tooltip="Combined market capitalization for public Open Audio listings and local SONG·DAQ launches currently visible here." />
+                <Stat k="24h Volume" v={`$${fmtNum(coinTotals.vol)}`} tooltip="Total dollar volume from the public coin index and local SONG·DAQ market records." />
+                <Stat k="Holders" v={fmtNum(coinTotals.holders)} tooltip="Total unique holder count reported by the public coin index where available." />
               </motion.section>
             ) : (
               <motion.section

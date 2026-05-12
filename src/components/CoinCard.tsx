@@ -52,6 +52,11 @@ export function CoinCard({
   const sparkColor = sparkUp ? "#00E572" : "#FF3366";
   const tier = getTier(c.marketCap ?? 0);
   const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || null;
+  const isSongDaqLocal = Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
+  const assetLabel = isSongDaqLocal ? "SONG·DAQ Song Token" : "Open Audio Artist Coin";
+  const sourceHelp = isSongDaqLocal
+    ? "This coin was created through SONG·DAQ."
+    : "This is a public Audius/Open Audio market coin imported from the public coin index. It was not minted by a user on SONG·DAQ.";
 
   const trackTitle = c.audius_track_title ?? null;
   const audioUrl = c.audius_track_id ? `https://api.audius.co/v1/tracks/${c.audius_track_id}/stream?app_name=songdaq` : null;
@@ -108,6 +113,13 @@ export function CoinCard({
                 </Tooltip>
               )}
               <RiskBadge coin={c as any} compact />
+              <Tooltip content={sourceHelp}>
+                <span className={`rounded-md border px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest ${
+                  isSongDaqLocal ? "border-neon/25 bg-neon/10 text-neon" : "border-violet/25 bg-violet/10 text-violet"
+                }`}>
+                  {isSongDaqLocal ? "SONG·DAQ" : "Open Audio"}
+                </span>
+              </Tooltip>
             </div>
             <div className="text-[10px] text-mute line-clamp-2 uppercase tracking-widest font-bold mt-0.5">
               {c.artist_name ? <>{c.artist_name}{c.artist_handle ? ` · @${c.artist_handle}` : ""}</> : c.name}
@@ -149,7 +161,7 @@ export function CoinCard({
         <div className="flex flex-col min-w-0">
           <h2 className="text-sm font-black tracking-tighter text-ink uppercase flex items-center gap-2 mb-2">
             <Rocket className="text-neon" size={14} />
-            Artist Token
+            {assetLabel}
           </h2>
           <span className="text-[9px] text-mute uppercase tracking-widest font-black mb-1">Price</span>
           <span className="num text-xl font-black tracking-tight text-ink">{fmtUsd(c.price ?? 0, 6)}</span>
@@ -229,6 +241,7 @@ export function CoinListRow({
   const change = c.priceChange24hPercent ?? 0;
   const tier = getTier(c.marketCap ?? 0);
   const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || null;
+  const isSongDaqLocal = Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
 
   return (
     <motion.div
@@ -253,6 +266,11 @@ export function CoinListRow({
         <div className="flex items-center gap-2">
           <span className="font-bold text-sm tracking-tight group-hover:text-neon transition">${c.ticker}</span>
           <RiskBadge coin={c as any} compact />
+          <span className={`rounded-md border px-1.5 py-0.5 text-[7px] font-black uppercase tracking-widest ${
+            isSongDaqLocal ? "border-neon/25 bg-neon/10 text-neon" : "border-violet/25 bg-violet/10 text-violet"
+          }`}>
+            {isSongDaqLocal ? "SONG·DAQ" : "Open Audio"}
+          </span>
           {tier.label && <span className={`text-[7px] font-black uppercase tracking-widest px-1 py-0.5 rounded border ${tier.color}`}>{tier.label}</span>}
           <span className="text-[9px] text-mute uppercase tracking-widest font-bold">{c.holder ?? 0} holders</span>
         </div>

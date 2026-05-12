@@ -229,6 +229,10 @@ export default function CoinPage() {
     artist: coin.artist_name || "",
     wallet: ownerWallet || address || "",
   }).toString()}`;
+  const assetSourceLabel = isSongDaqLocal ? "SONG·DAQ Song Token" : "Open Audio Artist Coin";
+  const assetSourceNote = isSongDaqLocal
+    ? "Created through SONG·DAQ."
+    : "Imported from the public Audius/Open Audio coin index. This was not minted by a SONG·DAQ user.";
   const watching = isWatched(coin.mint);
   const livePrice = coin.price ?? 0;
   const histPrice = (coin as any).history24hPrice ?? livePrice;
@@ -382,7 +386,7 @@ export default function CoinPage() {
                       <SafeImage src={coinArtwork} alt={coin.ticker} fill sizes="96px" fallback={coin.ticker} className="object-cover" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <div className="text-[10px] uppercase tracking-[0.24em] font-black text-mute">Artist Token Profile</div>
+                      <div className="text-[10px] uppercase tracking-[0.24em] font-black text-mute">{assetSourceLabel}</div>
                       <h2 className="mt-1 text-2xl font-black tracking-tight text-white break-words">{coin.name || `$${coin.ticker}`}</h2>
                       <div className="mt-1 text-sm font-bold text-white/75 break-words">
                         {coin.artist_name || "Unknown Artist"} {coin.artist_handle ? <span className="font-mono text-mute">@{coin.artist_handle}</span> : null}
@@ -390,7 +394,7 @@ export default function CoinPage() {
                       {coin.description ? (
                         <p className="mt-3 text-sm leading-relaxed text-mute">{coin.description}</p>
                       ) : (
-                        <p className="mt-3 text-sm leading-relaxed text-mute">This token is connected to the artist&apos;s Audius market profile and Solana mint activity.</p>
+                        <p className="mt-3 text-sm leading-relaxed text-mute">{assetSourceNote}</p>
                       )}
                       <div className="mt-4 flex flex-wrap gap-2">
                         {primaryTrack ? (
@@ -505,14 +509,14 @@ export default function CoinPage() {
                   <SafeImage src={coinArtwork} alt={coin.ticker} fill sizes="56px" fallback={coin.ticker} className="object-cover" />
                 </div>
                 <div className="min-w-0">
-                  <div className="text-[10px] uppercase tracking-widest font-black text-mute">Artist Token</div>
+                  <div className="text-[10px] uppercase tracking-widest font-black text-mute">{assetSourceLabel}</div>
                   <div className="mt-1 text-lg font-black text-white break-words">${coin.ticker} · {coin.name}</div>
                   <div className="mt-0.5 text-xs font-bold text-white/70 break-words">{coin.artist_name || "Unknown Artist"}</div>
                   {coin.artist_handle ? <div className="font-mono text-[10px] text-mute">@{coin.artist_handle}</div> : null}
                 </div>
               </div>
               <div className="mt-3 line-clamp-4 text-xs leading-relaxed text-mute">
-                {coin.description || "Artist token connected to Audius music and Solana market data."}
+                {coin.description || assetSourceNote}
               </div>
               <div className="mt-3 flex flex-wrap gap-2">
                 {primaryTrack ? (
@@ -719,7 +723,7 @@ export default function CoinPage() {
             <div className="flex items-baseline gap-3 mb-1 flex-wrap">
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white drop-shadow-md break-words">${coin.ticker}</h1>
               <span className="text-mute text-sm tracking-wide break-words whitespace-normal">{coin.name}</span>
-              <span className="text-[9px] uppercase tracking-widest font-bold text-neon bg-neon/10 px-2 py-0.5 rounded border border-neon/30 shadow-[0_0_5px_rgba(0,229,114,0.25)]">Artist Token</span>
+              <span className={`text-[9px] uppercase tracking-widest font-bold px-2 py-0.5 rounded border ${isSongDaqLocal ? "text-neon bg-neon/10 border-neon/30 shadow-[0_0_5px_rgba(0,229,114,0.25)]" : "text-violet bg-violet/10 border-violet/30 shadow-[0_0_5px_rgba(155,81,224,0.25)]"}`}>{assetSourceLabel}</span>
               <RiskBadge coin={coin as any} compact />
               {isOwner && <span className="text-[9px] uppercase tracking-widest font-bold text-violet bg-violet/10 px-2 py-0.5 rounded border border-violet/30 shadow-[0_0_5px_rgba(155,81,224,0.3)]">Your Asset</span>}
               {(coin as any).has_discord && <span className="text-[9px] uppercase tracking-widest font-bold text-[#5865F2] bg-[#5865F2]/10 px-2 py-0.5 rounded border border-[#5865F2]/30">Discord Active</span>}
