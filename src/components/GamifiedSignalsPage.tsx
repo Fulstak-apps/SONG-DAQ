@@ -78,9 +78,6 @@ export function GamifiedSignalsPage() {
             <h1 className="mt-4 text-3xl font-black tracking-tight text-ink sm:text-4xl lg:text-5xl">
               Hype, IPOs, badges, milestones, and undervalued picks.
             </h1>
-            <p className="mt-3 max-w-2xl text-base leading-relaxed text-mute">
-              This page keeps the investing-game layer separate from the core market, so browsing stays clean while strategy signals get room to breathe.
-            </p>
           </div>
           <div className="flex flex-wrap gap-2 lg:justify-end">
             {paperMode && (
