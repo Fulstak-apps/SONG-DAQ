@@ -21,18 +21,19 @@ export function WhyFansCanBuy({ compact = false }: { compact?: boolean }) {
     },
   ];
   return (
-    <section className={`rounded-2xl border border-neon/20 bg-neon/8 ${compact ? "p-4" : "p-5"} text-neon`}>
-      <div className="text-[10px] uppercase tracking-widest font-black">Why fans can buy</div>
-      <p className="mt-2 text-xs leading-relaxed text-neon/80">
+    <section className={`min-w-0 max-w-full overflow-hidden rounded-2xl border border-neon/20 bg-neon/8 ${compact ? "p-4" : "p-5"} text-neon`}>
+      <div className="text-[10px] uppercase tracking-widest font-black break-words">Why fans can buy</div>
+      <p className="mt-2 max-w-full break-words text-xs leading-relaxed text-neon/80">
         SONG·DAQ follows the Open Audio/Audius idea: artist vesting is separate from the public market. Fans can profit only if demand and liquidity support a higher market price. Profit is not guaranteed.
       </p>
-      <div className="mt-4 grid gap-3 md:grid-cols-3">
+      <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-3">
         {items.map((item) => (
-          <div key={item.title} className="rounded-xl border border-neon/15 bg-black/15 p-3">
-            <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-neon">
-              {item.icon} {item.title}
+          <div key={item.title} className="min-w-0 max-w-full overflow-hidden rounded-xl border border-neon/15 bg-black/15 p-3">
+            <div className="flex min-w-0 items-start gap-2 text-[10px] uppercase tracking-widest font-black leading-snug text-neon">
+              <span className="mt-0.5 shrink-0">{item.icon}</span>
+              <span className="min-w-0 whitespace-normal break-words">{item.title}</span>
             </div>
-            <div className="mt-2 text-xs leading-relaxed text-neon/75">{item.body}</div>
+            <div className="mt-2 max-w-full break-words text-xs leading-relaxed text-neon/75">{item.body}</div>
           </div>
         ))}
       </div>
