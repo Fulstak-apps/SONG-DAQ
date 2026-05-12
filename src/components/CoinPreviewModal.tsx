@@ -6,7 +6,7 @@ import { Copy, ExternalLink, Pause, Play, ShieldCheck, Star, X } from "lucide-re
 import { SafeImage } from "./SafeImage";
 import { RiskBadge } from "./RiskBadge";
 import { PriceChart, type PricePointDTO } from "./PriceChart";
-import { usePlayer, useWatchlist, type PlayerTrack } from "@/lib/store";
+import { usePlayer, useSession, useWatchlist, type PlayerTrack } from "@/lib/store";
 import { toast } from "@/lib/toast";
 import { CHART_RANGE_LABELS, CHART_RANGES, isFastRange, type ChartRange } from "@/lib/chartRanges";
 import { fmtNum, fmtPct } from "@/lib/pricing";
@@ -54,6 +54,7 @@ export function CoinPreviewModal({
   const [tracks, setTracks] = useState<any[]>([]);
   const loadingRef = useRef(false);
   const { current, playing, playTrack, toggle } = usePlayer();
+  const { audius } = useSession();
   const watchlist = useWatchlist();
   const { coins: allCoins } = useCoins("marketCap");
   const txPreview = useMemo(() => {
@@ -143,6 +144,14 @@ export function CoinPreviewModal({
   const isOpenAudio = Boolean(activeCoin.isOpenAudioCoin || activeCoin.source === "open_audio" || activeCoin.source === "audius_public");
   const isSongDaqLocal = !isOpenAudio && Boolean(activeCoin.isSongDaqLocal || activeCoin.songId || activeCoin.mintAddress);
   const assetLabel = isSongDaqLocal ? "song-daq Song Coin" : "Open Audio Artist Coin";
+  const signedInArtistOwnsCoin = Boolean(
+    isOwner ||
+    (audius?.userId && (
+      String(audius.userId) === String(activeCoin.owner_id ?? "") ||
+      String(audius.userId) === String((activeCoin as any).artistWallet?.audiusUserId ?? "")
+    )) ||
+    (audius?.handle && activeCoin.artist_handle && audius.handle.toLowerCase() === activeCoin.artist_handle.toLowerCase())
+  );
   const chartPoints = points.length ? points : coin.price ? [{
     ts: new Date().toISOString(),
     open: coin.price,
@@ -226,6 +235,16 @@ export function CoinPreviewModal({
         && String(item.audius_track_title ?? "").trim().toLowerCase() === title
         && String(item.artist_handle ?? "").trim().toLowerCase() === String(activeCoin.artist_handle ?? "").trim().toLowerCase();
     });
+  }
+
+  function createSongCoinHref(track: any) {
+    const params = new URLSearchParams();
+    const trackId = String(track?.id ?? "");
+    if (trackId && !trackId.startsWith("song-daq-")) params.set("trackId", trackId);
+    const trackTitle = String(track?.title ?? "");
+    if (trackTitle) params.set("trackTitle", trackTitle);
+    if (activeCoin.artist_handle) params.set("artist", activeCoin.artist_handle);
+    return `/artist?${params.toString()}`;
   }
 
   function toggleTrack(track: any) {
@@ -481,6 +500,10 @@ export function CoinPreviewModal({
                           {linked ? (
                             <Link href={`/coin/${linked.mint}`} className="btn h-8 px-2.5 text-[9px] uppercase tracking-widest font-black">
                               Open Coin
+                            </Link>
+                          ) : signedInArtistOwnsCoin ? (
+                            <Link href={createSongCoinHref(track)} className="btn-primary h-8 px-2.5 text-[9px] uppercase tracking-widest font-black">
+                              Create Coin
                             </Link>
                           ) : (
                             <span className="inline-flex h-8 items-center rounded-lg border border-edge bg-panel px-2.5 text-[9px] uppercase tracking-widest font-black text-mute">

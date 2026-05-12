@@ -228,7 +228,10 @@ export function CoinTradeModal({
   if (!coin) return null;
   const change = coin.priceChange24hPercent ?? 0;
   const risk = calculateCoinRisk(coin as any);
-  const isOwner = !!(audius && audius.userId === coin.owner_id);
+  const isOwner = Boolean(
+    (audius?.userId && String(audius.userId) === String(coin.owner_id ?? "")) ||
+    (audius?.handle && coin.artist_handle && audius.handle.toLowerCase() === coin.artist_handle.toLowerCase())
+  );
   const chartPoints = points.length ? points : coin.price ? [{
     ts: new Date().toISOString(),
     open: coin.price,
@@ -297,6 +300,16 @@ export function CoinTradeModal({
         && String(item.audius_track_title ?? "").trim().toLowerCase() === title
         && String(item.artist_handle ?? "").trim().toLowerCase() === artistHandle;
     });
+  }
+
+  function createSongCoinHref(track: any) {
+    const params = new URLSearchParams();
+    const trackId = String(track?.id ?? "");
+    if (trackId) params.set("trackId", trackId);
+    const trackTitle = String(track?.title ?? "");
+    if (trackTitle) params.set("trackTitle", trackTitle);
+    if (coin?.artist_handle) params.set("artist", coin.artist_handle);
+    return `/artist?${params.toString()}`;
   }
 
   function playArtistTrack(track: any) {
@@ -647,6 +660,10 @@ export function CoinTradeModal({
                           {linkedCoin ? (
                             <Link href={`/coin/${linkedCoin.mint}`} className="btn h-8 px-2.5 text-[9px] uppercase tracking-widest font-black">
                               {linkedIsCurrent ? "Current Coin" : "Open Coin"}
+                            </Link>
+                          ) : isOwner ? (
+                            <Link href={createSongCoinHref(track)} className="btn-primary h-8 px-2.5 text-[9px] uppercase tracking-widest font-black">
+                              Create Coin
                             </Link>
                           ) : (
                             <span className="inline-flex h-8 items-center rounded-lg border border-edge bg-panel px-2.5 text-[9px] uppercase tracking-widest font-black text-mute">

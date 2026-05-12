@@ -222,9 +222,10 @@ export default function CoinPage() {
   const isSongDaqLocal = !isOpenAudio && Boolean((coin as any).isSongDaqLocal || localSongId || (coin as any).mintAddress);
   const isOwner = Boolean(
     (audius?.userId && (
-      audius.userId === coin.owner_id ||
-      audius.userId === (coin as any).artistWallet?.audiusUserId
+      String(audius.userId) === String(coin.owner_id ?? "") ||
+      String(audius.userId) === String((coin as any).artistWallet?.audiusUserId ?? "")
     )) ||
+    (audius?.handle && coin.artist_handle && audius.handle.toLowerCase() === coin.artist_handle.toLowerCase()) ||
     (address && ownerWallet && address === ownerWallet)
   );
   const splitsHref = `/splits?${new URLSearchParams({
@@ -234,6 +235,15 @@ export default function CoinPage() {
     artist: coin.artist_name || "",
     wallet: ownerWallet || address || "",
   }).toString()}`;
+  const createSongCoinHref = (track: any) => {
+    const params = new URLSearchParams();
+    const trackId = String(track?.id ?? "");
+    if (trackId) params.set("trackId", trackId);
+    const trackTitle = String(track?.title ?? "");
+    if (trackTitle) params.set("trackTitle", trackTitle);
+    if (coin.artist_handle) params.set("artist", coin.artist_handle);
+    return `/artist?${params.toString()}`;
+  };
   const assetSourceLabel = isSongDaqLocal ? "song-daq Song Coin" : "Open Audio Artist Coin";
   const assetSourceNote = isSongDaqLocal
     ? "Created through song-daq."
@@ -508,6 +518,8 @@ export default function CoinPage() {
                             ) : null}
                             {linkedCoin ? (
                               <Link href={`/coin/${linkedCoin.mint}`} className="btn h-8 px-3 text-[9px] uppercase tracking-widest font-black">Open Coin</Link>
+                            ) : isOwner ? (
+                              <Link href={createSongCoinHref(t)} className="btn-primary h-8 px-3 text-[9px] uppercase tracking-widest font-black">Create Coin</Link>
                             ) : (
                               <span className="inline-flex h-8 items-center rounded-xl border border-edge bg-panel2 px-3 text-[9px] uppercase tracking-widest font-black text-mute">No Coin</span>
                             )}
@@ -644,6 +656,8 @@ export default function CoinPage() {
                         ) : null}
                         {linkedCoin ? (
                           <Link href={`/coin/${linkedCoin.mint}`} className="btn h-7 px-2 text-[8px] uppercase tracking-widest font-black">Open Coin</Link>
+                        ) : isOwner ? (
+                          <Link href={createSongCoinHref(t)} className="btn-primary h-7 px-2 text-[8px] uppercase tracking-widest font-black">Create Coin</Link>
                         ) : (
                           <span className="inline-flex h-7 items-center rounded-lg border border-edge bg-panel px-2 text-[8px] uppercase tracking-widest font-black text-mute">No Coin Yet</span>
                         )}
@@ -950,6 +964,10 @@ export default function CoinPage() {
                         {linkedCoin ? (
                           <Link href={`/coin/${linkedCoin.mint}`} className="btn h-9 px-3 text-[9px] uppercase tracking-widest font-black">
                             Open Coin
+                          </Link>
+                        ) : isOwner ? (
+                          <Link href={createSongCoinHref(t)} className="btn-primary h-9 px-3 text-[9px] uppercase tracking-widest font-black">
+                            Create Coin
                           </Link>
                         ) : (
                           <span className="inline-flex h-9 items-center rounded-xl border border-edge bg-panel2 px-3 text-[9px] uppercase tracking-widest font-black text-mute">

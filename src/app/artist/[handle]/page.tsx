@@ -10,7 +10,7 @@ import { CoinPreviewModal } from "@/components/CoinPreviewModal";
 import { CoinTradeModal } from "@/components/CoinTradeModal";
 import { fmtNum, fmtPct } from "@/lib/pricing";
 import type { AudiusCoin } from "@/lib/audiusCoins";
-import { usePlayer, type PlayerTrack } from "@/lib/store";
+import { usePlayer, useSession, type PlayerTrack } from "@/lib/store";
 
 function artwork(track: any) {
   return track?.artwork?.["480x480"] || track?.artwork?.["150x150"] || track?.artwork?.["1000x1000"] || null;
@@ -29,6 +29,7 @@ export default function ArtistProfilePage() {
   const [preview, setPreview] = useState<AudiusCoin | null>(null);
   const [trade, setTrade] = useState<{ side: "BUY" | "SELL"; coin: AudiusCoin } | null>(null);
   const { current, playing, playTrack, toggle } = usePlayer();
+  const { audius } = useSession();
 
   useEffect(() => {
     let alive = true;
@@ -67,6 +68,10 @@ export default function ArtistProfilePage() {
   const verified = Boolean(user?.is_verified || artistCoins.some((c: any) => c.artist_handle || c.audiusVerified));
   const pendingLiquidity = artistCoins.filter((c: any) => Number(c.liquidity ?? c.reserveSol ?? c.liquidityPairAmount ?? 0) <= 0).length;
   const artistName = user?.name || user?.handle || decoded;
+  const isSignedInArtist = Boolean(
+    (audius?.userId && user?.id && String(audius.userId) === String(user.id)) ||
+    (audius?.handle && user?.handle && audius.handle.toLowerCase() === String(user.handle).toLowerCase())
+  );
   const nameClass = artistName.length > 34
     ? "text-2xl md:text-4xl"
     : artistName.length > 22
@@ -89,6 +94,30 @@ export default function ArtistProfilePage() {
     const pt = playerTrack(track);
     if (current?.id === pt.id) toggle();
     else playTrack(pt, topTracks.map(playerTrack));
+  }
+
+  function linkedCoinForTrack(track: any) {
+    const trackId = String(track?.id ?? "");
+    const trackTitle = String(track?.title ?? "").trim().toLowerCase();
+    return coins.find((coin) => {
+      if (coin.audius_track_id && String(coin.audius_track_id) === trackId) return true;
+      return !!trackTitle
+        && String(coin.audius_track_title ?? coin.name ?? "").trim().toLowerCase() === trackTitle
+        && (
+          String(coin.artist_handle ?? "").trim().toLowerCase() === String(user?.handle ?? decoded).trim().toLowerCase() ||
+          String(coin.artist_name ?? "").trim().toLowerCase() === artistName.trim().toLowerCase()
+        );
+    }) ?? null;
+  }
+
+  function createSongCoinHref(track: any) {
+    const params = new URLSearchParams();
+    const trackId = String(track?.id ?? "");
+    if (trackId) params.set("trackId", trackId);
+    const trackTitle = String(track?.title ?? "");
+    if (trackTitle) params.set("trackTitle", trackTitle);
+    if (user?.handle) params.set("artist", user.handle);
+    return `/artist?${params.toString()}`;
   }
 
   if (loading) {
@@ -188,7 +217,9 @@ export default function ArtistProfilePage() {
             <span className="text-[10px] uppercase tracking-widest text-mute font-bold">{tracks.length} tracks found</span>
           </div>
           <div className="grid md:grid-cols-2 xl:grid-cols-3 gap-3">
-            {topTracks.map((track) => (
+            {topTracks.map((track) => {
+              const linkedCoin = linkedCoinForTrack(track);
+              return (
               <div key={track.id} className="panel panel-hover p-4 flex gap-3 min-w-0">
                 <span className="relative w-16 h-16 rounded-xl overflow-hidden bg-panel2 border border-edge shrink-0">
                   <SafeImage src={artwork(track)} alt={track.title} fill sizes="64px" fallback={track.title} className="object-cover" />
@@ -200,25 +231,51 @@ export default function ArtistProfilePage() {
                     {current?.id === String(track.id) && playing ? <Pause size={18} /> : <Play size={18} />}
                   </button>
                 </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-black text-white truncate">{track.title}</span>
-                  <span className="block text-[10px] uppercase tracking-widest text-mute mt-1 truncate">{track.genre || track.mood || "Audius Track"}</span>
-                  <span className="mt-3 flex items-center gap-3 text-[10px] font-mono text-mute">
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-start justify-between gap-2">
+                    <span className="min-w-0">
+                      <span className="block text-sm font-black text-white break-words">{track.title}</span>
+                      <span className="block text-[10px] uppercase tracking-widest text-mute mt-1 truncate">{track.genre || track.mood || "Audius Track"}</span>
+                    </span>
+                    <span className={`shrink-0 rounded-full border px-2 py-1 text-[8px] font-black uppercase tracking-widest ${
+                      linkedCoin ? "border-neon/30 bg-neon/10 text-neon" : "border-edge bg-white/[0.04] text-mute"
+                    }`}>
+                      {linkedCoin ? "Coin On" : "No Coin"}
+                    </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap items-center gap-3 text-[10px] font-mono text-mute">
                     <span>{fmtNum(track.play_count ?? 0)} plays</span>
                     <span>{fmtNum(track.favorite_count ?? 0)} likes</span>
-                  </span>
-                </span>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {linkedCoin ? (
+                      <Link href={`/coin/${linkedCoin.mint}`} className="btn h-8 px-3 text-[9px] uppercase tracking-widest font-black">
+                        Open Coin
+                      </Link>
+                    ) : isSignedInArtist ? (
+                      <Link href={createSongCoinHref(track)} className="btn-primary h-8 px-3 text-[9px] uppercase tracking-widest font-black">
+                        Create Coin
+                      </Link>
+                    ) : (
+                      <span className="inline-flex h-8 items-center rounded-xl border border-edge bg-panel2 px-3 text-[9px] uppercase tracking-widest font-black text-mute">
+                        No Coin Yet
+                      </span>
+                    )}
+                  </div>
+                </div>
                 <a href={track.permalink ? `https://audius.co${track.permalink}` : `https://audius.co/${user.handle}`} target="_blank" rel="noreferrer" className="self-start text-mute hover:text-white transition">
                   <ExternalLink size={14} />
                 </a>
               </div>
-            ))}
+              );
+            })}
           </div>
         </section>
       </section>
 
       <CoinPreviewModal
         coin={preview}
+        isOwner={isSignedInArtist}
         onClose={() => setPreview(null)}
         onTrade={(side, coin) => setTrade({ side, coin })}
       />

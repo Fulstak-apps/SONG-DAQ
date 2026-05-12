@@ -92,6 +92,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const [pick, setPick] = useState<AudiusTrack | null>(null);
   const [loadingTracks, setLoadingTracks] = useState(false);
   const [trackErr, setTrackErr] = useState<string | null>(null);
+  const [prefillTrackId, setPrefillTrackId] = useState<string | null>(null);
+  const [prefillTrackTitle, setPrefillTrackTitle] = useState<string | null>(null);
 
   // Step 2: tokenomics
   const [supply, setSupply] = useState(1_000_000_000);
@@ -146,6 +148,28 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       .catch((e) => setTrackErr(e.message))
       .finally(() => setLoadingTracks(false));
   }, [audius?.userId, audius?.handle]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const trackId = params.get("trackId") || params.get("audiusTrackId");
+    const trackTitle = params.get("trackTitle") || params.get("title");
+    if (!trackId && !trackTitle) return;
+    setPrefillTrackId(trackId);
+    setPrefillTrackTitle(trackTitle);
+    setLaunchKind("SONG");
+    setStep(1);
+  }, []);
+
+  useEffect(() => {
+    if ((!prefillTrackId && !prefillTrackTitle) || pick || !tracks.length) return;
+    const normalizedTitle = String(prefillTrackTitle ?? "").trim().toLowerCase();
+    const match = tracks.find((track) =>
+      (prefillTrackId && String(track.id) === String(prefillTrackId)) ||
+      (normalizedTitle && String(track.title ?? "").trim().toLowerCase() === normalizedTitle)
+    );
+    if (match) setPick(match);
+  }, [prefillTrackId, prefillTrackTitle, pick, tracks]);
 
   useEffect(() => {
     fetch("/api/launch/status", { cache: "no-store" })
