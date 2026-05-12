@@ -46,7 +46,15 @@ export const useSession = create<SessionState>()(
       provider: null,
       audius: null,
       setSession: (s) => set((prev) => {
-        const nextAddress = isPersistedSolanaAddress(s.address) ? s.address : s.address === null ? null : prev.address;
+        const nextAddress = s.provider === "audius"
+          ? null
+          : isPersistedSolanaAddress(s.address)
+            ? s.address
+            : s.address === null
+              ? null
+              : prev.provider === "audius"
+                ? null
+                : prev.address;
         return {
           ...prev,
           ...s,
@@ -64,7 +72,7 @@ export const useSession = create<SessionState>()(
       version: 1,
       merge: (persisted, current) => {
         const state = (persisted as any) ?? {};
-        const validWallet = state.kind === "solana" && isPersistedSolanaAddress(state.address);
+        const validWallet = state.provider !== "audius" && state.kind === "solana" && isPersistedSolanaAddress(state.address);
         return {
           ...current,
           ...state,

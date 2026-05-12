@@ -83,17 +83,13 @@ export function Navbar() {
         setSession({ address: nextAddress, kind: "solana", provider: walletId });
         return;
       }
-      if (audius?.wallets?.sol) {
-        setSession({ address: audius.wallets.sol, kind: "solana", provider: "audius" });
-        return;
-      }
       setSession({ address: null, kind: null, provider: null });
     };
 
     const currentAddress = getCurrentWalletAddress(walletId);
     if (currentAddress && currentAddress !== address) syncAddress(currentAddress);
     return subscribeWalletChanges(walletId, syncAddress);
-  }, [address, provider, audius?.wallets?.sol, setSession]);
+  }, [address, provider, setSession]);
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const unreadAlerts = alerts.filter(a => a.triggered && !a.triggered).length;

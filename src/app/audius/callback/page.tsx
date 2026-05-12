@@ -125,10 +125,7 @@ export default function AudiusCallback() {
         const current = useSession.getState();
         const hasExternalWallet = !!current.address && current.provider !== "audius";
         const linkWallet = hasExternalWallet ? current.address : sol;
-        setSession({
-          audius: profile,
-          ...(hasExternalWallet ? {} : sol ? { address: sol, kind: "solana" as const, provider: "audius" } : {}),
-        });
+        setSession(hasExternalWallet ? { audius: profile } : { audius: profile, address: null, kind: null, provider: null });
         setUserMode("ARTIST");
         try {
           localStorage.setItem("audius-oauth-profile", JSON.stringify({ source: "audius-oauth", state, profile, ts: Date.now() }));
