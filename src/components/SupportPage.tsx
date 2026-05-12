@@ -91,7 +91,7 @@ export function SupportPage() {
 
       <section className="grid gap-4 lg:grid-cols-2">
         <SupportCard icon={<Landmark />} title="What Is Launch Liquidity?">
-          <p>Launch liquidity is required to make a song coin tradable. The artist receives the full fixed supply first, then SONG·DAQ asks the artist to approve a second transaction that moves the reserved launch coins plus SOL or USDC into the public trading pool.</p>
+          <p>Launch liquidity is required to make a song coin tradable. SONG·DAQ separates the supply into artist hold, launch liquidity, and reserve. The launch-liquidity portion may stage in the artist wallet briefly, then the artist approves a second transaction that moves those coins plus SOL, USDC, or AUDIO into the public trading pool.</p>
           <p>This is separate from royalties. A coin can launch without royalty verification, but it still needs liquidity to trade.</p>
           <p>Think of launch liquidity like opening the first market for the coin. Without it, people can see the coin, but there is no real pool for buys and sells.</p>
           <p>Once the pool is verified, fans can buy with SOL. Fans may profit if demand rises and they later sell higher, but profit is never guaranteed and prices can go down.</p>

@@ -95,12 +95,12 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const [distributor, setDistributor] = useState<string>("");
   const [royalty, setRoyalty] = useState<RoyaltyConfig>(DEFAULT_ROYALTY);
   const [maxWalletBps, setMaxWalletBps] = useState(200);
-  const [artistAllocationBps, setArtistAllocationBps] = useState(5000);
+  const [artistAllocationBps, setArtistAllocationBps] = useState(4000);
   const [launchPreset, setLaunchPreset] = useState<LaunchPresetId>("balanced");
-  const [liquidityTokenAmount, setLiquidityTokenAmount] = useState(500_000_000);
+  const [liquidityTokenAmount, setLiquidityTokenAmount] = useState(350_000_000);
   const [liquidityPairAmount, setLiquidityPairAmount] = useState(1);
   const [liquidityPairAsset, setLiquidityPairAsset] = useState<PairAsset>("SOL");
-  const [liquidityLockDays, setLiquidityLockDays] = useState(180);
+  const [liquidityLockDays, setLiquidityLockDays] = useState(365);
   const [ownershipConfirmed, setOwnershipConfirmed] = useState(false);
   const [riskAcknowledged, setRiskAcknowledged] = useState(false);
   const { currency, prices: fiatPrices, updatedAt: fiatUpdatedAt } = useLiveFiatPrices(["SOL", "AUDIO", "USDC"]);
@@ -154,11 +154,21 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
     ? canStep2 && supply === 1_000_000_000 && artistAllocationBps === 5000
     : canStep2 && royaltyValid && supply >= 1_000 && basePrice > 0 && curveSlope >= 0 && !!distributor;
   const liquidityValid = launchKind === "ARTIST" ? true : liquidityTokenAmount > 0 && liquidityPairAmount > 0 && liquidityLockDays >= 30;
-  const allocationRisk = artistAllocationBps > 5000 || maxWalletBps > 1000;
+  const artistVestedTokenAmount = Math.max(0, Math.round(supply * (artistAllocationBps / 10_000)));
+  const launchLiquidityTokenAmount = Math.max(0, Math.round(liquidityTokenAmount));
+  const allocationOverbooked = launchKind === "SONG" && artistVestedTokenAmount + launchLiquidityTokenAmount > supply;
+  const reserveTokenAmount = launchKind === "SONG"
+    ? Math.max(0, Math.round(supply - artistVestedTokenAmount - launchLiquidityTokenAmount))
+    : 0;
+  const artistWalletMintAmount = launchKind === "SONG"
+    ? artistVestedTokenAmount + launchLiquidityTokenAmount
+    : supply;
+  const liquidityAllocationBps = Math.round((launchLiquidityTokenAmount / Math.max(supply, 1)) * 10_000);
+  const allocationRisk = artistAllocationBps > 5000 || maxWalletBps > 1000 || allocationOverbooked;
   const canLaunchReview = canStep3 && liquidityValid && !allocationRisk;
   const impliedPrice = liquidityPairAmount / Math.max(liquidityTokenAmount, 1);
   const launchLiquidityRatio = liquidityTokenAmount / Math.max(supply, 1);
-  const reserveBps = Math.max(0, 10_000 - artistAllocationBps - Math.round(launchLiquidityRatio * 10_000));
+  const reserveBps = Math.max(0, 10_000 - artistAllocationBps - liquidityAllocationBps);
   const projectedDepth = liquidityPairAmount >= 5 ? "Institutional" : liquidityPairAmount >= 1 ? "Healthy" : "Thin";
   const launchImpact = liquidityPairAmount > 0 ? Math.min(25, (1 / liquidityPairAmount) * 2.5) : 25;
   const pairUsdRate = liquidityPairAsset === "USDC" ? 1 : Number(fiatPrices[liquidityPairAsset]?.usd ?? 0);
@@ -257,15 +267,17 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       }
       const treasuryWallet = launchStatus?.treasuryWallet || process.env.NEXT_PUBLIC_TREASURY_WALLET;
       if (!treasuryWallet) throw new Error("TREASURY_WALLET is required before launch.");
-      const artistSupply = Math.max(0, Number(supply));
+      if (allocationOverbooked) {
+        throw new Error("Artist hold plus launch liquidity cannot be more than the total supply. Lower one of the allocation settings.");
+      }
       const cleanTitle = String(pick.title ?? "Song Token").replace(/\s+/g, " ").trim();
       const cleanSymbol = cleanTitle.replace(/[^a-z0-9]/gi, "").slice(0, 10).toUpperCase() || "SONG";
       const metadataBaseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       const paidMint = await createArtistPaidSongMint(externalWalletProvider as WalletId, {
         artistWallet: externalWalletAddress,
         treasuryWallet,
-        artistSupply,
-        treasurySupply: Number(liquidityTokenAmount),
+        artistSupply: artistWalletMintAmount,
+        treasurySupply: reserveTokenAmount,
         metadata: {
           name: `${cleanTitle} Song Token`.slice(0, 32),
           symbol: cleanSymbol,
@@ -293,7 +305,15 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
             pairAsset: liquidityPairAsset,
             lockDays: liquidityLockDays,
           },
-          clientMint: paidMint,
+          clientMint: {
+            ...paidMint,
+            allocation: {
+              artistVestedSupply: artistVestedTokenAmount,
+              launchLiquiditySupply: launchLiquidityTokenAmount,
+              reserveSupply: reserveTokenAmount,
+              artistWalletMintAmount,
+            },
+          },
         },
       });
       setResult(r);
@@ -327,7 +347,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
 
         const walletId = getConnectedWalletId() || externalWalletProvider;
         setLiquidityStage("signing");
-        setLiquidityMessage(`Approve the second wallet transaction. This adds liquidity by putting reserved song coins plus ${liquidityPairAsset} into the public pool.`);
+        setLiquidityMessage(`Approve the second wallet transaction. This moves the launch-liquidity coins out of your wallet and pairs them with ${liquidityPairAsset} in the public pool so fans can buy and sell.`);
         liquidityTxSig = await sendSerializedTransaction(walletId as WalletId, prep.transaction);
 
         setLiquidityStage("confirming");
@@ -799,10 +819,31 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                           </button>
                         </div>
                         <div className="grid gap-2 md:grid-cols-4">
-                          <LaunchMetric k="Artist holds" v={`${(artistAllocationBps / 100).toFixed(0)}%`} tone="violet" />
-                          <LaunchMetric k="Liquidity / public" v={`${(launchLiquidityRatio * 100).toFixed(0)}%`} tone="neon" />
-                          <LaunchMetric k="Reserve" v={`${(reserveBps / 100).toFixed(0)}%`} />
-                          <LaunchMetric k="Wallet cap" v={`${(maxWalletBps / 100).toFixed(2)}%`} />
+                          <LaunchMetric
+                            k="Artist holds"
+                            v={`${(artistAllocationBps / 100).toFixed(0)}%`}
+                            tone="violet"
+                            help="This is the artist's long-term share. It is separate from the coins used to make the public pool."
+                          />
+                          <LaunchMetric
+                            k="Liquidity / public"
+                            v={`${(launchLiquidityRatio * 100).toFixed(0)}%`}
+                            tone="neon"
+                            help="These coins are staged in the artist wallet only long enough to pair them with SOL, USDC, or AUDIO. After liquidity is added, fans buy from the public pool."
+                          />
+                          <LaunchMetric
+                            k="Reserve"
+                            v={`${(reserveBps / 100).toFixed(0)}%`}
+                            help="Reserve coins are not sent to the artist wallet. They stay in the SONG·DAQ reserve/treasury for future liquidity support, royalty pool mechanics, or admin-controlled platform operations."
+                          />
+                          <LaunchMetric
+                            k="Wallet cap"
+                            v={`${(maxWalletBps / 100).toFixed(2)}%`}
+                            help="Wallet cap is the most one buyer should hold during launch. It helps prevent one wallet from taking too much supply early."
+                          />
+                        </div>
+                        <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-xs leading-relaxed text-neon/90">
+                          One-click mode sets the split automatically: artist hold, launch liquidity for buyers, and reserve. During launch your wallet may briefly hold the liquidity portion, then the second approval moves that portion into the public pool.
                         </div>
                       </div>
                       <Field
@@ -858,7 +899,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   )}
                   {allocationRisk && (
                     <div className="rounded-xl border border-amber/20 bg-amber/10 p-3 text-xs text-amber">
-                      This does not match the Audius-style model. Keep artist vesting at or below 50% and max wallet cap at or below 10%.
+                      {allocationOverbooked
+                        ? "Artist hold plus launch liquidity is over 100% of supply. Lower artist hold or liquidity tokens so the reserve does not go negative."
+                        : "This does not match the Audius-style model. Keep artist vesting at or below 50% and max wallet cap at or below 10%."}
                     </div>
                   )}
                   <div className="rounded-xl border border-violet/20 bg-violet/10 p-3 text-xs leading-relaxed text-violet/85">
@@ -1102,7 +1145,26 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <Row k="Estimated network fee" v={formatCryptoWithFiat(estimatedNetworkFeeSol, "SOL", estimatedNetworkFeeUsd, currency)} />
                       <Row k="Trading opens" v={launchKind === "ARTIST" ? "After AUDIO curve transaction confirms" : "After liquidity transaction verifies"} color="text-neon" />
                       <Row k="Vesting / lock" v={launchKind === "ARTIST" ? "50% artist vesting over 5 years" : `${liquidityLockDays} days`} />
-                      <Row k="Artist allocation" v={`${(artistAllocationBps / 100).toFixed(2)}%`} />
+                      <Row
+                        k="Artist hold"
+                        v={`${(artistAllocationBps / 100).toFixed(2)}% · ${fmtNum(artistVestedTokenAmount)}`}
+                        help="This is the artist's intended long-term allocation. It is not the full supply."
+                      />
+                      {launchKind === "SONG" ? (
+                        <>
+                          <Row
+                            k="Liquidity for fans"
+                            v={`${(liquidityAllocationBps / 100).toFixed(2)}% · ${fmtNum(launchLiquidityTokenAmount)}`}
+                            color="text-neon"
+                            help="These coins are used to make the buy/sell pool. They may stage in your wallet briefly, then move into the public pool when you approve liquidity."
+                          />
+                          <Row
+                            k="Reserve"
+                            v={`${(reserveBps / 100).toFixed(2)}% · ${fmtNum(reserveTokenAmount)}`}
+                            help="Reserve coins are minted to the reserve/treasury account, not kept as artist-owned coins."
+                          />
+                        </>
+                      ) : null}
                       <Row k="Max wallet cap" v={`${(maxWalletBps / 100).toFixed(2)}%`} />
                       <Row k="Royalty status" v="Pending verification" color="text-amber" />
                       <Row k="Signing policy" v="Wallet transaction only. No private key. No blind message." color="text-neon" />
@@ -1111,7 +1173,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <div className="text-[10px] uppercase tracking-widest font-black text-white">Wallet approval preview</div>
                       <div className="space-y-3 text-xs leading-relaxed text-mute">
                         <div>
-                          <span className="font-black text-neon">Approval 1:</span> {launchKind === "ARTIST" ? "creates the Artist Coin pool on Meteora Dynamic Bonding Curve using the AUDIO quote mint." : "creates the SPL mint, attaches SONG·DAQ metadata, mints the fixed supply to your connected artist wallet, disables freeze authority, and revokes mint authority."}
+                          <span className="font-black text-neon">Approval 1:</span> {launchKind === "ARTIST" ? "creates the Artist Coin pool on Meteora Dynamic Bonding Curve using the AUDIO quote mint." : `creates the SPL mint, attaches SONG·DAQ metadata, mints ${fmtNum(artistVestedTokenAmount)} artist-hold coins plus ${fmtNum(launchLiquidityTokenAmount)} liquidity-staging coins to your wallet, sends ${fmtNum(reserveTokenAmount)} reserve coins to treasury, disables freeze authority, and revokes mint authority.`}
                         </div>
                         <div>
                           <span className="font-black text-neon">{launchKind === "ARTIST" ? "Optional first buy:" : "Approval 2:"}</span> {launchKind === "ARTIST" ? `if entered, your wallet also buys with ${formatCryptoWithFiat(liquidityPairAmount || 0, "AUDIO", creatorFirstBuyUsd, currency)} in the same launch flow.` : `creates the public liquidity pool with the token amount and ${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)} shown here.`}
@@ -1128,7 +1190,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <ul className="list-disc space-y-1 pl-4">
                         <li>{launchKind === "ARTIST" ? "Uses the Open Audio Artist Coin standard: 1B supply and 9 decimals." : "Fixed supply is created once."}</li>
                         <li>{launchKind === "ARTIST" ? "Pairs the public market against the official $AUDIO mint." : "Freeze authority is disabled."}</li>
-                        <li>{launchKind === "ARTIST" ? "Artist allocation vests separately over 5 years." : "Mint authority is revoked in the same mint transaction."}</li>
+                        <li>{launchKind === "ARTIST" ? "Artist allocation vests separately over 5 years." : "Artist hold, launch liquidity, and reserve are separated before trading opens."}</li>
+                        <li>{launchKind === "ARTIST" ? "The public curve is created in the launch transaction." : "Mint authority is revoked in the same mint transaction."}</li>
                         <li>Metadata includes artist identity, image, protocol, royalty status, and liquidity status.</li>
                       </ul>
                     </div>
@@ -1221,7 +1284,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       {liquidityMessage || "SONG·DAQ is preparing the launch liquidity step."}
                     </div>
                     <div className="rounded-xl border border-edge bg-panel p-3 text-left text-xs leading-relaxed text-mute">
-                      Fans buy from the liquidity pool, not from a hidden mint. The artist receives the full supply first, then the reserved portion is moved into the public trading pool with paired SOL/USDC.
+                      Fans buy from the liquidity pool, not from a hidden artist wallet. The artist hold is separate. The launch-liquidity portion moves into the public pool with paired SOL, USDC, or AUDIO so buyers have a market to trade against.
                     </div>
                   </div>
                   <a className="btn-primary block w-full py-4 text-sm font-black tracking-widest" href={`/song/${result.song?.id}`}>
@@ -1339,10 +1402,13 @@ function Tag({ label }: { label: string }) {
   return <span className="text-[8px] uppercase tracking-widest font-black px-2 py-1 rounded bg-panel2 text-mute border border-edge">{label}</span>;
 }
 
-function LaunchMetric({ k, v, tone = "neon" }: { k: string; v: string; tone?: "neon" | "amber" | "violet" }) {
+function LaunchMetric({ k, v, tone = "neon", help }: { k: string; v: string; tone?: "neon" | "amber" | "violet"; help?: string }) {
   return (
     <div className="rounded-xl border border-edge bg-panel p-4">
-      <div className="text-[9px] uppercase tracking-widest font-black text-mute">{k}</div>
+      <div className="inline-flex items-center gap-1.5 text-[9px] uppercase tracking-widest font-black text-mute">
+        {k}
+        {help ? <InfoTooltip side="bottom" def={help} /> : null}
+      </div>
       <div className={`mt-2 font-mono text-sm font-black ${tone === "amber" ? "text-amber" : tone === "violet" ? "text-violet" : "text-neon"}`}>{v}</div>
     </div>
   );

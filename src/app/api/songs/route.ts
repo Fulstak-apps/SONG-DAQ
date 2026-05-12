@@ -107,6 +107,16 @@ export async function POST(req: NextRequest) {
   if (Number(artistAllocationBps) > 5000) {
     return NextResponse.json({ error: "Artist vesting allocation is too high. Audius-style launches should keep artist allocation at or below 50%." }, { status: 422 });
   }
+  const supplyNumber = Number(supply);
+  const artistVestedSupply = Math.max(0, Math.round(supplyNumber * (Number(artistAllocationBps) / 10_000)));
+  const launchLiquiditySupply = Math.max(0, Math.round(liq.tokenAmount));
+  const reserveSupply = Math.max(0, Math.round(supplyNumber - artistVestedSupply - launchLiquiditySupply));
+  if (!Number.isFinite(supplyNumber) || supplyNumber < 1000) {
+    return NextResponse.json({ error: "Total supply must be at least 1,000 coins." }, { status: 422 });
+  }
+  if (artistVestedSupply + launchLiquiditySupply > supplyNumber) {
+    return NextResponse.json({ error: "Artist hold plus launch liquidity cannot exceed total supply." }, { status: 422 });
+  }
   const treasury = process.env.TREASURY_WALLET || process.env.NEXT_PUBLIC_TREASURY_WALLET;
   if (!treasury) return NextResponse.json({ error: "TREASURY_WALLET is required to lock launch liquidity" }, { status: 503 });
 
@@ -172,8 +182,12 @@ export async function POST(req: NextRequest) {
   }
   try {
     const supplyInfo = await conn.getTokenSupply(new PublicKey(String(clientMint.mint)));
-    if (Number(supplyInfo.value.uiAmount ?? 0) <= 0) {
+    const mintedSupply = Number(supplyInfo.value.uiAmount ?? 0);
+    if (mintedSupply <= 0) {
       return NextResponse.json({ error: "Mint has no verified token supply" }, { status: 422 });
+    }
+    if (Math.abs(mintedSupply - supplyNumber) > 0.5) {
+      return NextResponse.json({ error: "Minted supply does not match launch supply", details: { mintedSupply, supply: supplyNumber } }, { status: 422 });
     }
   } catch {
     return NextResponse.json({ error: "Could not verify SPL mint supply on Solana" }, { status: 422 });
@@ -267,13 +281,19 @@ export async function POST(req: NextRequest) {
         metadataUri,
         paidBy: artistWallet,
         liquidity: liq,
+        allocation: {
+          artistVestedSupply,
+          launchLiquiditySupply,
+          reserveSupply,
+          artistWalletMintAmount: artistVestedSupply + launchLiquiditySupply,
+        },
         symbol: sym,
         walletVisibility: {
           metaplexMetadataAttached: true,
           stableMetadataUri: true,
           source: "SONG·DAQ + Audius",
           phantomMayStillHideNewTokens: true,
-          openAudioModel: "Audius-style artist coins use a public $AUDIO market curve and creator vesting. SONG·DAQ blocks live trading until verified liquidity exists.",
+          openAudioModel: "Audius-style artist coins use a public $AUDIO market curve and creator vesting. SONG·DAQ opens trading after verified liquidity exists.",
         },
       }),
     },
@@ -293,6 +313,12 @@ export async function POST(req: NextRequest) {
       tokenAccount,
       treasuryTokenAccount,
       mintTx,
+      allocation: {
+        artistVestedSupply,
+        launchLiquiditySupply,
+        reserveSupply,
+        artistWalletMintAmount: artistVestedSupply + launchLiquiditySupply,
+      },
       metadataAddress: clientMint.metadataAddress ? String(clientMint.metadataAddress) : null,
       metadataUri,
       paidBy: artistWallet,

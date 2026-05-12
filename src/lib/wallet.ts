@@ -534,6 +534,7 @@ export async function createArtistPaidSongMint(
   const rpc = process.env.NEXT_PUBLIC_SOLANA_RPC || clusterApiUrl("mainnet-beta");
   const connection = new Connection(rpc, "confirmed");
   const payer = new PublicKey(artistWallet);
+  const treasuryOwner = new PublicKey(treasuryWallet);
   const currentWallet = provider.publicKey?.toString?.();
   const currentWalletAddress = currentWallet ? assertValidSolanaAddress(currentWallet, "Connected wallet") : null;
   if (!currentWalletAddress) {
@@ -562,6 +563,7 @@ export async function createArtistPaidSongMint(
     : null;
   const rawArtistSupply = BigInt(Math.trunc(Math.max(0, artistSupply))) * 10n ** BigInt(decimals);
   const rawTreasurySupply = BigInt(Math.trunc(Math.max(0, treasurySupply))) * 10n ** BigInt(decimals);
+  const treasuryAta = rawTreasurySupply > 0n ? await getAssociatedTokenAddress(mint.publicKey, treasuryOwner) : null;
   const latest = await connection.getLatestBlockhash("confirmed");
 
   const tx = new Transaction({
@@ -569,7 +571,7 @@ export async function createArtistPaidSongMint(
     recentBlockhash: latest.blockhash,
   }).add(
     createMemoInstruction(
-      `SONG·DAQ launch mint: $${memoSymbol}. Fixed supply song coin, artist wallet receives supply, metadata attached, freeze disabled, mint authority revoked.`,
+      `SONG·DAQ launch: $${memoSymbol}. Artist/liquidity staged, reserve separated, freeze off, mint revoked.`,
     ),
     SystemProgram.createAccount({
       fromPubkey: payer,
@@ -583,15 +585,20 @@ export async function createArtistPaidSongMint(
   );
 
   if (metadataInstruction) tx.add(metadataInstruction.instruction);
+  if (treasuryAta && !treasuryAta.equals(artistAta)) {
+    tx.add(createAssociatedTokenAccountInstruction(payer, treasuryAta, treasuryOwner, mint.publicKey));
+  }
 
   if (rawArtistSupply > 0n) {
     tx.add(createMintToInstruction(mint.publicKey, artistAta, payer, rawArtistSupply));
   }
+  if (treasuryAta && rawTreasurySupply > 0n) {
+    tx.add(createMintToInstruction(mint.publicKey, treasuryAta, payer, rawTreasurySupply));
+  }
 
-  // Keep the first Phantom approval clean: all newly minted supply goes to the
-  // artist wallet, then mint authority is revoked in the same transaction.
-  // Liquidity reserve movement happens later through a separate, explicit
-  // liquidity action, which avoids looking like a hidden transfer to treasury.
+  // Keep the approval readable: the artist wallet receives only the artist
+  // hold plus the liquidity staging amount. Reserve supply is separated into
+  // the configured treasury account before mint authority is revoked.
   tx.add(createSetAuthorityInstruction(mint.publicKey, payer, AuthorityType.MintTokens, null));
 
   tx.partialSign(mint);
@@ -624,7 +631,7 @@ export async function createArtistPaidSongMint(
   return {
     mint: mint.publicKey.toBase58(),
     tokenAccount: artistAta.toBase58(),
-    treasuryTokenAccount: "",
+    treasuryTokenAccount: treasuryAta?.toBase58() ?? "",
     mintTx: sig,
     metadataAddress: metadataInstruction?.metadata.toBase58(),
     metadataUri,
