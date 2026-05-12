@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  // Current song-token contribution. Do not project it backward.
+  // Current song-coin contribution. Do not project it backward.
   let songValue = 0;
   for (const h of user.holdings) songValue += h.amount * h.song.price;
 

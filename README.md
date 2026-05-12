@@ -1,11 +1,11 @@
 # Song-daq — Decentralized Audio Quotient
 
-A stock market for Song Tokens and Artist Tokens. Song Token launches create real
+A stock market for Song Coins and Artist Coins. Song Coin launches create real
 SPL tokens on Solana from verified Audius / Open Audio Protocol identity.
 Trading uses executable Solana/Jupiter routes when liquidity exists.
 
 ```
-Song → Token → Market Price → Revenue Stream → Royalty Distribution
+Song → Coin → Market Price → Revenue Stream → Royalty Distribution
 ```
 
 ## Stack
@@ -39,14 +39,14 @@ npm run prisma:seed   # optional local catalog bootstrap from live Audius tracks
 npm run dev           # http://localhost:3000
 ```
 
-Normal Song Token launches are paid by the connected artist wallet. The
+Normal Song Coin launches are paid by the connected artist wallet. The
 artist signs the mint transaction, pays Solana rent/network fees, and the
 API verifies the confirmed transaction before listing the token. Song-daq
 does not create off-chain placeholder mints.
 
 ## Real Blockchain Setup
 
-To launch a real Song Token locally on devnet:
+To launch a real Song Coin locally on devnet:
 
 1. Set `NEXT_PUBLIC_SOLANA_NETWORK=devnet`.
 2. Set `NEXT_PUBLIC_SOLANA_RPC=https://api.devnet.solana.com` or a paid devnet RPC.
@@ -85,7 +85,7 @@ Song-daq treats every launch as adversarial until verified:
 - Manual handle pasting is not accepted for launch verification.
 - Duplicate verified Audius track IDs are blocked.
 - Coin launch requires ownership confirmation and risk acknowledgement.
-- Liquidity is required before launch; no-liquidity Song Tokens are not listed as live.
+- Liquidity is required before launch; no-liquidity Song Coins are not listed as live.
 - Launches capture token liquidity amount, paired asset amount, implied price, lock period, max wallet cap, and artist allocation.
 - Royalty language is shown as a “royalty-backed transparency signal” until distributor/legal verification is locked.
 - Buy flow includes investor risk confirmation: price can go to zero, liquidity can be limited, royalty claims may be unverified, and this is not financial advice.

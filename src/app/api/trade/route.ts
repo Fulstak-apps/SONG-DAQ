@@ -46,7 +46,7 @@ function routeError(message?: string) {
 }
 
 async function liveQuote(song: any, side: string, tokens?: number, solIn?: number, slippageBps = 150) {
-  if (!song.mintAddress) throw new Error("This Song Token does not have a mint address yet.");
+  if (!song.mintAddress) throw new Error("This Song Coin does not have a mint address yet.");
   const params = {
     basePrice: song.basePrice,
     slope: song.curveSlope,
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
   const song = await prisma.songToken.findUnique({ where: { id: songId } });
   if (!song) return NextResponse.json({ error: "not found" }, { status: 404 });
   if ((song as any).status !== "LIVE" || (song as any).liquidityPairAmount <= 0 || (song as any).liquidityTokenAmount <= 0) {
-    return NextResponse.json({ error: "Trading unavailable: this Song Token is not live with verified launch liquidity" }, { status: 403 });
+    return NextResponse.json({ error: "Trading unavailable: this Song Coin is not live with verified launch liquidity" }, { status: 403 });
   }
 
   if (txSig) {
@@ -213,7 +213,7 @@ export async function GET(req: NextRequest) {
   const song = await prisma.songToken.findUnique({ where: { id: songId } });
   if (!song) return NextResponse.json({ error: "not found" }, { status: 404 });
   if ((song as any).status !== "LIVE" || (song as any).liquidityPairAmount <= 0 || (song as any).liquidityTokenAmount <= 0) {
-    return NextResponse.json({ error: "Trading unavailable: this Song Token is not live with verified launch liquidity" }, { status: 403 });
+    return NextResponse.json({ error: "Trading unavailable: this Song Coin is not live with verified launch liquidity" }, { status: 403 });
   }
   const params = {
     basePrice: song.basePrice,

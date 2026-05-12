@@ -21,6 +21,7 @@ import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 import { pickAudiusArtwork } from "@/lib/audiusArtwork";
 import { fmtUsdDisplay } from "@/lib/formatters";
+import { Pause, Play, RotateCcw, RotateCw } from "lucide-react";
 
 const CoinTradeModal = dynamic(() => import("@/components/CoinTradeModal").then((m) => m.CoinTradeModal), { ssr: false });
 const TradeFeed = dynamic(() => import("@/components/TradeFeed").then((m) => m.TradeFeed), { ssr: false });
@@ -46,7 +47,7 @@ function trackArtwork(track: any, fallback?: string | null) {
 export default function CoinPage() {
   const { mint } = useParams<{ mint: string }>();
   const { audius, address } = useSession();
-  const { current, playing, playTrack, toggle } = usePlayer();
+  const { current, playing, playTrack, toggle, currentTime, duration, seekTo } = usePlayer();
   const [coin, setCoin] = useState<AudiusCoin | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [tradeSide, setTradeSide] = useState<"BUY" | "SELL" | null>(null);
@@ -226,7 +227,7 @@ export default function CoinPage() {
     artist: coin.artist_name || "",
     wallet: ownerWallet || address || "",
   }).toString()}`;
-  const assetSourceLabel = isSongDaqLocal ? "song-daq Song Token" : "Open Audio Artist Coin";
+  const assetSourceLabel = isSongDaqLocal ? "song-daq Song Coin" : "Open Audio Artist Coin";
   const assetSourceNote = isSongDaqLocal
     ? "Created through song-daq."
     : "Imported from the public Audius/Open Audio coin index. This was not minted by a song-daq user.";
@@ -247,6 +248,19 @@ export default function CoinPage() {
     href: coin.audius_track_url,
   } : null;
   const isPrimaryPlaying = !!primaryTrack && current?.id === primaryTrack.id && playing;
+  const isPrimaryActive = !!primaryTrack && current?.id === primaryTrack.id;
+
+  const seekPrimaryTrack = (seconds: number) => {
+    if (!primaryTrack) return;
+    if (!isPrimaryActive) playTrack(primaryTrack);
+    seekTo(Math.max(0, seconds));
+  };
+
+  const skipPrimaryTrack = (seconds: number) => {
+    if (!primaryTrack) return;
+    if (!isPrimaryActive) playTrack(primaryTrack);
+    seekTo(Math.max(0, (isPrimaryActive ? currentTime : 0) + seconds));
+  };
 
   const findLinkedCoin = (track: any) => {
     const trackTitle = String(track.title ?? "");
@@ -393,26 +407,21 @@ export default function CoinPage() {
                       ) : (
                         <p className="mt-3 text-sm leading-relaxed text-mute">{assetSourceNote}</p>
                       )}
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        {primaryTrack ? (
-                          <button
-                            type="button"
-                            onClick={() => playAudiusTrack(primaryTrack)}
-                            className="btn-primary h-10 px-4 text-[10px] uppercase tracking-widest font-black"
-                          >
-                            {isPrimaryPlaying ? "Pause Song" : "Play Song"}
-                          </button>
-                        ) : (
-                          <span className="inline-flex h-10 items-center rounded-xl border border-edge bg-panel px-4 text-[10px] uppercase tracking-widest font-black text-mute">
-                            No Song Preview
-                          </span>
-                        )}
-                        {coin.audius_track_url ? (
-                          <a href={coin.audius_track_url} target="_blank" rel="noreferrer" className="btn h-10 px-4 text-[10px] uppercase tracking-widest font-black">
-                            Open on Audius
-                          </a>
-                        ) : null}
-                      </div>
+                      <CoinPageAudioPlayer
+                        disabled={!primaryTrack}
+                        playing={isPrimaryPlaying}
+                        active={isPrimaryActive}
+                        currentTime={isPrimaryActive ? currentTime : 0}
+                        duration={isPrimaryActive ? duration : 0}
+                        onToggle={() => primaryTrack && playAudiusTrack(primaryTrack)}
+                        onSeek={seekPrimaryTrack}
+                        onSkip={skipPrimaryTrack}
+                      />
+                      {coin.audius_track_url ? (
+                        <a href={coin.audius_track_url} target="_blank" rel="noreferrer" className="btn mt-3 h-10 px-4 text-[10px] uppercase tracking-widest font-black">
+                          Open on Audius
+                        </a>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -537,7 +546,7 @@ export default function CoinPage() {
               <div className="text-[10px] uppercase tracking-widest font-black text-neon">What is this coin?</div>
               <p className="mt-2 text-xs leading-relaxed text-mute">
                 {isSongDaqLocal
-                  ? "A song-daq Song Token is tied to one song and traded inside song-daq with song, chart, liquidity, and royalty status shown together."
+                  ? "A song-daq Song Coin is tied to one song and traded inside song-daq with song, chart, liquidity, and royalty status shown together."
                   : "An Open Audio Artist Coin is an Audius/Open Audio-visible artist coin imported into song-daq so fans can view market and portfolio context here."}
               </p>
               <div className="mt-3 grid grid-cols-2 gap-2">
@@ -1008,6 +1017,114 @@ export default function CoinPage() {
       </div>
 
       {reportOpen && <ReportModal mint={coin.mint} onClose={() => setReportOpen(false)} />}
+    </div>
+  );
+}
+
+function formatTrackTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
+  const total = Math.floor(seconds);
+  const mins = Math.floor(total / 60);
+  const secs = total % 60;
+  return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
+function CoinPageAudioPlayer({
+  disabled,
+  playing,
+  active,
+  currentTime,
+  duration,
+  onToggle,
+  onSeek,
+  onSkip,
+}: {
+  disabled: boolean;
+  playing: boolean;
+  active: boolean;
+  currentTime: number;
+  duration: number;
+  onToggle: () => void;
+  onSeek: (seconds: number) => void;
+  onSkip: (seconds: number) => void;
+}) {
+  const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
+  const safeCurrent = safeDuration > 0 ? Math.min(currentTime, safeDuration) : 0;
+  const pct = safeDuration > 0 ? Math.max(0, Math.min(100, (safeCurrent / safeDuration) * 100)) : 0;
+  const rangeStyle = {
+    background: `linear-gradient(to right, var(--neon) 0%, var(--neon) ${pct}%, rgba(255,255,255,0.16) ${pct}%, rgba(255,255,255,0.16) 100%)`,
+  };
+
+  if (disabled) {
+    return (
+      <div className="mt-4 rounded-2xl border border-edge bg-panel/80 p-4 text-xs font-bold uppercase tracking-widest text-mute">
+        No Audius song preview attached yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-4 rounded-2xl border border-neon/20 bg-black/35 p-4 shadow-[0_0_30px_rgba(183,255,0,0.08)]">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-neon text-pure-black shadow-neon-glow transition hover:bg-neondim"
+          aria-label={playing ? "Pause song" : "Play song"}
+        >
+          {playing ? <Pause size={19} /> : <Play size={19} />}
+        </button>
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <div className="text-[10px] uppercase tracking-widest font-black text-neon">
+              {playing ? "Playing from Audius" : active ? "Paused" : "Play Song"}
+            </div>
+            <div className="font-mono text-[10px] text-mute">
+              {formatTrackTime(safeCurrent)} / {safeDuration ? formatTrackTime(safeDuration) : "--:--"}
+            </div>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max={safeDuration || 100}
+            step="0.1"
+            value={safeDuration ? safeCurrent : 0}
+            onChange={(e) => onSeek(Number(e.target.value))}
+            className="h-2 w-full appearance-none rounded-full bg-white/10 accent-neon"
+            style={rangeStyle}
+            aria-label="Song playback position"
+          />
+          <div className="mt-2 h-8 overflow-hidden rounded-xl border border-white/10 bg-panel/70">
+            <div className="flex h-full items-end gap-1 px-2 pb-1 opacity-80">
+              {Array.from({ length: 48 }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`w-full rounded-t bg-neon/70 ${i / 48 <= pct / 100 ? "shadow-[0_0_10px_rgba(183,255,0,0.45)]" : "opacity-25"}`}
+                  style={{ height: `${20 + ((i * 17) % 72)}%` }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:w-[92px]">
+          <button
+            type="button"
+            onClick={() => onSkip(-10)}
+            className="btn h-10 px-2 text-[9px] uppercase tracking-widest font-black"
+            aria-label="Back 10 seconds"
+          >
+            <RotateCcw size={13} /> 10
+          </button>
+          <button
+            type="button"
+            onClick={() => onSkip(10)}
+            className="btn h-10 px-2 text-[9px] uppercase tracking-widest font-black"
+            aria-label="Forward 10 seconds"
+          >
+            10 <RotateCw size={13} />
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

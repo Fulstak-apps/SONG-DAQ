@@ -330,7 +330,7 @@ export default function PortfolioPage() {
           <Metric label="Demo SOL" value={formatCryptoWithFiat(paperSol, "SOL", paperUsd.sol ? paperSol * paperUsd.sol : null)} sub="Simulated wallet SOL" />
           <Metric label="Demo AUDIO" value={formatCryptoWithFiat(paperAudio, "AUDIO", paperUsd.audio ? paperAudio * paperUsd.audio : null)} sub="Simulated AUDIO balance" />
           <Metric label="Artist Tokens" value={fmtNum(paperPositions.length)} sub="Paper holdings" />
-          <Metric label="Song Tokens" value="0" sub="Use the market to add positions" />
+          <Metric label="Song Coins" value="0" sub="Use the market to add positions" />
           <Metric label="PnL / Net Change" value="—" sub="Demo mode starts neutral" />
           <Metric label="Risk Focus" value="Demo" sub="No blockchain transaction is sent" />
         </section>
@@ -420,7 +420,7 @@ export default function PortfolioPage() {
             {audius?.wallets?.sol ? ` · Audius vault ${short(audius.wallets.sol)}` : ""}
           </p>
           <p className="mt-2 max-w-2xl text-xs leading-relaxed text-mute">
-            Brokerage-style view: total value, SOL, AUDIO, Song Tokens, Artist Coins, other wallet assets, profit/loss, and recent activity all roll into one indexed account view.
+            Brokerage-style view: total value, SOL, AUDIO, Song Coins, Artist Coins, other wallet assets, profit/loss, and recent activity all roll into one indexed account view.
           </p>
         </div>
         <div className="flex flex-wrap gap-2">
@@ -441,10 +441,10 @@ export default function PortfolioPage() {
       </header>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-        <Metric label="Total Portfolio Value" value={fmtUsd(totalIndexedValueUsd)} sub={issuerAllocationValueUsd > 0 ? "Liquid value; issuer allocation separated" : paperMode ? "Paper cash + wallet + AUDIO + coins" : "SOL + AUDIO + Song Tokens + Artist Coins + other assets"} />
+        <Metric label="Total Portfolio Value" value={fmtUsd(totalIndexedValueUsd)} sub={issuerAllocationValueUsd > 0 ? "Liquid value; issuer allocation separated" : paperMode ? "Paper cash + wallet + AUDIO + coins" : "SOL + AUDIO + Song Coins + Artist Coins + other assets"} />
         <Metric label="SOL" value={externalAddress && native.balance != null ? formatCryptoWithFiat(native.balance, "SOL", native.usd) : "Connect"} sub={externalAddress ? priceAgeText(fiatUpdatedAt) : "Connect external wallet"} />
         <Metric label="AUDIO" value={formatCryptoWithFiat(audioBalance, "AUDIO", audioValueUsd || null)} sub="Audius token value included in total" />
-        <Metric label="Song Tokens" value={fmtNum(songTokens.length)} sub={formatCryptoWithFiat(songValueSol, "SOL", songValueUsd)} />
+        <Metric label="Song Coins" value={fmtNum(songTokens.length)} sub={formatCryptoWithFiat(songValueSol, "SOL", songValueUsd)} />
         <Metric label="Artist Coins" value={fmtNum(artistTokens.length)} sub={issuerAllocationValueUsd > 0 ? `${fmtUsd(artistValueUsd)} liquid` : fmtUsd(artistValueUsd)} />
         <Metric label="Other Assets" value={fmtNum(otherWalletAssets.length)} sub={fmtUsd(otherWalletValueUsd)} />
         <Metric label="P/L" value={`${pnl >= 0 ? "+" : ""}${fmtUsd(pnl)}`} sub="Indexed portfolio delta" />
@@ -523,8 +523,8 @@ export default function PortfolioPage() {
         <div className="panel-elevated p-5 grain">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-xl font-black tracking-tight">Song Tokens</h2>
-              <p className="text-mute text-xs mt-1">Indexed from song-daq song-token positions and on-platform holdings.</p>
+              <h2 className="text-xl font-black tracking-tight">Song Coins</h2>
+              <p className="text-mute text-xs mt-1">Indexed from song-daq song-coin positions and on-platform holdings.</p>
             </div>
           </div>
           <div className="space-y-2">
@@ -543,7 +543,7 @@ export default function PortfolioPage() {
                 </div>
               </Link>
             )) : (
-              <Empty icon={<Music2 size={18} />} title="No Song Tokens Found" text="Song-token positions will appear here after you buy or receive them on song-daq." />
+              <Empty icon={<Music2 size={18} />} title="No Song Coins Found" text="Song-coin positions will appear here after you buy or receive them on song-daq." />
             )}
           </div>
         </div>
@@ -573,7 +573,7 @@ export default function PortfolioPage() {
           </div>
 
           <div className="panel-elevated p-5 grain">
-            <h2 className="text-lg font-black tracking-tight mb-4">Song Token Index</h2>
+            <h2 className="text-lg font-black tracking-tight mb-4">Song Coin Index</h2>
             <div className="grid grid-cols-2 gap-2">
               <Mini label="Song Value" value={formatCryptoWithFiat(songValueSol, "SOL", songValueUsd)} />
               <Mini label="Royalty" value={formatCryptoWithFiat(royaltySol, "SOL", royaltyUsd)} />

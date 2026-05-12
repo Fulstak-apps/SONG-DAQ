@@ -97,7 +97,7 @@ export async function POST(req: NextRequest) {
     lockDays: Number(liquidity?.lockDays ?? 0),
   };
   if (!["SOL", "USDC", "AUDIO"].includes(liq.pairAsset)) {
-    return NextResponse.json({ error: "Song Token launch liquidity must be paired with SOL, USDC, or AUDIO." }, { status: 422 });
+    return NextResponse.json({ error: "Song Coin launch liquidity must be paired with SOL, USDC, or AUDIO." }, { status: 422 });
   }
   if (liq.tokenAmount <= 0 || liq.pairAmount <= 0 || liq.lockDays < 30) {
     return NextResponse.json({ error: "Liquidity is required before launch. This protects buyers and allows trading to start fairly." }, { status: 422 });
@@ -136,7 +136,7 @@ export async function POST(req: NextRequest) {
   }
 
   const existing = await prisma.songToken.findUnique({ where: { audiusTrackId: String(audiusTrackId) } });
-  if (existing) return NextResponse.json({ error: "Song already tokenized", song: existing }, { status: 409 });
+  if (existing) return NextResponse.json({ error: "Song already has a song coin", song: existing }, { status: 409 });
 
   const track = await getTrack(String(audiusTrackId));
   const moderation = moderateCoinText({
@@ -347,7 +347,7 @@ export async function POST(req: NextRequest) {
       metadataUri,
       paidBy: artistWallet,
       tradingStatus: "PENDING_LIQUIDITY",
-      message: "Song Token minted. Fans buy from the public market curve/pool, not from the artist directly. Trading opens only after verified liquidity is active.",
+      message: "Song Coin minted. Fans buy from the public market curve/pool, not from the artist directly. Trading opens only after verified liquidity is active.",
     },
   });
 }

@@ -116,7 +116,7 @@ export function LandingPage() {
             className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2"
           >
             <PathButton href="/market" title="Fan / Investor" body="Browse coins, watch charts, buy, sell, and track your portfolio." tone="neon" />
-            <PathButton href="/artist" title="Artist" body="Connect Audius, choose Artist Coin or Song Token, launch, add liquidity, and set up splits." tone="violet" />
+            <PathButton href="/artist" title="Artist" body="Connect Audius, choose Artist Coin or Song Coin, launch, add liquidity, and set up splits." tone="violet" />
           </motion.div>
         </div>
 
@@ -168,7 +168,7 @@ export function LandingPage() {
       <Section>
         <div className="grid gap-3 md:grid-cols-3">
           <FlowCard title="Investors" items={["Browse market", "Open coin", "Review chart, artist, source, liquidity, royalty status", "Buy or sell", "Portfolio updates"]} />
-          <FlowCard title="Artists" items={["Connect Audius", "Choose Artist Coin or Song Token", "Pick profile or song", "Choose a launch preset", "Launch, add liquidity, set up splits later"]} />
+          <FlowCard title="Artists" items={["Connect Audius", "Choose Artist Coin or Song Coin", "Pick profile or song", "Choose a launch preset", "Launch, add liquidity, set up splits later"]} />
           <FlowCard title="Admins" items={["Verify royalty requests", "Review trust issues", "Track wallet/API errors", "Manage payout records"]} />
         </div>
       </Section>
@@ -183,7 +183,7 @@ export function LandingPage() {
       <div className="grid grid-cols-1 items-stretch gap-3 [grid-auto-rows:1fr] md:grid-cols-3 lg:grid-cols-6">
         <Section className="h-full" delay={0}><Step num={1} title="Upload" icon={<CloudUpload className="text-violet" size={24} />} desc="Upload your track to Audius." /></Section>
         <Section className="h-full" delay={0.05}><Step num={2} title="Distribute" icon={<Globe className="text-violet" size={24} />} desc="Release via DistroKid, TuneCore, etc." /></Section>
-        <Section className="h-full" delay={0.1}><Step num={3} title="Tokenize" icon={<CircleDollarSign className="text-violet" size={24} />} desc="Create your song token. Set royalty share (min 10%)." active /></Section>
+        <Section className="h-full" delay={0.1}><Step num={3} title="Tokenize" icon={<CircleDollarSign className="text-violet" size={24} />} desc="Create your song coin. Set royalty share (min 10%)." active /></Section>
         <Section className="h-full" delay={0.15}><Step num={4} title="Lock Splits" icon={<Lock className="text-neon" size={24} />} desc="Send unique royalty email to your distributor." /></Section>
         <Section className="h-full" delay={0.2}><Step num={5} title="Verify" icon={<ShieldCheck className="text-violet" size={24} />} desc="Distributor confirms → Splits Locked badge." /></Section>
         <Section className="h-full" delay={0.25}><Step num={6} title="Fans Invest" icon={<Users className="text-violet" size={24} />} desc="Royalties flow monthly. Everyone wins." /></Section>
@@ -337,7 +337,7 @@ export function LandingPage() {
                 This should not feel like a one-sided extraction machine. The structure is strongest when artists get funding, fans get transparency and access, and the music itself gets sustained attention.
               </p>
               <div className="mt-8 space-y-5">
-                <WinCard icon={<Users size={20} />} title="Artists" items={["Raise capital from fans without pretending to give away the whole catalog", "Keep ownership visible while still showing how revenue flows are structured", "Launch artist tokens and song tokens with clearer market expectations", "Build long-term support instead of short-term hype around a single drop"]} color="violet" />
+                <WinCard icon={<Users size={20} />} title="Artists" items={["Raise capital from fans without pretending to give away the whole catalog", "Keep ownership visible while still showing how revenue flows are structured", "Launch artist tokens and song coins with clearer market expectations", "Build long-term support instead of short-term hype around a single drop"]} color="violet" />
                 <WinCard icon={<TrendingUp size={20} />} title="Fans" items={["Support artists you believe in with more transparency around launch terms", "Track liquidity, verification status, and market behavior before buying", "Share in market participation and royalty-linked signals where the data is actually verified", "Build status and reputation around informed participation, not blind speculation"]} color="neon" />
                 <WinCard icon={<Music size={20} />} title="The Music" items={["Stronger communities form around songs with real traction and real support", "Better reporting and launch standards reduce fake or low-quality token spam", "Artists have more reason to keep fans engaged beyond the first launch moment", "The market can reward consistency, trust, and actual cultural momentum"]} color="cyan" />
               </div>
@@ -361,8 +361,8 @@ export function LandingPage() {
               <div className="rounded-2xl border border-edge bg-panel p-6 md:p-7 min-h-[320px]">
                 <div className="text-sm font-black uppercase tracking-widest text-neon mb-4">How launch works</div>
                 <ul className="space-y-4 text-sm md:text-[15px] text-mute leading-relaxed">
-                  <li>Artists sign in with Audius, choose either an artist token or a song token, and connect the wallet that will own the launch transaction.</li>
-                  <li>For song tokens, the artist selects a real catalog track, configures supply, wallet caps, artist allocation, and royalty transparency fields before anything is minted.</li>
+                  <li>Artists sign in with Audius, choose either an artist token or a song coin, and connect the wallet that will own the launch transaction.</li>
+                  <li>For song coins, the artist selects a real catalog track, configures supply, wallet caps, artist allocation, and royalty transparency fields before anything is minted.</li>
                   <li>Liquidity is a required launch step. The launch cannot move forward until the artist adds starting liquidity, chooses a paired asset, and sets a lock duration.</li>
                   <li>The review step summarizes supply, allocation, price, liquidity, lock period, and warnings so the artist sees the market structure clearly before confirming.</li>
                 </ul>
@@ -402,7 +402,7 @@ export function LandingPage() {
                 <span className="text-gradient-neon">the label.</span>
               </h2>
               <p className="text-mute text-lg max-w-md mx-auto">
-                Start trading tokenized music. Earn royalties on every stream.
+                Start trading song coins. Follow royalty signals on every stream.
               </p>
             </motion.div>
             

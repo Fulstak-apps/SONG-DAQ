@@ -135,7 +135,7 @@ export function ArtistDashboard() {
           icon={<LockKeyhole size={18} />}
           title="Liquidity Status"
           value={`${lockedCoins}/${Math.max(myCoins.length, 1)} Locked`}
-          body={pendingLiquidity ? `${pendingLiquidity} Song Token launch still needs verified liquidity.` : "No pending liquidity blocks found for your indexed launches."}
+          body={pendingLiquidity ? `${pendingLiquidity} Song Coin launch still needs verified liquidity.` : "No pending liquidity blocks found for your indexed launches."}
           tone={pendingLiquidity ? "amber" : "neon"}
         />
         <ReadinessCard

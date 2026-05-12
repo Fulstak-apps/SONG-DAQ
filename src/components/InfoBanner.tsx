@@ -8,7 +8,7 @@ const MESSAGES = [
     id: "insurance",
     icon: <Shield size={14} className="text-neon" />,
     label: "On-Chain Assets",
-    text: "Song Token launches create a real Solana SPL mint and mint supply to the artist wallet.",
+    text: "Song Coin launches create a real Solana SPL mint and mint supply to the artist wallet.",
     accent: "neon",
   },
   {

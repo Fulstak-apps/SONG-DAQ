@@ -128,7 +128,7 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
         
         <div className="space-y-2">
           <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1 flex justify-between">
-            <Glossary term="Token amount" def="How many Song Tokens you want to buy or sell. If you are buying and do not know the amount, use the budget field instead.">
+            <Glossary term="Token amount" def="How many Song Coins you want to buy or sell. If you are buying and do not know the amount, use the budget field instead.">
               Token Amount
             </Glossary>
             <span className="text-mute font-mono">${song.symbol}</span>
@@ -158,7 +158,7 @@ export function TradePanel({ song, onTraded }: { song: any; onTraded: () => void
             
             <div className="space-y-2">
               <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1 flex justify-between">
-                <Glossary term="Budget" def="The most SOL you want to spend on this buy. The app estimates how many Song Tokens that budget can get.">
+                <Glossary term="Budget" def="The most SOL you want to spend on this buy. The app estimates how many Song Coins that budget can get.">
                   Budget
                 </Glossary>
                 <span className="text-mute font-mono">{asset}</span>

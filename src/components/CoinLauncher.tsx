@@ -288,7 +288,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       if (allocationOverbooked) {
         throw new Error("Artist hold plus launch liquidity cannot be more than the total supply. Lower one of the allocation settings.");
       }
-      const cleanTitle = String(pick.title ?? "Song Token").replace(/\s+/g, " ").trim();
+      const cleanTitle = String(pick.title ?? "Song Coin").replace(/\s+/g, " ").trim();
       const cleanSymbol = cleanTitle.replace(/[^a-z0-9]/gi, "").slice(0, 10).toUpperCase() || "SONG";
       const metadataBaseUrl = process.env.NEXT_PUBLIC_APP_URL || window.location.origin;
       const paidMint = await createArtistPaidSongMint(externalWalletProvider as WalletId, {
@@ -297,7 +297,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         artistSupply: artistWalletMintAmount,
         treasurySupply: reserveTokenAmount,
         metadata: {
-          name: `${cleanTitle} Song Token`.slice(0, 32),
+          name: `${cleanTitle} Song Coin`.slice(0, 32),
           symbol: cleanSymbol,
           baseUrl: metadataBaseUrl,
         },
@@ -569,7 +569,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   if (!audius) {
     return (
       <div className="panel p-5 sm:p-10 text-center text-mute uppercase tracking-widest font-bold text-xs bg-panel2 border-dashed border-edge">
-        Sign in with Audius to verify your artist identity before launching a song token.
+        Sign in with Audius to verify your artist identity before launching a song coin.
       </div>
     );
   }
@@ -621,7 +621,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
           onClick={() => { setLaunchKind("SONG"); setLiquidityPairAsset("SOL"); setBasePrice(0.001); setCurveSlope(0.0000005); setStep(1); setErr(null); }}
           className={`rounded-xl px-4 py-3 text-[10px] uppercase tracking-widest font-black transition ${launchKind === "SONG" ? "bg-neon/15 text-neon border border-neon/25" : "text-mute hover:text-ink"}`}
         >
-          Song Token · song-daq
+          Song Coin · song-daq
         </button>
         <button
           type="button"
@@ -943,7 +943,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 <div className="rounded-xl border border-violet/20 bg-violet/10 p-3 text-xs leading-relaxed text-violet/85">
                     {launchKind === "ARTIST"
                       ? "Audius-style artist coins use a 1B supply, 9 decimals, $AUDIO quote asset, Meteora bonding curve, and 50% creator vesting. This is the path that can show on Audius/Open Audio after indexing."
-                      : "Song Tokens are tied to one Audius track and show in song-daq. They use Audius catalog metadata, but they are not automatically listed on Audius unless Open Audio adds song-level coin indexing."}
+                      : "Song Coins are tied to one Audius track and show in song-daq. They use Audius catalog metadata, but they are not automatically listed on Audius unless Open Audio adds song-level coin indexing."}
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1">Settlement Distributor</label>
@@ -1258,7 +1258,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   </div>
                   <label className="flex items-start gap-3 rounded-xl border border-edge bg-panel p-3 text-left text-xs text-mute">
                     <input type="checkbox" checked={ownershipConfirmed} onChange={(e) => setOwnershipConfirmed(e.target.checked)} className="mt-1" />
-                    <span>I confirm I own or control the rights needed to create this song token and I am not impersonating another artist.</span>
+                    <span>I confirm I own or control the rights needed to create this song coin and I am not impersonating another artist.</span>
                   </label>
                   <label className="flex items-start gap-3 rounded-xl border border-edge bg-panel p-3 text-left text-xs text-mute">
                     <input type="checkbox" checked={riskAcknowledged} onChange={(e) => setRiskAcknowledged(e.target.checked)} className="mt-1" />

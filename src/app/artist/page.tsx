@@ -98,10 +98,10 @@ export default function ArtistPage() {
       </header>
 
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Stat k="Active Artist Tokens" v={fmtNum(mySongs.length)} tooltip="Number of your artist and Song Tokens currently trading on the market." />
+        <Stat k="Active Artist Tokens" v={fmtNum(mySongs.length)} tooltip="Number of your artist and Song Coins currently trading on the market." />
         <Stat k="Total Network Cap" v={formatCryptoWithFiat(totalCap, "SOL", totalCap * solUsdRate, currency, 2)} tooltip={`The combined market capitalization of all your listed songs. ${priceAgeText(fiatUpdatedAt)}.`} />
         <Stat k="Cumulative Revenue" v={formatCryptoWithFiat(artistRevenue, "SOL", artistRevenue * solUsdRate, currency, 4)} accent="gain" tooltip={`Total SOL you have earned from your retained shares. ${priceAgeText(fiatUpdatedAt)}.`} />
-        <Stat k="Unique Holders" v={fmtNum(totalHolders)} tooltip="Total number of unique addresses holding your Song Tokens." />
+        <Stat k="Unique Holders" v={fmtNum(totalHolders)} tooltip="Total number of unique addresses holding your Song Coins." />
       </section>
 
       <CoinLauncher onLaunched={() => { loadMe(); loadSongs(); }} />

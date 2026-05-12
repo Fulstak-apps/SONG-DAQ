@@ -51,7 +51,7 @@ export function CoinCard({
   const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || null;
   const isOpenAudio = Boolean(c.isOpenAudioCoin || c.source === "open_audio" || c.source === "audius_public");
   const isSongDaqLocal = !isOpenAudio && Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
-  const assetLabel = isSongDaqLocal ? "song-daq Song Token" : "Open Audio Artist Coin";
+  const assetLabel = isSongDaqLocal ? "song-daq Song Coin" : "Open Audio Artist Coin";
   const sourceHelp = isSongDaqLocal
     ? "This coin was created through song-daq."
     : "This is a public Audius/Open Audio market coin imported from the public coin index. It was not minted by a user on song-daq.";
@@ -138,7 +138,7 @@ export function CoinCard({
         </button>
       </div>
 
-      {/* Track info: fixed height so Artist Tokens and song tokens align. */}
+      {/* Track info: fixed height so Artist Tokens and song coins align. */}
       <div className="flex h-5 items-center gap-2 px-1">
         {trackTitle ? (
           <>

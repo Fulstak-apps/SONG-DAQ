@@ -1,5 +1,5 @@
 /**
- * Bonding curve for Song Tokens.
+ * Bonding curve for Song Coins.
  *
  * Spot price as a function of circulating supply:
  *   p(s) = basePrice + slope * s

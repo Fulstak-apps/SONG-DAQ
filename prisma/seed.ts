@@ -1,7 +1,7 @@
 /**
  * Seed script — creates a couple of demo songs from Audius trending so
  * you can see the UI without launching anything yourself. Safe to run
- * repeatedly: it skips tracks that are already tokenized.
+ * repeatedly: it skips tracks that already have song coins.
  */
 
 import { PrismaClient } from "@prisma/client";

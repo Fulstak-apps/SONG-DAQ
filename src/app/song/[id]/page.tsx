@@ -616,7 +616,7 @@ function PendingLiquidityPanel({ song, isOwner = false }: { song: any; isOwner?:
           <div className="text-[10px] uppercase tracking-widest font-black text-orange-500">{status}</div>
           <h3 className="mt-1 text-lg font-black tracking-tight text-white">Trading route not live yet</h3>
           <p className="mt-2 text-xs text-mute leading-relaxed">
-            This Song Token can be inspected on-chain, but song-daq will not enable buy or sell actions until the artist adds the reserved coins plus SOL/USDC into a verified liquidity pool.
+            This Song Coin can be inspected on-chain, but song-daq will not enable buy or sell actions until the artist adds the reserved coins plus SOL/USDC into a verified liquidity pool.
           </p>
         </div>
       </div>
@@ -735,7 +735,7 @@ function SongPageAudioPlayer({
   if (disabled) {
     return (
       <div className="mt-5 rounded-2xl border border-edge bg-panel/80 p-4 text-xs text-mute">
-        No Audius audio preview is attached to this Song Token yet.
+        No Audius audio preview is attached to this Song Coin yet.
       </div>
     );
   }

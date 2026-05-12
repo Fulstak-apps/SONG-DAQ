@@ -20,7 +20,7 @@ function fallbackMetadata(req: NextRequest, mint: string) {
   const base = appUrl(req);
   return NextResponse.json(
     {
-      name: "song-daq Song Token",
+      name: "song-daq Song Coin",
       symbol: "SONG",
       description: "song-daq token metadata is being indexed. This is a song-linked market token. Fans buy from a public curve or liquidity pool after liquidity is verified; artist allocation and royalty verification are tracked separately.",
       image: `${base}/api/token-image/${mint}`,
@@ -33,7 +33,7 @@ function fallbackMetadata(req: NextRequest, mint: string) {
       },
       attributes: [
         { trait_type: "Protocol", value: "song-daq" },
-        { trait_type: "Asset Type", value: "Song Token" },
+        { trait_type: "Asset Type", value: "Song Coin" },
         { trait_type: "Status", value: "Indexing" },
         { trait_type: "Mint Policy", value: "Fixed supply" },
         { trait_type: "Freeze Policy", value: "Disabled" },
@@ -96,7 +96,7 @@ export async function GET(req: NextRequest, { params }: { params: { mint: string
 
   return NextResponse.json(
     {
-      name: `${song.title} Song Token`.slice(0, 32),
+      name: `${song.title} Song Coin`.slice(0, 32),
       symbol,
       description: [
         `${song.title} by ${artistName}.`,
@@ -123,7 +123,7 @@ export async function GET(req: NextRequest, { params }: { params: { mint: string
       },
       attributes: [
         { trait_type: "Protocol", value: "song-daq" },
-        { trait_type: "Asset Type", value: "Song Token" },
+        { trait_type: "Asset Type", value: "Song Coin" },
         { trait_type: "Song Title", value: song.title },
         { trait_type: "Artist", value: artistName },
         { trait_type: "Artist Wallet", value: song.artistWallet.wallet },

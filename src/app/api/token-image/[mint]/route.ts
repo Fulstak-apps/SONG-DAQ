@@ -19,7 +19,7 @@ export async function GET(_req: Request, { params }: { params: { mint: string } 
 
   const symbol = esc((song?.symbol || "$SONG").replace(/^\$/, "").slice(0, 10).toUpperCase());
   const title = esc(song?.title || "song-daq");
-  const artist = esc(song?.artistName || "Song Token");
+  const artist = esc(song?.artistName || "Song Coin");
   const svg = `<?xml version="1.0" encoding="UTF-8"?>
 <svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
   <defs>

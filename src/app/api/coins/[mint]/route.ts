@@ -24,7 +24,7 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
     decimals: 6,
     owner_id: song.artistWallet?.audiusUserId || song.artistWalletId || "",
     logo_uri: song.artworkUrl || song.artistWallet?.audiusAvatar || undefined,
-    description: `${song.title} by ${song.artistName}. song-daq song token.`,
+    description: `${song.title} by ${song.artistName}. song-daq song coin.`,
     price: priceUsd || undefined,
     marketCap: marketCap || undefined,
     liquidity: Number(song.launchLiquidityUsd || (Number(song.liquidityPairAmount || 0) * Number(rates[String(song.liquidityPairAsset || "SOL").toUpperCase()] || 0)) || song.liquidityPairAmount || 0),

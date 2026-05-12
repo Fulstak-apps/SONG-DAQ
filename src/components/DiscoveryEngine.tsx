@@ -490,7 +490,7 @@ export default function DiscoveryEngine() {
           <p className="text-mute text-sm sm:text-base md:text-lg max-w-xl font-medium leading-relaxed">
             {isArtist
               ? `Establish your market presence, @${audius?.handle}. Convert streaming engagement into institutional capital.`
-              : "Discover breakout artists early. Support their Artist Tokens and Song Tokens, build your reputation, and gain status as they grow."}
+              : "Discover breakout artists early. Support their Artist Tokens and Song Coins, build your reputation, and gain status as they grow."}
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 shrink-0 relative z-10 w-full md:w-auto">
             {isArtist && (
@@ -618,7 +618,7 @@ export default function DiscoveryEngine() {
             <Segmented
               options={[
                 { id: "coins" as Market, label: "Artist Tokens" },
-                { id: "songs" as Market, label: "Song Tokens" },
+                { id: "songs" as Market, label: "Song Coins" },
               ]}
               value={market}
               onChange={setMarket}
@@ -759,10 +759,10 @@ export default function DiscoveryEngine() {
                 animate={{ opacity: 1 }}
                 className="grid grid-cols-2 md:grid-cols-4 gap-3"
               >
-                <Stat k="Listings" v={fmtNum(songs.length)} tooltip="Total number of songs successfully tokenized and currently trading." />
-                <Stat k="Market Cap" v={`${fmtSol(songTotals.cap, 2)} SOL`} tooltip="The aggregate value of all tokenized song markets combined." />
-                <Stat k="24h Volume" v={`${fmtSol(songTotals.vol, 2)} SOL`} tooltip="Total trading volume across all song tokens in the last 24 hours." />
-                <Stat k="Avg Perf" v={fmtPct((songTotals.avg - 1) * 100)} accent={(songTotals.avg - 1) >= 0 ? "gain" : "lose"} tooltip="Average performance of all song tokens relative to their initial launch price." />
+                <Stat k="Listings" v={fmtNum(songs.length)} tooltip="Total number of song coins currently trading." />
+                <Stat k="Market Cap" v={`${fmtSol(songTotals.cap, 2)} SOL`} tooltip="The aggregate value of all song coin markets combined." />
+                <Stat k="24h Volume" v={`${fmtSol(songTotals.vol, 2)} SOL`} tooltip="Total trading volume across all song coins in the last 24 hours." />
+                <Stat k="Avg Perf" v={fmtPct((songTotals.avg - 1) * 100)} accent={(songTotals.avg - 1) >= 0 ? "gain" : "lose"} tooltip="Average performance of all song coins relative to their initial launch price." />
               </motion.section>
             )}
           </AnimatePresence>

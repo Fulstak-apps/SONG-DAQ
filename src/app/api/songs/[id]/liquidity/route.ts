@@ -54,7 +54,7 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
     }
     if (!liquidityTxSig || !poolId) {
       return NextResponse.json(
-        { error: "A confirmed liquidity transaction and pool address are required before a song token can go live." },
+        { error: "A confirmed liquidity transaction and pool address are required before a song coin can go live." },
         { status: 422 },
       );
     }
@@ -152,7 +152,7 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
 
     return NextResponse.json({
       song: updated,
-      message: "Liquidity added. This Song Token is now marked live in the app.",
+      message: "Liquidity added. This Song Coin is now marked live in the app.",
     });
   } catch (err) {
     if (err instanceof AuthError) {
