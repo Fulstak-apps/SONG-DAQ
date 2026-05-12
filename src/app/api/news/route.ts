@@ -7,7 +7,7 @@ export const revalidate = 0;
 
 const parser = new Parser();
 const NEWS_CACHE_MS = 5 * 60_000;
-type NewsCategory = "MUSIC" | "TECH" | "AI" | "TRENDING";
+type NewsCategory = "MUSIC" | "TECH" | "AI" | "CREATOR" | "TRENDING";
 
 let newsCache: { at: number; news: any[] } | null = null;
 
@@ -15,8 +15,8 @@ const FEEDS = [
   { url: "https://pitchfork.com/rss/news/", source: "Pitchfork", category: "MUSIC" as NewsCategory },
   { url: "https://www.billboard.com/feed/", source: "Billboard", category: "MUSIC" as NewsCategory },
   { url: "https://www.musicbusinessworldwide.com/feed/", source: "Music Business Worldwide", category: "MUSIC" as NewsCategory },
-  { url: "https://www.hypebot.com/feed", source: "Hypebot", category: "MUSIC" as NewsCategory },
   { url: "https://news.google.com/rss/search?q=(music%20industry%20OR%20music%20business%20OR%20artist%20royalties%20OR%20streaming%20royalties)%20when:2d&hl=en-US&gl=US&ceid=US:en", source: "Google Music News", category: "MUSIC" as NewsCategory },
+  { url: "https://news.google.com/rss/search?q=(creator%20economy%20OR%20creator%20monetization%20OR%20fan%20funding%20OR%20music%20creators)%20when:2d&hl=en-US&gl=US&ceid=US:en", source: "Google Creator Economy", category: "CREATOR" as NewsCategory },
   { url: "https://techcrunch.com/feed/", source: "TechCrunch", category: "TECH" as NewsCategory },
   { url: "https://www.theverge.com/rss/index.xml", source: "The Verge", category: "TECH" as NewsCategory },
   { url: "https://www.wired.com/feed/rss", source: "WIRED", category: "TECH" as NewsCategory },
@@ -52,8 +52,16 @@ const FALLBACK_NEWS = [
     category: "AI" as NewsCategory,
   },
   {
+    id: "songdaq-fallback-creator",
+    title: "Creator economy signals are temporarily delayed",
+    link: "https://song-daq.onrender.com/market",
+    pubDate: new Date().toISOString(),
+    source: "song-daq",
+    category: "CREATOR" as NewsCategory,
+  },
+  {
     id: "songdaq-fallback-trending",
-    title: "Market intelligence source temporarily delayed",
+    title: "Market moving news source temporarily delayed",
     link: "https://song-daq.onrender.com/market",
     pubDate: new Date().toISOString(),
     source: "song-daq",
@@ -120,6 +128,9 @@ function autoCategory(item: any, fallback: NewsCategory): NewsCategory {
   if (/\b(label|artist|song|album|music|streaming|spotify|audius|royalt|tour|concert|producer|publishing|catalog|recording|songwriter)\b/.test(text)) {
     return "MUSIC";
   }
+  if (/\b(creator|creators|fan funding|patreon|substack|monetization|merch|community|membership|influencer|youtube|tiktok)\b/.test(text)) {
+    return "CREATOR";
+  }
   if (/\b(tech|startup|software|apple|google|microsoft|meta|crypto|blockchain|solana|wallet|app|platform|device|cloud)\b/.test(text)) {
     return "TECH";
   }
@@ -157,7 +168,7 @@ export async function GET() {
   const unique = Array.from(new Map(stories.map((s) => [s.link || s.title, s])).values());
   unique.sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
 
-  const buckets: NewsCategory[] = ["MUSIC", "TECH", "AI", "TRENDING"];
+  const buckets: NewsCategory[] = ["MUSIC", "AI", "TECH", "CREATOR", "TRENDING"];
   const visualFirst = (items: any[]) => [...items].sort((a, b) => {
     const imageDelta = Number(Boolean(b.thumbnail)) - Number(Boolean(a.thumbnail));
     if (imageDelta) return imageDelta;

@@ -603,7 +603,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
             <div className="w-10 h-10 rounded-xl bg-neon/10 flex items-center justify-center border border-neon/20">
               <Rocket className="text-neon" size={20} />
             </div>
-            Artist token launch
+            Launch Your Artist Market
           </h2>
           <div className="text-[10px] uppercase tracking-widest font-bold text-mute">
             Authenticated Issuer: <span className="text-white">@{audius.handle}</span>
@@ -674,9 +674,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }}
               className="space-y-6"
             >
-              <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
-                <Music size={14} className="text-violet" /> Step 01 — {launchKind === "ARTIST" ? "Artist Profile" : "Asset Selection"}
-              </div>
+                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
+                  <Music size={14} className="text-violet" /> Step 01 — {launchKind === "ARTIST" ? "Artist Name + Image" : "Pick Song + Artwork"}
+                </div>
 
               {launchKind === "ARTIST" && (
                 <div className="grid gap-4 md:grid-cols-[120px_1fr] rounded-2xl border border-edge bg-panel p-5">
@@ -734,7 +734,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               {launchKind === "SONG" && loadingTracks && (
                 <div className="flex flex-col items-center justify-center py-20 space-y-4">
                   <div className="w-8 h-8 border-2 border-neon border-t-transparent rounded-full animate-spin" />
-                  <div className="text-[10px] uppercase tracking-widest font-bold text-mute">Scanning Audius Catalog...</div>
+                  <div className="text-[10px] uppercase tracking-widest font-bold text-mute">Loading your Audius songs...</div>
                 </div>
               )}
               
@@ -746,7 +746,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     No compatible master recordings found for @{audius.handle}.
                   </div>
                   <div className="text-[10px] uppercase tracking-widest font-bold text-mute">
-                    Upload a track to Audius first, then initialize terminal.
+                    Upload a track to Audius first, then come back to launch its market.
                   </div>
                 </div>
               )}
@@ -789,7 +789,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
             >
               <div className="space-y-6">
                 <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest font-black text-mute">
-                  <Settings size={14} className="text-violet" /> Step 02 — Calibration
+                  <Settings size={14} className="text-violet" /> Step 02 — Market Setup
                 </div>
                 <div className="space-y-4">
                   {launchKind === "ARTIST" ? (
@@ -886,7 +886,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                             onChange={markCustom(setSupply)}
                             step={1000}
                             min={1000}
-                            unit="Tokens"
+                            unit="Coins"
                             description={`Total supply estimate: ${formatFiatEstimate(fullSupplyValueUsd, currency)}. If all coins were counted at the starting price, this would be the estimated value. The real market value can be much lower or higher once people start trading.`}
                           />
                           <Field
@@ -1085,7 +1085,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     onChange={markCustom(setLiquidityTokenAmount)}
                     step={1000}
                     min={1}
-                    unit="Tokens"
+                    unit="Coins"
                     help="This is how many of the new song coins go into the public market. Fans buy from this pool instead of buying directly from the artist."
                     description={`This is the song-coin side of liquidity. Estimated total starting pool value: ${formatFiatEstimate(estimatedPoolValueUsd, currency)}.`}
                   />
@@ -1172,7 +1172,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <Rocket className="text-neon" size={40} />
                   </div>
                   <div className="space-y-2 text-center">
-                    <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Review Risk + Launch</h3>
+                    <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Review + Launch</h3>
                     <p className="text-mute text-sm font-medium">
                       {!externalWalletAddress
                         ? "Your Audius wallet is recognized for identity and setup. Connect Phantom, Solflare, or Backpack when you are ready to sign the live Solana mint transaction."
@@ -1187,7 +1187,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <Row k={launchKind === "ARTIST" ? "Artist" : "Song"} v={launchKind === "ARTIST" ? (audius?.name || audius?.handle || "Artist coin") : (pick?.title ?? "Song coin")} />
                       <Row k="Full estimated spend" v={`${estimatedTotalSpendLabel} · ${formatFiatEstimate(estimatedTotalSpendUsd, currency)}`} color="text-neon" />
                       <Row k="Supply" v={launchKind === "ARTIST" ? "1B / 9 decimals" : fmtNum(supply)} />
-                      <Row k="Market" v={launchKind === "ARTIST" ? `Meteora DBC vs $AUDIO · ${formatCryptoWithFiat(liquidityPairAmount, "AUDIO", creatorFirstBuyUsd, currency)}` : `${fmtNum(liquidityTokenAmount)} tokens + ${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)}`} color="text-neon" />
+                      <Row k="Market" v={launchKind === "ARTIST" ? `Meteora DBC vs $AUDIO · ${formatCryptoWithFiat(liquidityPairAmount, "AUDIO", creatorFirstBuyUsd, currency)}` : `${fmtNum(liquidityTokenAmount)} coins + ${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)}`} color="text-neon" />
                       <Row
                         k="Audius sync"
                         v={launchKind === "ARTIST" ? "Can appear on Audius after indexing" : "Visible on song-daq, linked to Audius track"}
@@ -1227,7 +1227,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                           <span className="font-black text-neon">Approval 1:</span> {launchKind === "ARTIST" ? "creates the Artist Coin pool on Meteora Dynamic Bonding Curve using the AUDIO quote mint." : `creates the SPL mint, attaches song-daq metadata, mints ${fmtNum(artistVestedTokenAmount)} artist-hold coins plus ${fmtNum(launchLiquidityTokenAmount)} liquidity-staging coins to your wallet, sends ${fmtNum(reserveTokenAmount)} reserve coins to treasury, disables freeze authority, and revokes mint authority.`}
                         </div>
                         <div>
-                          <span className="font-black text-neon">{launchKind === "ARTIST" ? "Optional first buy:" : "Approval 2:"}</span> {launchKind === "ARTIST" ? `if entered, your wallet also buys with ${formatCryptoWithFiat(liquidityPairAmount || 0, "AUDIO", creatorFirstBuyUsd, currency)} in the same launch flow.` : `creates the public liquidity pool with the token amount and ${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)} shown here. Total estimated wallet spend: ${formatFiatEstimate(estimatedTotalSpendUsd, currency)}.`}
+                          <span className="font-black text-neon">{launchKind === "ARTIST" ? "Optional first buy:" : "Approval 2:"}</span> {launchKind === "ARTIST" ? `if entered, your wallet also buys with ${formatCryptoWithFiat(liquidityPairAmount || 0, "AUDIO", creatorFirstBuyUsd, currency)} in the same launch flow.` : `creates the public liquidity pool with the coin amount and ${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)} shown here. Total estimated wallet spend: ${formatFiatEstimate(estimatedTotalSpendUsd, currency)}.`}
                         </div>
                         <div>
                           Wallet prompts should show your wallet as signer, this token symbol, normal Solana programs, and no unlimited approval.
@@ -1276,7 +1276,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     onClick={deploy}
                     disabled={!externalWalletAddress || !canLaunchReview || !ownershipConfirmed || !riskAcknowledged}
                   >
-                    {!externalWalletAddress ? "CONNECT EXTERNAL WALLET TO SIGN" : launchKind === "ARTIST" ? "SIGN AUDIO ARTIST COIN LAUNCH" : "SIGN MINT + ADD LIQUIDITY"}
+                    {!externalWalletAddress ? "CONNECT EXTERNAL WALLET TO SIGN" : launchKind === "ARTIST" ? "SIGN AUDIO ARTIST COIN LAUNCH" : "SIGN LAUNCH + ADD LIQUIDITY"}
                   </button>
                 </div>
               )}
@@ -1289,7 +1289,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   </div>
                   <div className="space-y-2">
                     <div className="text-neon text-lg font-black tracking-tighter uppercase animate-pulse">
-                      {liquidityStage === "idle" ? "Synchronizing Ledger…" : "Setting Up Liquidity…"}
+                      {liquidityStage === "idle" ? "Launching Market…" : "Setting Up Liquidity…"}
                     </div>
                     <div className="max-w-md text-mute text-[10px] uppercase tracking-widest font-bold leading-relaxed">
                       {liquidityMessage || "Waiting for artist wallet signature · verifying Solana mint"}
@@ -1306,7 +1306,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <CheckCircle2 className="text-neon" size={40} />
                   </div>
                   <div className="space-y-2">
-                    <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Asset Verified</h3>
+                    <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Market Created</h3>
                     <div className="text-mute text-sm font-medium">
                       {result.launch?.mintTx === "Imported from Audius/Open Audio"
                         ? `Successfully imported ${result.song?.symbol} into song-daq.`
@@ -1342,7 +1342,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <LaunchSuccessChecklist result={result} liquidityStage={liquidityStage} launchKind={launchKind} />
                   </div>
                   <a className="btn-primary block w-full py-4 text-sm font-black tracking-widest" href={`/song/${result.song?.id}`}>
-                    {liquidityStage === "live" ? "OPEN LIVE TOKEN" : "OPEN TOKEN DETAIL"}
+                    {liquidityStage === "live" ? "OPEN LIVE COIN" : "OPEN COIN DETAIL"}
                   </a>
                 </div>
               )}
@@ -1486,7 +1486,7 @@ function LaunchReadinessChecklist({
     ["Audius artist verified", artistVerified, "Audius identity links the coin to the real artist account."],
     ["Metadata ready", metadataReady, "Name, symbol, image, description, and token traits are prepared."],
     ["Liquidity ready", liquidityReady, "Public market liquidity is required before fans can buy."],
-    ["Token details", tokenTrustReady, "Ownership, risk, vesting, and cap settings are accepted."],
+    ["Coin details", tokenTrustReady, "Ownership, risk, vesting, and cap settings are accepted."],
   ] as const;
   return (
     <section className="relative z-10 rounded-2xl border border-edge bg-panel p-4">

@@ -60,7 +60,7 @@ export function SongCard({ s, compact = false }: { s: SongRow; compact?: boolean
       >
         <div className="absolute top-3 right-3 z-10">
           {s.splitsLocked ? (
-            <Tooltip content="Splits Locked: Artist royalties are cryptographically routing to token holders.">
+            <Tooltip content="Splits Locked: Artist royalties are cryptographically routing to coin holders.">
               <span className="w-2 h-2 rounded-full bg-neon block shadow-[0_0_6px_rgba(0,229,114,0.5)]" />
             </Tooltip>
           ) : (

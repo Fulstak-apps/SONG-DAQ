@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { Star, Rocket, Play, Pause } from "lucide-react";
 import { SafeImage } from "./SafeImage";
 import { Sparkline } from "./Sparkline";
-import { Tooltip, Glossary } from "./Tooltip";
+import { Tooltip } from "./Tooltip";
 import { fmtNum, fmtPct } from "@/lib/pricing";
 import { usePlayer, useWatchlist, type PlayerTrack } from "@/lib/store";
 import { toast } from "@/lib/toast";
@@ -138,7 +138,7 @@ export function CoinCard({
         </button>
       </div>
 
-      {/* Track info: fixed height so Artist Tokens and song coins align. */}
+      {/* Track info: fixed height so Artist Coins and Song Coins align. */}
       <div className="flex h-5 items-center gap-2 px-1">
         {trackTitle ? (
           <>
@@ -153,6 +153,22 @@ export function CoinCard({
           </>
         )}
       </div>
+
+      <Tooltip
+        width={340}
+        content={
+          <div className="space-y-2 text-[12px] leading-relaxed text-mute">
+            <div><span className="font-black text-neon">Price:</span> what one coin costs right now.</div>
+            <div><span className="font-black text-neon">Market cap:</span> coin price multiplied by the active supply.</div>
+            <div><span className="font-black text-neon">Holders:</span> wallets that currently hold the coin.</div>
+            <div><span className="font-black text-neon">Liquidity:</span> the public market money that lets fans buy and sell.</div>
+          </div>
+        }
+      >
+        <span className="w-fit rounded-full border border-edge bg-white/[0.045] px-2.5 py-1 text-[8px] font-black uppercase tracking-widest text-mute transition hover:border-neon/30 hover:text-neon">
+          What does this mean?
+        </span>
+      </Tooltip>
 
       {/* Price + Sparkline row */}
       <div className="flex flex-1 items-end justify-between gap-4 pt-1">

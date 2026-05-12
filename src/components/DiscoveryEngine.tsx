@@ -236,10 +236,10 @@ export default function DiscoveryEngine() {
   const [networkStats, setNetworkStats] = useState({ tradingVolume: 0, activeArtists: 0, songsTokenized: 0 });
   const [networkStatsLoaded, setNetworkStatsLoaded] = useState(false);
   const heroText = [
-    { a: "Insurance and", b: "liquidity.", color: "text-gradient-neon" },
+    { a: "Own Music", b: "Like Stock.", color: "text-gradient-neon" },
     { a: "100% verified", b: "on-chain.", color: "text-gradient-violet" },
-    { a: "Earn stream", b: "royalties.", color: "text-gradient-cyan" },
-    { a: "Real-time", b: "audit protocol.", color: "text-gradient-gold" },
+    { a: "Launch in", b: "under 2 min.", color: "text-gradient-cyan" },
+    { a: "Instant creator", b: "tokenization.", color: "text-gradient-gold" },
   ];
   const hero = heroText[heroIdx];
 
@@ -490,12 +490,12 @@ export default function DiscoveryEngine() {
           <p className="text-mute text-sm sm:text-base md:text-lg max-w-xl font-medium leading-relaxed">
             {isArtist
               ? `Establish your market presence, @${audius?.handle}. Convert streaming engagement into institutional capital.`
-              : "Discover breakout artists early. Support their Artist Tokens and Song Coins, build your reputation, and gain status as they grow."}
+              : "Discover breakout artists early. Support their Artist Coins and Song Coins, build your reputation, and gain status as they grow."}
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 shrink-0 relative z-10 w-full md:w-auto">
             {isArtist && (
               <Link href="/artist" className="w-full sm:w-auto btn-primary px-8 py-3.5 text-[10px] font-black tracking-widest shadow-neon-glow">
-                LAUNCH TOKEN
+                LAUNCH COIN
               </Link>
             )}
             {!address && (
@@ -533,13 +533,13 @@ export default function DiscoveryEngine() {
                   </div>
                   <HeroPulseLoadingRow label="Volume" />
                   <HeroPulseLoadingRow label="Active Artists" />
-                  <HeroPulseLoadingRow label="Songs Tokenized" />
+                  <HeroPulseLoadingRow label="Song Coins" />
                 </>
               ) : (
                 <>
                   <HeroPulseRow label="Volume" value={fmtUsdCompact(heroPulse.volume)} accent="text-neon" />
                   <HeroPulseRow label="Active Artists" value={fmtStatCompact(heroPulse.artists)} />
-                  <HeroPulseRow label="Songs Tokenized" value={fmtStatCompact(heroPulse.songs)} accent="text-cyan" />
+                  <HeroPulseRow label="Song Coins" value={fmtStatCompact(heroPulse.songs)} accent="text-cyan" />
                 </>
               )}
             </div>
@@ -571,7 +571,7 @@ export default function DiscoveryEngine() {
           <div className="lg:w-[520px] min-h-[58px] grid grid-cols-1 sm:grid-cols-2 gap-2">
             {artistQuery.trim().length < 2 ? (
               <div className="sm:col-span-2 h-full rounded-xl border border-edge bg-white/[0.045] px-4 py-3 text-xs text-mute flex items-center">
-                Search live Audius artists and jump to their Artist Token when one is listed.
+                Search live Audius artists and jump to their Artist Coin when one is listed.
               </div>
             ) : artistSearching ? (
               <div className="sm:col-span-2 h-full rounded-xl border border-edge bg-white/[0.045] px-4 py-3 text-xs text-mute flex items-center animate-pulse">
@@ -617,7 +617,7 @@ export default function DiscoveryEngine() {
           <div className="flex flex-col sm:flex-row gap-2 min-w-0">
             <Segmented
               options={[
-                { id: "coins" as Market, label: "Artist Tokens" },
+                { id: "coins" as Market, label: "Artist Coins" },
                 { id: "songs" as Market, label: "Song Coins" },
               ]}
               value={market}
@@ -848,7 +848,7 @@ export default function DiscoveryEngine() {
                   ) : (
                     <>
                       <div className="text-mute text-sm font-bold">No Audius coins reachable right now</div>
-                      <button onClick={() => setMarket("songs")} className="btn mt-3 text-xs">Browse Artist Tokens instead →</button>
+                      <button onClick={() => setMarket("songs")} className="btn mt-3 text-xs">Browse Song Coins instead →</button>
                     </>
                   )}
                 </div>
@@ -901,9 +901,9 @@ export default function DiscoveryEngine() {
                   </>
                 ) : (
                   <>
-                    <div className="text-lg font-bold mb-1 text-ink">No Artist Tokens yet</div>
+                    <div className="text-lg font-bold mb-1 text-ink">No Artist Coins yet</div>
                     <div className="text-mute text-sm mb-3">Be the first to tokenize your music.</div>
-                    {isArtist && <Link href="/artist" className="btn-primary text-xs">+ Launch Artist Token</Link>}
+                    {isArtist && <Link href="/artist" className="btn-primary text-xs">+ Launch Artist Coin</Link>}
                   </>
                 )}
               </div>

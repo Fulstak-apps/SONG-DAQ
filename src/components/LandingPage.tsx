@@ -45,11 +45,12 @@ export function LandingPage() {
   const [stats, setStats] = useState({ tradingVolume: 0, activeArtists: 0, songsTokenized: 0 });
   const [statsLoaded, setStatsLoaded] = useState(false);
   const HERO_TEXT = [
-    { a: "Insurance and", b: "liquidity.", color: "text-gradient-neon" },
+    { a: "Own Music", b: "Like Stock.", color: "text-gradient-neon" },
     { a: "100% verified", b: "on-chain.", color: "text-gradient-violet" },
-    { a: "Earn stream", b: "royalties.", color: "text-gradient-cyan" },
-    { a: "Real-time", b: "audit protocol.", color: "text-gradient-gold" },
+    { a: "Launch in", b: "under 2 min.", color: "text-gradient-cyan" },
+    { a: "Instant creator", b: "tokenization.", color: "text-gradient-gold" },
   ];
+  const trustBadges = ["100% verified on-chain", "Instant creator tokenization", "Launch in under 2 minutes"];
 
   useEffect(() => {
     const i = setInterval(() => setHeroIdx((curr) => (curr + 1) % HERO_TEXT.length), 4000);
@@ -106,8 +107,16 @@ export function LandingPage() {
             transition={{ duration: 0.7, delay: 0.35 }}
             className="text-mute text-sm sm:text-base md:text-lg max-w-xl font-medium leading-relaxed mx-auto lg:mx-0"
           >
-            Buy and trade music coins tied to real artists and songs. Audius powers artist identity and catalog data; song-daq powers the market, portfolio, charts, and royalty transparency.
+            Song-daq lets artists launch music markets and lets fans buy song coins with clear price, liquidity, wallet, and royalty signals before money moves.
           </motion.p>
+
+          <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
+            {trustBadges.map((badge) => (
+              <span key={badge} className="rounded-full border border-neon/20 bg-neon/8 px-3 py-1.5 text-[9px] font-black uppercase tracking-[0.18em] text-neon">
+                {badge}
+              </span>
+            ))}
+          </div>
 
           <motion.div
             initial={false}
@@ -146,13 +155,13 @@ export function LandingPage() {
                 </div>
                 <HeroPulseStat label="Volume" loading />
                 <HeroPulseStat label="Active Artists" loading />
-                <HeroPulseStat label="Songs Tokenized" loading />
+                <HeroPulseStat label="Song Coins" loading />
               </>
             ) : (
               <>
                 <HeroPulseStat label="Volume" value={fmtStatUsd(stats.tradingVolume)} accent="text-neon" />
                 <HeroPulseStat label="Active Artists" value={fmtStat(stats.activeArtists)} />
-                <HeroPulseStat label="Songs Tokenized" value={fmtStat(stats.songsTokenized)} accent="text-cyan" />
+                <HeroPulseStat label="Song Coins" value={fmtStat(stats.songsTokenized)} accent="text-cyan" />
               </>
             )}
             </div>
@@ -163,6 +172,26 @@ export function LandingPage() {
           </div>
         </motion.div>
       </section>
+
+      <Section>
+        <div className="grid gap-3 md:grid-cols-3">
+          <SimpleStep
+            num="01"
+            title="Launch Artist Coin"
+            body="Artists connect Audius, choose an Artist Coin or Song Coin, and set the market structure in plain English."
+          />
+          <SimpleStep
+            num="02"
+            title="Fans Buy Ownership"
+            body="Fans buy from a public curve or liquidity pool, not from a hidden artist wallet."
+          />
+          <SimpleStep
+            num="03"
+            title="Earn From Activity + Growth"
+            body="Portfolio value can move with demand, market activity, and verified royalty signals. Profit is never guaranteed."
+          />
+        </div>
+      </Section>
 
       {/* ═══ HOW IT WORKS ═════════════════════════════════ */}
       <Section>
@@ -183,7 +212,7 @@ export function LandingPage() {
       <div className="grid grid-cols-1 items-stretch gap-3 [grid-auto-rows:1fr] md:grid-cols-3 lg:grid-cols-6">
         <Section className="h-full" delay={0}><Step num={1} title="Upload" icon={<CloudUpload className="text-violet" size={24} />} desc="Upload your track to Audius." /></Section>
         <Section className="h-full" delay={0.05}><Step num={2} title="Distribute" icon={<Globe className="text-violet" size={24} />} desc="Release via DistroKid, TuneCore, etc." /></Section>
-        <Section className="h-full" delay={0.1}><Step num={3} title="Tokenize" icon={<CircleDollarSign className="text-violet" size={24} />} desc="Create your song coin. Set royalty share (min 10%)." active /></Section>
+        <Section className="h-full" delay={0.1}><Step num={3} title="Launch Coin" icon={<CircleDollarSign className="text-violet" size={24} />} desc="Create your song coin. Set royalty share (min 10%)." active /></Section>
         <Section className="h-full" delay={0.15}><Step num={4} title="Lock Splits" icon={<Lock className="text-neon" size={24} />} desc="Send unique royalty email to your distributor." /></Section>
         <Section className="h-full" delay={0.2}><Step num={5} title="Verify" icon={<ShieldCheck className="text-violet" size={24} />} desc="Distributor confirms → Splits Locked badge." /></Section>
         <Section className="h-full" delay={0.25}><Step num={6} title="Fans Invest" icon={<Users className="text-violet" size={24} />} desc="Royalties flow monthly. Everyone wins." /></Section>
@@ -192,7 +221,7 @@ export function LandingPage() {
       {/* ═══ PRODUCT SHOWCASE ═════════════════════════════ */}
       <Section>
         <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-4">
-          {/* Token Preview Card */}
+          {/* Coin Preview Card */}
           <div className="panel-elevated p-8 relative overflow-hidden grain">
             <div className="orb orb-violet w-[300px] h-[300px] -top-20 -right-20 opacity-30" />
             <div className="relative z-10">
@@ -218,15 +247,15 @@ export function LandingPage() {
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
-                <MiniStat k="Token Price" v="$0.021" />
+                <MiniStat k="Coin Price" v="$0.021" />
                 <MiniStat k="Market Cap" v="$2.1M" />
                 <MiniStat k="Holders" v="1,248" />
                 <MiniStat k="Royalty Share" v="25%" accent />
               </div>
 
-              {/* Token allocation */}
+              {/* Coin allocation */}
               <div className="mt-8 pt-6 border-t border-white/[0.04]">
-                <div className="label mb-4">Token Allocation</div>
+                <div className="label mb-4">Coin Allocation</div>
                 <div className="flex gap-1 h-3 rounded-full overflow-hidden">
                   <div className="bg-violet/60 flex-[50]" />
                   <div className="bg-blue-500/60 flex-[25]" />
@@ -290,12 +319,12 @@ export function LandingPage() {
       </Section>
 
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-        <Section delay={0}><FeatureCard icon={<TrendingUp size={24} />} title="Live Trading" desc="Real-time bonding curve execution. Buy and sell tokens instantly with on-chain settlement." detail="Execution, price discovery, and wallet confirmation stay visible so users can understand what they are buying and how the market is moving before they commit funds." color="neon" noTooltip /></Section>
-        <Section delay={0.05}><FeatureCard icon={<Zap size={24} />} title="Stream Royalties" desc="Verified distributor splits route royalties directly to token holders every month." detail="Royalty-backed signals, distributor routing, and payout status are surfaced in the app so buyers can distinguish between verified revenue flows and pending claims." color="violet" noTooltip /></Section>
+        <Section delay={0}><FeatureCard icon={<TrendingUp size={24} />} title="Live Trading" desc="Buy and sell song coins with clear chart, liquidity, fee, and wallet confirmation screens." detail="Execution, price discovery, and wallet confirmation stay visible so users can understand what they are buying and how the market is moving before they commit funds." color="neon" noTooltip /></Section>
+        <Section delay={0.05}><FeatureCard icon={<Zap size={24} />} title="Stream Royalties" desc="Verified distributor splits can become visible royalty signals for song coin markets." detail="Royalty-backed signals, distributor routing, and payout status are surfaced in the app so buyers can distinguish between verified revenue flows and pending claims." color="violet" noTooltip /></Section>
         <Section delay={0.1}><FeatureCard icon={<ShieldCheck size={24} />} title="On-Chain Verified" desc="Every split is cryptographically verifiable. No trust needed — verify on Solana." detail="Mint addresses, launch data, and contract-linked status are presented with explorer visibility so advanced users can verify the same records the interface is describing." color="neon" noTooltip /></Section>
         <Section delay={0.15}><FeatureCard icon={<BarChart3 size={24} />} title="Price Intelligence" desc="AI-powered 'Why Did This Move?' analysis explains every price movement." detail="Market context is easier to trust when price movement is explained with volume, timing, and behavior cues instead of leaving users to guess why a token jumped or faded." color="cyan" noTooltip /></Section>
         <Section delay={0.2}><FeatureCard icon={<Eye size={24} />} title="Whale Tracking" desc="Real-time alerts when large wallets accumulate or exit positions." detail="Large position changes, holder concentration, and unusual activity are the kinds of signals that help users avoid blindly walking into manipulated markets." color="gold" noTooltip /></Section>
-        <Section delay={0.25}><FeatureCard icon={<Gem size={24} />} title="Prestige System" desc="Earn XP for trading. Unlock Bronze → Silver → Gold → Platinum → Diamond tiers." detail="Prestige gives active users a persistent reputation layer tied to informed participation, not just empty badges, so long-term engagement is more visible than impulsive hype." color="violet" noTooltip /></Section>
+        <Section delay={0.25}><FeatureCard icon={<Gem size={24} />} title="Prestige System" desc="Build reputation through market participation, watchlists, and informed activity." detail="Prestige gives active users a persistent reputation layer tied to informed participation, not just empty badges, so long-term engagement is more visible than impulsive hype." color="violet" noTooltip /></Section>
       </div>
 
       {/* ═══ TRUST SECTION ════════════════════════════════ */}
@@ -307,7 +336,7 @@ export function LandingPage() {
             <div className="relative z-10">
               <div className="label mb-4">Security & Trust</div>
               <h3 className="text-3xl md:text-4xl font-black tracking-tight text-white max-w-2xl">
-                Built to make token launches and trades legible before anyone risks real money.
+                Built to make coin launches and trades legible before anyone risks real money.
               </h3>
               <p className="mt-4 mb-8 text-base md:text-lg leading-relaxed text-mute max-w-2xl">
                 song-daq is designed so wallet approvals, artist identity, royalty status, liquidity protection, and contract visibility are understandable before anyone commits funds. The page should answer the trust questions first, not make you hunt for them in tiny hover states.
@@ -372,7 +401,7 @@ export function LandingPage() {
                 <ul className="space-y-4 text-sm md:text-[15px] text-mute leading-relaxed">
                   <li>Wallet signatures are required for launches and trades, which means user funds do not move unless the connected wallet explicitly approves the exact transaction.</li>
                   <li>Liquidity lock settings are captured at launch and shown publicly, helping users judge whether the pool is protected or still exposed to quick removal.</li>
-                  <li>Tokens without valid launch liquidity should not appear as live public market assets, which reduces the chance of people buying into a dead or non-functional market.</li>
+                  <li>Coins without valid launch liquidity should not appear as live public market assets, which reduces the chance of people buying into a dead or non-functional market.</li>
                   <li>Artist identity, royalty status, wallet caps, allocation warnings, trust badges, and reporting tools are all surfaced so buyers can evaluate risk before participating.</li>
                 </ul>
               </div>
@@ -501,6 +530,19 @@ function FlowCard({ title, items }: { title: string; items: string[] }) {
   );
 }
 
+function SimpleStep({ num, title, body }: { num: string; title: string; body: string }) {
+  return (
+    <div className="panel-elevated grain min-h-[190px] p-5 md:p-6">
+      <div className="flex items-start justify-between gap-4">
+        <span className="font-mono text-2xl font-black text-neon">{num}</span>
+        <span className="h-2 w-2 rounded-full bg-neon shadow-[0_0_16px_rgba(183,255,0,0.45)]" />
+      </div>
+      <h3 className="mt-5 text-2xl font-black tracking-tight text-ink">{title}</h3>
+      <p className="mt-3 text-sm leading-relaxed text-mute">{body}</p>
+    </div>
+  );
+}
+
 function Step({ num, title, icon, desc, active }: { num: number; title: string; icon: React.ReactNode; desc: string; active?: boolean }) {
   return (
     <Tooltip
@@ -622,7 +664,7 @@ function supportDetail(text: string) {
     "Smart contract visibility": "Mint addresses and external explorers are linked so advanced users can inspect token contracts and transactions directly.",
     "Fraud and fake artist reporting": "Suspicious coins or fake artist listings should be reportable through support so the market can flag, review, and delist abusive assets.",
     "Account recovery and support process": "Wallet custody remains with the user, but support can help with Audius linking, suspicious activity reports, and transaction troubleshooting.",
-    "Distributor-verified splits": "The artist routes royalties through a distributor split or verification flow, so token holders can see that payouts are connected to actual distribution infrastructure.",
+    "Distributor-verified splits": "The artist routes royalties through a distributor split or verification flow, so coin holders can see that payouts are connected to actual distribution infrastructure.",
     "On-chain transparency — verify everything": "Mint addresses, wallets, launch data, and market activity should be inspectable on Solana. The UI summarizes it, but the chain remains the source of truth.",
     "Artist tokens are vested (no rug pulls)": "Artist allocations should release over time instead of all at once. Vesting helps prevent instant dumping and makes incentives line up with long-term fan support.",
     "Suspicious coin monitoring": "Large holder changes, unusual activity, and identity mismatches should be highlighted so users can judge risk before buying.",

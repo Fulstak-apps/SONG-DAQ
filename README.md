@@ -116,7 +116,7 @@ include exact slippage.
 
 ```
 50% → artist
-30% → token holders (pro-rata)
+30% → coin holders (pro-rata)
 20% → liquidity / treasury
 ```
 

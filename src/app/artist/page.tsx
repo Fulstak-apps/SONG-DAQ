@@ -69,7 +69,7 @@ export default function ArtistPage() {
         <div className="absolute inset-0 bg-gradient-to-tr from-red/5 to-transparent pointer-events-none" />
         <div className="text-white text-lg font-bold">Artist Access Restricted</div>
         <div className="text-mute text-sm leading-relaxed">
-          Your account is currently registered as an Investor. Only verified Artists can launch Artist Tokens and access the studio.
+          Your account is currently registered as an Investor. Only verified Artists can launch Artist Coins and access the studio.
         </div>
       </div>
     );
@@ -98,7 +98,7 @@ export default function ArtistPage() {
       </header>
 
       <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Stat k="Active Artist Tokens" v={fmtNum(mySongs.length)} tooltip="Number of your artist and Song Coins currently trading on the market." />
+        <Stat k="Active Artist Coins" v={fmtNum(mySongs.length)} tooltip="Number of your artist and Song Coins currently trading on the market." />
         <Stat k="Total Network Cap" v={formatCryptoWithFiat(totalCap, "SOL", totalCap * solUsdRate, currency, 2)} tooltip={`The combined market capitalization of all your listed songs. ${priceAgeText(fiatUpdatedAt)}.`} />
         <Stat k="Cumulative Revenue" v={formatCryptoWithFiat(artistRevenue, "SOL", artistRevenue * solUsdRate, currency, 4)} accent="gain" tooltip={`Total SOL you have earned from your retained shares. ${priceAgeText(fiatUpdatedAt)}.`} />
         <Stat k="Unique Holders" v={fmtNum(totalHolders)} tooltip="Total number of unique addresses holding your Song Coins." />

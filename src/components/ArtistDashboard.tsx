@@ -150,7 +150,7 @@ export function ArtistDashboard() {
       {/* Artist's coins */}
       <section>
         <div className="flex items-center justify-between mb-3 px-1">
-          <div className="label">Your Artist Tokens</div>
+          <div className="label">Your Artist Coins</div>
           <a href="https://audius.co/clubs" target="_blank" rel="noreferrer" className="text-[10px] text-mute hover:text-white uppercase tracking-widest font-bold transition flex items-center gap-1">
             Manage on Audius <ExternalLink size={10} />
           </a>

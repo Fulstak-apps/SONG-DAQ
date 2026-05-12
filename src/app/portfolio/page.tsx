@@ -329,7 +329,7 @@ export default function PortfolioPage() {
           <Metric label="Demo Cash" value={fmtUsd(cashUsd)} sub="Combined paper value from SOL + AUDIO + seed cash" />
           <Metric label="Demo SOL" value={formatCryptoWithFiat(paperSol, "SOL", paperUsd.sol ? paperSol * paperUsd.sol : null)} sub="Simulated wallet SOL" />
           <Metric label="Demo AUDIO" value={formatCryptoWithFiat(paperAudio, "AUDIO", paperUsd.audio ? paperAudio * paperUsd.audio : null)} sub="Simulated AUDIO balance" />
-          <Metric label="Artist Tokens" value={fmtNum(paperPositions.length)} sub="Paper holdings" />
+          <Metric label="Artist Coins" value={fmtNum(paperPositions.length)} sub="Paper holdings" />
           <Metric label="Song Coins" value="0" sub="Use the market to add positions" />
           <Metric label="PnL / Net Change" value="—" sub="Demo mode starts neutral" />
           <Metric label="Risk Focus" value="Demo" sub="No blockchain transaction is sent" />
@@ -493,14 +493,14 @@ export default function PortfolioPage() {
         <div className="panel-elevated p-5 grain">
           <div className="flex items-center justify-between mb-4">
             <div>
-              <h2 className="text-xl font-black tracking-tight">Artist Tokens</h2>
+              <h2 className="text-xl font-black tracking-tight">Artist Coins</h2>
               <p className="text-mute text-xs mt-1">Read from Solana token accounts, Audius artist-token metadata, and confirmed song-daq trade records.</p>
             </div>
             {(tradingTokens.loading || audiusTokens.loading) && <span className="text-[10px] uppercase tracking-widest text-neon animate-pulse">Syncing</span>}
           </div>
           <div className="space-y-2">
             {artistTokens.length ? artistTokens.map((t) => <TokenRow key={t.mint} t={t} />) : (
-              <Empty icon={<Music2 size={18} />} title="No Artist Tokens Found" text="Your connected Solana wallet, Audius vault, and confirmed song-daq trade records do not currently show Artist Tokens." />
+              <Empty icon={<Music2 size={18} />} title="No Artist Coins Found" text="Your connected Solana wallet, Audius vault, and confirmed song-daq trade records do not currently show Artist Coins." />
             )}
           </div>
         </div>

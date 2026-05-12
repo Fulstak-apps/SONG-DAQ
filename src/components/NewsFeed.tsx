@@ -9,7 +9,7 @@ interface NewsItem {
   link: string;
   pubDate: string;
   source: string;
-  category: "MUSIC" | "TECH" | "AI" | "TRENDING";
+  category: "MUSIC" | "TECH" | "AI" | "CREATOR" | "TRENDING";
   thumbnail?: string;
 }
 
@@ -18,6 +18,7 @@ const CAT_STYLE: Record<string, string> = {
   TRENDING: "text-neon border-neon/20 bg-neon/5",
   TECH: "text-cyan border-cyan/20 bg-cyan/5",
   AI: "text-gold border-gold/20 bg-gold/5",
+  CREATOR: "text-neon border-neon/20 bg-neon/5",
 };
 
 function cleanNewsText(value: string) {
@@ -62,6 +63,11 @@ export function NewsFeed() {
   const baseNews = news.slice(0, 15);
   const displayNews = Array.from({ length: Math.max(2, Math.ceil(30 / Math.max(baseNews.length, 1))) })
     .flatMap(() => baseNews);
+  const categoryCounts = (["MUSIC", "AI", "TECH", "CREATOR"] as const).map((category) => ({
+    category,
+    count: news.filter((item) => item.category === category).length,
+    label: category === "CREATOR" ? "CREATOR ECONOMY" : `${category} NEWS`,
+  }));
 
   useEffect(() => {
     if (paused || !loaded || !displayNews.length) return;
@@ -91,11 +97,19 @@ export function NewsFeed() {
           <span className="w-2 h-2 rounded-full bg-violet shadow-[0_0_6px_rgba(155,81,224,0.5)] animate-pulseDot" />
           <span className="label text-xs">
             <Glossary term="News Feed" def="Algorithmic curation of music industry and financial market news affecting your assets." category="financial">
-              Market Intelligence
+              Music + Creator Intel
             </Glossary>
           </span>
         </div>
         <span className="text-[9px] text-mute num bg-white/[0.055] px-2 py-0.5 rounded-full border border-edge font-bold uppercase tracking-widest">{news.length} stories</span>
+      </div>
+
+      <div className="relative z-10 flex gap-1.5 overflow-x-auto border-b border-edge px-5 py-2 no-scrollbar">
+        {categoryCounts.map((item) => (
+          <span key={item.category} className={`shrink-0 rounded-full border px-2.5 py-1 text-[8px] font-black uppercase tracking-widest ${CAT_STYLE[item.category] ?? ""}`}>
+            {item.label} · {loaded ? item.count : "..."}
+          </span>
+        ))}
       </div>
 
       {!loaded ? (

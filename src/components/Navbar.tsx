@@ -18,7 +18,7 @@ type NavItem = { href: string; label: string; icon: string; reqArtistMode?: bool
 const NAV: NavItem[] = [
   { href: "/market", label: "MARKET", icon: "◉" },
   { href: "/portfolio", label: "PORTFOLIO", icon: "◧" },
-  { href: "/artist", label: "LAUNCH TOKEN", reqArtistMode: true, icon: "♫" },
+  { href: "/artist", label: "LAUNCH COIN", reqArtistMode: true, icon: "♫" },
   { href: "/social", label: "INTEL", icon: "📡" },
   { href: "/faq", label: "SUPPORT", icon: "?" },
 ];

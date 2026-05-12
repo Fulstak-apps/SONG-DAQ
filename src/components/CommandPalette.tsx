@@ -17,7 +17,7 @@ interface Item {
 }
 
 const STATIC_ITEMS: Item[] = [
-  { id: "nav-market", title: "Market", subtitle: "Live Artist Tokens + Song Coins", href: "/market", hint: "System", icon: <TrendingUp size={14} className="text-neon" /> },
+  { id: "nav-market", title: "Market", subtitle: "Live Artist Coins + Song Coins", href: "/market", hint: "System", icon: <TrendingUp size={14} className="text-neon" /> },
   { id: "nav-portfolio", title: "Asset Portfolio", subtitle: "Holdings & performance analytics", href: "/portfolio", hint: "System", icon: <Star size={14} className="text-gold" /> },
   { id: "nav-social", title: "Social Feed", subtitle: "Community intelligence & sentiment", href: "/social", hint: "Network", icon: <Zap size={14} className="text-violet" /> },
   { id: "nav-artist", title: "Artist Studio", subtitle: "Token issuance & verification", href: "/artist", hint: "Protocol", icon: <Music size={14} className="text-violet" /> },
