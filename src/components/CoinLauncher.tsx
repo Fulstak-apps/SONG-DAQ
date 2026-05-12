@@ -300,6 +300,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       setLiquidityStage("preparing");
       setLiquidityMessage("Coin created. Now SONG·DAQ is preparing launch liquidity so fans can buy and sell it.");
 
+      let liquidityTxSig: string | null = null;
+      let liquidityPrep: {
+        poolId: string;
+        lpMint: string;
+      } | null = null;
       try {
         const prep = await api<{
           transaction: string;
@@ -318,18 +323,20 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
             lockDays: Number(liquidityLockDays),
           },
         });
+        liquidityPrep = { poolId: prep.poolId, lpMint: prep.lpMint };
 
         const walletId = getConnectedWalletId() || externalWalletProvider;
         setLiquidityStage("signing");
         setLiquidityMessage(`Approve the second wallet transaction. This adds liquidity by putting reserved song coins plus ${liquidityPairAsset} into the public pool.`);
-        const liquidityTxSig = await sendSerializedTransaction(walletId as WalletId, prep.transaction);
+        liquidityTxSig = await sendSerializedTransaction(walletId as WalletId, prep.transaction);
 
         setLiquidityStage("confirming");
-        setLiquidityMessage("Liquidity transaction sent. Verifying the public pool before opening trading to fans.");
+        setLiquidityMessage("Liquidity transaction sent. Solana and the pool router may need a moment to index it, so SONG·DAQ is verifying before opening trading to fans.");
         let live: any = null;
         let lastLiquidityError: any = null;
-        for (let attempt = 0; attempt < 3; attempt++) {
+        for (let attempt = 0; attempt < 10; attempt++) {
           try {
+            setLiquidityMessage(`Liquidity transaction sent. Verifying public pool confirmation (${attempt + 1}/10).`);
             live = await api<any>(`/api/songs/${r.song.id}/liquidity`, {
               method: "POST",
               json: {
@@ -346,17 +353,52 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
             break;
           } catch (recordError: any) {
             lastLiquidityError = recordError;
-            await new Promise((resolve) => setTimeout(resolve, 1600 + attempt * 1600));
+            await new Promise((resolve) => setTimeout(resolve, 1800 + attempt * 1200));
           }
         }
-        if (!live) throw lastLiquidityError || new Error("Liquidity transaction was sent, but SONG·DAQ could not verify it yet.");
+        if (!live) {
+          setLiquidityStage("confirming");
+          setLiquidityMessage(
+            `Liquidity transaction was sent, but SONG·DAQ is still waiting for the pool to index. Transaction: ${liquidityTxSig}. Refresh the coin page in a moment if it does not switch to live automatically.`,
+          );
+          setResult({
+            ...r,
+            launch: {
+              ...r.launch,
+              liquidityTxSig,
+              poolId: prep.poolId,
+              lpMint: prep.lpMint,
+              tradingStatus: "VERIFYING_LIQUIDITY",
+              verifyError: lastLiquidityError?.message ?? null,
+            },
+          });
+          onLaunched?.();
+          return;
+        }
 
         setLiquidityStage("live");
         setLiquidityMessage("Launch liquidity is live. Fans can now buy and sell this coin from the public pool.");
         setResult({ ...r, song: live.song || r.song, launch: { ...r.launch, liquidityTxSig, poolId: prep.poolId, lpMint: prep.lpMint, tradingStatus: "LIVE" } });
       } catch (liquidityError: any) {
-        setLiquidityStage("failed");
-        setLiquidityMessage(liquidityError?.message || "Coin was created, but it still needs liquidity. Liquidity means putting reserved song coins plus SOL, USDC, or AUDIO into the public pool so fans can buy and sell.");
+        if (liquidityTxSig) {
+          setLiquidityStage("confirming");
+          setLiquidityMessage(
+            `Liquidity transaction was sent, but SONG·DAQ could not finish verification yet. Transaction: ${liquidityTxSig}. This usually means Solana or the pool router is still indexing it.`,
+          );
+          setResult({
+            ...r,
+            launch: {
+              ...r.launch,
+              liquidityTxSig,
+              poolId: liquidityPrep?.poolId,
+              lpMint: liquidityPrep?.lpMint,
+              tradingStatus: "VERIFYING_LIQUIDITY",
+            },
+          });
+        } else {
+          setLiquidityStage("failed");
+          setLiquidityMessage(liquidityError?.message || "Coin was created, but it still needs liquidity. Liquidity means putting reserved song coins plus SOL, USDC, or AUDIO into the public pool so fans can buy and sell.");
+        }
       }
       onLaunched?.();
     } catch (e: any) {

@@ -12,7 +12,8 @@ import { api } from "@/lib/api";
 import { getConnectedWalletId, sendSerializedTransaction } from "@/lib/wallet";
 import { fmtSol, fmtNum, fmtPct } from "@/lib/pricing";
 import { spotPrice, quoteBuyByTokens, quoteSellByTokens } from "@/lib/bondingCurve";
-import { Glossary } from "@/components/Tooltip";
+import { Glossary, InfoTooltip } from "@/components/Tooltip";
+import { formatCryptoWithFiat, formatFiatEstimate, priceAgeText, useLiveFiatPrices } from "@/lib/fiat";
 
 import { CHART_RANGE_LABELS, CHART_RANGES, CHART_RANGE_MS, type ChartRange } from "@/lib/chartRanges";
 
@@ -39,9 +40,9 @@ export default function SongTradingPage() {
   const load = useCallback(async () => {
     try {
       const [s, p, h] = await Promise.all([
-        fetch(`/api/songs/${id}`, { cache: "no-store" }).then((r) => r.json()),
-        fetch(`/api/price/${id}`, { cache: "no-store" }).then((r) => r.json()),
-        fetch(`/api/songs/${id}/holders`, { cache: "no-store" }).then((r) => r.json()),
+        api<any>(`/api/songs/${id}`),
+        api<any>(`/api/price/${id}`),
+        api<any>(`/api/songs/${id}/holders`),
       ]);
       if (s.error) throw new Error(s.error);
       setSong(s.song);
@@ -630,13 +631,24 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
   const [lockDays, setLockDays] = useState(String(song.liquidityLockDays || 180));
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
+  const { currency, prices, updatedAt } = useLiveFiatPrices([pairAsset, "SOL"]);
+  const pairAmountNumber = Number(pairAmount || 0);
+  const pairUsdRate = pairAsset === "USDC" ? 1 : Number(prices[pairAsset]?.usd ?? 0);
+  const pairUsd = pairUsdRate > 0 ? pairAmountNumber * pairUsdRate : null;
+  const estimatedFeeSol = 0.003;
+  const solUsdRate = Number(prices.SOL?.usd ?? 0);
+  const estimatedFeeUsd = solUsdRate > 0 ? estimatedFeeSol * solUsdRate : null;
+  const poolValueUsd = pairUsd != null ? pairUsd * 2 : null;
 
   async function submit() {
     if (!address) return;
     setBusy(true);
     setErr(null);
+    setStatus(null);
+    let sig: string | null = null;
     try {
-      const prep = await api<{
+      const prepared = await api<{
         transaction: string;
         poolId: string;
         lpMint: string;
@@ -655,24 +667,49 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
       });
       const walletId = getConnectedWalletId();
       if (!walletId) throw new Error("No connected Solana wallet found");
-      const sig = await sendSerializedTransaction(walletId, prep.transaction);
-      await api(`/api/songs/${song.id}/liquidity`, {
-        method: "POST",
-        json: {
-          wallet: address,
-          tokenAmount: Number(tokenAmount),
-          pairAmount: Number(pairAmount),
-          pairAsset,
-          lockDays: Number(lockDays),
-          liquidityTxSig: sig,
-          poolId: prep.poolId,
-          lpMint: prep.lpMint,
-        },
-      });
+      setStatus(`Approve liquidity: ${formatCryptoWithFiat(pairAmountNumber, pairAsset, pairUsd, currency)} plus ${Number(tokenAmount).toLocaleString()} song coins.`);
+      sig = await sendSerializedTransaction(walletId, prepared.transaction);
+      setStatus("Liquidity transaction sent. Verifying the public pool. This can take a little while after wallet approval.");
+
+      let verified = false;
+      let lastError: any = null;
+      for (let attempt = 0; attempt < 10; attempt++) {
+        try {
+          setStatus(`Liquidity transaction sent. Checking confirmation (${attempt + 1}/10).`);
+          await api(`/api/songs/${song.id}/liquidity`, {
+            method: "POST",
+            json: {
+              wallet: address,
+              tokenAmount: Number(tokenAmount),
+              pairAmount: Number(pairAmount),
+              pairAsset,
+              lockDays: Number(lockDays),
+              liquidityTxSig: sig,
+              poolId: prepared.poolId,
+              lpMint: prepared.lpMint,
+            },
+          });
+          verified = true;
+          break;
+        } catch (e: any) {
+          lastError = e;
+          await new Promise((resolve) => setTimeout(resolve, 1800 + attempt * 1200));
+        }
+      }
+      if (!verified) {
+        setStatus(`Liquidity transaction was sent, but SONG·DAQ is still waiting for router/indexer confirmation. Transaction: ${sig}. Refresh this page in a moment.`);
+        setErr(lastError?.message || null);
+        return;
+      }
       setOpen(false);
       window.location.reload();
     } catch (e: any) {
-      setErr(e.message ?? "Failed to add liquidity");
+      if (sig) {
+        setStatus(`Liquidity transaction was sent, but SONG·DAQ could not finish verification yet. Transaction: ${sig}. Refresh this page in a moment.`);
+        setErr(e.message ?? null);
+      } else {
+        setErr(e.message ?? "Failed to add liquidity");
+      }
     } finally {
       setBusy(false);
     }
@@ -697,8 +734,17 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
               <input value={tokenAmount} onChange={(e) => setTokenAmount(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-edge bg-panel px-4 py-3 text-sm text-ink outline-none focus:border-neon/50" />
             </label>
             <label className="space-y-2 text-[10px] uppercase tracking-widest font-bold text-mute">
-              <span>Paired asset amount ({pairAsset})</span>
+              <span className="flex items-center gap-1.5">
+                Paired asset amount ({pairAsset})
+                <InfoTooltip
+                  side="bottom"
+                  def={`This is the ${pairAsset} side of the public market. Fans pay with this side and receive song coins from the token side.`}
+                />
+              </span>
               <input value={pairAmount} onChange={(e) => setPairAmount(e.target.value)} inputMode="decimal" className="w-full rounded-xl border border-edge bg-panel px-4 py-3 text-sm text-ink outline-none focus:border-neon/50" />
+              <span className="block text-[10px] normal-case tracking-normal text-mute">
+                {formatCryptoWithFiat(pairAmountNumber, pairAsset, pairUsd, currency)}
+              </span>
             </label>
             <label className="space-y-2 text-[10px] uppercase tracking-widest font-bold text-mute">
               <span>Paired Asset</span>
@@ -715,6 +761,22 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
           <div className="rounded-xl border border-edge bg-panel p-3 text-xs text-mute">
             This sends the reserved launch coins plus paired SOL/USDC into the public pool. Once the transaction is verified, SONG·DAQ marks the coin live so fans can buy and sell.
           </div>
+          <div className="grid gap-2 sm:grid-cols-3">
+            <div className="rounded-xl border border-edge bg-panel p-3">
+              <div className="text-[9px] uppercase tracking-widest font-black text-mute">Payment side</div>
+              <div className="mt-1 font-mono text-xs font-bold text-white">{formatCryptoWithFiat(pairAmountNumber, pairAsset, pairUsd, currency)}</div>
+            </div>
+            <div className="rounded-xl border border-edge bg-panel p-3">
+              <div className="text-[9px] uppercase tracking-widest font-black text-mute">Estimated pool</div>
+              <div className="mt-1 font-mono text-xs font-bold text-neon">{formatFiatEstimate(poolValueUsd, currency)}</div>
+            </div>
+            <div className="rounded-xl border border-edge bg-panel p-3">
+              <div className="text-[9px] uppercase tracking-widest font-black text-mute">Network fee</div>
+              <div className="mt-1 font-mono text-xs font-bold text-white">{formatCryptoWithFiat(estimatedFeeSol, "SOL", estimatedFeeUsd, currency)}</div>
+            </div>
+          </div>
+          <div className="text-[9px] uppercase tracking-widest text-mute">{priceAgeText(updatedAt)}</div>
+          {status && <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-xs text-neon">{status}</div>}
           {err && <div className="rounded-xl border border-red/20 bg-red/10 p-3 text-xs text-red">{err}</div>}
           <button className="btn-primary w-full h-11 text-[10px] font-black uppercase tracking-widest disabled:opacity-50" disabled={busy} onClick={submit}>
             {busy ? "Saving Liquidity…" : "Confirm Liquidity"}
