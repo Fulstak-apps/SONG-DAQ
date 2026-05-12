@@ -310,11 +310,20 @@ export default function DiscoveryEngine() {
     return { cap, vol, avg: songs.length ? perf / songs.length : 1 };
   }, [songs]);
 
+  const marketPulseCounts = useMemo(() => coins.reduce(
+    (a, c) => {
+      if (isOpenAudioMarketCoin(c)) a.artistCoins += 1;
+      else if (isSongDaqMarketCoin(c)) a.songCoins += 1;
+      return a;
+    },
+    { artistCoins: 0, songCoins: 0 },
+  ), [coins]);
+
   const heroPulse = useMemo(() => ({
     volume: networkStatsLoaded ? networkStats.tradingVolume : coinTotals.vol + songTotals.vol,
-    artists: networkStatsLoaded ? networkStats.artistCoins : coins.length,
-    songs: networkStatsLoaded ? networkStats.songCoins : songs.length,
-  }), [networkStatsLoaded, networkStats, coinTotals.vol, songTotals.vol, coins.length, songs.length]);
+    artists: Math.max(networkStatsLoaded ? networkStats.artistCoins : 0, marketPulseCounts.artistCoins),
+    songs: Math.max(networkStatsLoaded ? networkStats.songCoins : 0, marketPulseCounts.songCoins, songs.length),
+  }), [networkStatsLoaded, networkStats, coinTotals.vol, songTotals.vol, marketPulseCounts, songs.length]);
 
   // Filter by watchlist
   const filteredCoins = useMemo(() => {

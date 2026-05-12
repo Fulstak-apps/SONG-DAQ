@@ -1,10 +1,12 @@
 "use client";
 import Link from "next/link";
 import { motion, useInView, AnimatePresence } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { ArrowRight, CloudUpload, Globe, CircleDollarSign, Lock, ShieldCheck, Users, Copy, Music, Info, CheckCircle2, TrendingUp, Zap, BarChart3, Gem, Sparkles, Eye } from "lucide-react";
 import { useUI } from "@/lib/store";
 import { Tooltip } from "./Tooltip";
+import { useCoins } from "@/lib/useCoins";
+import type { AudiusCoin } from "@/lib/audiusCoins";
 
 const spring = { type: "spring", stiffness: 300, damping: 30 } as const;
 const fadeUp = { initial: { opacity: 0, y: 30 }, animate: { opacity: 1, y: 0 }, transition: { duration: 0.7, ease: [0.16, 1, 0.3, 1] } };
@@ -38,8 +40,17 @@ function fmtStatUsd(n: number) {
   return `$${n.toFixed(0)}`;
 }
 
+function isOpenAudioPulseCoin(c: AudiusCoin) {
+  return Boolean((c as any).isOpenAudioCoin || (c as any).source === "open_audio" || (c as any).source === "audius_public");
+}
+
+function isSongDaqPulseCoin(c: AudiusCoin) {
+  return !isOpenAudioPulseCoin(c) && Boolean((c as any).isSongDaqLocal || (c as any).songId || (c as any).mintAddress);
+}
+
 export function LandingPage() {
   const { openLoginModal } = useUI();
+  const { coins: pulseCoins, loading: pulseCoinLoading } = useCoins("marketCap");
 
   const [heroIdx, setHeroIdx] = useState(0);
   const [stats, setStats] = useState({ tradingVolume: 0, activeArtists: 0, artistCoins: 0, songCoins: 0, songsTokenized: 0 });
@@ -73,6 +84,21 @@ export function LandingPage() {
     const i = setInterval(load, 60_000);
     return () => { alive = false; clearInterval(i); };
   }, []);
+
+  const marketPulseCounts = useMemo(() => pulseCoins.reduce(
+    (a, c) => {
+      if (isOpenAudioPulseCoin(c)) a.artistCoins += 1;
+      else if (isSongDaqPulseCoin(c)) a.songCoins += 1;
+      return a;
+    },
+    { artistCoins: 0, songCoins: 0 },
+  ), [pulseCoins]);
+  const pulseLoaded = statsLoaded || (!pulseCoinLoading && pulseCoins.length > 0);
+  const pulseArtistCoins = Math.max(stats.artistCoins, marketPulseCounts.artistCoins);
+  const pulseSongCoins = Math.max(
+    stats.songCoins || Math.max(stats.songsTokenized - stats.artistCoins, 0),
+    marketPulseCounts.songCoins,
+  );
 
   const curr = HERO_TEXT[heroIdx];
 
@@ -150,7 +176,7 @@ export function LandingPage() {
               </span>
             </div>
             <div className="relative mt-5 grid gap-3">
-            {!statsLoaded ? (
+            {!pulseLoaded ? (
               <>
                 <div className="rounded-2xl border border-edge bg-neon/8 px-4 py-3 text-[10px] uppercase tracking-[0.2em] font-black text-neon">
                   <span className="inline-flex items-center gap-2"><span className="h-2 w-2 rounded-full bg-neon animate-pulseDot" /> Loading market data...</span>
@@ -162,8 +188,8 @@ export function LandingPage() {
             ) : (
               <>
                 <HeroPulseStat label="Volume" value={fmtStatUsd(stats.tradingVolume)} accent="text-neon" />
-                <HeroPulseStat label="Artist Coins" value={fmtStat(stats.artistCoins)} />
-                <HeroPulseStat label="Song Coins" value={fmtStat(stats.songCoins || Math.max(stats.songsTokenized - stats.artistCoins, 0))} accent="text-cyan" />
+                <HeroPulseStat label="Artist Coins" value={fmtStat(pulseArtistCoins)} />
+                <HeroPulseStat label="Song Coins" value={fmtStat(pulseSongCoins)} accent="text-cyan" />
               </>
             )}
             </div>
