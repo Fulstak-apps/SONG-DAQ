@@ -16,6 +16,12 @@ services:
         value: songdaq
       - key: NEXT_PUBLIC_APP_URL
         value: https://song-daq.onrender.com
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_SESSION_SECRET
+        sync: false
       - key: APP_MODE
         value: live
       - key: ENABLE_ROYALTY_REQUESTS
