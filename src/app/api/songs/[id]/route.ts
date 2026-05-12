@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { refreshSong } from "@/lib/refresh";
+import { getTrack } from "@/lib/audius";
+import { cacheGet, cacheSet } from "@/lib/redis";
 
 export const dynamic = "force-dynamic";
 
@@ -17,5 +19,12 @@ export async function GET(_req: NextRequest, ctx: { params: { id: string } }) {
     },
   });
   if (!song) return NextResponse.json({ error: "not found" }, { status: 404 });
-  return NextResponse.json({ song });
+  const durationKey = `song:duration:${song.audiusTrackId}`;
+  let duration = await cacheGet<number>(durationKey).catch(() => null);
+  if (!duration) {
+    const track = await getTrack(song.audiusTrackId).catch(() => null);
+    duration = Number(track?.duration || 0);
+    if (duration > 0) await cacheSet(durationKey, duration, 60 * 60 * 24).catch(() => {});
+  }
+  return NextResponse.json({ song: { ...song, duration: duration || null } });
 }

@@ -11,7 +11,7 @@ export function GlobalPlayer() {
   const commandRef = useRef<"play" | "pause">("pause");
   const fadeRef = useRef<number | null>(null);
   const targetVolumeRef = useRef(0.05);
-  const { current, playing, userPaused, toggle, next, previous, setPlaying, volume, setVolume } = usePlayer();
+  const { current, playing, userPaused, toggle, next, previous, setPlaying, volume, setVolume, setPlaybackTime, seekRequest } = usePlayer();
   const [blocked, setBlocked] = useState(false);
 
   useEffect(() => {
@@ -52,12 +52,13 @@ export function GlobalPlayer() {
       return;
     }
 
-    if (audio.paused) {
-      commandRef.current = "play";
-      audio.volume = 0;
-      audio.play()
+    commandRef.current = "play";
+    const shouldFade = audio.paused;
+    if (shouldFade) audio.volume = 0;
+    audio.play()
         .then(() => {
           setBlocked(false);
+          if (!shouldFade) return;
           const startedAt = performance.now();
           const duration = 450;
           const fade = (now: number) => {
@@ -77,8 +78,15 @@ export function GlobalPlayer() {
           setBlocked(true);
           setPlaying(false);
         });
-    }
   }, [playing, userPaused, current?.id, setPlaying]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio || seekRequest == null) return;
+    const nextTime = Math.max(0, Math.min(seekRequest, Number.isFinite(audio.duration) ? audio.duration : seekRequest));
+    audio.currentTime = nextTime;
+    setPlaybackTime(nextTime, audio.duration);
+  }, [seekRequest, setPlaybackTime]);
 
   if (!current) return <audio ref={audioRef} className="hidden" preload="none" />;
 
@@ -145,11 +153,17 @@ export function GlobalPlayer() {
         </div>
         <audio
           ref={audioRef}
+          onLoadedMetadata={(e) => setPlaybackTime(e.currentTarget.currentTime || 0, e.currentTarget.duration || 0)}
+          onTimeUpdate={(e) => setPlaybackTime(e.currentTarget.currentTime || 0, e.currentTarget.duration || 0)}
           onPlay={() => setBlocked(false)}
           onPause={() => {
             if (commandRef.current === "play" && !userPaused) setPlaying(false);
           }}
-          onEnded={next}
+          onEnded={() => {
+            const queue = usePlayer.getState().queue;
+            if (queue.length > 1) next();
+            else setPlaying(false);
+          }}
           preload="none"
           className="hidden"
         />

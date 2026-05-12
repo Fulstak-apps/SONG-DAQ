@@ -354,6 +354,7 @@ export interface PlayerTrack {
   streamUrl: string;
   artwork?: string | null;
   href?: string;
+  duration?: number | null;
 }
 
 interface PlayerState {
@@ -362,6 +363,9 @@ interface PlayerState {
   playing: boolean;
   userPaused: boolean;
   volume: number;
+  currentTime: number;
+  duration: number;
+  seekRequest: number | null;
   setQueue: (tracks: PlayerTrack[], autoplay?: boolean) => void;
   playTrack: (track: PlayerTrack, queue?: PlayerTrack[]) => void;
   toggle: () => void;
@@ -371,6 +375,8 @@ interface PlayerState {
   previous: () => void;
   setPlaying: (playing: boolean) => void;
   setVolume: (volume: number) => void;
+  setPlaybackTime: (currentTime: number, duration?: number) => void;
+  seekTo: (seconds: number) => void;
 }
 
 export const usePlayer = create<PlayerState>()(
@@ -381,6 +387,9 @@ export const usePlayer = create<PlayerState>()(
       playing: false,
       userPaused: false,
       volume: 0.1,
+      currentTime: 0,
+      duration: 0,
+      seekRequest: null,
       setQueue: (tracks, autoplay = false) => {
         const { current, queue, userPaused } = get();
         const sameQueue = queue.length === tracks.length && queue.every((t, i) => t.id === tracks[i]?.id);
@@ -398,6 +407,8 @@ export const usePlayer = create<PlayerState>()(
         queue: queue?.length ? queue : get().queue,
         playing: true,
         userPaused: false,
+        currentTime: get().current?.id === track.id ? get().currentTime : 0,
+        duration: get().current?.id === track.id ? get().duration : Number(track.duration || 0),
       }),
       toggle: () => {
         const playing = get().playing;
@@ -421,6 +432,11 @@ export const usePlayer = create<PlayerState>()(
       },
       setPlaying: (playing) => set({ playing }),
       setVolume: (volume) => set({ volume: Math.max(0, Math.min(1, volume)) }),
+      setPlaybackTime: (currentTime, duration) => set((state) => ({
+        currentTime: Number.isFinite(currentTime) ? currentTime : state.currentTime,
+        duration: Number.isFinite(duration ?? state.duration) ? (duration ?? state.duration) : state.duration,
+      })),
+      seekTo: (seconds) => set({ seekRequest: Math.max(0, seconds) }),
     }),
     {
       name: "songdaq-player",

@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AlertTriangle, BadgeCheck, ExternalLink, Lock, ShieldCheck } from "lucide-react";
+import { AlertTriangle, BadgeCheck, ExternalLink, Lock, Pause, Play, RotateCcw, RotateCw, ShieldCheck } from "lucide-react";
 import { PriceChart, type PricePointDTO } from "@/components/PriceChart";
 import { TradePanel } from "@/components/TradePanel";
 import { TradeFeed } from "@/components/TradeFeed";
@@ -21,7 +21,7 @@ export default function SongTradingPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const { address } = useSession();
-  const { current, playing, playTrack, toggle } = usePlayer();
+  const { current, playing, playTrack, toggle, currentTime, duration, seekTo } = usePlayer();
   const [song, setSong] = useState<any>(null);
   const [points, setPoints] = useState<PricePointDTO[]>([]);
   const [holders, setHolders] = useState<any[]>([]);
@@ -129,17 +129,25 @@ export default function SongTradingPage() {
   const isTradable = song.status === "LIVE" && Number(song.liquidityPairAmount || 0) > 0 && Number(song.liquidityTokenAmount || 0) > 0;
   const isOwner = !!address && song.artistWallet?.wallet === address;
   const playingThis = current?.id === String(song.id) && playing;
+  const activeThis = current?.id === String(song.id);
+  const playerTrack = song.streamUrl ? {
+    id: String(song.id),
+    title: song.title,
+    artist: song.artistName,
+    artwork: song.artworkUrl,
+    streamUrl: song.streamUrl,
+    href: `/song/${song.id}`,
+    duration: Number(song.duration || 0) || null,
+  } : null;
   const toggleSong = () => {
-    if (!song.streamUrl) return;
+    if (!playerTrack) return;
     if (current?.id === String(song.id)) toggle();
-    else playTrack({
-      id: String(song.id),
-      title: song.title,
-      artist: song.artistName,
-      artwork: song.artworkUrl,
-      streamUrl: song.streamUrl,
-      href: `/song/${song.id}`,
-    });
+    else playTrack(playerTrack);
+  };
+  const skipSong = (seconds: number) => {
+    if (!playerTrack) return;
+    if (!activeThis) playTrack(playerTrack);
+    seekTo(Math.max(0, (activeThis ? currentTime : 0) + seconds));
   };
 
   if (advancedMode) {
@@ -296,14 +304,6 @@ export default function SongTradingPage() {
           <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-xl overflow-hidden bg-panel2 shrink-0 shadow-[0_10px_30px_rgba(0,0,0,0.5)] border border-edge group">
             {song.artworkUrl ? <Image src={song.artworkUrl} alt={song.title} fill sizes="112px" className="object-cover group-hover:scale-105 transition-transform duration-500" /> : null}
             <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-60" />
-            {song.streamUrl && (
-              <button
-                onClick={toggleSong}
-                className="absolute bottom-2 left-2 right-2 rounded-lg bg-panel/90 border border-edge py-2 text-[10px] uppercase tracking-widest font-black text-white hover:bg-panel2 transition"
-              >
-                {playingThis ? "Pause" : "Play"}
-              </button>
-            )}
           </div>
           <div className="flex-1 min-w-0 relative z-10">
             <div className="flex items-center gap-3 mb-1">
@@ -322,6 +322,20 @@ export default function SongTradingPage() {
               </span>
               <span className="text-[10px] uppercase tracking-widest text-mute font-bold ml-2">ATH {fmtSol(song.ath, 6)}</span>
             </div>
+            <SongPageAudioPlayer
+              disabled={!playerTrack}
+              playing={playingThis}
+              active={activeThis}
+              currentTime={activeThis ? currentTime : 0}
+              duration={activeThis ? (duration || Number(song.duration || 0)) : Number(song.duration || 0)}
+              onToggle={toggleSong}
+              onSeek={(seconds) => {
+                if (!playerTrack) return;
+                if (!activeThis) playTrack(playerTrack);
+                seekTo(seconds);
+              }}
+              onSkip={skipSong}
+            />
           </div>
           <div className="flex w-full flex-col gap-3 shrink-0 relative z-10 md:w-auto">
             {address && (
@@ -684,6 +698,114 @@ function LiveLiquidityPanel({ song, onChanged }: { song: any; onChanged?: () => 
   );
 }
 
+function formatTime(seconds: number) {
+  if (!Number.isFinite(seconds) || seconds <= 0) return "0:00";
+  const total = Math.floor(seconds);
+  const mins = Math.floor(total / 60);
+  const secs = total % 60;
+  return `${mins}:${String(secs).padStart(2, "0")}`;
+}
+
+function SongPageAudioPlayer({
+  disabled,
+  playing,
+  active,
+  currentTime,
+  duration,
+  onToggle,
+  onSeek,
+  onSkip,
+}: {
+  disabled: boolean;
+  playing: boolean;
+  active: boolean;
+  currentTime: number;
+  duration: number;
+  onToggle: () => void;
+  onSeek: (seconds: number) => void;
+  onSkip: (seconds: number) => void;
+}) {
+  const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
+  const safeCurrent = safeDuration > 0 ? Math.min(currentTime, safeDuration) : 0;
+  const pct = safeDuration > 0 ? Math.max(0, Math.min(100, (safeCurrent / safeDuration) * 100)) : 0;
+  const rangeStyle = {
+    background: `linear-gradient(to right, var(--neon) 0%, var(--neon) ${pct}%, rgba(255,255,255,0.16) ${pct}%, rgba(255,255,255,0.16) 100%)`,
+  };
+
+  if (disabled) {
+    return (
+      <div className="mt-5 rounded-2xl border border-edge bg-panel/80 p-4 text-xs text-mute">
+        No Audius audio preview is attached to this Song Token yet.
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-5 rounded-2xl border border-neon/20 bg-black/35 p-4 shadow-[0_0_30px_rgba(183,255,0,0.08)]">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-neon text-pure-black shadow-neon-glow transition hover:bg-neondim"
+          aria-label={playing ? "Pause song" : "Play song"}
+        >
+          {playing ? <Pause size={19} /> : <Play size={19} />}
+        </button>
+        <div className="min-w-0 flex-1">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <div className="text-[10px] uppercase tracking-widest font-black text-neon">
+              {playing ? "Playing from Audius" : active ? "Paused" : "Play Song"}
+            </div>
+            <div className="font-mono text-[10px] text-mute">
+              {formatTime(safeCurrent)} / {safeDuration ? formatTime(safeDuration) : "--:--"}
+            </div>
+          </div>
+          <input
+            type="range"
+            min="0"
+            max={safeDuration || 100}
+            step="0.1"
+            value={safeDuration ? safeCurrent : 0}
+            onChange={(e) => onSeek(Number(e.target.value))}
+            className="h-2 w-full appearance-none rounded-full bg-white/10 accent-neon"
+            style={rangeStyle}
+            aria-label="Song playback position"
+          />
+          <div className="mt-2 h-8 overflow-hidden rounded-xl border border-white/10 bg-panel/70">
+            <div className="flex h-full items-end gap-1 px-2 pb-1 opacity-80">
+              {Array.from({ length: 48 }).map((_, i) => (
+                <span
+                  key={i}
+                  className={`w-full rounded-t bg-neon/70 ${i / 48 <= pct / 100 ? "shadow-[0_0_10px_rgba(183,255,0,0.45)]" : "opacity-25"}`}
+                  style={{ height: `${20 + ((i * 17) % 72)}%` }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+        <div className="grid grid-cols-2 gap-2 sm:w-[92px]">
+          <button
+            type="button"
+            onClick={() => onSkip(-10)}
+            className="btn h-10 px-2 text-[9px] uppercase tracking-widest font-black"
+            aria-label="Back 10 seconds"
+          >
+            <RotateCcw size={13} /> 10
+          </button>
+          <button
+            type="button"
+            onClick={() => onSkip(10)}
+            className="btn h-10 px-2 text-[9px] uppercase tracking-widest font-black"
+            aria-label="Forward 10 seconds"
+          >
+            10 <RotateCw size={13} />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BurnTokensPanel({ song, onBurned }: { song: any; onBurned?: () => void }) {
   const { address } = useSession();
   const [open, setOpen] = useState(false);
@@ -823,6 +945,15 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
   const totalSpendLabel = pairAsset === "SOL"
     ? formatCryptoWithFiat(pairAmountNumber + estimatedFeeSol, "SOL", totalSpendUsd, currency)
     : `${formatCryptoWithFiat(pairAmountNumber, pairAsset, pairUsd, currency)} + ${formatCryptoWithFiat(estimatedFeeSol, "SOL", estimatedFeeUsd, currency)}`;
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (window.location.hash === "#liquidity" || params.get("liquidity") === "1") {
+      setOpen(true);
+      window.setTimeout(() => document.getElementById("liquidity")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+    }
+  }, []);
 
   async function submit() {
     if (!address) return;

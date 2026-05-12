@@ -560,7 +560,7 @@ export default function CoinPage() {
                     {localSongId ? (
                       <>
                         <Link href={`/song/${localSongId}`} className="btn-primary h-10 px-3 text-center text-[9px] uppercase tracking-widest font-black">Open Song Dashboard</Link>
-                        <Link href={`/song/${localSongId}#liquidity`} className="btn h-10 px-3 text-center text-[9px] uppercase tracking-widest font-black">Add Liquidity</Link>
+                        <Link href={`/song/${localSongId}?liquidity=1#liquidity`} className="btn h-10 px-3 text-center text-[9px] uppercase tracking-widest font-black">Add Liquidity</Link>
                       </>
                     ) : null}
                     <Link href={splitsHref} className="btn h-10 px-3 text-center text-[9px] uppercase tracking-widest font-black">Set Up Splits</Link>
