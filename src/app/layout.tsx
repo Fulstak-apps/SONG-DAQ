@@ -11,6 +11,7 @@ import { LocalTimeToggle } from "@/components/LocalTimeToggle";
 import { HiddenAdminAccess } from "@/components/HiddenAdminAccess";
 import { PaperModeFrame } from "@/components/PaperModeFrame";
 import { AudiusAutoShuffle } from "@/components/AudiusAutoShuffle";
+import { SITE_BRAND, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, getSiteOrigin, siteUrl } from "@/lib/site";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -26,9 +27,70 @@ const jetbrains = JetBrains_Mono({
 import { ThemeProvider } from "@/components/ThemeProvider";
 
 export const metadata: Metadata = {
-  title: "song-daq — Institutional Music Exchange",
-  description:
-    "A Solana-based song coin platform for launch liquidity, royalty transparency, and Paper Mode trading.",
+  metadataBase: new URL(getSiteOrigin()),
+  title: {
+    default: SITE_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  generator: "Next.js",
+  referrer: "origin-when-cross-origin",
+  keywords: [
+    "song-daq",
+    "SONG·DAQ",
+    "music coins",
+    "song coins",
+    "artist coins",
+    "Audius",
+    "Open Audio Protocol",
+    "Solana music marketplace",
+    "music royalty marketplace",
+    "music investing",
+    "creator economy",
+  ],
+  authors: [{ name: SITE_NAME, url: getSiteOrigin() }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    url: getSiteOrigin(),
+    siteName: SITE_BRAND,
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "SONG·DAQ music coin marketplace",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/opengraph-image"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  verification: {
+    google: process.env.NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION || undefined,
+  },
+  category: "finance",
 };
 
 export default function RootLayout({
@@ -36,8 +98,36 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    name: SITE_NAME,
+    alternateName: SITE_BRAND,
+    url: getSiteOrigin(),
+    applicationCategory: "FinanceApplication",
+    operatingSystem: "Web",
+    description: SITE_DESCRIPTION,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
+    sameAs: [
+      siteUrl("/market"),
+      siteUrl("/how-it-works"),
+      "https://openaudio.org/",
+      "https://audius.co/",
+    ],
+  };
+
   return (
     <html lang="en" suppressHydrationWarning className={`${inter.variable} ${jetbrains.variable} dark`}>
+      <head>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
+      </head>
       <body className="min-h-screen font-sans antialiased bg-bg text-ink selection:bg-neon/20 selection:text-ink">
         <ThemeProvider>
           <Navbar />
