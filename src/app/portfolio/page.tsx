@@ -409,6 +409,9 @@ export default function PortfolioPage() {
             {externalAddress ? `External wallet ${short(externalAddress)}` : "External Solana wallet not connected"}
             {audius?.wallets?.sol ? ` · Audius vault ${short(audius.wallets.sol)}` : ""}
           </p>
+          <p className="mt-2 max-w-2xl text-xs leading-relaxed text-mute">
+            Brokerage-style view: total value, SOL, AUDIO, Song Tokens, Artist Coins, other wallet assets, profit/loss, and recent activity all roll into one indexed account view.
+          </p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
@@ -428,13 +431,13 @@ export default function PortfolioPage() {
       </header>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-        <Metric label="Total Indexed Value" value={fmtUsd(totalIndexedValueUsd)} sub={paperMode ? "Wallet + AUDIO + coins + paper cash" : "Wallet + AUDIO + all indexed coins"} />
-        <Metric label="External SOL" value={externalAddress && native.balance != null ? formatCryptoWithFiat(native.balance, "SOL", native.usd) : "Connect"} sub={externalAddress ? priceAgeText(fiatUpdatedAt) : "Connect external wallet"} />
-        <Metric label="External USD" value={externalAddress && native.usd != null ? fmtUsd(native.usd) : "—"} sub={externalAddress ? "Native SOL value" : "Not connected"} />
-        <Metric label="AUDIO" value={formatCryptoWithFiat(audioBalance, "AUDIO", audioValueUsd || null)} sub="Audius token value" />
-        <Metric label="Cash" value={fmtUsd(cashUsd)} sub={paperMode ? "Combined paper value from SOL + AUDIO + seed cash" : "Connect bank later"} />
-        <Metric label="Artist Tokens" value={fmtNum(artistTokens.length)} sub={fmtUsd(artistValueUsd)} />
+        <Metric label="Total Portfolio Value" value={fmtUsd(totalIndexedValueUsd)} sub={paperMode ? "Paper cash + wallet + AUDIO + coins" : "SOL + AUDIO + Song Tokens + Artist Coins + other assets"} />
+        <Metric label="SOL" value={externalAddress && native.balance != null ? formatCryptoWithFiat(native.balance, "SOL", native.usd) : "Connect"} sub={externalAddress ? priceAgeText(fiatUpdatedAt) : "Connect external wallet"} />
+        <Metric label="AUDIO" value={formatCryptoWithFiat(audioBalance, "AUDIO", audioValueUsd || null)} sub="Audius token value included in total" />
         <Metric label="Song Tokens" value={fmtNum(songTokens.length)} sub={formatCryptoWithFiat(songValueSol, "SOL", songValueUsd)} />
+        <Metric label="Artist Coins" value={fmtNum(artistTokens.length)} sub={fmtUsd(artistValueUsd)} />
+        <Metric label="Other Assets" value={fmtNum(otherWalletAssets.length)} sub={fmtUsd(otherWalletValueUsd)} />
+        <Metric label="P/L" value={`${pnl >= 0 ? "+" : ""}${fmtUsd(pnl)}`} sub="Indexed portfolio delta" />
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-3">

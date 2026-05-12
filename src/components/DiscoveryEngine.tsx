@@ -27,6 +27,7 @@ type CoinSort = "quality" | "marketCap" | "volume" | "gainers" | "holders";
 type SongSort = "trending" | "gainers" | "volume" | "new";
 type ViewMode = "grid" | "list" | "heat";
 type MarketFilter = "all" | "verified" | "locked" | "lowRisk" | "rising" | "new" | "holders";
+type MarketSource = "all" | "songdaq" | "open_audio" | "mine";
 
 const COIN_SORTS: { id: CoinSort; label: string }[] = [
   { id: "quality", label: "QUALITY" },
@@ -217,6 +218,7 @@ export default function DiscoveryEngine() {
   const [view, setView] = useState<ViewMode>("grid");
   const [showWatchlistOnly, setShowWatchlistOnly] = useState(false);
   const [marketFilter, setMarketFilter] = useState<MarketFilter>("all");
+  const [marketSource, setMarketSource] = useState<MarketSource>("all");
   const [coinQuery, setCoinQuery] = useState("");
   const [artistQuery, setArtistQuery] = useState("");
   const [artistResults, setArtistResults] = useState<any[]>([]);
@@ -306,6 +308,21 @@ export default function DiscoveryEngine() {
   // Filter by watchlist
   const filteredCoins = useMemo(() => {
     let list = showWatchlistOnly ? coins.filter(c => watchlist.items.includes(c.mint)) : coins;
+    if (marketSource !== "all") {
+      list = list.filter((c) => {
+        const openAudio = Boolean((c as any).isOpenAudioCoin || (c as any).source === "open_audio" || (c as any).source === "audius_public");
+        const songDaq = !openAudio && Boolean((c as any).isSongDaqLocal || (c as any).songId || (c as any).mintAddress);
+        if (marketSource === "songdaq") return songDaq;
+        if (marketSource === "open_audio") return openAudio;
+        if (marketSource === "mine") {
+          return Boolean(
+            (audius?.userId && String(c.owner_id || "") === String(audius.userId)) ||
+            (address && String((c as any).artistWallet?.wallet || "") === address)
+          );
+        }
+        return true;
+      });
+    }
     const q = coinQuery.trim().toLowerCase().replace(/^\$/, "");
     if (q) {
       list = list.filter((c) => {
@@ -364,7 +381,7 @@ export default function DiscoveryEngine() {
       const bl = Number((b as any).liquidity ?? 0);
       return (br * 1000 + bv * 0.002 + bl * 0.2) - (ar * 1000 + av * 0.002 + al * 0.2);
     });
-  }, [coins, showWatchlistOnly, watchlist.items, marketFilter, coinQuery]);
+  }, [coins, showWatchlistOnly, watchlist.items, marketFilter, coinQuery, marketSource, audius?.userId, address]);
 
   const filteredSongs = useMemo(() => {
     if (!showWatchlistOnly) return songs;
@@ -660,6 +677,27 @@ export default function DiscoveryEngine() {
                   marketFilter === id
                     ? "bg-neon/10 border-neon/25 text-neon"
                     : "bg-white/[0.045] border-edge text-mute hover:text-ink hover:bg-white/[0.08]"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
+          <div className="flex w-full flex-wrap items-center gap-1.5 xl:w-auto">
+            {[
+              ["all", "All Sources"],
+              ["songdaq", "SONG·DAQ"],
+              ["open_audio", "Open Audio"],
+              ["mine", "My Coins"],
+            ].map(([id, label]) => (
+              <button
+                key={id}
+                onClick={() => setMarketSource(id as MarketSource)}
+                className={`shrink-0 rounded-xl border px-3 py-2 text-[10px] font-black uppercase tracking-widest transition ${
+                  marketSource === id
+                    ? "border-violet/30 bg-violet/12 text-violet"
+                    : "border-edge bg-white/[0.045] text-mute hover:bg-white/[0.08] hover:text-ink"
                 }`}
               >
                 {label}

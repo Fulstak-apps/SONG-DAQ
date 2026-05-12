@@ -101,6 +101,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const [maxWalletBps, setMaxWalletBps] = useState(200);
   const [artistAllocationBps, setArtistAllocationBps] = useState(4000);
   const [launchPreset, setLaunchPreset] = useState<LaunchPresetId>("balanced");
+  const [showCustomPreset, setShowCustomPreset] = useState(false);
   const [liquidityTokenAmount, setLiquidityTokenAmount] = useState(350_000_000);
   const [liquidityPairAmount, setLiquidityPairAmount] = useState(1);
   const [liquidityPairAsset, setLiquidityPairAsset] = useState<PairAsset>("SOL");
@@ -193,6 +194,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
 
   function applyLaunchPreset(preset: typeof LAUNCH_PRESETS[number]) {
     setLaunchPreset(preset.id);
+    setShowCustomPreset(false);
     setArtistAllocationBps(preset.artistBps);
     setMaxWalletBps(preset.maxWalletBps);
     setLiquidityTokenAmount(Math.round(supply * (preset.liquidityBps / 10_000)));
@@ -204,6 +206,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   function markCustom<T extends number>(setter: (value: T) => void) {
     return (value: T) => {
       setLaunchPreset("custom");
+      setShowCustomPreset(true);
       setter(value);
     };
   }
@@ -822,14 +825,14 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                           })}
                           <button
                             type="button"
-                            onClick={() => setLaunchPreset("custom")}
+                            onClick={() => { setLaunchPreset("custom"); setShowCustomPreset((v) => !v); }}
                             className={`rounded-2xl border p-3 text-left transition active:scale-[0.99] ${
-                              launchPreset === "custom" ? "border-violet/40 bg-violet/10 text-violet" : "border-edge bg-panel hover:border-white/20 hover:bg-panel2"
+                              showCustomPreset || launchPreset === "custom" ? "border-violet/40 bg-violet/10 text-violet" : "border-edge bg-panel hover:border-white/20 hover:bg-panel2"
                             }`}
                           >
-                            <div className="text-[10px] uppercase tracking-widest font-black">Custom</div>
+                            <div className="text-[10px] uppercase tracking-widest font-black">Advanced Custom</div>
                             <div className="mt-1 font-mono text-[11px] font-black text-white">Manual tokenomics</div>
-                            <p className="mt-2 text-[10px] leading-relaxed text-mute">Fine-tune every number yourself.</p>
+                            <p className="mt-2 text-[10px] leading-relaxed text-mute">Open the detailed controls only when you want to fine-tune every number yourself.</p>
                           </button>
                         </div>
                         <div className="grid gap-2 md:grid-cols-4">
@@ -860,55 +863,63 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                           One-click mode sets the split automatically: artist hold, launch liquidity for buyers, and reserve. During launch your wallet may briefly hold the liquidity portion, then the second approval moves that portion into the public pool.
                         </div>
                       </div>
-                      <Field
-                        label="Total Issuance"
-                        value={supply}
-                        onChange={markCustom(setSupply)}
-                        step={1000}
-                        min={1000}
-                        unit="Tokens"
-                        description={`Total supply estimate: ${formatFiatEstimate(fullSupplyValueUsd, currency)}. If all coins were counted at the starting price, this would be the estimated value. The real market value can be much lower or higher once people start trading.`}
-                      />
-                      <Field
-                        label="Starting token price"
-                        value={basePrice}
-                        onChange={markCustom(setBasePrice)}
-                        step={0.0001}
-                        min={0}
-                        unit="SOL"
-                        help="This is the estimated price for 1 song coin at launch. The price can move up or down once people start buying and selling."
-                        description={`Starting token price: ${formatCryptoWithFiat(basePrice, "SOL", basePriceUsd, currency, 6)}.`}
-                      />
-                      <Field
-                        label="Curve Momentum"
-                        value={curveSlope}
-                        onChange={markCustom(setCurveSlope)}
-                        step={0.0000001}
-                        min={0}
-                        unit="Slope"
-                        help="Curve momentum controls how quickly the token price can rise as more people buy. Higher momentum can make early buys move the price faster. Lower momentum makes price movement slower and smoother."
-                        description="Use a lower number for a calmer launch. Use a higher number only if you want the price curve to react more aggressively to demand."
-                      />
-                      <Field
-                        label="Max Wallet Cap"
-                        value={maxWalletBps / 100}
-                        onChange={(n) => { setLaunchPreset("custom"); setMaxWalletBps(Math.round(n * 100)); }}
-                        step={0.25}
-                        min={0.1}
-                        unit="% of supply"
-                        help="Max wallet cap is the most one wallet should be allowed to hold during launch. It helps stop one buyer from taking too much of the supply at the start."
-                        description="A smaller cap spreads coins across more fans. A larger cap lets bigger buyers take a bigger position."
-                      />
-                      <Field
-                        label="Artist Hold / Vesting Allocation"
-                        value={artistAllocationBps / 100}
-                        onChange={(n) => { setLaunchPreset("custom"); setArtistAllocationBps(Math.round(n * 100)); }}
-                        step={0.25}
-                        min={0}
-                        unit="% of supply"
-                        help="This is the artist's share of the total token supply. Vesting means the artist's share is held over time instead of all being freely sellable right away."
-                        description="Keeping the artist share vested helps fans trust that the artist is aligned with the coin long term."
-                      />
+                      {(showCustomPreset || launchPreset === "custom") && (
+                        <div className="space-y-4 rounded-2xl border border-violet/20 bg-violet/5 p-4">
+                          <div>
+                            <div className="text-[10px] uppercase tracking-widest font-black text-violet">Advanced custom controls</div>
+                            <p className="mt-1 text-xs leading-relaxed text-mute">Most artists should use Fan First, Balanced, or Premium. These controls are for fine-tuning launch mechanics after you understand the tradeoffs.</p>
+                          </div>
+                          <Field
+                            label="Total Issuance"
+                            value={supply}
+                            onChange={markCustom(setSupply)}
+                            step={1000}
+                            min={1000}
+                            unit="Tokens"
+                            description={`Total supply estimate: ${formatFiatEstimate(fullSupplyValueUsd, currency)}. If all coins were counted at the starting price, this would be the estimated value. The real market value can be much lower or higher once people start trading.`}
+                          />
+                          <Field
+                            label="Starting token price"
+                            value={basePrice}
+                            onChange={markCustom(setBasePrice)}
+                            step={0.0001}
+                            min={0}
+                            unit="SOL"
+                            help="This is the estimated price for 1 song coin at launch. The price can move up or down once people start buying and selling."
+                            description={`Starting token price: ${formatCryptoWithFiat(basePrice, "SOL", basePriceUsd, currency, 6)}.`}
+                          />
+                          <Field
+                            label="Curve Momentum"
+                            value={curveSlope}
+                            onChange={markCustom(setCurveSlope)}
+                            step={0.0000001}
+                            min={0}
+                            unit="Slope"
+                            help="Curve momentum controls how quickly the token price can rise as more people buy. Higher momentum can make early buys move the price faster. Lower momentum makes price movement slower and smoother."
+                            description="Use a lower number for a calmer launch. Use a higher number only if you want the price curve to react more aggressively to demand."
+                          />
+                          <Field
+                            label="Max Wallet Cap"
+                            value={maxWalletBps / 100}
+                            onChange={(n) => { setLaunchPreset("custom"); setShowCustomPreset(true); setMaxWalletBps(Math.round(n * 100)); }}
+                            step={0.25}
+                            min={0.1}
+                            unit="% of supply"
+                            help="Max wallet cap is the most one wallet should be allowed to hold during launch. It helps stop one buyer from taking too much of the supply at the start."
+                            description="A smaller cap spreads coins across more fans. A larger cap lets bigger buyers take a bigger position."
+                          />
+                          <Field
+                            label="Artist Hold / Vesting Allocation"
+                            value={artistAllocationBps / 100}
+                            onChange={(n) => { setLaunchPreset("custom"); setShowCustomPreset(true); setArtistAllocationBps(Math.round(n * 100)); }}
+                            step={0.25}
+                            min={0}
+                            unit="% of supply"
+                            help="This is the artist's share of the total token supply. Vesting means the artist's share is held over time instead of all being freely sellable right away."
+                            description="Keeping the artist share vested helps fans trust that the artist is aligned with the coin long term."
+                          />
+                        </div>
+                      )}
                     </>
                   )}
                   {allocationRisk && (
@@ -1315,6 +1326,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <div className="rounded-xl border border-edge bg-panel p-3 text-left text-xs leading-relaxed text-mute">
                       Fans buy from the liquidity pool, not from a hidden artist wallet. The artist hold is separate. The launch-liquidity portion moves into the public pool with paired SOL, USDC, or AUDIO so buyers have a market to trade against.
                     </div>
+                    <LaunchSuccessChecklist result={result} liquidityStage={liquidityStage} launchKind={launchKind} />
                   </div>
                   <a className="btn-primary block w-full py-4 text-sm font-black tracking-widest" href={`/song/${result.song?.id}`}>
                     {liquidityStage === "live" ? "OPEN LIVE TOKEN" : "OPEN TOKEN DETAIL"}
@@ -1477,6 +1489,41 @@ function LaunchReadinessChecklist({
         ))}
       </div>
     </section>
+  );
+}
+
+function LaunchSuccessChecklist({
+  result,
+  liquidityStage,
+  launchKind,
+}: {
+  result: any;
+  liquidityStage: "idle" | "preparing" | "signing" | "confirming" | "live" | "failed";
+  launchKind: LaunchKind;
+}) {
+  const items = [
+    ["Coin minted", Boolean(result?.song?.mintAddress), "The token mint exists and can be inspected by wallet or explorer."],
+    ["Metadata live", Boolean(result?.launch?.metadataUri || result?.song?.mintAddress), "Name, symbol, image, description, and trust details are attached."],
+    ["Liquidity added", liquidityStage === "live", "Liquidity is the public market money that lets fans buy and sell."],
+    ["Market page visible", Boolean(result?.song?.id), "The coin can be opened from SONG·DAQ and indexed into market views."],
+    ["Portfolio visible", Boolean(result?.song?.mintAddress), "Wallet/portfolio indexing can now resolve this mint as a SONG·DAQ asset."],
+    ["Splits optional", true, launchKind === "ARTIST" ? "Royalty split setup can be completed after launch." : "Song royalty split setup can be added later from the coin or artist page."],
+  ] as const;
+
+  return (
+    <div className="rounded-xl border border-edge bg-panel p-3 text-left">
+      <div className="text-[10px] uppercase tracking-widest font-black text-ink">Launch success checklist</div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-2">
+        {items.map(([label, ok, hint]) => (
+          <div key={label} className="rounded-xl border border-edge bg-panel2 p-2.5">
+            <div className={`text-[9px] uppercase tracking-widest font-black ${ok ? "text-neon" : "text-amber"}`}>
+              {ok ? "Ready" : "Next"} · {label}
+            </div>
+            <p className="mt-1 text-[11px] leading-relaxed text-mute">{hint}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 

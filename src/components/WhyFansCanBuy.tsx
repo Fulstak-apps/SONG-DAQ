@@ -26,7 +26,7 @@ export function WhyFansCanBuy({ compact = false }: { compact?: boolean }) {
       <p className="mt-2 max-w-full break-words text-xs leading-relaxed text-neon/80">
         SONG·DAQ follows the Open Audio/Audius idea: artist vesting is separate from the public market. Fans can profit only if demand and liquidity support a higher market price. Profit is not guaranteed.
       </p>
-      <div className="mt-4 grid min-w-0 gap-3 md:grid-cols-3">
+      <div className={`mt-4 grid min-w-0 gap-3 ${compact ? "grid-cols-1" : "md:grid-cols-3"}`}>
         {items.map((item) => (
           <div key={item.title} className="min-w-0 max-w-full overflow-hidden rounded-xl border border-neon/15 bg-black/15 p-3">
             <div className="flex min-w-0 items-start gap-2 text-[10px] uppercase tracking-widest font-black leading-snug text-neon">

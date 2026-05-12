@@ -45,10 +45,10 @@ export function LandingPage() {
   const [stats, setStats] = useState({ tradingVolume: 0, activeArtists: 0, songsTokenized: 0 });
   const [statsLoaded, setStatsLoaded] = useState(false);
   const HERO_TEXT = [
-    { a: "Insurance and", b: "liquidity.", color: "text-gradient-neon" },
-    { a: "100% verified", b: "on-chain.", color: "text-gradient-violet" },
-    { a: "Earn stream", b: "royalties.", color: "text-gradient-cyan" },
-    { a: "Real-time", b: "audit protocol.", color: "text-gradient-gold" },
+    { a: "Trade music", b: "coins.", color: "text-gradient-neon" },
+    { a: "Real artists.", b: "Real songs.", color: "text-gradient-violet" },
+    { a: "Charts meet", b: "catalogs.", color: "text-gradient-cyan" },
+    { a: "Royalty signals.", b: "Market flow.", color: "text-gradient-gold" },
   ];
 
   useEffect(() => {
@@ -105,8 +105,7 @@ export function LandingPage() {
             transition={{ duration: 0.7, delay: 0.35 }}
             className="text-mute text-lg md:text-xl font-medium leading-relaxed max-w-xl mx-auto"
           >
-            The world&apos;s first institutional-grade exchange for tokenized music royalties. 
-            Trade on-chain. Earn on every stream.
+            Buy and trade music coins tied to real artists and songs. Audius powers artist identity and catalog data; SONG·DAQ powers the market, portfolio, charts, and royalty transparency.
           </motion.p>
 
           <motion.div
@@ -115,19 +114,8 @@ export function LandingPage() {
             transition={{ duration: 0.7, delay: 0.5 }}
             className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4"
           >
-            <Link
-              href="/artist"
-              className="btn-primary px-10 py-4 text-sm font-black tracking-widest shadow-neon-glow hover:shadow-[0_0_40px_rgba(0,229,114,0.35)] transition-all text-pure-white"
-            >
-              LAUNCH A TOKEN
-              <ArrowRight size={16} className="ml-1" />
-            </Link>
-            <Link
-              href="/market"
-              className="btn-glass px-8 py-4 text-[11px] uppercase tracking-widest font-bold"
-            >
-              TRADING TERMINAL
-            </Link>
+            <PathButton href="/market" title="Fan / Investor" body="Browse coins, watch charts, buy, sell, and track your portfolio." tone="neon" />
+            <PathButton href="/artist" title="Artist" body="Connect Audius, choose Artist Coin or Song Token, launch, add liquidity, and set up splits." tone="violet" />
           </motion.div>
 
           {/* Live stats counter */}
@@ -159,6 +147,14 @@ export function LandingPage() {
       </section>
 
       {/* ═══ HOW IT WORKS ═════════════════════════════════ */}
+      <Section>
+        <div className="grid gap-3 md:grid-cols-3">
+          <FlowCard title="Investors" items={["Browse market", "Open coin", "Review chart, artist, source, liquidity, royalty status", "Buy or sell", "Portfolio updates"]} />
+          <FlowCard title="Artists" items={["Connect Audius", "Choose Artist Coin or Song Token", "Pick profile or song", "Choose a launch preset", "Launch, add liquidity, set up splits later"]} />
+          <FlowCard title="Admins" items={["Verify royalty requests", "Review trust issues", "Track wallet/API errors", "Manage payout records"]} />
+        </div>
+      </Section>
+
       <Section>
         <div className="text-center mb-12">
           <div className="text-[10px] uppercase tracking-[0.3em] font-black text-mute mb-3">How SONG·DAQ Works</div>
@@ -425,6 +421,42 @@ function LiveStatSkeleton({ label, className = "" }: { label: string; className?
     <div className={`text-center ${className}`}>
       <div className="mx-auto h-7 w-24 rounded-lg skeleton" />
       <div className="text-[9px] uppercase tracking-[0.2em] font-bold text-mute mt-2">{label}</div>
+    </div>
+  );
+}
+
+function PathButton({ href, title, body, tone }: { href: string; title: string; body: string; tone: "neon" | "violet" }) {
+  const active = tone === "neon";
+  return (
+    <Link
+      href={href}
+      className={`group w-full rounded-2xl border p-4 text-left transition-all sm:w-[270px] ${
+        active
+          ? "border-neon/30 bg-neon/10 hover:border-neon/55 hover:bg-neon/15"
+          : "border-violet/30 bg-violet/10 hover:border-violet/55 hover:bg-violet/15"
+      }`}
+    >
+      <div className={`flex items-center justify-between gap-3 text-xs font-black uppercase tracking-[0.22em] ${active ? "text-neon" : "text-violet"}`}>
+        {title}
+        <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
+      </div>
+      <p className="mt-2 text-sm leading-relaxed text-mute">{body}</p>
+    </Link>
+  );
+}
+
+function FlowCard({ title, items }: { title: string; items: string[] }) {
+  return (
+    <div className="panel-elevated grain flex h-full min-h-[250px] flex-col p-5 md:p-6">
+      <div className="text-[10px] font-black uppercase tracking-[0.26em] text-neon">{title}</div>
+      <ul className="mt-4 space-y-3">
+        {items.map((item) => (
+          <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-mute">
+            <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-neon" />
+            <span>{item}</span>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }

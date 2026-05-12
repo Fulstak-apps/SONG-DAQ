@@ -537,6 +537,21 @@ export default function CoinPage() {
             </div>
             <button onClick={() => setTradeSide("BUY")} className="btn-primary w-full py-4 text-lg">BUY</button>
             <button onClick={() => setTradeSide("SELL")} className="btn-danger w-full py-4 text-lg">SELL</button>
+            <div className="w-full rounded-2xl border border-edge bg-panel p-4 text-left">
+              <div className="text-[10px] uppercase tracking-widest font-black text-neon">What is this coin?</div>
+              <p className="mt-2 text-xs leading-relaxed text-mute">
+                {isSongDaqLocal
+                  ? "A SONG·DAQ Song Token is tied to one song and traded inside SONG·DAQ with song, chart, liquidity, and royalty status shown together."
+                  : "An Open Audio Artist Coin is an Audius/Open Audio-visible artist coin imported into SONG·DAQ so fans can view market and portfolio context here."}
+              </p>
+              <div className="mt-3 grid grid-cols-2 gap-2">
+                <KV k="Source" v={isSongDaqLocal ? "SONG·DAQ" : "Open Audio"} />
+                <KV k="Liquidity" v={fmtUsd(coin.liquidity ?? 0, 0)} />
+                <KV k="Royalty Status" v={(coin as any).splitsLocked ? "Verified" : "Not submitted"} />
+                <KV k="Risk / Trust" v={isOwner ? "Creator" : "Review"} />
+              </div>
+            </div>
+            <WhyFansCanBuy compact />
             {isSongDaqLocal ? (
               <div className="w-full rounded-2xl border border-neon/20 bg-neon/5 p-4 text-left">
                 <div className="text-[10px] uppercase tracking-widest font-black text-neon">Creator Tools</div>

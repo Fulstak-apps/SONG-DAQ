@@ -524,6 +524,16 @@ export function CoinTradeModal({
                 </div>
               </div>
 
+              <div className="rounded-xl border border-neon/20 bg-neon/8 p-3">
+                <div className="text-[10px] uppercase tracking-widest font-black text-neon">Trade in 4 steps</div>
+                <div className="mt-2 grid gap-2 text-[11px] leading-relaxed text-mute sm:grid-cols-2">
+                  <div><span className="font-black text-ink">1.</span> Enter USD/SOL amount</div>
+                  <div><span className="font-black text-ink">2.</span> Review token estimate</div>
+                  <div><span className="font-black text-ink">3.</span> Check fee and price movement</div>
+                  <div><span className="font-black text-ink">4.</span> Confirm, then Portfolio updates</div>
+                </div>
+              </div>
+
               <div className="rounded-xl border border-edge bg-panel p-3">
                 <div className="mb-3 flex items-start gap-3">
                   <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-edge bg-panel2">
