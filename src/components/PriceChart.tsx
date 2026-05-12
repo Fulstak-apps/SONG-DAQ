@@ -56,7 +56,7 @@ export function PriceChart({
   showMA25,
   chartType = "line",
   live = false,
-  variant = "default",
+  variant = "investing",
   mode = "simple",
   emptyState = "Building price history",
 }: {
@@ -359,7 +359,7 @@ export function PriceChart({
               name === "volume"
                 ? (quote === "USD" ? fmtUsd(Number(v), 2) : `${fmtSol(Number(v), 3)} SOL`)
                 : fmtPrice(Number(v)),
-              name.toUpperCase(),
+              name === "displayClose" ? "PRICE" : name === "displayHigh" ? "HIGH" : name === "displayLow" ? "LOW" : name.toUpperCase(),
             ]}
             cursor={{ stroke: investing ? "rgba(88,214,79,0.36)" : "rgba(255,255,255,0.18)", strokeDasharray: "4 4" }}
           />
