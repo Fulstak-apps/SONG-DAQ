@@ -22,6 +22,9 @@ interface TokenRow {
   logo_uri: string | null;
   price: number | null;
   valueUsd: number | null;
+  countedValueUsd?: number | null;
+  issuerAllocation?: boolean;
+  valuationNote?: string | null;
   isAudio: boolean;
   isArtistCoin: boolean;
   priceSource?: string | null;
@@ -45,6 +48,10 @@ function fmtUsd(n: number) {
 
 function short(addr: string) {
   return addr.length > 14 ? `${addr.slice(0, 6)}…${addr.slice(-4)}` : addr;
+}
+
+function countedUsd(t: TokenRow) {
+  return t.countedValueUsd ?? t.valueUsd ?? 0;
 }
 
 function useTokenHoldings(address: string | null | undefined, mode: "summary" | "full" = "summary") {
@@ -213,6 +220,8 @@ export default function PortfolioPage() {
         logo_uri: coin.logo_uri ?? null,
         price,
         valueUsd: price != null ? amount * price : Number(h.costBasis ?? 0),
+        countedValueUsd: price != null ? amount * price : Number(h.costBasis ?? 0),
+        issuerAllocation: false,
         isAudio: String(h.ticker || coin.ticker).toUpperCase() === "AUDIO",
         isArtistCoin: true,
       };
@@ -254,7 +263,7 @@ export default function PortfolioPage() {
   const audioValueUsd = [
     ...(tradingTokens.data?.tokens ?? []),
     ...(audiusTokens.data?.tokens ?? []),
-  ].filter((t) => t.isAudio).reduce((sum, t) => sum + (t.valueUsd ?? 0), 0) ||
+  ].filter((t) => t.isAudio).reduce((sum, t) => sum + countedUsd(t), 0) ||
     (audioBalance * audioUsdPrice);
   const cashUsd = paperMode
     ? paper.balances.cashUsd + (paper.balances.sol * paperUsd.sol) + (paper.balances.audio * paperUsd.audio)
@@ -263,16 +272,17 @@ export default function PortfolioPage() {
   const paperAudio = paperMode ? paper.balances.audio : 0;
   const songValueSol = portfolio?.summary?.value ?? 0;
   const royaltySol = portfolio?.summary?.royalty ?? 0;
-  const artistValueUsd = artistTokens.reduce((sum, t) => sum + (t.valueUsd ?? 0), 0);
-  const otherWalletValueUsd = otherWalletAssets.reduce((sum, t) => sum + (t.valueUsd ?? 0), 0);
+  const artistValueUsd = artistTokens.reduce((sum, t) => sum + countedUsd(t), 0);
+  const issuerAllocationValueUsd = artistTokens.reduce((sum, t) => sum + (t.issuerAllocation ? (t.valueUsd ?? 0) : 0), 0);
+  const otherWalletValueUsd = otherWalletAssets.reduce((sum, t) => sum + countedUsd(t), 0);
   const indexedAudioValueUsd = [
     ...(tradingTokens.data?.tokens ?? []),
     ...(audiusTokens.data?.tokens ?? []),
-  ].filter((t) => t.isAudio).reduce((sum, t) => sum + (t.valueUsd ?? 0), 0);
+  ].filter((t) => t.isAudio).reduce((sum, t) => sum + countedUsd(t), 0);
   const indexedArtistValueUsd = [
     ...(tradingTokens.data?.tokens ?? []),
     ...(audiusTokens.data?.tokens ?? []),
-  ].filter((t) => t.isArtistCoin).reduce((sum, t) => sum + (t.valueUsd ?? 0), 0);
+  ].filter((t) => t.isArtistCoin).reduce((sum, t) => sum + countedUsd(t), 0);
   const audioValueTopUpUsd = Math.max(0, audioValueUsd - indexedAudioValueUsd);
   const artistValueTopUpUsd = Math.max(0, artistValueUsd - indexedArtistValueUsd);
   const songValueUsd = songValueSol * (solUsdPrice || (native.balance ? (native.usd ?? 0) / native.balance : 0));
@@ -431,11 +441,11 @@ export default function PortfolioPage() {
       </header>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-        <Metric label="Total Portfolio Value" value={fmtUsd(totalIndexedValueUsd)} sub={paperMode ? "Paper cash + wallet + AUDIO + coins" : "SOL + AUDIO + Song Tokens + Artist Coins + other assets"} />
+        <Metric label="Total Portfolio Value" value={fmtUsd(totalIndexedValueUsd)} sub={issuerAllocationValueUsd > 0 ? "Liquid value; issuer allocation separated" : paperMode ? "Paper cash + wallet + AUDIO + coins" : "SOL + AUDIO + Song Tokens + Artist Coins + other assets"} />
         <Metric label="SOL" value={externalAddress && native.balance != null ? formatCryptoWithFiat(native.balance, "SOL", native.usd) : "Connect"} sub={externalAddress ? priceAgeText(fiatUpdatedAt) : "Connect external wallet"} />
         <Metric label="AUDIO" value={formatCryptoWithFiat(audioBalance, "AUDIO", audioValueUsd || null)} sub="Audius token value included in total" />
         <Metric label="Song Tokens" value={fmtNum(songTokens.length)} sub={formatCryptoWithFiat(songValueSol, "SOL", songValueUsd)} />
-        <Metric label="Artist Coins" value={fmtNum(artistTokens.length)} sub={fmtUsd(artistValueUsd)} />
+        <Metric label="Artist Coins" value={fmtNum(artistTokens.length)} sub={issuerAllocationValueUsd > 0 ? `${fmtUsd(artistValueUsd)} liquid` : fmtUsd(artistValueUsd)} />
         <Metric label="Other Assets" value={fmtNum(otherWalletAssets.length)} sub={fmtUsd(otherWalletValueUsd)} />
         <Metric label="P/L" value={`${pnl >= 0 ? "+" : ""}${fmtUsd(pnl)}`} sub="Indexed portfolio delta" />
       </section>
@@ -446,7 +456,16 @@ export default function PortfolioPage() {
         <Metric label="Risk Focus" value={artistTokens.length || songTokens.length ? "Active" : "Idle"} sub="Review liquidity and trust badges" />
       </section>
 
-      <WalletDiagnostics compact />
+        <WalletDiagnostics compact />
+
+      {issuerAllocationValueUsd > 0 && (
+        <div className="rounded-2xl border border-amber/25 bg-amber/10 p-4 text-amber">
+          <div className="text-[10px] uppercase tracking-widest font-black">Issuer allocation is separated</div>
+          <p className="mt-1 text-xs leading-relaxed text-amber/85">
+            {fmtUsd(issuerAllocationValueUsd)} of creator-held coin supply is not counted in your liquid portfolio total. That supply is your own issued token inventory, not cash you can spend. Fans buy from the public pool/curve after liquidity is added.
+          </p>
+        </div>
+      )}
 
       <section className="grid grid-cols-1 xl:grid-cols-[1.25fr_0.75fr] gap-4">
         <div className="space-y-4">
@@ -596,24 +615,33 @@ function Metric({ label, value, sub }: { label: string; value: string; sub: stri
 }
 
 function TokenRow({ t }: { t: TokenRow }) {
+  const liquidValue = countedUsd(t);
   return (
     <Link href={`/coin/${t.mint}`} className="flex items-center gap-3 rounded-xl border border-edge bg-panel p-3 hover:bg-panel2 hover:border-white/25 active:scale-[0.99] transition">
       <div className="relative w-11 h-11 rounded-lg overflow-hidden border border-edge bg-panel2 shrink-0">
         <SafeImage src={t.logo_uri} alt={t.ticker} fill sizes="44px" fallback={t.ticker} className="object-cover" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="font-bold text-white truncate">${t.ticker}</div>
+        <div className="flex min-w-0 items-center gap-2">
+          <div className="font-bold text-white truncate">${t.ticker}</div>
+          {t.issuerAllocation ? <span className="shrink-0 rounded-full border border-amber/25 bg-amber/10 px-1.5 py-0.5 text-[8px] font-black uppercase tracking-widest text-amber">Issuer</span> : null}
+        </div>
         <div className="text-[10px] uppercase tracking-widest text-mute truncate">{t.name}</div>
+        {t.valuationNote ? <div className="mt-1 text-[10px] normal-case tracking-normal text-amber/80 line-clamp-2">{t.valuationNote}</div> : null}
       </div>
       <div className="text-right">
         <div className="font-mono text-sm text-white">{fmtNum(t.amount)}</div>
-        <div className="text-[10px] uppercase tracking-widest text-mute">{t.valueUsd != null ? fmtUsd(t.valueUsd) : "No price"}</div>
+        <div className="text-[10px] uppercase tracking-widest text-mute">
+          {t.issuerAllocation ? "Not counted" : liquidValue ? fmtUsd(liquidValue) : "No price"}
+        </div>
+        {t.issuerAllocation && t.valueUsd != null ? <div className="text-[9px] uppercase tracking-widest text-mute">{fmtUsd(t.valueUsd)} estimated</div> : null}
       </div>
     </Link>
   );
 }
 
 function WalletAssetRow({ t }: { t: TokenRow }) {
+  const liquidValue = countedUsd(t);
   const body = (
     <>
       <div className="relative w-11 h-11 rounded-lg overflow-hidden border border-edge bg-panel2 shrink-0">
@@ -629,7 +657,9 @@ function WalletAssetRow({ t }: { t: TokenRow }) {
       </div>
       <div className="text-right shrink-0">
         <div className="font-mono text-sm text-white">{fmtNum(t.amount)}</div>
-        <div className="text-[10px] uppercase tracking-widest text-mute">{t.valueUsd != null ? fmtUsd(t.valueUsd) : "No USD price"}</div>
+        <div className="text-[10px] uppercase tracking-widest text-mute">
+          {t.issuerAllocation ? "Not counted" : liquidValue ? fmtUsd(liquidValue) : "No USD price"}
+        </div>
       </div>
     </>
   );

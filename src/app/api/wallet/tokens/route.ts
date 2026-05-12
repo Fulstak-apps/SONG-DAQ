@@ -200,6 +200,8 @@ export async function GET(req: NextRequest) {
       logo_uri: audioCoin?.logo_uri ?? audioMeta?.icon ?? `/api/token-image/${AUDIO_MINT}`,
       price: audioPrice || null,
       valueUsd: audioPrice ? audioPrice * audioAmount : null,
+      countedValueUsd: audioPrice ? audioPrice * audioAmount : null,
+      issuerAllocation: false,
       isAudio: true,
       isArtistCoin: !!audioCoin,
       priceSource: audioPrice ? "jupiter" : null,
@@ -210,7 +212,7 @@ export async function GET(req: NextRequest) {
       address,
       mode,
       tokens: audioToken,
-      totalUsd: audioToken.reduce((s, t) => s + (t.valueUsd ?? 0), 0),
+      totalUsd: audioToken.reduce((s, t) => s + (t.countedValueUsd ?? t.valueUsd ?? 0), 0),
       audioBalance: audioAmount,
       artistCoinCount: 0,
     });
@@ -249,6 +251,13 @@ export async function GET(req: NextRequest) {
         liquidityPairAmount: true,
         liquidityTokenAmount: true,
         liquidityPairAsset: true,
+        supply: true,
+        artistAllocationBps: true,
+        artistWallet: {
+          select: {
+            wallet: true,
+          },
+        },
       },
     });
     for (const song of localSongs) {
@@ -268,6 +277,18 @@ export async function GET(req: NextRequest) {
     const meta = metaMap.get(t.mint);
     const songPrice = song ? estimateSongTokenUsd(song, localRates) : 0;
     const price = Number(songPrice || coin?.price || jupiterPrice?.usdPrice || jupiterPrice?.price || 0);
+    const valueUsd = price ? price * t.amount : null;
+    const isIssuerSongToken = Boolean(song?.artistWallet?.wallet && song.artistWallet.wallet === address);
+    const artistAllocationTokens = song
+      ? Number(song.supply || 0) * (Number(song.artistAllocationBps || 0) / 10_000)
+      : 0;
+    const reservedLiquidityTokens = song ? Number(song.liquidityTokenAmount || 0) : 0;
+    const issuerAllocation = Boolean(
+      isIssuerSongToken &&
+      t.amount > 0 &&
+      (t.amount >= Math.max(1, artistAllocationTokens * 0.5) || t.amount > reservedLiquidityTokens),
+    );
+    const countedValueUsd = issuerAllocation ? 0 : valueUsd;
     return {
       mint: t.mint,
       amount: t.amount,
@@ -276,7 +297,12 @@ export async function GET(req: NextRequest) {
       name: song?.coinName ?? song?.title ?? coin?.name ?? meta?.name ?? (isAudio ? "Audius" : "Unknown Token"),
       logo_uri: song?.artworkUrl ?? coin?.logo_uri ?? meta?.icon ?? `/api/token-image/${t.mint}`,
       price: price || null,
-      valueUsd: price ? price * t.amount : null,
+      valueUsd,
+      countedValueUsd,
+      issuerAllocation,
+      valuationNote: issuerAllocation
+        ? "Creator-held supply is shown as issuer allocation and is not counted as liquid portfolio cash."
+        : null,
       isAudio,
       isArtistCoin: !!coin || !!song,
       priceChange24h: jupiterPrice?.priceChange24h ?? null,
@@ -287,9 +313,9 @@ export async function GET(req: NextRequest) {
       metadataSource: song ? "song-daq" : coin ? "audius" : meta ? "jupiter" : "wallet",
     };
   });
-  enriched.sort((a, b) => (b.valueUsd ?? 0) - (a.valueUsd ?? 0));
+  enriched.sort((a, b) => (b.countedValueUsd ?? b.valueUsd ?? 0) - (a.countedValueUsd ?? a.valueUsd ?? 0));
 
-  const totalUsd = enriched.reduce((s, t) => s + (t.valueUsd ?? 0), 0);
+  const totalUsd = enriched.reduce((s, t) => s + (t.countedValueUsd ?? t.valueUsd ?? 0), 0);
   const audio = enriched.find((t) => t.isAudio);
   return NextResponse.json({
     address,

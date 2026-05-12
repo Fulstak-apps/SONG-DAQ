@@ -264,7 +264,12 @@ export default function SongTradingPage() {
 
           {/* Right Sidebar (Trade Panel) */}
           <div className="w-full lg:w-[380px] border-t lg:border-t-0 lg:border-l border-edge bg-panel2 overflow-y-auto no-scrollbar shrink-0 p-4 space-y-4">
-            {isTradable ? <TradePanel song={song} onTraded={load} /> : <PendingLiquidityPanel song={song} isOwner={isOwner} />}
+            {isTradable ? (
+              <>
+                <TradePanel song={song} onTraded={load} />
+                {isOwner ? <LiveLiquidityPanel song={song} /> : null}
+              </>
+            ) : <PendingLiquidityPanel song={song} isOwner={isOwner} />}
             
             <div className="panel p-4 bg-panel">
               <div className="text-[10px] uppercase tracking-widest font-bold text-mute mb-3">Distributor Royalties</div>
@@ -428,7 +433,12 @@ export default function SongTradingPage() {
       </div>
 
       <div className="space-y-6">
-        {isTradable ? <TradePanel song={song} onTraded={load} /> : <PendingLiquidityPanel song={song} isOwner={isOwner} />}
+        {isTradable ? (
+          <>
+            <TradePanel song={song} onTraded={load} />
+            {isOwner ? <LiveLiquidityPanel song={song} /> : null}
+          </>
+        ) : <PendingLiquidityPanel song={song} isOwner={isOwner} />}
         <TokenTrustPanel song={song} isTradable={isTradable} />
         
         {!song.splitsLocked && (
@@ -622,6 +632,57 @@ function PendingLiquidityPanel({ song, isOwner = false }: { song: any; isOwner?:
   );
 }
 
+function LiveLiquidityPanel({ song }: { song: any }) {
+  const mint = song.mintAddress ? `${song.mintAddress.slice(0, 6)}…${song.mintAddress.slice(-6)}` : "Mint pending";
+  const pairAsset = song.liquidityPairAsset || "SOL";
+  const pairAmount = Number(song.liquidityPairAmount || 0);
+  const tokenAmount = Number(song.liquidityTokenAmount || 0);
+
+  return (
+    <div id="liquidity" className="panel p-5 space-y-4 border border-neon/20 bg-neon/5 shadow-xl scroll-mt-28">
+      <div className="flex items-start gap-3">
+        <div className="w-10 h-10 rounded-xl bg-neon/15 border border-neon/25 flex items-center justify-center shrink-0">
+          <BadgeCheck className="text-neon" size={18} />
+        </div>
+        <div className="min-w-0">
+          <div className="flex items-center gap-1.5 text-[10px] uppercase tracking-widest font-black text-neon">
+            Liquidity is live
+            <InfoTooltip
+              side="bottom"
+              def="Liquidity is the public market money that lets fans buy and sell. Adding more liquidity can make trading smoother and reduce big price jumps, but it does not guarantee profit."
+            />
+          </div>
+          <h3 className="mt-1 text-lg font-black tracking-tight text-white">Add more liquidity anytime</h3>
+          <p className="mt-2 text-xs text-mute leading-relaxed">
+            Yes, you can keep adding liquidity after launch. Think of it like adding more inventory and market depth: more song coins plus more {pairAsset} go into the public pool so fans have a clearer place to buy and sell.
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="rounded-xl border border-edge bg-panel p-3 min-w-0">
+          <div className="text-[9px] uppercase tracking-widest font-black text-mute">SPL Mint</div>
+          <div className="mt-1 font-mono text-xs text-white truncate">{mint}</div>
+        </div>
+        <div className="rounded-xl border border-edge bg-panel p-3">
+          <div className="text-[9px] uppercase tracking-widest font-black text-mute">Current Pair</div>
+          <div className="mt-1 text-xs uppercase tracking-widest font-black text-neon">{pairAmount.toLocaleString()} {pairAsset}</div>
+        </div>
+        <div className="rounded-xl border border-edge bg-panel p-3">
+          <div className="text-[9px] uppercase tracking-widest font-black text-mute">Coin Side</div>
+          <div className="mt-1 text-xs uppercase tracking-widest font-black text-neon">{tokenAmount.toLocaleString()} coins</div>
+        </div>
+      </div>
+
+      <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-[11px] leading-relaxed text-neon/90">
+        Your creator-held supply is separate from the public pool. Fans do not buy from a hidden artist wallet; they buy from the liquidity route. Add more liquidity when you want to deepen that public market.
+      </div>
+
+      <LiquidityTopUp song={song} mintLabel={mint} />
+    </div>
+  );
+}
+
 function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
   const { address } = useSession();
   const [open, setOpen] = useState(false);
@@ -641,6 +702,7 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
   const estimatedFeeUsd = solUsdRate > 0 ? estimatedFeeSol * solUsdRate : null;
   const poolValueUsd = pairUsd != null ? pairUsd * 2 : null;
   const totalSpendUsd = pairUsd != null && estimatedFeeUsd != null ? pairUsd + estimatedFeeUsd : null;
+  const hasExistingLiquidity = Number(song.liquidityPairAmount || 0) > 0 && Number(song.liquidityTokenAmount || 0) > 0;
   const totalSpendLabel = pairAsset === "SOL"
     ? formatCryptoWithFiat(pairAmountNumber + estimatedFeeSol, "SOL", totalSpendUsd, currency)
     : `${formatCryptoWithFiat(pairAmountNumber, pairAsset, pairUsd, currency)} + ${formatCryptoWithFiat(estimatedFeeSol, "SOL", estimatedFeeUsd, currency)}`;
@@ -725,10 +787,10 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
         className="btn-primary w-full h-11 text-[10px] font-black uppercase tracking-widest"
         onClick={() => setOpen((v) => !v)}
       >
-        {open ? "Close Liquidity Form" : "Add Liquidity"}
+        {open ? "Close Liquidity Form" : hasExistingLiquidity ? "Add More Liquidity" : "Add Liquidity"}
       </button>
       <div className="text-[10px] uppercase tracking-widest font-bold text-neon/80">
-        Artist-only liquidity top-up for {mintLabel}
+        Artist-only liquidity {hasExistingLiquidity ? "top-up" : "setup"} for {mintLabel}
       </div>
       {open && (
         <div className="space-y-3">
@@ -763,7 +825,9 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
             </label>
           </div>
           <div className="rounded-xl border border-edge bg-panel p-3 text-xs text-mute">
-            This sends the reserved launch coins plus paired SOL/USDC into the public pool. Once the transaction is verified, SONG·DAQ marks the coin live so fans can buy and sell.
+            {hasExistingLiquidity
+              ? "This adds another layer of market depth to the public pool. It can help fans buy and sell with less price jump, but it is still your money going into liquidity."
+              : "This sends the reserved launch coins plus paired SOL/USDC into the public pool. Once the transaction is verified, SONG·DAQ marks the coin live so fans can buy and sell."}
           </div>
           <div className="rounded-2xl border border-neon/25 bg-neon/10 p-4">
             <div className="flex items-center gap-1.5 text-[9px] uppercase tracking-widest font-black text-neon">
