@@ -25,6 +25,9 @@ function localSongToCoin(song: any): AudiusCoin {
   const mint = song.mintAddress || song.fakeTokenAddress || song.id;
   const priceUsd = Number(song.currentPriceUsd || song.launchPriceUsd || 0);
   const supply = Number(song.supply || 0);
+  const isOpenAudio = String(song.distributor || "").includes("Open Audio")
+    || String(song.riskLevel || "").startsWith("OPEN_AUDIO")
+    || String(song.audiusTrackId || "").startsWith("artist-coin:");
   return {
     name: song.coinName || `${song.title} Song Coin`,
     ticker: normalizeSymbol(song.symbol || song.title || "SONG"),
@@ -48,7 +51,9 @@ function localSongToCoin(song: any): AudiusCoin {
     audius_track_title: song.title,
     audius_track_artwork: song.artworkUrl || undefined,
     audius_play_count: Number(song.streams || 0),
-    isSongDaqLocal: true,
+    isSongDaqLocal: !isOpenAudio,
+    isOpenAudioCoin: isOpenAudio,
+    source: isOpenAudio ? "open_audio" : "songdaq",
     songId: song.id,
     mintAddress: song.mintAddress || null,
     createdAt: song.createdAt ? new Date(song.createdAt).toISOString() : undefined,

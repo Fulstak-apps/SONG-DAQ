@@ -214,7 +214,8 @@ export default function CoinPage() {
   const coinArtwork = coin.logo_uri || coin.audius_track_artwork || coin.artist_avatar || null;
   const ownerWallet = String((coin as any).artistWallet?.wallet || "");
   const localSongId = String((coin as any).songId || (coin as any).id || "");
-  const isSongDaqLocal = Boolean((coin as any).isSongDaqLocal || localSongId || (coin as any).mintAddress);
+  const isOpenAudio = Boolean((coin as any).isOpenAudioCoin || (coin as any).source === "open_audio" || (coin as any).source === "audius_public");
+  const isSongDaqLocal = !isOpenAudio && Boolean((coin as any).isSongDaqLocal || localSongId || (coin as any).mintAddress);
   const isOwner = Boolean(
     (audius?.userId && (
       audius.userId === coin.owner_id ||

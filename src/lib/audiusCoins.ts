@@ -59,6 +59,8 @@ export interface AudiusCoin {
   audius_play_count?: number;
   /** SONG·DAQ-local song coin metadata. Present for coins created in this app before Audius/Jupiter index them. */
   isSongDaqLocal?: boolean;
+  isOpenAudioCoin?: boolean;
+  source?: "songdaq" | "open_audio" | "audius_public";
   songId?: string;
   mintAddress?: string | null;
   createdAt?: string;
@@ -112,6 +114,8 @@ function normalizeCoin(c: AudiusCoin): AudiusCoin {
   return {
     ...c,
     logo_uri: image ?? c.logo_uri,
+    isOpenAudioCoin: c.isOpenAudioCoin ?? true,
+    source: c.source ?? "audius_public",
   };
 }
 

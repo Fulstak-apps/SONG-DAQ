@@ -144,7 +144,8 @@ export function CoinPreviewModal({
 
   if (!coin) return null;
   const activeCoin = coin;
-  const isSongDaqLocal = Boolean(activeCoin.isSongDaqLocal || activeCoin.songId || activeCoin.mintAddress);
+  const isOpenAudio = Boolean(activeCoin.isOpenAudioCoin || activeCoin.source === "open_audio" || activeCoin.source === "audius_public");
+  const isSongDaqLocal = !isOpenAudio && Boolean(activeCoin.isSongDaqLocal || activeCoin.songId || activeCoin.mintAddress);
   const assetLabel = isSongDaqLocal ? "SONG·DAQ Song Token" : "Open Audio Artist Coin";
   const chartPoints = points.length ? points : coin.price ? [{
     ts: new Date().toISOString(),

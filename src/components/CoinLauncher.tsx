@@ -81,6 +81,10 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const launchIdentityWallet = externalWalletAddress || audiusWalletAddress;
   const [step, setStep] = useState<Step>(1);
   const [launchKind, setLaunchKind] = useState<LaunchKind>("SONG");
+  const audiusVisibility =
+    launchKind === "ARTIST"
+      ? "Audius-visible Open Audio Artist Coin"
+      : "SONG·DAQ song coin linked to Audius catalog";
 
   // Step 1: track selection
   const [tracks, setTracks] = useState<AudiusTrack[]>([]);
@@ -590,6 +594,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
           <div className="text-[10px] uppercase tracking-widest font-bold text-mute">
             Authenticated Issuer: <span className="text-white">@{audius.handle}</span>
           </div>
+          <div className="text-[10px] uppercase tracking-widest font-black text-neon">
+            Sync mode: <span className="text-white">{audiusVisibility}</span>
+          </div>
         </div>
         <Stepper step={step} />
       </header>
@@ -600,15 +607,22 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
           onClick={() => { setLaunchKind("SONG"); setLiquidityPairAsset("SOL"); setBasePrice(0.001); setCurveSlope(0.0000005); setStep(1); setErr(null); }}
           className={`rounded-xl px-4 py-3 text-[10px] uppercase tracking-widest font-black transition ${launchKind === "SONG" ? "bg-neon/15 text-neon border border-neon/25" : "text-mute hover:text-ink"}`}
         >
-          Song Token
+          Song Token · SONG·DAQ
         </button>
         <button
           type="button"
           onClick={() => { setLaunchKind("ARTIST"); setStep(1); setErr(null); }}
           className={`rounded-xl px-4 py-3 text-[10px] uppercase tracking-widest font-black transition ${launchKind === "ARTIST" ? "bg-violet/15 text-violet border border-violet/25" : "text-mute hover:text-ink"}`}
         >
-          Artist Token
+          Artist Coin · Audius-visible
         </button>
+      </div>
+
+      <div className="relative z-10 rounded-2xl border border-edge bg-panel p-4">
+        <div className="text-[10px] uppercase tracking-widest font-black text-mute">Audius sync</div>
+        <p className="mt-2 text-xs leading-relaxed text-mute">
+          Audius/Open Audio coins launched on Audius can be imported into SONG·DAQ by mint address. Coins launched on SONG·DAQ show on Audius only when they use the official Open Audio Artist Coin path: $AUDIO quote, Meteora bonding curve, 1B supply, 9 decimals, and artist vesting. Custom song coins stay visible in SONG·DAQ while linking back to the Audius track and artist.
+        </p>
       </div>
 
       {!externalWalletAddress && audiusWalletAddress && (
@@ -666,9 +680,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <div className="rounded-xl border border-edge bg-panel2 p-3 text-mute">Audio <span className="block text-amber">Unavailable until song attached</span></div>
                     </div>
                     <div className="rounded-2xl border border-violet/25 bg-violet/10 p-4">
-                      <div className="text-[10px] uppercase tracking-widest font-black text-violet">Option C: launch on Audius, run everything else on SONG·DAQ</div>
+                      <div className="text-[10px] uppercase tracking-widest font-black text-violet">Two-way Audius sync</div>
                       <p className="mt-2 text-xs leading-relaxed text-violet/85">
-                        If you already launched an Artist Coin on Audius, paste the official mint here. SONG·DAQ will build the coin page, chart, portfolio, royalty setup, admin tracking, and trading context around it.
+                        Launch an Artist Coin here with the Open Audio path and it is built for Audius/Open Audio indexing. If you already launched on Audius, paste the official mint here and SONG·DAQ will build the coin page, chart, portfolio, royalty setup, admin tracking, and trading context around it.
                       </p>
                       <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
                         <input
@@ -695,7 +709,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                         >
                           Open Audius Coins
                         </a>
-                        <span className="text-[10px] leading-relaxed text-mute">Official launch stays on Audius. SONG·DAQ imports the public mint after it exists.</span>
+                        <span className="text-[10px] leading-relaxed text-mute">Audius → SONG·DAQ works by import. SONG·DAQ → Audius works when the launch uses the Open Audio Artist Coin standard.</span>
                       </div>
                       {importMessage && <div className="mt-3 text-xs font-bold text-neon">{importMessage}</div>}
                     </div>
@@ -904,10 +918,10 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                         : "This does not match the Audius-style model. Keep artist vesting at or below 50% and max wallet cap at or below 10%."}
                     </div>
                   )}
-                  <div className="rounded-xl border border-violet/20 bg-violet/10 p-3 text-xs leading-relaxed text-violet/85">
+                <div className="rounded-xl border border-violet/20 bg-violet/10 p-3 text-xs leading-relaxed text-violet/85">
                     {launchKind === "ARTIST"
-                      ? "Audius-style artist coins use a 1B supply, 9 decimals, $AUDIO quote asset, Meteora bonding curve, and 50% creator vesting. Fans buy from the curve, not from a hidden artist wallet."
-                      : "Song Tokens are tied to one Audius track. The artist launches a fixed-supply song coin, then opens trading by pairing reserved song coins with SOL, USDC, or AUDIO liquidity."}
+                      ? "Audius-style artist coins use a 1B supply, 9 decimals, $AUDIO quote asset, Meteora bonding curve, and 50% creator vesting. This is the path that can show on Audius/Open Audio after indexing."
+                      : "Song Tokens are tied to one Audius track and show in SONG·DAQ. They use Audius catalog metadata, but they are not automatically listed on Audius unless Open Audio adds song-level coin indexing."}
                   </div>
                   <div className="space-y-2">
                     <label className="text-[10px] uppercase tracking-widest font-bold text-mute px-1">Settlement Distributor</label>
@@ -1098,6 +1112,14 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 <Row k="Estimated network fee" v={formatCryptoWithFiat(estimatedNetworkFeeSol, "SOL", estimatedNetworkFeeUsd, currency)} help="Solana network fees move. This is an estimate, not a guaranteed final charge." />
                 <Row k="Expected price movement" v={launchKind === "ARTIST" ? "Curve quoted in AUDIO" : liquidityPairAmount >= 1 ? "Low/Medium" : "High"} color={launchKind === "ARTIST" || liquidityPairAmount >= 1 ? "text-neon" : "text-amber"} help="If the market is small, one buy or sell can move the price more. A deeper market usually moves less." />
                 <Row k="Market source" v={launchKind === "ARTIST" ? "Meteora Dynamic Bonding Curve" : "Public pool approval"} help="This tells you where fans will buy. The public pool or curve is the market, not a hidden artist wallet." />
+                <Row
+                  k="Audius visibility"
+                  v={launchKind === "ARTIST" ? "Indexes on Audius/Open Audio" : "SONG·DAQ only"}
+                  color={launchKind === "ARTIST" ? "text-neon" : "text-amber"}
+                  help={launchKind === "ARTIST"
+                    ? "This uses the official Open Audio Artist Coin shape, so it is designed to appear in Audius/Open Audio coin lists after indexing."
+                    : "This is a song-level SONG·DAQ coin linked to an Audius track. It can be traded here, but Audius may not list custom song coins on its own app."}
+                />
                 <Row k="Trust lock" v={launchKind === "ARTIST" ? "50% creator vesting over 5 years" : `${liquidityLockDays} days required`} color="text-neon" help="A lock or vesting schedule helps show fans the launch is not just a quick sellout by the artist." />
                 <div className="pt-1 text-[9px] uppercase tracking-widest text-mute">{fiatAge}</div>
               </div>
@@ -1142,6 +1164,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <Row k={launchKind === "ARTIST" ? "Artist" : "Song"} v={launchKind === "ARTIST" ? (audius?.name || audius?.handle || "Artist coin") : (pick?.title ?? "Song coin")} />
                       <Row k="Supply" v={launchKind === "ARTIST" ? "1B / 9 decimals" : fmtNum(supply)} />
                       <Row k="Market" v={launchKind === "ARTIST" ? `Meteora DBC vs $AUDIO · ${formatCryptoWithFiat(liquidityPairAmount, "AUDIO", creatorFirstBuyUsd, currency)}` : `${fmtNum(liquidityTokenAmount)} tokens + ${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)}`} color="text-neon" />
+                      <Row
+                        k="Audius sync"
+                        v={launchKind === "ARTIST" ? "Can appear on Audius after indexing" : "Visible on SONG·DAQ, linked to Audius track"}
+                        color={launchKind === "ARTIST" ? "text-neon" : "text-amber"}
+                      />
                       <Row k="Estimated network fee" v={formatCryptoWithFiat(estimatedNetworkFeeSol, "SOL", estimatedNetworkFeeUsd, currency)} />
                       <Row k="Trading opens" v={launchKind === "ARTIST" ? "After AUDIO curve transaction confirms" : "After liquidity transaction verifies"} color="text-neon" />
                       <Row k="Vesting / lock" v={launchKind === "ARTIST" ? "50% artist vesting over 5 years" : `${liquidityLockDays} days`} />
@@ -1269,7 +1296,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <div className="text-neon font-mono text-[10px] break-all">Mint tx: {result.launch.mintTx}</div>
                     )}
                     <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-xs leading-relaxed text-neon">
-                      Wallet visibility metadata is attached on-chain. If Phantom still hides a brand-new token, open Hidden Tokens and mark it as Not Spam; the token is still in the wallet.
+                      {launchKind === "ARTIST"
+                        ? "This launch used the Open Audio Artist Coin path, so it is built for Audius/Open Audio coin indexing. Indexing can take a little time after the transaction confirms."
+                        : "Wallet visibility metadata is attached on-chain. This SONG·DAQ song coin is linked to Audius catalog data, but Audius may not list custom song coins in its own app yet."}
                     </div>
                     <div className={`rounded-xl border p-3 text-xs leading-relaxed ${
                       liquidityStage === "live"

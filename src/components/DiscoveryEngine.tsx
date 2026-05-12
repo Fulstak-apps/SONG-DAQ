@@ -327,7 +327,8 @@ export default function DiscoveryEngine() {
         const risk = calculateCoinRisk(c as any);
         const liquidity = Number((c as any).liquidity ?? (c as any).reserveSol ?? (c as any).liquidityPairAmount ?? 0);
         const verified = Boolean((c as any).artist_handle || (c as any).audiusVerified || (c as any).audius_track_id);
-        const localLaunch = Boolean((c as any).isSongDaqLocal || (c as any).songId || (c as any).createdAt);
+        const openAudio = Boolean((c as any).isOpenAudioCoin || (c as any).source === "open_audio" || (c as any).source === "audius_public");
+        const localLaunch = !openAudio && Boolean((c as any).isSongDaqLocal || (c as any).songId || (c as any).createdAt);
         switch (marketFilter) {
           case "verified":
             return verified;

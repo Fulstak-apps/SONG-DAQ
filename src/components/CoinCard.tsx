@@ -52,7 +52,8 @@ export function CoinCard({
   const sparkColor = sparkUp ? "#00E572" : "#FF3366";
   const tier = getTier(c.marketCap ?? 0);
   const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || null;
-  const isSongDaqLocal = Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
+  const isOpenAudio = Boolean(c.isOpenAudioCoin || c.source === "open_audio" || c.source === "audius_public");
+  const isSongDaqLocal = !isOpenAudio && Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
   const assetLabel = isSongDaqLocal ? "SONG·DAQ Song Token" : "Open Audio Artist Coin";
   const sourceHelp = isSongDaqLocal
     ? "This coin was created through SONG·DAQ."
@@ -241,7 +242,8 @@ export function CoinListRow({
   const change = c.priceChange24hPercent ?? 0;
   const tier = getTier(c.marketCap ?? 0);
   const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || null;
-  const isSongDaqLocal = Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
+  const isOpenAudio = Boolean(c.isOpenAudioCoin || c.source === "open_audio" || c.source === "audius_public");
+  const isSongDaqLocal = !isOpenAudio && Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
 
   return (
     <motion.div
