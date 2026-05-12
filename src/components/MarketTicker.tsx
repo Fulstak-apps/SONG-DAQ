@@ -2,6 +2,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useCoins } from "@/lib/useCoins";
+import { useUsdToDisplayRate } from "@/lib/fiat";
 
 interface CoinTick {
   kind: "coin";
@@ -20,12 +21,6 @@ interface NewsTick {
 
 type Tick = CoinTick | NewsTick;
 
-function fmtUsd(n: number) {
-  if (!isFinite(n)) return "—";
-  if (Math.abs(n) >= 1) return `$${n.toFixed(2)}`;
-  return `$${n.toFixed(6)}`;
-}
-
 const CAT_COLOR: Record<string, string> = {
   TECH: "text-cyan bg-cyan/5 border-cyan/15",
   MUSIC: "text-violet bg-violet/5 border-violet/15",
@@ -35,6 +30,7 @@ const CAT_COLOR: Record<string, string> = {
 
 export function MarketTicker() {
   const { coins } = useCoins("volume");
+  const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
   const [news, setNews] = useState<any[]>([]);
 
   useEffect(() => {
@@ -88,13 +84,13 @@ export function MarketTicker() {
       <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-bg to-transparent z-10 pointer-events-none" />
       <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-bg to-transparent z-10 pointer-events-none" />
       
-      <div className="flex animate-ticker py-2 pl-2 pr-2 whitespace-nowrap items-center" style={{ animationDuration: "74s" }}>
+      <div className="flex animate-ticker py-2 pl-2 pr-2 whitespace-nowrap items-center [animation-play-state:running] hover:[animation-play-state:paused]" style={{ animationDuration: "150s" }}>
         {doubled.map((t, i) => {
           if (t.kind === "coin") {
             return (
               <Link key={`c${i}`} href={t.href} className="mx-0.5 flex w-[188px] sm:w-[248px] shrink-0 items-center gap-1 overflow-hidden rounded-lg px-2 text-[10px] transition hover:bg-white/[0.05] sm:gap-1.5 sm:px-2.5 sm:text-[11px] group">
                 <span className="font-mono font-black text-ink group-hover:text-neon transition truncate max-w-[76px] sm:max-w-[110px]">${t.symbol}</span>
-                <span className="num font-bold text-ink shrink-0 tabular-nums">{fmtUsd(t.priceUsd)}</span>
+                <span className="num font-bold text-ink shrink-0 tabular-nums">{formatDisplayFiat(t.priceUsd, Math.abs(t.priceUsd) >= 1 ? 2 : 6)}</span>
                 <span className={`num font-black tracking-wider shrink-0 ${t.change >= 0 ? "text-neon animate-pulse" : "text-red"}`}>
                   {t.change >= 0 ? "▲" : "▼"} {Math.abs(t.change).toFixed(2)}%
                 </span>

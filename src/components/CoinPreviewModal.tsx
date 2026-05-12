@@ -14,7 +14,7 @@ import type { AudiusCoin } from "@/lib/audiusCoins";
 import { readJson } from "@/lib/safeJson";
 import { useCoins } from "@/lib/useCoins";
 import { pickAudiusArtwork } from "@/lib/audiusArtwork";
-import { fmtUsdDisplay } from "@/lib/formatters";
+import { useUsdToDisplayRate } from "@/lib/fiat";
 
 interface RecentTradeDTO {
   id: string;
@@ -26,10 +26,6 @@ interface RecentTradeDTO {
   createdAt: string;
   wallet: string | null;
   ticker: string;
-}
-
-function fmtUsd(n: number, digits = 4) {
-  return fmtUsdDisplay(n, digits);
 }
 
 function short(addr: string) {
@@ -57,6 +53,7 @@ export function CoinPreviewModal({
   const { audius } = useSession();
   const watchlist = useWatchlist();
   const { coins: allCoins } = useCoins("marketCap");
+  const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
   const txPreview = useMemo(() => {
     const sourcePoints = points.length ? points : coin ? [{
       ts: new Date().toISOString(),
@@ -203,7 +200,7 @@ export function CoinPreviewModal({
   const activeSide = Number(coin.buy24h ?? 0) >= Number(coin.sell24h ?? 0) ? "Buy pressure" : "Sell pressure";
   const royaltyStatus = (coin as any).splitsLocked ? "Royalty split locked" : "Royalty pending";
   const marketValueReliable = !isSongDaqLocal || (coin as any).isMarketValueReliable !== false;
-  const marketValueLabel = marketValueReliable && Number(coin.marketCap ?? 0) > 0 ? fmtUsd(coin.marketCap ?? 0, 0) : "Not priced yet";
+  const marketValueLabel = marketValueReliable && Number(coin.marketCap ?? 0) > 0 ? formatDisplayFiat(coin.marketCap ?? 0, 0) : "Not priced yet";
   const tradableSupply = Number((coin as any).tradableSupply ?? coin.circulatingSupply ?? 0);
 
   function trackToPlayerTrack(track: any): PlayerTrack {
@@ -317,7 +314,7 @@ export function CoinPreviewModal({
                 <div className="mt-2 text-[11px] uppercase tracking-widest text-mute">No song preview attached</div>
               )}
               <div className="mt-4 flex flex-wrap items-baseline gap-3">
-                <span className="text-2xl sm:text-3xl font-mono font-black">{fmtUsd(coin.price ?? 0, 6)}</span>
+                <span className="text-2xl sm:text-3xl font-mono font-black">{formatDisplayFiat(coin.price ?? 0, 6)}</span>
                 <span className={`num text-sm font-black ${change >= 0 ? "text-neon" : "text-red"}`}>
                   {change >= 0 ? "+" : ""}{fmtPct(change)} 24h
                 </span>
@@ -382,10 +379,10 @@ export function CoinPreviewModal({
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-                <Metric label="Market Value" value={marketValueLabel} />
-                <Metric label="Volume" value={fmtUsd(coin.v24hUSD ?? 0, 0)} />
+                <Metric label="Public Value" value={marketValueLabel} />
+                <Metric label="Volume" value={formatDisplayFiat(coin.v24hUSD ?? 0, 0)} />
                 <Metric label="Holders" value={fmtNum(coin.holder ?? 0)} />
-                <Metric label="Liquidity" value={fmtUsd(coin.liquidity ?? 0, 0)} />
+                <Metric label="Liquidity" value={formatDisplayFiat(coin.liquidity ?? 0, 0)} />
                 <Metric label="Supply" value={fmtNum(coin.totalSupply ?? 0)} />
                 <Metric label="Tradable" value={tradableSupply > 0 ? fmtNum(tradableSupply) : "Pending"} />
                 <Metric label="Markets" value={String((coin as any).numberMarkets ?? 1)} />
@@ -404,7 +401,7 @@ export function CoinPreviewModal({
                 <InsightCard
                   label="Market Pulse"
                   value={activeSide}
-                  body={`${fmtNum(coin.trade24h ?? 0)} trades today · ${fmtNum(coin.uniqueWallet24h ?? 0)} active wallets · ${fmtUsd(coin.v24hUSD ?? 0, 0)} volume.`}
+                  body={`${fmtNum(coin.trade24h ?? 0)} trades today · ${fmtNum(coin.uniqueWallet24h ?? 0)} active wallets · ${formatDisplayFiat(coin.v24hUSD ?? 0, 0)} volume.`}
                 />
                 <InsightCard
                   label="Royalty Signal"
@@ -566,8 +563,8 @@ export function CoinPreviewModal({
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="font-mono text-ink">{fmtUsd(p.priceUsd, 6)}</div>
-                          {p.totalUsd ? <div className="text-[10px] uppercase tracking-widest text-mute font-black">{fmtUsd(p.totalUsd, 2)}</div> : null}
+                          <div className="font-mono text-ink">{formatDisplayFiat(p.priceUsd, 6)}</div>
+                          {p.totalUsd ? <div className="text-[10px] uppercase tracking-widest text-mute font-black">{formatDisplayFiat(p.totalUsd, 2)}</div> : null}
                         </div>
                       </div>
                       <div className="mt-2 flex flex-wrap items-center gap-2">

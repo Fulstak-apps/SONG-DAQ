@@ -2,6 +2,7 @@
 import { useMemo } from "react";
 import { motion } from "framer-motion";
 import type { AudiusCoin } from "@/lib/audiusCoins";
+import { useUsdToDisplayRate } from "@/lib/fiat";
 
 /**
  * Treemap-style heat map: tile size by market cap, color by 24h % change.
@@ -23,14 +24,6 @@ function colorFor(change: number) {
   return `rgba(255,51,102,${a.toFixed(3)})`;
 }
 
-function fmtUsd(n: number) {
-  if (!isFinite(n)) return "—";
-  if (Math.abs(n) >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(2)}B`;
-  if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
-  return `$${n.toFixed(2)}`;
-}
-
 export function HeatMap({
   coins,
   onSelect,
@@ -38,6 +31,7 @@ export function HeatMap({
   coins: AudiusCoin[];
   onSelect?: (c: AudiusCoin) => void;
 }) {
+  const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
   const tiles = useMemo(() => {
     const filtered = coins
       .filter((c) => (c.marketCap ?? 0) > 0)
@@ -88,12 +82,12 @@ export function HeatMap({
                 gridRow: `span ${rowSpan}`,
                 background: colorFor(change),
               }}
-              title={`${c.name} · ${fmtUsd(c.marketCap ?? 0)} · ${change.toFixed(2)}%`}
+              title={`${c.name} · ${formatDisplayFiat(c.marketCap ?? 0, 0)} · ${change.toFixed(2)}%`}
             >
               <div className={`absolute inset-0 ${change >= 0 ? "live-scan-neon" : "live-scan-red"} opacity-70`} />
               <div className="relative z-10 font-mono text-xs font-black truncate text-pure-white drop-shadow">${c.ticker}</div>
               <div className="relative z-10 flex items-baseline justify-between gap-1 mt-1">
-                <span className="text-[10px] text-pure-white/80 truncate">{fmtUsd(c.marketCap ?? 0)}</span>
+                <span className="text-[10px] text-pure-white/80 truncate">{formatDisplayFiat(c.marketCap ?? 0, 0)}</span>
                 <span className="text-[11px] font-mono font-black text-pure-white">
                   {change >= 0 ? "+" : ""}{change.toFixed(2)}%
                 </span>

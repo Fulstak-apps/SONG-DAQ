@@ -158,7 +158,9 @@ export async function GET(_req: NextRequest, ctx: { params: { mint: string } }) 
       },
     }).catch(() => null);
     const localCoin = localFirst ? localSongToCoin(localFirst, rates) : local ? localSongToCoin(local, rates) : {};
-    return NextResponse.json({ coin: { ...enriched, ...localCoin, ...(local ?? {}) } });
+    // Keep the normalized valuation last so stale raw DB market-cap fields
+    // cannot overwrite public-market-safe pricing for fresh local launches.
+    return NextResponse.json({ coin: { ...enriched, ...(local ?? {}), ...localCoin } });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }

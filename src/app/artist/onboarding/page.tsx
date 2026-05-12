@@ -4,10 +4,10 @@ import { Wallet, Music, Droplets, FileCheck2, Rocket } from "lucide-react";
 export default function ArtistOnboardingPage() {
   const steps = [
     ["Connect Wallet", "Connect an external Solana wallet. This wallet pays launch fees and owns the launch transaction.", <Wallet key="wallet" />],
-    ["Create Song Coin", "Choose a real Audius catalog song, artwork, symbol, supply, launch price, and ownership terms.", <Music key="music" />],
+    ["Create Song Coin", "Choose a real Audius catalog song, artwork, symbol, supply, launch price, and market terms.", <Music key="music" />],
     ["Add Launch Liquidity", "Launch liquidity is required to make the song coin tradable. It is separate from royalty revenue.", <Droplets key="drop" />],
     ["Royalty Setup", "Optionally add admin@song-daq.com as a distributor split recipient and submit a request for verification.", <FileCheck2 key="file" />],
-    ["Review + Launch", "Review SOL and USD values, wallet address, liquidity, risk notes, and final wallet approval.", <Rocket key="rocket" />],
+    ["Review + Launch", "Review crypto plus fiat values, wallet address, liquidity, risk notes, and final wallet approval.", <Rocket key="rocket" />],
   ];
 
   return (

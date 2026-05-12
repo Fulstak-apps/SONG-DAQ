@@ -8,6 +8,7 @@ import { ExternalLink, LockKeyhole, Music, Pause, Play, Radio, ShieldCheck, Tren
 import { SafeImage } from "@/components/SafeImage";
 import { CoinPreviewModal } from "@/components/CoinPreviewModal";
 import { CoinTradeModal } from "@/components/CoinTradeModal";
+import { ArtistIntel } from "@/components/ArtistIntel";
 import { fmtNum, fmtPct } from "@/lib/pricing";
 import type { AudiusCoin } from "@/lib/audiusCoins";
 import { usePlayer, useSession, type PlayerTrack } from "@/lib/store";
@@ -177,6 +178,14 @@ export default function ArtistProfilePage() {
         <Insight icon={<TrendingUp size={16} />} label="Market Cap" value={`$${fmtNum(totalCap)}`} tone="neon" />
         <Insight icon={<Radio size={16} />} label="Social Traction" value={`${fmtNum(totalPlays)} Plays`} tone="violet" />
       </section>
+
+      <ArtistIntel
+        artistName={artistName}
+        handle={user.handle || decoded}
+        songTitle={topTracks[0]?.title}
+        trackId={topTracks[0]?.id ? String(topTracks[0].id) : null}
+        compact
+      />
 
       <section className="grid lg:grid-cols-[360px_1fr] gap-4">
         <aside className="panel-elevated p-5 h-fit">

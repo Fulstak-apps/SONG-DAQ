@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Sun, Moon, Volume2, VolumeX, Search } from "lucide-react";
 import { WalletBalance } from "./WalletBalance";
+import { CurrencySelector } from "./CurrencySelector";
 import { AudiusLoginButton } from "./AudiusLoginButton";
 import { RoleToggle } from "./RoleToggle";
 import { LoginModal } from "./LoginModal";
@@ -205,6 +206,7 @@ export function Navbar() {
           <div className="ml-auto hidden lg:flex items-center justify-end gap-1.5 min-w-0">
               {audius ? <div className="shrink-0"><AudiusLoginButton compact /></div> : null}
               {(hasSeparateExternalWallet || audius) ? <WalletBalance compact /> : paperMode ? <PaperWalletPill /> : null}
+              <CurrencySelector compact />
               {(address || paperMode) ? <div className="hidden xl:block shrink-0"><RoleToggle /></div> : null}
           </div>
 
@@ -287,6 +289,9 @@ export function Navbar() {
               Paper wallet active · simulated funds
             </span>
           )}
+          <span className="col-span-2 min-[390px]:col-span-3 flex justify-center">
+            <CurrencySelector compact />
+          </span>
         </nav>
       </div>
 

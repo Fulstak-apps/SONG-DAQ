@@ -13,7 +13,7 @@ import {
   Cell,
 } from "recharts";
 import { fmtSol } from "@/lib/pricing";
-import { fmtUsdDisplay } from "@/lib/formatters";
+import { formatFiat, useUsdToDisplayRate } from "@/lib/fiat";
 
 export interface PricePointDTO {
   ts: string | Date;
@@ -39,10 +39,6 @@ type ChartDatum = {
   ma25?: number;
   volumeColor?: string;
 };
-
-function fmtUsd(n: number, d = 6) {
-  return fmtUsdDisplay(n, d);
-}
 
 export function PriceChart({
   points,
@@ -72,23 +68,26 @@ export function PriceChart({
   emptyState?: "No live price data yet" | "Waiting for first trade" | "No liquidity" | "Data source unavailable" | "Building price history";
 }) {
   const uid = useId().replace(/:/g, "");
+  const { currency, rate } = useUsdToDisplayRate();
   const investing = variant === "investing";
   const renderMA7 = showMA7 ?? showMovingAverage ?? mode === "advanced";
   const renderMA25 = showMA25 ?? showMovingAverage ?? mode === "advanced";
+  const displayRate = quote === "USD" && rate > 0 ? rate : 1;
+  const displayCurrency = quote === "USD" && rate > 0 ? currency : "USD";
   let data: ChartDatum[] = points.map((p) => ({
     t: typeof p.ts === "string" ? new Date(p.ts).getTime() : p.ts.getTime(),
-    open: p.open,
-    close: p.close,
-    high: p.high,
-    low: p.low,
-    volume: p.volume,
-    displayOpen: p.open,
-    displayClose: p.close,
-    displayHigh: p.high,
-    displayLow: p.low,
+    open: p.open * displayRate,
+    close: p.close * displayRate,
+    high: p.high * displayRate,
+    low: p.low * displayRate,
+    volume: quote === "USD" ? p.volume * displayRate : p.volume,
+    displayOpen: p.open * displayRate,
+    displayClose: p.close * displayRate,
+    displayHigh: p.high * displayRate,
+    displayLow: p.low * displayRate,
   })).sort((a, b) => a.t - b.t);
   const fmtPrice = (v: number) =>
-    quote === "USD" ? fmtUsd(v) : fmtSol(v, 5);
+    quote === "USD" ? formatFiat(v, displayCurrency, 6) : fmtSol(v, 5);
   if (!data.length) {
     return (
       <div style={{ height }} className="w-full grid place-items-center text-mute text-sm uppercase tracking-widest animate-pulse font-bold">
@@ -238,6 +237,9 @@ export function PriceChart({
   const pad = range > 0
     ? Math.max(range * (investing ? 0.18 : 0.45), tinyPad)
     : Math.max(Math.abs(last) * 0.004, tinyPad);
+  const minimumSpan = quote === "USD" ? 0.000000001 : 0.00000000001;
+  const axisMin = Math.max(0, min - pad);
+  const axisMax = Math.max(max + pad, axisMin + minimumSpan);
   const lastIndex = data.length - 1;
   const renderLastDot = (props: any) => {
     const { cx, cy, index } = props;
@@ -263,14 +265,14 @@ export function PriceChart({
     const tMin = data[0].t;
     const tMax = data[data.length - 1].t;
     const scaleX = (t: number) => left + ((t - tMin) / Math.max(tMax - tMin, 1)) * plotW;
-    const scaleY = (v: number) => top + ((max + pad - v) / Math.max((max + pad) - (min - pad), quote === "USD" ? 0.000000001 : 0.00000000001)) * plotH;
+    const scaleY = (v: number) => top + ((axisMax - v) / Math.max(axisMax - axisMin, minimumSpan)) * plotH;
     const width = Math.max(4, Math.min(18, plotW / Math.max(data.length, 1) * 0.62));
     return { chartWidth, chartHeight, scaleX, scaleY, width };
   })();
 
-  const domainMax = max + pad;
-  const domainMin = min - pad;
-  const domainSpan = Math.max(domainMax - domainMin, quote === "USD" ? 0.000000001 : 0.00000000001);
+  const domainMax = axisMax;
+  const domainMin = axisMin;
+  const domainSpan = Math.max(domainMax - domainMin, minimumSpan);
   const yPctFor = (value: number) => Math.max(4, Math.min(94, ((domainMax - value) / domainSpan) * 100));
   const xPctFor = (time: number) => {
     const tMin = data[0].t;
@@ -331,7 +333,7 @@ export function PriceChart({
             stroke="rgba(248,250,252,0.42)"
             fontSize={10}
             tickFormatter={(v) => fmtPrice(Number(v))}
-            domain={[min - pad, max + pad]}
+            domain={[axisMin, axisMax]}
             width={82}
             tickCount={4}
             axisLine={false}
@@ -355,7 +357,7 @@ export function PriceChart({
             labelFormatter={(t) => new Date(Number(t)).toLocaleString()}
             formatter={(v: any, name: string) => [
               name === "volume"
-                ? (quote === "USD" ? fmtUsd(Number(v), 2) : `${fmtSol(Number(v), 3)} SOL`)
+                ? (quote === "USD" ? formatFiat(Number(v), displayCurrency, 2) : `${fmtSol(Number(v), 3)} SOL`)
                 : fmtPrice(Number(v)),
               name === "displayClose" ? "PRICE" : name === "displayHigh" ? "HIGH" : name === "displayLow" ? "LOW" : name.toUpperCase(),
             ]}
@@ -507,7 +509,7 @@ export function PriceChart({
             className="absolute hidden -translate-x-1/2 rounded-full border border-white/15 bg-black/55 px-2 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-white/70 backdrop-blur-sm sm:block"
             style={{ left: `${Math.min(78, xPctFor(lowPoint.t))}%`, top: `${Math.min(88, yPctFor(lowPoint.displayLow) + 4)}%` }}
           >
-            Low {fmtPrice(lowPoint.displayLow)}
+            Low {fmtPrice(Math.max(0, lowPoint.displayLow))}
           </div>
 
           <div className="absolute bottom-1 left-6 right-[88px] flex justify-between font-mono text-[10px] font-bold text-white/35 sm:right-[112px]">

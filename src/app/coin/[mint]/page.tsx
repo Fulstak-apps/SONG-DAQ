@@ -19,8 +19,9 @@ import { Glossary, InfoTooltip } from "@/components/Tooltip";
 import { readJson } from "@/lib/safeJson";
 import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
+import { ArtistIntel } from "@/components/ArtistIntel";
 import { pickAudiusArtwork } from "@/lib/audiusArtwork";
-import { fmtUsdDisplay } from "@/lib/formatters";
+import { useUsdToDisplayRate } from "@/lib/fiat";
 import { Pause, Play, RotateCcw, RotateCw } from "lucide-react";
 
 const CoinTradeModal = dynamic(() => import("@/components/CoinTradeModal").then((m) => m.CoinTradeModal), { ssr: false });
@@ -32,12 +33,21 @@ const MarketIntelligenceGrid = dynamic(() => import("@/components/MarketIntellig
 
 import { CHART_RANGE_LABELS, CHART_RANGES, CHART_RANGE_MS, isFastRange, type ChartRange } from "@/lib/chartRanges";
 
-function fmtUsd(n: number, d = 4) {
-  return fmtUsdDisplay(n, d);
-}
-
 function shortMint(m: string) {
   return m.length > 14 ? `${m.slice(0, 6)}…${m.slice(-4)}` : m;
+}
+
+function fmtAssetAmount(value: number, symbol = "") {
+  if (!Number.isFinite(value)) return "—";
+  const abs = Math.abs(value);
+  const amount = abs >= 1
+    ? value.toLocaleString(undefined, { maximumFractionDigits: 6 })
+    : abs > 0 && abs < 0.000001
+      ? value.toExponential(3)
+    : abs > 0
+      ? value.toLocaleString(undefined, { maximumFractionDigits: 9 })
+      : "0";
+  return symbol ? `${amount} ${symbol}` : amount;
 }
 
 function firstText(...values: unknown[]) {
@@ -67,7 +77,10 @@ export default function CoinPage() {
   const { coins: allCoins } = useCoins("marketCap");
   const [search, setSearch] = useState("");
   const [tracks, setTracks] = useState<any[]>([]);
+  const [tracksLoading, setTracksLoading] = useState(false);
+  const [tracksLoaded, setTracksLoaded] = useState(false);
   const loadingRef = useRef(false);
+  const { currency, formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
 
   const { mints: watched, toggle: toggleWatch, has: isWatched } = useCoinWatchlist();
   const { mints: recent, push: pushRecent } = useRecentCoins();
@@ -110,12 +123,30 @@ export default function CoinPage() {
 
   // Fetch a few of the artist's tracks for the "news" panel.
   useEffect(() => {
-    if (!coin?.artist_handle) { setTracks([]); return; }
+    if (!coin?.artist_handle) {
+      setTracks([]);
+      setTracksLoading(false);
+      setTracksLoaded(true);
+      return;
+    }
     let alive = true;
+    setTracks([]);
+    setTracksLoading(true);
+    setTracksLoaded(false);
     fetch(`/api/audius/tracks?handle=${encodeURIComponent(coin.artist_handle)}`, { cache: "no-store" })
       .then((r) => r.ok ? readJson<{ tracks?: any[] }>(r) : { tracks: [] })
-      .then((j) => { if (alive) setTracks(j?.tracks ?? []); })
-      .catch(() => {});
+      .then((j) => {
+        if (alive) setTracks(j?.tracks ?? []);
+      })
+      .catch(() => {
+        if (alive) setTracks([]);
+      })
+      .finally(() => {
+        if (alive) {
+          setTracksLoading(false);
+          setTracksLoaded(true);
+        }
+      });
     return () => { alive = false; };
   }, [coin?.artist_handle]);
 
@@ -252,13 +283,13 @@ export default function CoinPage() {
   const livePrice = coin.price ?? 0;
   const marketValueReliable = !isSongDaqLocal || (coin as any).isMarketValueReliable !== false;
   const marketValueLabel = marketValueReliable && Number(coin.marketCap ?? 0) > 0
-    ? fmtUsd(coin.marketCap ?? 0, 0)
+    ? formatDisplayFiat(coin.marketCap ?? 0, 0)
     : "Not priced yet";
-  const marketValueNote = String((coin as any).marketValueNote || "Market value appears after public liquidity and real trading data are available.");
+  const marketValueNote = String((coin as any).marketValueNote || "Public value appears after public liquidity and real trading data are available.");
   const tradableSupply = Number((coin as any).tradableSupply ?? coin.circulatingSupply ?? 0);
   const tradableSupplyLabel = tradableSupply > 0 ? fmtNum(tradableSupply) : "Pending";
   const fullSupplyLabel = Number(coin.totalSupply ?? 0) > 0 ? fmtNum(coin.totalSupply ?? 0) : "Pending";
-  const volumeLabel = Number(coin.v24hUSD ?? 0) > 0 ? fmtUsd(coin.v24hUSD ?? 0, 0) : "$0.00";
+  const volumeLabel = Number(coin.v24hUSD ?? 0) > 0 ? formatDisplayFiat(coin.v24hUSD ?? 0, 0) : formatDisplayFiat(0, 0);
   const holderLabel = isSongDaqLocal && coin.holder == null ? "Indexing" : fmtNum(coin.holder ?? 0);
   const histPrice = (coin as any).history24hPrice ?? livePrice;
   const high24 = Math.max(livePrice, histPrice);
@@ -331,13 +362,13 @@ export default function CoinPage() {
             </div>
             <div className="w-px h-6 bg-white/10 mx-1 sm:mx-2 hidden sm:block" />
             <div className="flex items-baseline gap-2 sm:gap-3">
-              <span className="text-lg sm:text-xl font-mono font-bold text-white">{fmtUsd(livePrice, 6)}</span>
+              <span className="text-lg sm:text-xl font-mono font-bold text-white">{formatDisplayFiat(livePrice, 6)}</span>
               <span className={`num text-sm font-bold tracking-wider ${change >= 0 ? "gain" : "lose"}`}>
                 {change >= 0 ? "+" : ""}{change.toFixed(2)}%
               </span>
             </div>
             <div className="flex gap-3 sm:gap-4 sm:ml-6 text-xs text-mute font-mono">
-              <div>Value: <span className="text-white">{marketValueLabel}</span></div>
+              <div>Public: <span className="text-white">{marketValueLabel}</span></div>
               <div>Vol: <span className="text-white">{volumeLabel}</span></div>
             </div>
           </div>
@@ -370,7 +401,7 @@ export default function CoinPage() {
                         <span className="font-bold text-sm text-white group-hover:text-neon transition">${c.ticker}</span>
                       </div>
                       <div className="text-right">
-                        <div className="font-mono text-xs font-bold text-white">{fmtUsd(c.price ?? 0, 4)}</div>
+                        <div className="font-mono text-xs font-bold text-white">{formatDisplayFiat(c.price ?? 0, 4)}</div>
                         <div className={`text-[9px] font-bold tracking-wider ${ch >= 0 ? "gain" : "lose"}`}>
                           {ch >= 0 ? "+" : ""}{ch.toFixed(2)}%
                         </div>
@@ -456,10 +487,10 @@ export default function CoinPage() {
                 <div className="rounded-2xl border border-edge bg-panel2 p-4 sm:p-5">
                   <div className="text-[10px] uppercase tracking-[0.24em] font-black text-mute">Token Facts</div>
                   <div className="mt-4 grid grid-cols-2 gap-3">
-                    <KV k="Price" v={fmtUsd(coin.price ?? 0, 6)} />
+                    <KV k="Price" v={formatDisplayFiat(coin.price ?? 0, 6)} />
                     <KV k="24h Change" v={`${change >= 0 ? "+" : ""}${change.toFixed(2)}%`} accent={change >= 0 ? "gain" : "lose"} />
-                    <KV k="Market Value" v={marketValueLabel} tooltip={marketValueNote} />
-                    <KV k="Liquidity" v={fmtUsd(coin.liquidity ?? 0, 0)} />
+                    <KV k="Public Value" v={marketValueLabel} tooltip={marketValueNote} />
+                    <KV k="Liquidity" v={formatDisplayFiat(coin.liquidity ?? 0, 0)} />
                     <KV k="Holders" v={holderLabel} />
                     <KV k="Tradable" v={tradableSupplyLabel} tooltip="This is the public supply currently set aside for the market route. It is not the artist's full minted supply." />
                     <KV k="Supply" v={fullSupplyLabel} tooltip="Total supply is the full amount minted. song-daq does not count every minted coin as market value until it is actually in the public market." />
@@ -474,7 +505,7 @@ export default function CoinPage() {
                     <h3 className="mt-1 text-xl font-black tracking-tight text-white">More music from {coin.artist_name || coin.name}</h3>
                   </div>
                   <span className="text-[10px] uppercase tracking-widest font-black text-mute">
-                    {tracks.length ? `${Math.min(tracks.length, 8)} tracks` : "No tracks loaded"}
+                    {tracksLoading ? "Loading songs" : tracks.length ? `${Math.min(tracks.length, 8)} songs` : "No songs found"}
                   </span>
                 </div>
 
@@ -527,9 +558,20 @@ export default function CoinPage() {
                         </div>
                       </div>
                     );
-                  }) : (
+                  }) : tracksLoading ? (
+                    Array.from({ length: 4 }).map((_, idx) => (
+                      <div key={`track-skeleton-${idx}`} className="flex gap-3 rounded-2xl border border-edge bg-panel p-3">
+                        <div className="h-14 w-14 shrink-0 animate-pulse rounded-xl bg-white/[0.07]" />
+                        <div className="flex-1 space-y-2 py-1">
+                          <div className="h-3 w-2/3 animate-pulse rounded bg-white/[0.08]" />
+                          <div className="h-2 w-1/3 animate-pulse rounded bg-white/[0.06]" />
+                          <div className="mt-3 h-8 w-24 animate-pulse rounded-xl bg-white/[0.07]" />
+                        </div>
+                      </div>
+                    ))
+                  ) : (
                     <div className="md:col-span-2 rounded-2xl border border-edge bg-panel p-5 text-sm text-mute">
-                      No discography loaded yet. Try refreshing, or open the artist on Audius from the link above.
+                      {tracksLoaded ? "No Audius songs were found for this artist yet." : "Loading artist songs..."}
                     </div>
                   )}
                 </div>
@@ -581,7 +623,7 @@ export default function CoinPage() {
               </p>
               <div className="mt-3 grid grid-cols-2 gap-2">
                 <KV k="Source" v={isSongDaqLocal ? "song-daq" : "Open Audio"} />
-                <KV k="Liquidity" v={fmtUsd(coin.liquidity ?? 0, 0)} />
+                <KV k="Liquidity" v={formatDisplayFiat(coin.liquidity ?? 0, 0)} />
                 <KV k="Royalty Status" v={(coin as any).splitsLocked ? "Verified" : "Not submitted"} />
                 <KV k="Risk / Trust" v={isOwner ? "Creator" : "Review"} />
               </div>
@@ -615,7 +657,9 @@ export default function CoinPage() {
             <div className="w-full rounded-2xl border border-edge bg-panel p-4 text-left">
               <div className="flex items-center justify-between gap-3">
                 <div className="text-[10px] uppercase tracking-widest font-black text-mute">Issuer Discography</div>
-                <div className="text-[10px] uppercase tracking-widest font-black text-mute">{tracks.length ? `${Math.min(tracks.length, 4)} songs` : "Loading"}</div>
+                <div className="text-[10px] uppercase tracking-widest font-black text-mute">
+                  {tracksLoading ? "Loading" : tracks.length ? `${Math.min(tracks.length, 4)} songs` : "No songs"}
+                </div>
               </div>
               <div className="mt-3 space-y-2">
                 {tracks.length ? tracks.slice(0, 4).map((t: any) => {
@@ -664,8 +708,24 @@ export default function CoinPage() {
                       </div>
                     </div>
                   );
-                }) : (
-                  <div className="rounded-xl border border-edge bg-panel2 p-3 text-xs text-mute">Loading artist songs...</div>
+                }) : tracksLoading ? (
+                  <div className="space-y-2">
+                    {Array.from({ length: 3 }).map((_, idx) => (
+                      <div key={`side-track-skeleton-${idx}`} className="rounded-xl border border-edge bg-panel2 p-2.5">
+                        <div className="flex items-center gap-2">
+                          <div className="h-10 w-10 shrink-0 animate-pulse rounded-lg bg-white/[0.07]" />
+                          <div className="flex-1 space-y-2">
+                            <div className="h-2.5 w-3/4 animate-pulse rounded bg-white/[0.08]" />
+                            <div className="h-2 w-1/3 animate-pulse rounded bg-white/[0.06]" />
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="rounded-xl border border-edge bg-panel2 p-3 text-xs text-mute">
+                    {tracksLoaded ? "No Audius songs found yet." : "Loading artist songs..."}
+                  </div>
                 )}
               </div>
             </div>
@@ -725,7 +785,7 @@ export default function CoinPage() {
                     />
                   </div>
                   <div className="text-right shrink-0">
-                    <div className="font-mono text-xs font-bold text-white">{fmtUsd(c.price ?? 0, 6)}</div>
+                    <div className="font-mono text-xs font-bold text-white">{formatDisplayFiat(c.price ?? 0, 6)}</div>
                     <div className={`text-[9px] font-bold tracking-wider mt-1 ${ch >= 0 ? "gain drop-shadow-[0_0_5px_rgba(0,229,114,0.3)]" : "lose drop-shadow-[0_0_5px_rgba(255,51,102,0.3)]"}`}>
                       {ch >= 0 ? "+" : ""}{ch.toFixed(2)}%
                     </div>
@@ -794,7 +854,7 @@ export default function CoinPage() {
               )}
             </div>
             <div className="mt-4 flex items-baseline gap-3 flex-wrap pr-0 md:pr-4">
-              <span className="text-3xl sm:text-4xl font-mono font-bold text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">{fmtUsd(coin.price ?? 0, 6)}</span>
+              <span className="text-3xl sm:text-4xl font-mono font-bold text-white drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">{formatDisplayFiat(coin.price ?? 0, 6)}</span>
               <span className={`num text-lg font-bold tracking-wider ${change >= 0 ? "gain drop-shadow-[0_0_10px_rgba(0,229,114,0.4)]" : "lose drop-shadow-[0_0_10px_rgba(255,51,102,0.4)]"}`}>
                 {change >= 0 ? "+" : ""}{fmtPct(change)}
               </span>
@@ -819,7 +879,7 @@ export default function CoinPage() {
             <div>
               <div className="text-[10px] font-black tracking-widest text-mute">song-daq chart</div>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-[10px] font-black uppercase tracking-widest">
-                <span className="rounded-full bg-[#58d64f]/15 px-2 py-1 text-[#58d64f]">Live price</span>
+                <span className="rounded-full bg-[#58d64f]/15 px-2 py-1 text-[#58d64f]">Live price · {currency}</span>
                 <span className="rounded-full bg-white/10 px-2 py-1 text-white/70">Advanced Chart</span>
               </div>
             </div>
@@ -886,6 +946,13 @@ export default function CoinPage() {
         )}
 
         <WhyFansCanBuy />
+        <ArtistIntel
+          mint={coin.mint}
+          artistName={coin.artist_name ?? coin.name}
+          handle={coin.artist_handle}
+          songTitle={coin.audius_track_title ?? coin.name}
+          trackId={coin.audius_track_id}
+        />
         <WalletDiagnostics compact />
 
         {/* News-style "tracks by artist" cards */}
@@ -987,8 +1054,8 @@ export default function CoinPage() {
         <section className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="panel p-5 space-y-4 shadow-xl">
             <div className="text-[10px] uppercase tracking-widest font-bold text-mute border-b border-edge pb-2">24h Network Activity</div>
-            <KVrow k="Buy Volume" v={`${fmtNum(coin.buy24h ?? 0)} · ${fmtUsd((coin as any).vBuy24hUSD ?? 0, 0)}`} accent="gain" />
-            <KVrow k="Sell Volume" v={`${fmtNum(coin.sell24h ?? 0)} · ${fmtUsd((coin as any).vSell24hUSD ?? 0, 0)}`} accent="lose" />
+            <KVrow k="Buy Volume" v={`${fmtNum(coin.buy24h ?? 0)} · ${formatDisplayFiat((coin as any).vBuy24hUSD ?? 0, 0)}`} accent="gain" />
+            <KVrow k="Sell Volume" v={`${fmtNum(coin.sell24h ?? 0)} · ${formatDisplayFiat((coin as any).vSell24hUSD ?? 0, 0)}`} accent="lose" />
             <KVrow k="Unique Wallets" v={fmtNum(coin.uniqueWallet24h ?? 0)} />
             <KVrow k="Trade Velocity Δ" v={`${((coin as any).trade24hChangePercent ?? 0).toFixed(1)}%`} />
           </div>
@@ -1037,7 +1104,7 @@ export default function CoinPage() {
           <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
             <TrustCheck label="Mint" value={coin.mint ? shortMint(coin.mint) : "Missing"} ok={!!coin.mint} />
             <TrustCheck label="Metadata" value={coin.logo_uri || coin.name ? "Attached" : "Fallback"} ok={!!(coin.logo_uri || coin.name)} />
-            <TrustCheck label="Pool / Liquidity" value={Number(coin.liquidity ?? 0) > 0 ? fmtUsd(coin.liquidity ?? 0, 0) : "Waiting"} ok={Number(coin.liquidity ?? 0) > 0} />
+            <TrustCheck label="Pool / Liquidity" value={Number(coin.liquidity ?? 0) > 0 ? formatDisplayFiat(coin.liquidity ?? 0, 0) : "Waiting"} ok={Number(coin.liquidity ?? 0) > 0} />
             <TrustCheck label="Artist" value={coin.artist_name || "Unknown"} ok={Boolean(coin.artist_name)} />
             <TrustCheck label="Royalty" value={String((coin as any).royalty_status ?? (coin as any).royaltyVerificationStatus ?? "Not submitted")} ok={String((coin as any).royalty_status ?? (coin as any).royaltyVerificationStatus ?? "").toLowerCase().includes("verified")} />
             <TrustCheck label="Risk" value={String((coin as any).riskLevel ?? "Review")} ok={String((coin as any).riskLevel ?? "").toLowerCase() === "low"} />
@@ -1177,6 +1244,7 @@ function MarketPoolPanel({
   isOwner: boolean;
   isSongDaqLocal: boolean;
 }) {
+  const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
   const pairAsset = firstText((coin as any).liquidityPairAsset, (coin as any).pairAsset, (coin as any).source === "open_audio" ? "AUDIO" : "SOL").toUpperCase();
   const poolAddress = firstText(coin.poolAddress, coin.poolId, (coin as any).liquidityPoolAddress, (coin as any).fakeLiquidityPoolAddress);
   const lpMint = firstText(coin.lpMint, (coin as any).lp_mint);
@@ -1207,10 +1275,10 @@ function MarketPoolPanel({
       </p>
       <div className="mt-4 grid grid-cols-2 gap-3">
         <KV k="Pair" v={`$${coin.ticker}/${pairAsset || "SOL"}`} tooltip="The pair is the two assets inside the public trading pool. Fans swap between the song coin and the payment coin." />
-        <KV k="Pool Value" v={poolUsd > 0 ? fmtUsd(poolUsd, 2) : "Indexing"} tooltip="Pool value is the visible public liquidity depth. Tiny pools may show as indexing until the router or price index catches up." />
+        <KV k="Pool Value" v={poolUsd > 0 ? formatDisplayFiat(poolUsd, 2) : "Indexing"} tooltip="Pool value is the visible public liquidity depth. Tiny pools may show as indexing until the router or price index catches up." />
         <KV k="Coin Side" v={tokenAmount > 0 ? fmtNum(tokenAmount) : "Pending"} tooltip="The amount of song coins placed into the public pool for buyers and sellers." />
-        <KV k="Payment Side" v={pairAmount > 0 ? `${fmtNum(pairAmount)} ${pairAsset || "SOL"}` : "Pending"} tooltip="The SOL, USDC, or AUDIO paired with the song coins so the market can quote a price." />
-        <KV k="Starting Price" v={startingPrice > 0 ? `${startingPrice.toExponential(3)} ${pairAsset || "SOL"}` : "Needs liquidity"} tooltip="The first pool price comes from payment side divided by song coins in the pool." />
+        <KV k="Payment Side" v={pairAmount > 0 ? fmtAssetAmount(pairAmount, pairAsset || "SOL") : "Pending"} tooltip="The SOL, USDC, or AUDIO paired with the song coins so the market can quote a price." />
+        <KV k="Starting Price" v={startingPrice > 0 ? fmtAssetAmount(startingPrice, pairAsset || "SOL") : "Needs liquidity"} tooltip="The first pool price comes from payment side divided by song coins in the pool." />
         <KV k="LP Mint" v={lpMint ? shortMint(lpMint) : "Pending"} tooltip="The LP mint represents the liquidity position created for this pool." />
       </div>
       <div className="mt-4 space-y-2 rounded-xl border border-edge bg-black/20 p-3">
@@ -1245,6 +1313,7 @@ function MarketPoolPanel({
 }
 
 function RoyaltyTransparency({ coin }: { coin: any }) {
+  const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
   const status = String(coin.royaltyVerificationStatus || coin.royalty_status || "not_submitted");
   const label: Record<string, string> = {
     not_submitted: "Royalties Not Submitted",
@@ -1284,16 +1353,16 @@ function RoyaltyTransparency({ coin }: { coin: any }) {
       </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <KV k="Royalty Split" v={coin.royaltyPercentageCommitted ? `${coin.royaltyPercentageCommitted}%` : "Not verified"} />
-        <KV k="Total Royalties Received" v={fmtUsd(Number(coin.totalRoyaltiesReceivedUsd || 0), 2)} />
-        <KV k="Royalty Pool Added" v={fmtUsd(Number(coin.totalRoyaltyPoolContributionsUsd || 0), 2)} tooltip="The Royalty Pool shows royalty money received by song-daq and added into this coin’s ecosystem." />
-        <KV k="Liquidity Support" v={fmtUsd(Number(coin.totalLiquidityAddedUsd || 0), 2)} tooltip="Liquidity shows how easily people can buy or sell without moving the price too much." />
-        <KV k="Total Buybacks" v={fmtUsd(Number(coin.totalBuybacksUsd || 0), 2)} />
-        <KV k="Holder Rewards" v={fmtUsd(Number(coin.totalHolderRewardsUsd || 0), 2)} />
+        <KV k="Total Royalties Received" v={formatDisplayFiat(Number(coin.totalRoyaltiesReceivedUsd || 0), 2)} />
+        <KV k="Royalty Pool Added" v={formatDisplayFiat(Number(coin.totalRoyaltyPoolContributionsUsd || 0), 2)} tooltip="The Royalty Pool shows royalty money received by song-daq and added into this coin’s ecosystem." />
+        <KV k="Liquidity Support" v={formatDisplayFiat(Number(coin.totalLiquidityAddedUsd || 0), 2)} tooltip="Liquidity shows how easily people can buy or sell without moving the price too much." />
+        <KV k="Total Buybacks" v={formatDisplayFiat(Number(coin.totalBuybacksUsd || 0), 2)} />
+        <KV k="Holder Rewards" v={formatDisplayFiat(Number(coin.totalHolderRewardsUsd || 0), 2)} />
         <KV k="Last Payment" v={coin.lastRoyaltyPaymentDate ? new Date(coin.lastRoyaltyPaymentDate).toLocaleDateString() : "None yet"} />
         <KV k="Next Expected" v={coin.nextExpectedRoyaltyPaymentDate ? new Date(coin.nextExpectedRoyaltyPaymentDate).toLocaleDateString() : "Not scheduled"} />
       </div>
       <div className="rounded-2xl border border-edge bg-panel2 p-4 text-sm text-mute leading-relaxed">
-        Royalty activity may support a song coin’s ecosystem, but it does not guarantee price increases, profits, or liquidity.
+        Royalty activity can add visible value flow to a song coin’s ecosystem when payments are received, verified, and added to the pool.
       </div>
     </section>
   );
@@ -1303,7 +1372,7 @@ function KV({ k, v, tooltip, accent }: { k: string; v: string; tooltip?: string;
   const fallbackTooltips: Record<string, string> = {
     "Mkt Cap": "Market cap is the current coin price multiplied by the circulating supply.",
     "Market Cap": "Market cap is the current coin price multiplied by the circulating supply.",
-    "Market Value": "Market value uses the public tradable market supply, not the full minted supply. Fresh coins may show Not priced yet until liquidity and trading are real.",
+    "Public Value": "Public value uses the public tradable market supply, not the full minted supply. Fresh coins may show Not priced yet until liquidity and trading are real.",
     Liquidity: "Liquidity shows how easily people can buy or sell without moving the price too much.",
     Tradable: "Tradable supply is the coin amount currently available in the public market route or liquidity pool.",
     "Total Supply": "Total supply is the full amount of coins created for this asset.",

@@ -101,11 +101,17 @@ export function estimateSongTokenSol(song: {
   liquidityTokenAmount?: number | null;
   liquidityPairAsset?: string | null;
 }, rates: Record<string, number> = {}) {
-  const storedSol = Number(song.currentPriceSol || song.launchPriceSol || song.price || 0);
-  if (storedSol > 0) return storedSol;
+  const tokenAmount = Number(song.liquidityTokenAmount || 0);
+  const pairAmount = Number(song.liquidityPairAmount || 0);
+  const pairAsset = normalizeAsset(song.liquidityPairAsset || "SOL");
+  if (tokenAmount > 0 && pairAmount > 0 && pairAsset === "SOL") {
+    return pairAmount / tokenAmount;
+  }
   const usd = estimateSongTokenUsd(song, rates);
   const solRate = Number(rates.SOL || FALLBACK_USD.SOL || 0);
-  return usd > 0 && solRate > 0 ? usd / solRate : 0;
+  if (usd > 0 && solRate > 0) return usd / solRate;
+  const storedSol = Number(song.currentPriceSol || song.launchPriceSol || song.price || 0);
+  return storedSol > 0 ? storedSol : 0;
 }
 
 export type SongCoinValuationBasis =
@@ -117,13 +123,20 @@ export type SongCoinValuationBasis =
 export function estimateSongLiquidityUsd(song: {
   launchLiquidityUsd?: number | null;
   liquidityPairAmount?: number | null;
+  liquidityTokenAmount?: number | null;
   liquidityPairAsset?: string | null;
 }, rates: Record<string, number> = {}) {
   const pairAmount = Number(song.liquidityPairAmount || 0);
+  const tokenAmount = Number(song.liquidityTokenAmount || 0);
   const pairAsset = normalizeAsset(song.liquidityPairAsset || "SOL");
   const pairRate = pairAsset === "USDC" ? 1 : Number(rates[pairAsset] || FALLBACK_USD[pairAsset] || 0);
   const implied = pairAmount > 0 && pairRate > 0 ? pairAmount * pairRate : 0;
-  if (implied > 0) return implied;
+  if (implied > 0) {
+    // A public liquidity pool has two sides: the payment coin plus the song
+    // coins valued at the same starting ratio. Showing both sides keeps the
+    // user from reading "1 SOL added" as the entire pool depth.
+    return tokenAmount > 0 ? implied * 2 : implied;
+  }
   return Number(song.launchLiquidityUsd || 0);
 }
 
@@ -140,6 +153,9 @@ export function valueLocalSongCoin(song: {
   supply?: number | null;
   circulating?: number | null;
   volume24h?: number | null;
+  holder?: number | null;
+  trade24h?: number | null;
+  uniqueWallet24h?: number | null;
   status?: string | null;
 }, rates: Record<string, number> = {}) {
   const priceUsd = estimateSongTokenUsd(song, rates);
@@ -150,15 +166,18 @@ export function valueLocalSongCoin(song: {
   const circulating = Math.max(0, Number(song.circulating || 0));
   const solRate = Number(rates.SOL || FALLBACK_USD.SOL || 0);
   const volumeUsd = Math.max(0, Number(song.volume24h || 0)) * (solRate > 0 ? solRate : 1);
+  const holderCount = Math.max(0, Number(song.holder || 0));
+  const tradeCount = Math.max(0, Number(song.trade24h || 0));
+  const activeWallets = Math.max(0, Number(song.uniqueWallet24h || 0));
   const tradableSupply = liquidityTokenAmount > 0
     ? Math.min(liquidityTokenAmount, totalSupply || liquidityTokenAmount)
     : circulating;
   const activeSupply = circulating > 0 ? circulating : tradableSupply;
   const hasLiquidity = liquidityUsd > 0 && liquidityTokenAmount > 0;
-  const hasTrading = circulating > 0 || volumeUsd > 0;
+  const hasTrading = volumeUsd > 0 || tradeCount > 0 || holderCount > 1 || activeWallets > 1;
   const basis: SongCoinValuationBasis = hasTrading
     ? "active_market"
-    : hasLiquidity && liquidityUsd >= 10
+    : hasLiquidity && liquidityUsd >= 25
       ? "liquidity_depth"
       : hasLiquidity
         ? "thin_liquidity"
@@ -185,11 +204,11 @@ export function valueLocalSongCoin(song: {
     basis,
     isMarketValueReliable: basis === "active_market" || basis === "liquidity_depth",
     note: basis === "active_market"
-      ? "Market value uses the active public trading supply."
+      ? "Public value uses the active public trading supply."
       : basis === "liquidity_depth"
-        ? "Market value uses the public liquidity supply, not the full 1B supply."
+        ? "Public value uses the public liquidity supply, not the full 1B supply."
         : basis === "thin_liquidity"
-          ? "Market value is hidden until there is enough liquidity or real trading activity."
-          : "Market value appears after liquidity or real trades are available.",
+          ? "Public value is hidden until there is enough liquidity or real trading activity."
+          : "Public value appears after liquidity or real trades are available.",
   };
 }

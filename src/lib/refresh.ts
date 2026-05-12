@@ -7,7 +7,7 @@
 import { prisma } from "./db";
 import { fetchMetrics } from "./audius";
 import { computePerformance } from "./pricing";
-import { spotPrice, marketCap } from "./bondingCurve";
+import { spotPrice } from "./bondingCurve";
 import { cacheGet, cacheSet } from "./redis";
 import { getAssetUsdRates, valueLocalSongCoin } from "./serverAssetPrices";
 
@@ -44,17 +44,12 @@ export async function refreshSong(songId: string, force = false): Promise<void> 
     circulating: song.circulating,
     performance,
   });
-  const curveCap = marketCap({
-    basePrice: song.basePrice,
-    slope: song.curveSlope,
-    circulating: song.circulating,
-    performance,
-  });
   const rates = await getAssetUsdRates(["SOL", "AUDIO", "USDC", song.liquidityPairAsset]);
   const solUsd = Number(rates.SOL || 0);
   const valuation = valueLocalSongCoin({ ...(song as any), price: curvePrice }, rates);
   const price = valuation.priceSol > 0 ? valuation.priceSol : curvePrice;
-  const cap = valuation.marketValueSol > 0 ? valuation.marketValueSol : curveCap;
+  const marketValueSol = valuation.marketValueSol > 0 ? valuation.marketValueSol : 0;
+  const marketValueUsd = valuation.marketValueUsd > 0 ? valuation.marketValueUsd : 0;
   await prisma.songToken.update({
     where: { id: songId },
     data: {
@@ -63,10 +58,10 @@ export async function refreshSong(songId: string, force = false): Promise<void> 
       reposts: metrics.reposts,
       performance,
       price,
-      marketCap: cap,
+      marketCap: marketValueSol,
       currentPriceSol: price,
       currentPriceUsd: valuation.priceUsd > 0 ? valuation.priceUsd : solUsd > 0 ? price * solUsd : song.currentPriceUsd,
-      marketCapUsd: valuation.marketValueUsd > 0 ? valuation.marketValueUsd : solUsd > 0 ? cap * solUsd : song.marketCapUsd,
+      marketCapUsd: marketValueUsd,
     },
   });
   await cacheSet(cacheKey, Date.now(), 60);

@@ -452,3 +452,74 @@ model AppSetting {
   value           String
   updatedAt       DateTime @updatedAt
 }
+
+model ArtistExternalProfile {
+  id              String   @id @default(cuid())
+  artistKey       String
+  artistName      String?
+  platform        String
+  url             String
+  handle          String?
+  displayName     String?
+  imageUrl        String?
+  bio             String?
+  followerCount   Float?
+  popularityScore Float?
+  metricsJson     String?
+  confidence      Float    @default(0)
+  sourceType      String   @default("auto_detected")
+  status          String   @default("active")
+  lastSyncedAt    DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([artistKey, platform])
+  @@index([platform, status])
+  @@unique([artistKey, platform, url])
+}
+
+model SongExternalLink {
+  id              String   @id @default(cuid())
+  songKey         String?
+  artistKey       String?
+  songTitle       String?
+  artistName      String?
+  platform        String
+  url             String
+  title           String?
+  imageUrl        String?
+  channelName     String?
+  viewCount       Float?
+  likeCount       Float?
+  commentCount    Float?
+  publishedAt     DateTime?
+  metricsJson     String?
+  confidence      Float    @default(0)
+  sourceType      String   @default("auto_detected")
+  status          String   @default("active")
+  lastSyncedAt    DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([songKey, platform])
+  @@index([artistKey, platform])
+  @@index([platform, status])
+  @@unique([platform, url])
+}
+
+model PlatformMetric {
+  id              String   @id @default(cuid())
+  targetType      String
+  targetKey       String
+  platform        String
+  metricName      String
+  metricValue     Float?
+  metricText      String?
+  sourceType      String   @default("auto_detected")
+  confidence      Float    @default(0)
+  lastSyncedAt    DateTime?
+  createdAt       DateTime @default(now())
+
+  @@index([targetType, targetKey, platform])
+  @@index([platform, metricName])
+}

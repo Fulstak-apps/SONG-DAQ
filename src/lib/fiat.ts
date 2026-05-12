@@ -8,9 +8,59 @@ export const SOL_MINT = "So11111111111111111111111111111111111111112";
 export const AUDIO_MINT = "9LzCMqDgTKYz9Drzqnpgee3SGa89up3a247ypMj2xrqM";
 
 export type FiatPrice = {
+  /** Back-compat field used throughout the UI: price in the selected display currency. */
   usd: number | null;
+  /** Same value as usd, named correctly for new code. */
+  fiat?: number | null;
+  /** Original USD price from the upstream feed when available. */
+  usdPrice?: number | null;
+  currency?: string;
   source?: string;
+  estimated?: boolean;
 };
+
+const REGION_CURRENCY: Record<string, string> = {
+  US: "USD",
+  CA: "CAD",
+  GB: "GBP",
+  AU: "AUD",
+  NZ: "NZD",
+  JP: "JPY",
+  KR: "KRW",
+  BR: "BRL",
+  MX: "MXN",
+  IN: "INR",
+  NG: "NGN",
+  ZA: "ZAR",
+  CH: "CHF",
+  CN: "CNY",
+  HK: "HKD",
+  SG: "SGD",
+  AE: "AED",
+  SA: "SAR",
+  SE: "SEK",
+  NO: "NOK",
+  DK: "DKK",
+};
+
+const EURO_REGIONS = new Set([
+  "AT", "BE", "CY", "DE", "EE", "ES", "FI", "FR", "GR", "HR", "IE", "IT",
+  "LT", "LU", "LV", "MT", "NL", "PT", "SI", "SK",
+]);
+
+export const COMMON_DISPLAY_CURRENCIES = ["USD", "EUR", "GBP", "CAD", "AUD", "JPY", "MXN", "BRL", "NGN", "ZAR", "INR"];
+
+export function detectDisplayCurrency(locale?: string) {
+  try {
+    const loc = new Intl.Locale(locale || navigator.language);
+    const region = loc.region?.toUpperCase();
+    if (!region) return DEFAULT_DISPLAY_CURRENCY;
+    if (EURO_REGIONS.has(region)) return "EUR";
+    return REGION_CURRENCY[region] || DEFAULT_DISPLAY_CURRENCY;
+  } catch {
+    return DEFAULT_DISPLAY_CURRENCY;
+  }
+}
 
 export function assetIdForSymbol(symbol: string | null | undefined) {
   const upper = String(symbol || "").trim().toUpperCase();
@@ -83,7 +133,7 @@ export function useDisplayCurrency() {
   useEffect(() => {
     try {
       const stored = window.localStorage.getItem(DISPLAY_CURRENCY_KEY);
-      setCurrencyState(stored || DEFAULT_DISPLAY_CURRENCY);
+      setCurrencyState(stored || detectDisplayCurrency());
     } catch {
       setCurrencyState(DEFAULT_DISPLAY_CURRENCY);
     }
@@ -98,6 +148,90 @@ export function useDisplayCurrency() {
   };
 
   return { currency, setCurrency };
+}
+
+export function fiatPriceValue(price: FiatPrice | null | undefined) {
+  return Number(price?.fiat ?? price?.usd ?? 0);
+}
+
+type DisplayRateCacheEntry = {
+  rate: number;
+  updatedAt: string | null;
+  error: string | null;
+  loadedAt: number;
+};
+
+const displayRateCache = new Map<string, DisplayRateCacheEntry>();
+const displayRateInflight = new Map<string, Promise<DisplayRateCacheEntry>>();
+
+async function fetchDisplayRate(currency: string): Promise<DisplayRateCacheEntry> {
+  const cached = displayRateCache.get(currency);
+  if (cached && Date.now() - cached.loadedAt < 60_000) return cached;
+
+  const existing = displayRateInflight.get(currency);
+  if (existing) return existing;
+
+  const promise = (async () => {
+    try {
+      const qs = new URLSearchParams({ ids: "USDC", currency });
+      const res = await fetch(`/api/prices?${qs.toString()}`, { cache: "no-store" });
+      const json = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(json?.error || "Fiat conversion unavailable");
+      const entry: DisplayRateCacheEntry = {
+        rate: Number(json?.conversionRate ?? json?.prices?.USDC?.fiat ?? json?.prices?.USDC?.usd ?? (currency === "USD" ? 1 : 0)),
+        updatedAt: json?.updatedAt ?? new Date().toISOString(),
+        error: null,
+        loadedAt: Date.now(),
+      };
+      displayRateCache.set(currency, entry);
+      return entry;
+    } catch (err) {
+      const entry: DisplayRateCacheEntry = {
+        rate: currency === "USD" ? 1 : 0,
+        updatedAt: null,
+        error: err instanceof Error ? err.message : "Fiat conversion unavailable",
+        loadedAt: Date.now(),
+      };
+      displayRateCache.set(currency, entry);
+      return entry;
+    } finally {
+      displayRateInflight.delete(currency);
+    }
+  })();
+
+  displayRateInflight.set(currency, promise);
+  return promise;
+}
+
+export function useUsdToDisplayRate() {
+  const { currency, setCurrency } = useDisplayCurrency();
+  const [rate, setRate] = useState(currency === "USD" ? 1 : 0);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      const entry = await fetchDisplayRate(currency);
+      if (!alive) return;
+      setRate(entry.rate);
+      setUpdatedAt(entry.updatedAt);
+      setError(entry.error);
+    };
+    load();
+    const timer = setInterval(load, 60_000);
+    return () => { alive = false; clearInterval(timer); };
+  }, [currency]);
+
+  const convertUsd = (usd: number | null | undefined) => {
+    if (usd == null || !Number.isFinite(Number(usd)) || !(rate > 0)) return null;
+    return Number(usd) * rate;
+  };
+
+  const formatUsd = (usd: number | null | undefined, digits = 2) => formatFiat(convertUsd(usd), currency, digits);
+  const formatUsdEstimate = (usd: number | null | undefined, digits = 2) => formatFiatEstimate(convertUsd(usd), currency, digits);
+
+  return { currency, setCurrency, rate, updatedAt, error, convertUsd, formatUsd, formatUsdEstimate };
 }
 
 export function useLiveFiatPrices(ids: Array<string | null | undefined>) {

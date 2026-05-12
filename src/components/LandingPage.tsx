@@ -56,7 +56,7 @@ export function LandingPage() {
   const [stats, setStats] = useState({ tradingVolume: 0, activeArtists: 0, artistCoins: 0, songCoins: 0, songsTokenized: 0 });
   const [statsLoaded, setStatsLoaded] = useState(false);
   const HERO_TEXT = [
-    { a: "Own Music", b: "Like Stock.", color: "text-gradient-neon" },
+    { a: "Trade Music", b: "Like Markets.", color: "text-gradient-neon" },
     { a: "100% verified", b: "on-chain.", color: "text-gradient-violet" },
     { a: "Launch in", b: "under 2 min.", color: "text-gradient-cyan" },
     { a: "Instant creator", b: "tokenization.", color: "text-gradient-gold" },
@@ -210,8 +210,8 @@ export function LandingPage() {
           />
           <SimpleStep
             num="02"
-            title="Fans Buy Ownership"
-            body="Fans buy from a public curve or liquidity pool, not from a hidden artist wallet."
+            title="Fans Trade the Market"
+            body="Fans buy song coins from a public curve or liquidity pool, not from a hidden artist wallet."
           />
           <SimpleStep
             num="03"
@@ -233,7 +233,7 @@ export function LandingPage() {
       <Section>
         <div className="text-center mb-12">
           <div className="text-[10px] uppercase tracking-[0.3em] font-black text-mute mb-3">How song-daq Works</div>
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gradient-hero">Six steps to ownership</h2>
+          <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gradient-hero">Six steps to a music market</h2>
         </div>
       </Section>
 
@@ -394,7 +394,7 @@ export function LandingPage() {
                 This should not feel like a one-sided extraction machine. The structure is strongest when artists get funding, fans get transparency and access, and the music itself gets sustained attention.
               </p>
               <div className="mt-8 space-y-5">
-                <WinCard icon={<Users size={20} />} title="Artists" items={["Raise capital from fans without pretending to give away the whole catalog", "Keep ownership visible while still showing how revenue flows are structured", "Launch artist tokens and song coins with clearer market expectations", "Build long-term support instead of short-term hype around a single drop"]} color="violet" />
+                <WinCard icon={<Users size={20} />} title="Artists" items={["Build market support from fans without pretending to give away the whole catalog", "Keep artist allocation visible while still showing how revenue flows are structured", "Launch artist tokens and song coins with clearer market expectations", "Build long-term support instead of short-term hype around a single drop"]} color="violet" />
                 <WinCard icon={<TrendingUp size={20} />} title="Fans" items={["Support artists you believe in with more transparency around launch terms", "Track liquidity, verification status, and market behavior before buying", "Share in market participation and royalty-linked signals where the data is actually verified", "Build status and reputation around informed participation, not blind speculation"]} color="neon" />
                 <WinCard icon={<Music size={20} />} title="The Music" items={["Stronger communities form around songs with real traction and real support", "Better reporting and launch standards reduce fake or low-quality token spam", "Artists have more reason to keep fans engaged beyond the first launch moment", "The market can reward consistency, trust, and actual cultural momentum"]} color="cyan" />
               </div>

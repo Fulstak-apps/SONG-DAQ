@@ -31,27 +31,34 @@ export async function GET() {
     const coins = rawCoins.length
       ? await withTimeout(hydrateArtists(rawCoins), 4_800, rawCoins)
       : [];
-    const liveSongs = canUseDatabaseForStats()
+    const localSongCoins = canUseDatabaseForStats()
       ? await withTimeout(prisma.songToken.findMany({
-          where: { status: "LIVE", liquidityPairAmount: { gt: 0 }, liquidityTokenAmount: { gt: 0 } },
-          select: { artistName: true, volume24h: true, audiusTrackId: true, mintAddress: true },
+          where: { mintAddress: { not: null } },
+          select: {
+            artistName: true,
+            volume24h: true,
+            audiusTrackId: true,
+            mintAddress: true,
+            fakeTokenAddress: true,
+            status: true,
+          },
         }), 2_000, []).catch(() => [])
       : [];
 
     const activeArtists = new Set<string>();
     for (const c of coins) activeArtists.add(c.owner_id || c.artist_handle || c.artist_name || c.ticker);
-    for (const s of liveSongs) activeArtists.add(s.artistName);
+    for (const s of localSongCoins) activeArtists.add(s.artistName);
 
     const tradingVolume =
       coins.reduce((sum, c) => sum + Number(c.v24hUSD ?? 0), 0) +
-      liveSongs.reduce((sum, s) => sum + Number(s.volume24h ?? 0), 0);
+      localSongCoins.reduce((sum, s) => sum + Number(s.volume24h ?? 0), 0);
 
     const tokenizedIds = new Set<string>();
-    for (const s of liveSongs) tokenizedIds.add(s.audiusTrackId || s.mintAddress || s.artistName);
+    for (const s of localSongCoins) tokenizedIds.add(s.audiusTrackId || s.mintAddress || s.fakeTokenAddress || s.artistName);
     for (const c of coins) tokenizedIds.add(c.audius_track_id || c.mint || c.ticker);
 
     const artistCoins = coins.length;
-    const songCoins = liveSongs.length;
+    const songCoins = localSongCoins.length;
     const songsTokenized = Math.max(tokenizedIds.size, artistCoins + songCoins, artistCoins, songCoins);
 
     const data = {
@@ -64,7 +71,7 @@ export async function GET() {
       updatedAt: new Date().toISOString(),
       sources: [
         "Audius live music tokens",
-        ...(liveSongs.length ? ["song-daq live song coins"] : []),
+        ...(localSongCoins.length ? ["song-daq launched song coins"] : []),
       ],
       databaseAvailable: canUseDatabaseForStats(),
     };

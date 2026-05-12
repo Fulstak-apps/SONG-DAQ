@@ -11,7 +11,7 @@ import { usePaperTrading, usePlayer, useSession, useUI, type PlayerTrack } from 
 import { sendSerializedTransaction, type WalletId } from "@/lib/wallet";
 import { toast } from "@/lib/toast";
 import { fmtNum, fmtPct } from "@/lib/pricing";
-import { formatCryptoWithFiat, formatFiat, formatFiatEstimate, priceAgeText, useLiveFiatPrices } from "@/lib/fiat";
+import { formatCryptoWithFiat, formatFiatEstimate, priceAgeText, useLiveFiatPrices, useUsdToDisplayRate } from "@/lib/fiat";
 import { CHART_RANGE_LABELS, CHART_RANGES, isFastRange, type ChartRange } from "@/lib/chartRanges";
 import type { AudiusCoin } from "@/lib/audiusCoins";
 import { calculateCoinRisk } from "@/lib/risk/calculateCoinRisk";
@@ -27,10 +27,6 @@ const SLIPPAGE_PRESETS = [
   { bps: "100", label: "Normal", detail: "1%" },
   { bps: "300", label: "Flexible", detail: "3%" },
 ];
-
-function fmtUsd(n: number, d = 4) {
-  return formatFiat(n, "USD", d);
-}
 
 function toRawAmount(value: string, decimals: number): string {
   const cleaned = value.trim();
@@ -79,7 +75,7 @@ export function CoinTradeModal({
   const { current, playing, playTrack, toggle } = usePlayer();
   const { coins: allCoins } = useCoins("marketCap");
   const [side, setSide] = useState<"BUY" | "SELL">(initialSide);
-  const [amount, setAmount] = useState(initialSide === "BUY" ? "10" : "100");
+  const [amount, setAmount] = useState(initialSide === "BUY" ? "0.07" : "100");
   const [slippageBps, setSlippageBps] = useState("100");
   const [busy, setBusy] = useState(false);
   const [quoteLoading, setQuoteLoading] = useState(false);
@@ -95,13 +91,14 @@ export function CoinTradeModal({
   const loadingRef = useRef(false);
   const fiatIds = useMemo(() => ["SOL", "AUDIO", coin?.mint], [coin?.mint]);
   const { currency, prices: fiatPrices, updatedAt: fiatUpdatedAt } = useLiveFiatPrices(fiatIds);
+  const { formatUsd: formatDisplayFiat, convertUsd } = useUsdToDisplayRate();
 
   const canSignSolanaSwap = kind === "solana" && !!provider && provider !== "audius" && provider !== "paper";
   const needsExternalWallet = !paperMode && !canSignSolanaSwap;
 
   useEffect(() => {
     setSide(initialSide);
-    setAmount(initialSide === "BUY" ? "10" : "100");
+    setAmount(initialSide === "BUY" ? "0.07" : "100");
   }, [initialSide, coin?.mint]);
   useEffect(() => {
     if (!coin) return;
@@ -241,14 +238,24 @@ export function CoinTradeModal({
     volume: 0,
   }] : [];
   const rawOutUnits = route && quote?.outAmount ? Number(quote.outAmount) / 10 ** route.outputDecimals : null;
-  const tokenUsd = Number(coin.price ?? fiatPrices[coin.mint]?.usd ?? 0);
+  const tokenUsd = Number(coin.price ?? fiatPrices[coin.mint]?.usdPrice ?? 0);
+  const tokenFiat = convertUsd(tokenUsd) ?? Number(fiatPrices[coin.mint]?.usd ?? 0);
+  const settleUsdRaw = {
+    SOL: Number(fiatPrices.SOL?.usdPrice ?? 0),
+    AUDIO: Number(fiatPrices.AUDIO?.usdPrice ?? 0),
+  };
   const inputUnits = Number(amount || 0);
-  const inputUsd = side === "BUY"
-    ? inputUnits * (settleUsd.SOL || 0)
+  const inputUsdValue = side === "BUY"
+    ? inputUnits * (settleUsdRaw.SOL || 0)
     : inputUnits * (tokenUsd || 0);
+  const inputUsd = convertUsd(inputUsdValue) ?? (
+    side === "BUY"
+      ? inputUnits * (settleUsd.SOL || 0)
+      : inputUnits * (tokenFiat || 0)
+  );
   const expectedOutFiat = rawOutUnits == null
     ? null
-    : rawOutUnits * (route?.outputTicker === "SOL" ? settleUsd.SOL : tokenUsd);
+    : rawOutUnits * (route?.outputTicker === "SOL" ? settleUsd.SOL : tokenFiat);
   const expectedOut = route && quote
     ? `${fromRawAmount(quote.outAmount, route.outputDecimals, 4)} ${route.outputTicker} ${formatFiatEstimate(expectedOutFiat, currency)}`
     : "—";
@@ -256,7 +263,7 @@ export function CoinTradeModal({
   const priceImpactUsd = quote?.priceImpactPct != null ? Math.abs(inputUsd * Number(quote.priceImpactPct)) : null;
   const routeProblem = isRouteProblem(err);
   const canSubmit = !busy && !quoteLoading && !isSameAssetRoute && Number(amount) > 0;
-  const paperTokens = coin.price && coin.price > 0 ? inputUsd / coin.price : 0;
+  const paperTokens = coin.price && coin.price > 0 ? inputUsdValue / coin.price : 0;
   const estimatedNetworkFeeSol = 0.003;
   const estimatedNetworkFeeUsd = settleUsd.SOL ? estimatedNetworkFeeSol * settleUsd.SOL : null;
   const totalFiatCost = side === "BUY" ? inputUsd + (estimatedNetworkFeeUsd ?? 0) : inputUsd - (estimatedNetworkFeeUsd ?? 0);
@@ -271,8 +278,8 @@ export function CoinTradeModal({
   const royaltyStatus = (coin as any).splitsLocked ? "Royalty split locked" : "Royalty not verified yet";
   const localCoin = Boolean((coin as any).isSongDaqLocal || (coin as any).source === "songdaq");
   const marketValueReliable = !localCoin || (coin as any).isMarketValueReliable !== false;
-  const marketValueLabel = marketValueReliable && Number(coin.marketCap ?? 0) > 0 ? fmtUsd(coin.marketCap ?? 0, 0) : "Not priced yet";
-  const marketValueNote = String((coin as any).marketValueNote || "Market value appears after public liquidity and real trading data are available.");
+  const marketValueLabel = marketValueReliable && Number(coin.marketCap ?? 0) > 0 ? formatDisplayFiat(coin.marketCap ?? 0, 0) : "Not priced yet";
+  const marketValueNote = String((coin as any).marketValueNote || "Public value appears after public liquidity and real trading data are available.");
 
   function trackArtwork(track: any) {
     return pickAudiusArtwork(track, coin?.audius_track_artwork ?? coin?.logo_uri ?? coin?.artist_avatar ?? null);
@@ -335,7 +342,7 @@ export function CoinTradeModal({
               ? Number(((Number(amount || 0) * (coin.price ?? 0)) / settleUsd.SOL).toFixed(4))
               : Number(amount || 0),
         tokenAmount: tokens,
-        totalUsd: side === "BUY" ? inputUsd : tokens * (coin.price ?? 0),
+        totalUsd: side === "BUY" ? inputUsdValue : tokens * (coin.price ?? 0),
       });
       setOk(`Paper ${side.toLowerCase()} saved · no wallet or money used`);
       toast.success("Paper trade saved", "Demo mode only. No blockchain transaction was sent.");
@@ -434,7 +441,7 @@ export function CoinTradeModal({
                 {isOwner && <span className="chip-violet text-[8px]">Your coin</span>}
               </div>
               <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-1">
-                <span className="font-mono text-lg font-bold tracking-tight text-ink">{fmtUsd(coin.price ?? 0, 6)}</span>
+                <span className="font-mono text-lg font-bold tracking-tight text-ink">{formatDisplayFiat(coin.price ?? 0, 6)}</span>
                 <span className={`num text-sm font-bold tracking-wider ${change >= 0 ? "text-neon" : "text-red"}`}>
                   {change >= 0 ? "▲" : "▼"} {fmtPct(change)}
                 </span>
@@ -457,7 +464,7 @@ export function CoinTradeModal({
               <div className="flex flex-col gap-2 mb-4 xl:flex-row xl:items-center xl:justify-between">
                 <div className="label">
                   <Glossary term="Price Chart" def="Real-time price indexed from Audius/Open Audio and observed route data." category="advanced">
-                    Live Price · USD
+                    Live Price · {currency}
                   </Glossary>
                   <div className="mt-1 text-[9px] uppercase tracking-widest font-black text-mute">Timeframe: <span className="text-neon">{CHART_RANGE_LABELS[range]}</span></div>
                 </div>
@@ -501,8 +508,8 @@ export function CoinTradeModal({
                 />
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
-                <ChartStat k="MARKET VALUE" v={marketValueLabel} tooltip={marketValueNote} />
-                <ChartStat k="24H VOL" v={fmtUsd(coin.v24hUSD ?? 0, 0)} tooltip="24 hour trading volume." />
+                <ChartStat k="PUBLIC VALUE" v={marketValueLabel} tooltip={marketValueNote} />
+                <ChartStat k="24H VOL" v={formatDisplayFiat(coin.v24hUSD ?? 0, 0)} tooltip="24 hour trading volume." />
                 <ChartStat k="HOLDERS" v={fmtNum(coin.holder ?? 0)} tooltip="Unique wallets holding this token." />
               </div>
             </section>
@@ -542,7 +549,7 @@ export function CoinTradeModal({
               <div className="rounded-xl border border-neon/20 bg-neon/8 p-3">
                 <div className="text-[10px] uppercase tracking-widest font-black text-neon">Trade in 4 steps</div>
                 <div className="mt-2 grid gap-2 text-[11px] leading-relaxed text-mute sm:grid-cols-2">
-                  <div><span className="font-black text-ink">1.</span> Enter USD/SOL amount</div>
+                  <div><span className="font-black text-ink">1.</span> Enter {currency}/SOL amount</div>
                   <div><span className="font-black text-ink">2.</span> Review token estimate</div>
                   <div><span className="font-black text-ink">3.</span> Check fee and price movement</div>
                   <div><span className="font-black text-ink">4.</span> Confirm, then Portfolio updates</div>
@@ -562,14 +569,14 @@ export function CoinTradeModal({
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <TradeInfo label="Song" value={selectedSong} />
-                  <TradeInfo label="Price" value={fmtUsd(coin.price ?? 0, 6)} />
+                  <TradeInfo label="Price" value={formatDisplayFiat(coin.price ?? 0, 6)} />
                   <TradeInfo label="24h Move" value={`${change >= 0 ? "+" : ""}${fmtPct(change)}`} accent={change >= 0 ? "text-neon" : "text-red"} />
-                  <TradeInfo label="Market Value" value={marketValueLabel} />
-                  <TradeInfo label="Liquidity" value={fmtUsd(coin.liquidity ?? 0, 0)} />
+                  <TradeInfo label="Public Value" value={marketValueLabel} />
+                  <TradeInfo label="Liquidity" value={formatDisplayFiat(coin.liquidity ?? 0, 0)} />
                   <TradeInfo label="Holders" value={fmtNum(coin.holder ?? 0)} />
                 </div>
                 <div className="mt-3 rounded-xl border border-edge bg-panel2/70 p-3 text-[11px] leading-relaxed text-mute">
-                  <span className="font-black text-ink">{marketPulse}.</span> {fmtNum(coin.trade24h ?? 0)} trades today, {fmtNum(coin.uniqueWallet24h ?? 0)} active wallets, and {fmtUsd(coin.v24hUSD ?? 0, 0)} in 24h volume. {royaltyStatus}.
+                  <span className="font-black text-ink">{marketPulse}.</span> {fmtNum(coin.trade24h ?? 0)} trades today, {fmtNum(coin.uniqueWallet24h ?? 0)} active wallets, and {formatDisplayFiat(coin.v24hUSD ?? 0, 0)} in 24h volume. {royaltyStatus}.
                 </div>
               </div>
 
@@ -779,7 +786,7 @@ export function CoinTradeModal({
                 {paperMode && (
                   <OrderRow
                     k={<Glossary term="Demo estimate" def="Paper trade mode estimates the position locally. It does not send a transaction, spend money, or prove that live liquidity exists.">Demo estimate</Glossary>}
-                    v={side === "BUY" ? `${fmtNum(paperTokens)} ${coin.ticker}` : fmtUsd(Number(amount || 0) * (coin.price ?? 0), 2)}
+                    v={side === "BUY" ? `${fmtNum(paperTokens)} ${coin.ticker}` : formatDisplayFiat(Number(amount || 0) * (coin.price ?? 0), 2)}
                     highlight
                   />
                 )}
@@ -814,7 +821,7 @@ export function CoinTradeModal({
               {side === "BUY" && (
                 <label className="block rounded-xl border border-amber/20 bg-amber/10 p-3 text-xs leading-relaxed text-amber/90">
                   <span className="mb-2 block text-[10px] uppercase tracking-widest font-black text-amber">Investor Confirmation · {risk.label}</span>
-                  <span className="block">This coin can lose value. Liquidity may be limited. Royalty claims may be unverified. Buying does not guarantee profit or legal ownership of copyright/royalties unless verified legal terms say so.</span>
+                  <span className="block">This coin can move up or down. Liquidity may be limited, and royalty claims may still be unverified. Review the chart, pool depth, wallet cost, and royalty status before buying.</span>
                   <span className="mt-3 flex items-start gap-2">
                     <input type="checkbox" checked={riskAccepted} onChange={(e) => setRiskAccepted(e.target.checked)} className="mt-0.5" />
                     <span>I understand.</span>

@@ -236,7 +236,7 @@ export default function DiscoveryEngine() {
   const [networkStats, setNetworkStats] = useState({ tradingVolume: 0, activeArtists: 0, artistCoins: 0, songCoins: 0, songsTokenized: 0 });
   const [networkStatsLoaded, setNetworkStatsLoaded] = useState(false);
   const heroText = [
-    { a: "Own Music", b: "Like Stock.", color: "text-gradient-neon" },
+    { a: "Trade Music", b: "Like Markets.", color: "text-gradient-neon" },
     { a: "100% verified", b: "on-chain.", color: "text-gradient-violet" },
     { a: "Launch in", b: "under 2 min.", color: "text-gradient-cyan" },
     { a: "Instant creator", b: "tokenization.", color: "text-gradient-gold" },
@@ -759,7 +759,7 @@ export default function DiscoveryEngine() {
                 className="grid grid-cols-2 md:grid-cols-4 gap-3"
               >
                 <Stat k="Listed" v={fmtNum(coins.length)} tooltip="Public Open Audio/Audius market coins plus any song-daq coins launched through this app." />
-                <Stat k="Combined Cap" v={`$${fmtNum(coinTotals.cap)}`} tooltip="Combined market capitalization for public Open Audio listings and local song-daq launches currently visible here." />
+                <Stat k="Combined Public Value" v={`$${fmtNum(coinTotals.cap)}`} tooltip="Combined public-market value for Open Audio listings and song-daq launches currently visible here." />
                 <Stat k="24h Volume" v={`$${fmtNum(coinTotals.vol)}`} tooltip="Total dollar volume from the public coin index and local song-daq market records." />
                 <Stat k="Holders" v={fmtNum(coinTotals.holders)} tooltip="Total unique holder count reported by the public coin index where available." />
               </motion.section>
@@ -771,7 +771,7 @@ export default function DiscoveryEngine() {
                 className="grid grid-cols-2 md:grid-cols-4 gap-3"
               >
                 <Stat k="Listings" v={fmtNum(songs.length)} tooltip="Total number of song coins currently trading." />
-                <Stat k="Market Cap" v={`${fmtSol(songTotals.cap, 2)} SOL`} tooltip="The aggregate value of all song coin markets combined." />
+                <Stat k="Public Value" v={`${fmtSol(songTotals.cap, 2)} SOL`} tooltip="The aggregate public-market value of visible song coin markets. Fresh or thin-liquidity coins may show little or no value until real trading exists." />
                 <Stat k="24h Volume" v={`${fmtSol(songTotals.vol, 2)} SOL`} tooltip="Total trading volume across all song coins in the last 24 hours." />
                 <Stat k="Avg Perf" v={fmtPct((songTotals.avg - 1) * 100)} accent={(songTotals.avg - 1) >= 0 ? "gain" : "lose"} tooltip="Average performance of all song coins relative to their initial launch price." />
               </motion.section>

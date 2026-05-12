@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { getConnection, isValidPubkey } from "@/lib/solana";
 import { getTrack, pickArtwork, streamUrl } from "@/lib/audius";
 import { computePerformance } from "@/lib/pricing";
-import { spotPrice } from "@/lib/bondingCurve";
 import { validateRoyalty, DEFAULT_ROYALTY } from "@/lib/royaltyConfig";
 import { assertAudiusTrackOwnership, AuthError } from "@/lib/auth";
 import { moderateCoinText } from "@/lib/risk/contentModeration";
@@ -237,12 +236,18 @@ export async function POST(req: NextRequest) {
   const effectiveBasePrice = Number.isFinite(startingPriceSol) && startingPriceSol > 0
     ? startingPriceSol
     : Number(basePrice);
-  const price = spotPrice({ basePrice: effectiveBasePrice, slope: curveSlope, circulating: 0, performance });
-  const currentPriceUsd = solUsdRate > 0 ? price * solUsdRate : startingPriceUsd;
+  // The launch price is the public pool ratio. Do not multiply the full 1B
+  // supply by an arbitrary curve/performance value before liquidity confirms.
+  // That made fresh coins look like they had huge cash value with no market.
+  const price = effectiveBasePrice;
+  const currentPriceUsd = startingPriceUsd > 0
+    ? startingPriceUsd
+    : solUsdRate > 0
+      ? price * solUsdRate
+      : 0;
   const launchLiquidityUsd = pairUsdRate > 0 ? liq.pairAmount * pairUsdRate : 0;
-  const publicMarketSupply = Math.max(0, Math.min(launchLiquiditySupply, supplyNumber));
-  const marketCapSol = price > 0 && publicMarketSupply > 0 ? price * publicMarketSupply : 0;
-  const marketCapUsd = currentPriceUsd > 0 && publicMarketSupply > 0 ? currentPriceUsd * publicMarketSupply : 0;
+  const marketCapSol = 0;
+  const marketCapUsd = 0;
 
   const song = await prisma.songToken.create({
     data: {

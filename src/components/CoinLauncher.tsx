@@ -213,8 +213,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const creatorFirstBuyUsd = audioUsdRate > 0 ? liquidityPairAmount * audioUsdRate : null;
   const fiatAge = priceAgeText(fiatUpdatedAt);
   const basePriceUsd = solUsdRate > 0 ? basePrice * solUsdRate : null;
-  const fullSupplyValueUsd = basePriceUsd != null ? supply * basePriceUsd : null;
-  const startingMarketCapUsd = impliedPriceUsd != null ? supply * impliedPriceUsd : null;
+  const fullSupplyValueUsd = impliedPriceUsd != null ? supply * impliedPriceUsd : basePriceUsd != null ? supply * basePriceUsd : null;
+  const startingPublicMarketValueUsd = impliedPriceUsd != null ? launchLiquidityTokenAmount * impliedPriceUsd : liquidityPairUsd;
   const estimatedPoolValueUsd = liquidityPairUsd != null ? liquidityPairUsd * 2 : null;
   const artistCoinGraduationUsd = audioUsdRate > 0 ? 1_000_000 * audioUsdRate : null;
   const artistCoinInitialMarketCapUsd = audioUsdRate > 0 ? 100_000 * audioUsdRate : null;
@@ -947,14 +947,14 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                             description={`Total supply estimate: ${formatFiatEstimate(fullSupplyValueUsd, currency)}. If all coins were counted at the starting price, this would be the estimated value. The real market value can be much lower or higher once people start trading.`}
                           />
                           <Field
-                            label="Starting token price"
+                            label="Curve fallback price"
                             value={basePrice}
                             onChange={markCustom(setBasePrice)}
                             step={0.0001}
                             min={0}
                             unit="SOL"
-                            help="This is the estimated price for 1 song coin at launch. The price can move up or down once people start buying and selling."
-                            description={`Starting token price: ${formatCryptoWithFiat(basePrice, "SOL", basePriceUsd, currency, 6)}.`}
+                            help="The real starting token price comes from the liquidity ratio in Step 04. This fallback is only used if a pool price cannot be calculated yet."
+                            description={`Fallback price: ${formatCryptoWithFiat(basePrice, "SOL", basePriceUsd, currency, 6)}. Starting token price from liquidity: ${liquidityPairAsset} ${impliedPrice.toFixed(10)} ${formatFiatEstimate(impliedPriceUsd, currency, 6)}.`}
                           />
                           <Field
                             label="Curve Momentum"
@@ -1112,7 +1112,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 />
                 <LiquidityExplainer
                   title="Why it matters"
-                  body="Without liquidity, the coin can exist but trading feels stuck. More liquidity usually makes buying and selling smoother, but it does not guarantee profit."
+                  body="Without liquidity, the coin can exist but trading feels stuck. More liquidity usually makes buying and selling smoother and gives fans a clearer public market."
                 />
               </div>
               {launchKind === "ARTIST" ? (
@@ -1185,8 +1185,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
               )}
               <div className="panel p-5 bg-panel border-edge rounded-2xl space-y-3">
                 <Row k="Full estimated spend" v={`${estimatedTotalSpendLabel} · ${formatFiatEstimate(estimatedTotalSpendUsd, currency)}`} color="text-neon" help="This is the estimated real-world amount your wallet spends before signing: the liquidity payment side plus Solana setup/network costs. Your wallet may show tiny rent/fee differences." />
-                <Row k="Starting price" v={launchKind === "ARTIST" ? "Open Audio curve config" : `${impliedPrice.toFixed(8)} ${liquidityPairAsset} ${formatFiatEstimate(impliedPriceUsd, currency, 4)}`} color="text-neon" help="The starting price is estimated from how many song coins and how much payment coin you put into the market." />
-                <Row k="Starting market value" v={launchKind === "ARTIST" ? formatCryptoWithFiat(100_000, "AUDIO", artistCoinInitialMarketCapUsd, currency, 0) : formatFiatEstimate(startingMarketCapUsd, currency)} help="This is a rough estimate using the starting price and total supply. Real value can change after trading begins." />
+                <Row k="Starting token price" v={launchKind === "ARTIST" ? "Open Audio curve config" : `${impliedPrice.toFixed(10)} ${liquidityPairAsset} ${formatFiatEstimate(impliedPriceUsd, currency, 6)}`} color="text-neon" help="The starting token price is the pool ratio: payment coin added divided by song coins added." />
+                <Row k="Starting public market value" v={launchKind === "ARTIST" ? formatCryptoWithFiat(100_000, "AUDIO", artistCoinInitialMarketCapUsd, currency, 0) : formatFiatEstimate(startingPublicMarketValueUsd, currency)} help="This counts the launch coins placed into the public pool, not the full 1B supply. The total supply estimate is shown separately." />
                 <Row k="Launch liquidity" v={launchKind === "ARTIST" ? formatCryptoWithFiat(liquidityPairAmount, "AUDIO", creatorFirstBuyUsd, currency) : formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)} color="text-neon" help="This is the real-world estimate of the payment coin being added to the launch liquidity pool." />
                 {launchKind !== "ARTIST" && <Row k="Estimated pool value" v={formatFiatEstimate(estimatedPoolValueUsd, currency)} help="A liquidity pool has two sides. This estimate counts the payment side plus the song-coin side at the same starting value." />}
                 <Row k="Estimated setup + network" v={formatCryptoWithFiat(estimatedSetupRentSol, "SOL", estimatedSetupRentUsd, currency)} help="This covers estimated Solana account rent and network fees for mint/metadata setup. Solana may charge a slightly different final amount." />
@@ -1321,7 +1321,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   </label>
                   <label className="flex items-start gap-3 rounded-xl border border-edge bg-panel p-3 text-left text-xs text-mute">
                     <input type="checkbox" checked={riskAcknowledged} onChange={(e) => setRiskAcknowledged(e.target.checked)} className="mt-1" />
-                    <span>I understand that fans can potentially profit only if demand pushes the coin price higher, and prices can go down.</span>
+                    <span>I understand that fans buy from the public market, and prices can move up or down after launch.</span>
                   </label>
                   <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-left text-xs leading-relaxed text-neon/85">
                     <div className="mb-1 text-[10px] uppercase tracking-widest font-black text-neon">{fiatAge}</div>
@@ -1555,7 +1555,7 @@ function LaunchReadinessChecklist({
     ["Audius artist verified", artistVerified, "Audius identity links the coin to the real artist account."],
     ["Metadata ready", metadataReady, "Name, symbol, image, description, and token traits are prepared."],
     ["Liquidity ready", liquidityReady, "Public market liquidity is required before fans can buy."],
-    ["Coin details", tokenTrustReady, "Ownership, risk, vesting, and cap settings are accepted."],
+    ["Coin details", tokenTrustReady, "Rights, risk, vesting, and cap settings are accepted."],
   ] as const;
   return (
     <section className="relative z-10 rounded-2xl border border-edge bg-panel p-4">

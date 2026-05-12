@@ -11,7 +11,7 @@ import { fmtNum } from "@/lib/pricing";
 import { getSolPriceUsd } from "@/lib/balance";
 import { readJson } from "@/lib/safeJson";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
-import { formatCryptoWithFiat, formatFiat, priceAgeText } from "@/lib/fiat";
+import { formatCryptoWithFiat, priceAgeText, useUsdToDisplayRate } from "@/lib/fiat";
 
 interface TokenRow {
   mint: string;
@@ -40,10 +40,6 @@ interface TokenHoldings {
   totalUsd: number;
   audioBalance: number;
   artistCoinCount: number;
-}
-
-function fmtUsd(n: number) {
-  return formatFiat(n, "USD");
 }
 
 function short(addr: string) {
@@ -102,6 +98,7 @@ function useTokenHoldings(address: string | null | undefined, mode: "summary" | 
 export default function PortfolioPage() {
   const { address, kind, provider, audius } = useSession();
   const { openLoginModal } = useUI();
+  const { currency, formatUsd: formatUsdDisplay, convertUsd, updatedAt: displayFiatUpdatedAt } = useUsdToDisplayRate();
   const paper = usePaperTrading();
   const { enabled: paperMode } = paper;
   const hasExternalWallet = !!address && provider !== "audius" && provider !== "paper";
@@ -290,9 +287,9 @@ export default function PortfolioPage() {
   const fiatUpdatedAt = native.updatedAt ?? null;
   const totalIndexedValueUsd = totalUsd + audioValueTopUpUsd + artistValueTopUpUsd + songValueUsd + cashUsd;
   const recentActivity = [
-    ...(portfolio?.trades ?? []).map((t: any) => ({ ...t, kind: "Song", label: t.song?.symbol ?? "SONG", total: formatCryptoWithFiat(t.total, "SOL", Number(t.total ?? 0) * (solUsdPrice || 0)) })),
-    ...(portfolio?.coinTrades ?? []).map((t: any) => ({ ...t, kind: "Artist", label: t.ticker ?? "TOKEN", total: fmtUsd(t.totalUsd ?? 0) })),
-    ...(portfolio?.payouts ?? []).map((p: any) => ({ ...p, side: "ROYALTY", kind: "Royalty", label: p.song?.symbol ?? "SONG", total: formatCryptoWithFiat(p.amount, "SOL", Number(p.amount ?? 0) * (solUsdPrice || 0)) })),
+    ...(portfolio?.trades ?? []).map((t: any) => ({ ...t, kind: "Song", label: t.song?.symbol ?? "SONG", total: formatCryptoWithFiat(t.total, "SOL", convertUsd(Number(t.total ?? 0) * (solUsdPrice || 0)), currency) })),
+    ...(portfolio?.coinTrades ?? []).map((t: any) => ({ ...t, kind: "Artist", label: t.ticker ?? "TOKEN", total: formatUsdDisplay(t.totalUsd ?? 0) })),
+    ...(portfolio?.payouts ?? []).map((p: any) => ({ ...p, side: "ROYALTY", kind: "Royalty", label: p.song?.symbol ?? "SONG", total: formatCryptoWithFiat(p.amount, "SOL", convertUsd(Number(p.amount ?? 0) * (solUsdPrice || 0)), currency) })),
   ].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 8);
   const pnl = (portfolio?.summary?.pnl ?? 0) + (tradingTokens.data?.totalUsd ?? 0) - (tradingTokens.data?.totalUsd ?? 0);
   const concentration = Math.max(
@@ -326,9 +323,9 @@ export default function PortfolioPage() {
         </header>
 
         <section className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-          <Metric label="Demo Cash" value={fmtUsd(cashUsd)} sub="Combined paper value from SOL + AUDIO + seed cash" />
-          <Metric label="Demo SOL" value={formatCryptoWithFiat(paperSol, "SOL", paperUsd.sol ? paperSol * paperUsd.sol : null)} sub="Simulated wallet SOL" />
-          <Metric label="Demo AUDIO" value={formatCryptoWithFiat(paperAudio, "AUDIO", paperUsd.audio ? paperAudio * paperUsd.audio : null)} sub="Simulated AUDIO balance" />
+          <Metric label="Demo Cash" value={formatUsdDisplay(cashUsd)} sub={`Combined paper value in ${currency}`} />
+          <Metric label="Demo SOL" value={formatCryptoWithFiat(paperSol, "SOL", convertUsd(paperUsd.sol ? paperSol * paperUsd.sol : null), currency)} sub="Simulated wallet SOL" />
+          <Metric label="Demo AUDIO" value={formatCryptoWithFiat(paperAudio, "AUDIO", convertUsd(paperUsd.audio ? paperAudio * paperUsd.audio : null), currency)} sub="Simulated AUDIO balance" />
           <Metric label="Artist Coins" value={fmtNum(paperPositions.length)} sub="Paper holdings" />
           <Metric label="Song Coins" value="0" sub="Use the market to add positions" />
           <Metric label="PnL / Net Change" value="—" sub="Demo mode starts neutral" />
@@ -356,7 +353,7 @@ export default function PortfolioPage() {
                   </div>
                   <div className="text-right">
                     <div className="font-mono text-sm text-white">{fmtNum(p.amount ?? 0)}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-mute">{fmtUsd(p.costUsd ?? 0)}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-mute">{formatUsdDisplay(p.costUsd ?? 0)}</div>
                   </div>
                 </div>
               )) : (
@@ -375,7 +372,7 @@ export default function PortfolioPage() {
                 <div key={t.id} className="rounded-xl border border-edge bg-white/[0.045] p-3 flex items-center justify-between gap-3">
                   <div className="min-w-0">
                     <div className="font-bold text-white truncate">{t.side} {t.ticker}</div>
-                    <div className="text-[10px] uppercase tracking-widest text-mute truncate">{fmtUsd(t.totalUsd)} · {new Date(t.ts).toLocaleTimeString()}</div>
+                    <div className="text-[10px] uppercase tracking-widest text-mute truncate">{formatUsdDisplay(t.totalUsd)} · {new Date(t.ts).toLocaleTimeString()}</div>
                   </div>
                   <div className={`text-[10px] uppercase tracking-widest font-black ${t.side === "BUY" ? "text-neon" : "text-red"}`}>{t.side}</div>
                 </div>
@@ -441,17 +438,17 @@ export default function PortfolioPage() {
       </header>
 
       <section className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3">
-        <Metric label="Total Portfolio Value" value={fmtUsd(totalIndexedValueUsd)} sub={issuerAllocationValueUsd > 0 ? "Liquid value; issuer allocation separated" : paperMode ? "Paper cash + wallet + AUDIO + coins" : "SOL + AUDIO + Song Coins + Artist Coins + other assets"} />
-        <Metric label="SOL" value={externalAddress && native.balance != null ? formatCryptoWithFiat(native.balance, "SOL", native.usd) : "Connect"} sub={externalAddress ? priceAgeText(fiatUpdatedAt) : "Connect external wallet"} />
-        <Metric label="AUDIO" value={formatCryptoWithFiat(audioBalance, "AUDIO", audioValueUsd || null)} sub="Audius token value included in total" />
-        <Metric label="Song Coins" value={fmtNum(songTokens.length)} sub={formatCryptoWithFiat(songValueSol, "SOL", songValueUsd)} />
-        <Metric label="Artist Coins" value={fmtNum(artistTokens.length)} sub={issuerAllocationValueUsd > 0 ? `${fmtUsd(artistValueUsd)} liquid` : fmtUsd(artistValueUsd)} />
-        <Metric label="Other Assets" value={fmtNum(otherWalletAssets.length)} sub={fmtUsd(otherWalletValueUsd)} />
-        <Metric label="P/L" value={`${pnl >= 0 ? "+" : ""}${fmtUsd(pnl)}`} sub="Indexed portfolio delta" />
+        <Metric label="Total Portfolio Value" value={formatUsdDisplay(totalIndexedValueUsd)} sub={issuerAllocationValueUsd > 0 ? "Liquid value; issuer allocation separated" : paperMode ? "Paper cash + wallet + AUDIO + coins" : "SOL + AUDIO + Song Coins + Artist Coins + other assets"} />
+        <Metric label="SOL" value={externalAddress && native.balance != null ? formatCryptoWithFiat(native.balance, "SOL", convertUsd(native.usd), currency) : "Connect"} sub={externalAddress ? priceAgeText(displayFiatUpdatedAt || fiatUpdatedAt) : "Connect external wallet"} />
+        <Metric label="AUDIO" value={formatCryptoWithFiat(audioBalance, "AUDIO", convertUsd(audioValueUsd || null), currency)} sub="Audius token value included in total" />
+        <Metric label="Song Coins" value={fmtNum(songTokens.length)} sub={formatCryptoWithFiat(songValueSol, "SOL", convertUsd(songValueUsd), currency)} />
+        <Metric label="Artist Coins" value={fmtNum(artistTokens.length)} sub={issuerAllocationValueUsd > 0 ? `${formatUsdDisplay(artistValueUsd)} liquid` : formatUsdDisplay(artistValueUsd)} />
+        <Metric label="Other Assets" value={fmtNum(otherWalletAssets.length)} sub={formatUsdDisplay(otherWalletValueUsd)} />
+        <Metric label="P/L" value={`${pnl >= 0 ? "+" : ""}${formatUsdDisplay(pnl)}`} sub="Indexed portfolio delta" />
       </section>
 
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-3">
-        <Metric label="PnL / Net Change" value={`${pnl >= 0 ? "+" : ""}${fmtUsd(pnl)}`} sub="Indexed portfolio delta" />
+        <Metric label="PnL / Net Change" value={`${pnl >= 0 ? "+" : ""}${formatUsdDisplay(pnl)}`} sub="Indexed portfolio delta" />
         <Metric label="Concentration" value={`${concentration}%`} sub="Lower is broader" />
         <Metric label="Risk Focus" value={artistTokens.length || songTokens.length ? "Active" : "Idle"} sub="Review liquidity and trust badges" />
       </section>
@@ -462,7 +459,7 @@ export default function PortfolioPage() {
         <div className="rounded-2xl border border-amber/25 bg-amber/10 p-4 text-amber">
           <div className="text-[10px] uppercase tracking-widest font-black">Issuer allocation is separated</div>
           <p className="mt-1 text-xs leading-relaxed text-amber/85">
-            {fmtUsd(issuerAllocationValueUsd)} of creator-held coin supply is not counted in your liquid portfolio total. That supply is your own issued token inventory, not cash you can spend. Fans buy from the public pool/curve after liquidity is added.
+            {formatUsdDisplay(issuerAllocationValueUsd)} of creator-held coin supply is not counted in your liquid portfolio total. That supply is your own issued token inventory, not cash you can spend. Fans buy from the public pool/curve after liquidity is added.
           </p>
         </div>
       )}
@@ -509,9 +506,9 @@ export default function PortfolioPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-black tracking-tight">External Wallet Assets</h2>
-              <p className="text-mute text-xs mt-1">Everything visible in your connected Solana wallet, including meme coins and non-song-daq tokens. USD values use Jupiter prices when available.</p>
+              <p className="text-mute text-xs mt-1">Everything visible in your connected Solana wallet, including meme coins and non-song-daq tokens. Fiat estimates use Jupiter prices when available.</p>
             </div>
-            <span className="text-[10px] uppercase tracking-widest text-neon font-black">{fmtUsd(otherWalletValueUsd)}</span>
+            <span className="text-[10px] uppercase tracking-widest text-neon font-black">{formatUsdDisplay(otherWalletValueUsd)}</span>
           </div>
           <div className="space-y-2">
             {otherWalletAssets.length ? otherWalletAssets.map((t) => <WalletAssetRow key={t.mint} t={t} />) : (
@@ -539,7 +536,7 @@ export default function PortfolioPage() {
                 </div>
                 <div className="text-right">
                   <div className="font-mono text-sm text-white">{fmtNum(h.amount ?? 0)}</div>
-                  <div className="text-[10px] uppercase tracking-widest text-mute">{formatCryptoWithFiat((h.amount ?? 0) * (h.song?.price ?? 0), "SOL", ((h.amount ?? 0) * (h.song?.price ?? 0)) * (solUsdPrice || 0))}</div>
+                  <div className="text-[10px] uppercase tracking-widest text-mute">{formatCryptoWithFiat((h.amount ?? 0) * (h.song?.price ?? 0), "SOL", convertUsd(((h.amount ?? 0) * (h.song?.price ?? 0)) * (solUsdPrice || 0)), currency)}</div>
                 </div>
               </Link>
             )) : (
@@ -575,8 +572,8 @@ export default function PortfolioPage() {
           <div className="panel-elevated p-5 grain">
             <h2 className="text-lg font-black tracking-tight mb-4">Song Coin Index</h2>
             <div className="grid grid-cols-2 gap-2">
-              <Mini label="Song Value" value={formatCryptoWithFiat(songValueSol, "SOL", songValueUsd)} />
-              <Mini label="Royalty" value={formatCryptoWithFiat(royaltySol, "SOL", royaltyUsd)} />
+              <Mini label="Song Value" value={formatCryptoWithFiat(songValueSol, "SOL", convertUsd(songValueUsd), currency)} />
+              <Mini label="Royalty" value={formatCryptoWithFiat(royaltySol, "SOL", convertUsd(royaltyUsd), currency)} />
             </div>
           </div>
         </div>
@@ -615,6 +612,7 @@ function Metric({ label, value, sub }: { label: string; value: string; sub: stri
 }
 
 function TokenRow({ t }: { t: TokenRow }) {
+  const { formatUsd: formatUsdDisplay } = useUsdToDisplayRate();
   const liquidValue = countedUsd(t);
   return (
     <Link href={`/coin/${t.mint}`} className="flex items-center gap-3 rounded-xl border border-edge bg-panel p-3 hover:bg-panel2 hover:border-white/25 active:scale-[0.99] transition">
@@ -632,15 +630,16 @@ function TokenRow({ t }: { t: TokenRow }) {
       <div className="text-right">
         <div className="font-mono text-sm text-white">{fmtNum(t.amount)}</div>
         <div className="text-[10px] uppercase tracking-widest text-mute">
-          {t.issuerAllocation ? "Not counted" : liquidValue ? fmtUsd(liquidValue) : "No price"}
+          {t.issuerAllocation ? "Not counted" : liquidValue ? formatUsdDisplay(liquidValue) : "No price"}
         </div>
-        {t.issuerAllocation && t.valueUsd != null ? <div className="text-[9px] uppercase tracking-widest text-mute">{fmtUsd(t.valueUsd)} estimated</div> : null}
+        {t.issuerAllocation && t.valueUsd != null ? <div className="text-[9px] uppercase tracking-widest text-mute">{formatUsdDisplay(t.valueUsd)} estimated</div> : null}
       </div>
     </Link>
   );
 }
 
 function WalletAssetRow({ t }: { t: TokenRow }) {
+  const { formatUsd: formatUsdDisplay } = useUsdToDisplayRate();
   const liquidValue = countedUsd(t);
   const body = (
     <>
@@ -658,7 +657,7 @@ function WalletAssetRow({ t }: { t: TokenRow }) {
       <div className="text-right shrink-0">
         <div className="font-mono text-sm text-white">{fmtNum(t.amount)}</div>
         <div className="text-[10px] uppercase tracking-widest text-mute">
-          {t.issuerAllocation ? "Not counted" : liquidValue ? fmtUsd(liquidValue) : "No USD price"}
+          {t.issuerAllocation ? "Not counted" : liquidValue ? formatUsdDisplay(liquidValue) : "No fiat price"}
         </div>
       </div>
     </>

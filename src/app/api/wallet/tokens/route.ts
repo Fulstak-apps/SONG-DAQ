@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { fetchJson } from "@/lib/fetchTimeout";
 import { prisma } from "@/lib/db";
 import { hasProductionDatabaseUrl } from "@/lib/appMode";
-import { estimateSongTokenUsd, getAssetUsdRates } from "@/lib/serverAssetPrices";
+import { getAssetUsdRates, valueLocalSongCoin } from "@/lib/serverAssetPrices";
 
 export const dynamic = "force-dynamic";
 
@@ -252,6 +252,8 @@ export async function GET(req: NextRequest) {
         liquidityTokenAmount: true,
         liquidityPairAsset: true,
         supply: true,
+        circulating: true,
+        volume24h: true,
         artistAllocationBps: true,
         artistWallet: {
           select: {
@@ -275,7 +277,8 @@ export async function GET(req: NextRequest) {
     const isAudio = t.mint === AUDIO_MINT;
     const jupiterPrice = priceMap.get(t.mint);
     const meta = metaMap.get(t.mint);
-    const songPrice = song ? estimateSongTokenUsd(song, localRates) : 0;
+    const songValuation = song ? valueLocalSongCoin(song, localRates) : null;
+    const songPrice = songValuation?.isMarketValueReliable ? Number(songValuation.priceUsd || 0) : 0;
     const price = Number(songPrice || coin?.price || jupiterPrice?.usdPrice || jupiterPrice?.price || 0);
     const valueUsd = price ? price * t.amount : null;
     const isIssuerSongToken = Boolean(song?.artistWallet?.wallet && song.artistWallet.wallet === address);
@@ -302,7 +305,9 @@ export async function GET(req: NextRequest) {
       issuerAllocation,
       valuationNote: issuerAllocation
         ? "Creator-held supply is shown as issuer allocation and is not counted as liquid portfolio cash."
-        : null,
+        : songValuation && !songValuation.isMarketValueReliable
+          ? songValuation.note
+          : null,
       isAudio,
       isArtistCoin: !!coin || !!song,
       priceChange24h: jupiterPrice?.priceChange24h ?? null,

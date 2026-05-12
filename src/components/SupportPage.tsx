@@ -17,7 +17,7 @@ const investorSteps = [
   "Browse the marketplace.",
   "Open a coin page.",
   "Review the chart, price, royalty status, and risk notes.",
-  "Choose an amount and review SOL plus USD.",
+  "Choose an amount and review crypto plus fiat.",
   "Confirm the buy from your wallet.",
   "Track the coin in your portfolio.",
 ];
@@ -25,7 +25,7 @@ const investorSteps = [
 const launchChecklist = [
   "Wallet connected globally across song-daq.",
   "Song, artist name, ticker, artwork, and supply are filled in.",
-  "Launch liquidity amount is reviewed in SOL and USD.",
+  "Launch liquidity amount is reviewed in crypto plus fiat.",
   "Artist confirms they have the rights or authority to launch the coin.",
   "Wallet transaction is approved.",
   "Coin appears on the market and portfolio pages after launch.",
@@ -40,7 +40,7 @@ const walletHelp = [
 
 const portfolioHelp = [
   "Your portfolio should show song coins bought on song-daq.",
-  "External wallet assets should show token names, images when available, token amounts, and USD value.",
+  "External wallet assets should show token names, images when available, token amounts, and fiat value.",
   "Paper Mode portfolio stays separate from Live Mode.",
   "If Phantom marks a token as spam, open Phantom and report it as not spam so it becomes visible.",
 ];
@@ -80,7 +80,7 @@ export function SupportPage() {
             song-daq is a music market where artists launch coins tied to artists and songs, and fans can buy, sell, track, and test those markets with clear wallet, liquidity, price, and royalty signals.
           </p>
           <p className="text-sm md:text-base text-ink/70 leading-relaxed font-medium">
-            The goal is simple: make music markets understandable. New users see clean charts, direct wallet prompts, SOL plus USD values, and plain-English explanations. Power users can go deeper into liquidity, volume, slippage, holder activity, and royalty records.
+            The goal is simple: make music markets understandable. New users see clean charts, direct wallet prompts, crypto plus fiat values, and plain-English explanations. Power users can go deeper into liquidity, volume, slippage, holder activity, and royalty records.
           </p>
           <div className="rounded-2xl border border-neon/25 bg-neon/10 p-4 text-sm text-neon font-black leading-relaxed shadow-[inset_0_0_24px_rgba(193,255,0,0.05)]">
             Launch works in two clear approvals: create the fixed-supply coin, then add launch liquidity. Fans buy from the liquidity pool, not from a hidden mint. Royalty money supports the coin after launch.
@@ -119,7 +119,7 @@ export function SupportPage() {
           <p>song-daq separates the supply into artist hold, launch liquidity, and reserve. The launch-liquidity portion may stage in the artist wallet briefly, then the artist approves a second transaction that moves those coins plus SOL, USDC, or AUDIO into the public trading pool.</p>
           <p>This is separate from royalties. A coin can launch without royalty verification, but it still needs liquidity to trade.</p>
           <p>Think of launch liquidity like opening the first market for the coin. Without it, people can see the coin, but there is no real pool for buys and sells.</p>
-          <p>Once the pool is verified, fans can buy with SOL. Fans may profit if demand rises and they later sell higher, and prices can also go down.</p>
+          <p>Once the pool is verified, fans can buy with SOL. If demand rises and someone later sells higher, that holder can come out ahead. Prices can also move down.</p>
         </SupportCard>
 
         <SupportCard icon={<FileCheck2 />} title="How Royalty Splits Work">
@@ -165,7 +165,7 @@ export function SupportPage() {
       <section className="grid gap-4 lg:grid-cols-3">
         <SupportCard icon={<Lock />} title="When Royalties Come In">
           <p>The distributor pays song-daq based on the split invitation. Admin records the payment and can add that value into the coin’s Royalty Pool / liquidity support system.</p>
-          <p>Royalty activity may support the ecosystem, but it does not guarantee price increases, profits, or liquidity.</p>
+          <p>Royalty activity can add visible value flow to the ecosystem when payments are received, verified, and added to the pool.</p>
           <p>When recorded, the coin page can show the amount received, the month covered, and whether it was added to the Royalty Pool.</p>
         </SupportCard>
         <SupportCard icon={<Sparkles />} title="Paper Mode">
@@ -184,12 +184,12 @@ export function SupportPage() {
           <div className="text-[10px] uppercase tracking-[0.28em] font-black text-mute">Trading Guide</div>
           <h2 className="text-3xl md:text-5xl font-black text-ink">How buying and selling should feel.</h2>
           <p className="mt-3 max-w-4xl text-sm md:text-base text-mute leading-relaxed">
-            song-daq should always tell users what they are about to do before money moves. A buy or sell confirmation should show token amount, SOL amount, USD estimate, wallet address, estimated fees, and any slippage warning in plain English.
+            song-daq should always tell users what they are about to do before money moves. A buy or sell confirmation should show token amount, crypto amount, fiat estimate, wallet address, estimated fees, and any slippage warning in plain English.
           </p>
         </div>
         <div className="grid gap-3 md:grid-cols-3">
-          <MiniGuide title="Before Buying" items={["Connect your wallet.", "Check price and royalty status.", "Review SOL and USD.", "Confirm in wallet."]} />
-          <MiniGuide title="Before Selling" items={["Check token amount.", "Review expected SOL and USD.", "Read slippage warning.", "Confirm only once."]} />
+          <MiniGuide title="Before Buying" items={["Connect your wallet.", "Check price and royalty status.", "Review crypto plus fiat.", "Confirm in wallet."]} />
+          <MiniGuide title="Before Selling" items={["Check token amount.", "Review expected crypto plus fiat.", "Read slippage warning.", "Confirm only once."]} />
           <MiniGuide title="After Trading" items={["Portfolio updates.", "Transaction is saved.", "Coin history updates.", "Solscan link appears when available."]} />
         </div>
       </section>
@@ -221,7 +221,7 @@ export function SupportPage() {
           {[
             "song-daq is not a bank, broker, exchange, or financial advisor.",
             "Song coins are risky and speculative.",
-            "Royalty activity does not guarantee returns.",
+            "Royalty activity is shown as a verified market signal when available.",
             "Prices can go down.",
             "Users are responsible for their own decisions.",
             "Legal copy is placeholder text and needs attorney review before public launch.",

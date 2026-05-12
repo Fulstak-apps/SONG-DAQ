@@ -378,9 +378,9 @@ export default function SongTradingPage() {
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <Stat
-            k="Market Value"
+            k="Public Value"
             v={song.isMarketValueReliable ? `${fmtSol(song.marketCap, 2)} SOL` : "Not priced yet"}
-            tooltip={song.marketValueNote || "Market value uses public tradable supply, not the full minted supply."}
+            tooltip={song.marketValueNote || "Public value uses public tradable supply, not the full minted supply."}
           />
           <Stat k="Circulating" v={`${fmtNum(song.circulating)} / ${fmtNum(song.supply)}`} tooltip="Tokens actively trading versus total minted supply." />
           <Stat k="Reserve" v={`${fmtSol(song.reserveSol, 2)} SOL`} tooltip="Liquidity pool backing the bonding curve." />
@@ -667,7 +667,7 @@ function LiveLiquidityPanel({ song, onChanged }: { song: any; onChanged?: () => 
             Liquidity is live
             <InfoTooltip
               side="bottom"
-              def="Liquidity is the public market money that lets fans buy and sell. Adding more liquidity can make trading smoother and reduce big price jumps, but it does not guarantee profit."
+              def="Liquidity is the public market money that lets fans buy and sell. Adding more liquidity can make trading smoother and reduce big price jumps."
             />
           </div>
           <h3 className="mt-1 text-lg font-black tracking-tight text-white">Add more liquidity anytime</h3>

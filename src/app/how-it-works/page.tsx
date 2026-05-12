@@ -34,7 +34,7 @@ export default function HowItWorksPage() {
       </section>
       <WhyFansCanBuy />
       <section className="panel p-6 text-sm leading-relaxed text-mute">
-        Royalty activity may support a song coin ecosystem, but it does not guarantee price increases, profit, liquidity, copyright ownership, or royalty rights unless verified legal terms say so.
+        Royalty activity can support a song coin ecosystem when payments are received, verified, and added into the public pool or royalty system. Copyright ownership and royalty rights depend on the verified terms shown for each coin.
       </section>
     </main>
   );

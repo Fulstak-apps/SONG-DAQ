@@ -6,15 +6,7 @@ import { Activity, Bell, Layers3, LockKeyhole } from "lucide-react";
 import { calculateCoinRisk } from "@/lib/risk/calculateCoinRisk";
 import { useAlerts } from "@/lib/store";
 import type { AudiusCoin } from "@/lib/audiusCoins";
-
-function fmtUsd(n: number, d = 4) {
-  if (!Number.isFinite(n)) return "-";
-  if (Math.abs(n) >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(2)}B`;
-  if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
-  if (Math.abs(n) >= 1) return `$${n.toFixed(2)}`;
-  return `$${n.toFixed(d)}`;
-}
+import { useUsdToDisplayRate } from "@/lib/fiat";
 
 function short(addr?: string) {
   if (!addr) return "-";
@@ -22,6 +14,7 @@ function short(addr?: string) {
 }
 
 export function MarketDepthPanel({ coin }: { coin: AudiusCoin & Record<string, any> }) {
+  const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
   const price = Number(coin.price ?? 0);
   const liquidity = Math.max(1, Number(coin.liquidity ?? coin.reserveSol ?? coin.liquidityPairAmount ?? 0));
   const rows = useMemo(() => {
@@ -62,9 +55,9 @@ export function MarketDepthPanel({ coin }: { coin: AudiusCoin & Record<string, a
           <tbody className="divide-y divide-edge">
             {rows.map((r) => (
               <tr key={r.notional}>
-                <td className="py-2 font-mono text-ink">{fmtUsd(r.notional, 0)}</td>
-                <td className="py-2 text-right font-mono text-red">{fmtUsd(r.bid, 6)}</td>
-                <td className="py-2 text-right font-mono text-neon">{fmtUsd(r.ask, 6)}</td>
+                <td className="py-2 font-mono text-ink">{formatDisplayFiat(r.notional, 0)}</td>
+                <td className="py-2 text-right font-mono text-red">{formatDisplayFiat(r.bid, 6)}</td>
+                <td className="py-2 text-right font-mono text-neon">{formatDisplayFiat(r.ask, 6)}</td>
                 <td className="py-2 text-right font-mono text-mute">{r.buyImpact.toFixed(2)}%</td>
               </tr>
             ))}
@@ -128,6 +121,7 @@ export function ActivityRiskPanel({ coin }: { coin: AudiusCoin & Record<string, 
 
 export function TokenAlertsPanel({ coin }: { coin: AudiusCoin & Record<string, any> }) {
   const alerts = useAlerts();
+  const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
   const [metric, setMetric] = useState<"price" | "volume" | "holders" | "liquidity">("price");
   const [target, setTarget] = useState(String(Number(coin.price ?? 0).toFixed(6)));
   const [direction, setDirection] = useState<"above" | "below">("above");
@@ -166,7 +160,7 @@ export function TokenAlertsPanel({ coin }: { coin: AudiusCoin & Record<string, a
         {mine.length ? mine.slice(0, 4).map((a) => (
           <div key={a.id} className="rounded-xl border border-edge bg-panel2 px-3 py-2 flex items-center justify-between gap-3 text-xs">
             <span className="text-mute uppercase tracking-widest font-bold">{a.metric ?? "price"} {a.direction}</span>
-            <span className="font-mono text-ink">{fmtUsd(a.targetPrice, 6)}</span>
+            <span className="font-mono text-ink">{formatDisplayFiat(a.targetPrice, 6)}</span>
           </div>
         )) : <div className="text-xs text-mute">No alerts for this token yet.</div>}
       </div>
@@ -175,6 +169,7 @@ export function TokenAlertsPanel({ coin }: { coin: AudiusCoin & Record<string, a
 }
 
 export function LiquidityManagementPanel({ coin, isOwner }: { coin: AudiusCoin & Record<string, any>; isOwner?: boolean }) {
+  const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
   const liquidity = Number(coin.liquidity ?? coin.reserveSol ?? coin.liquidityPairAmount ?? 0);
   const locked = Boolean(coin.liquidityLocked || coin.splitsLocked);
   const health = Math.max(0, Math.min(100, Math.round((liquidity > 0 ? 45 : 0) + Math.min(liquidity / 1_000, 35) + (locked ? 20 : 0))));
@@ -188,7 +183,7 @@ export function LiquidityManagementPanel({ coin, isOwner }: { coin: AudiusCoin &
         <LockKeyhole size={18} className={locked ? "text-neon" : "text-amber"} />
       </div>
       <div className="grid grid-cols-2 gap-2">
-        <MiniMetric label="Liquidity" value={fmtUsd(liquidity, 0)} />
+        <MiniMetric label="Liquidity" value={formatDisplayFiat(liquidity, 0)} />
         <MiniMetric label="Lock" value={locked ? "Locked" : "Pending"} />
         <MiniMetric label="Pool" value={short(coin.poolId || coin.pool_id)} />
         <MiniMetric label="Route" value={liquidity > 0 ? "Tradable" : "Waiting"} />

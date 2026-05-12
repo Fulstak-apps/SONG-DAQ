@@ -9,21 +9,16 @@ import { CardGridSkeleton } from "./Skeleton";
 import { SafeImage } from "./SafeImage";
 import { useCoins } from "@/lib/useCoins";
 import { useSession } from "@/lib/store";
-import { fmtSol, fmtNum, fmtPct } from "@/lib/pricing";
+import { fmtNum } from "@/lib/pricing";
+import { formatCryptoWithFiat, useLiveFiatPrices, useUsdToDisplayRate } from "@/lib/fiat";
 import type { AudiusCoin } from "@/lib/audiusCoins";
 import { Users, BarChart3, Coins, TrendingUp, ExternalLink, Plus, Briefcase, ShieldCheck, LockKeyhole, AlertTriangle } from "lucide-react";
-
-function fmtUsd(n: number, d = 2) {
-  if (!isFinite(n)) return "—";
-  if (Math.abs(n) >= 1_000_000_000) return `$${(n / 1_000_000_000).toFixed(2)}B`;
-  if (Math.abs(n) >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (Math.abs(n) >= 1_000) return `$${(n / 1_000).toFixed(2)}K`;
-  return `$${n.toFixed(d)}`;
-}
 
 export function ArtistDashboard() {
   const { audius, address } = useSession();
   const { coins, loading: coinLoading } = useCoins("marketCap");
+  const { currency, prices: fiatPrices } = useLiveFiatPrices(["SOL"]);
+  const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
   const [songs, setSongs] = useState<SongRow[]>([]);
   const [royalty, setRoyalty] = useState<number>(0);
   const [trade, setTrade] = useState<{ side: "BUY" | "SELL"; coin: AudiusCoin } | null>(null);
@@ -113,13 +108,17 @@ export function ArtistDashboard() {
         <ArtistStat k="Your Coins" v={String(myCoins.length)} icon={<Coins size={16} />} color="violet" />
         <ArtistStat k="Your IPOs" v={String(mySongs.length)} icon={<BarChart3 size={16} />} color="violet" />
         <ArtistStat k="Total Holders" v={fmtNum(totalHolders)} icon={<Users size={16} />} />
-        <ArtistStat k="Combined Cap" v={fmtUsd(totalCap, 0)} icon={<TrendingUp size={16} />} />
+        <ArtistStat k="Combined Cap" v={formatDisplayFiat(totalCap, 0)} icon={<TrendingUp size={16} />} />
       </section>
 
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <ArtistStat k="24h Volume" v={fmtUsd(totalVol24, 0)} />
+        <ArtistStat k="24h Volume" v={formatDisplayFiat(totalVol24, 0)} />
         <ArtistStat k="Unclaimed Fees" v={fmtNum(totalArtistFees)} accent="gain" />
-        <ArtistStat k="Royalty Earned" v={`${fmtSol(royalty, 4)} SOL`} accent="gain" />
+        <ArtistStat
+          k="Royalty Earned"
+          v={formatCryptoWithFiat(royalty, "SOL", Number(fiatPrices.SOL?.usd ?? 0) > 0 ? royalty * Number(fiatPrices.SOL?.usd ?? 0) : null, currency, 4)}
+          accent="gain"
+        />
         <ArtistStat k="Audius Followers" v={fmtNum((audius as any)?.follower_count ?? 0)} />
       </section>
 

@@ -184,10 +184,10 @@ export default function SocialPage() {
 
 function StoryCard({ story, variant }: { story: NewsStory; variant: "lead" | "wide" | "tall" | "normal" }) {
   const className =
-    variant === "lead" ? "md:col-span-2 md:row-span-2 min-h-[540px]" :
-    variant === "wide" ? "md:col-span-2 min-h-[430px]" :
-    variant === "tall" ? "md:row-span-2 min-h-[560px]" :
-    "min-h-[420px]";
+    variant === "lead" ? "md:col-span-2 md:row-span-2" :
+    variant === "wide" ? "md:col-span-2" :
+    variant === "tall" ? "md:row-span-2" :
+    "";
   const titleSize = variant === "lead" ? "text-xl sm:text-2xl md:text-3xl" : variant === "wide" ? "text-lg sm:text-xl md:text-2xl" : "text-base sm:text-lg";
   const img = story.thumbnail;
   const title = cleanIntelText(story.title);
@@ -212,12 +212,12 @@ function StoryCard({ story, variant }: { story: NewsStory; variant: "lead" | "wi
       style={driftStyle}
     >
       <div className={`relative overflow-hidden bg-panel2 border-b border-edge ${
-        variant === "lead" ? "h-72 md:h-80" : variant === "tall" ? "h-72" : "h-60"
+        variant === "lead" ? "h-64 md:h-72" : variant === "tall" ? "h-64" : "h-44 md:h-52"
       }`}>
         <IntelImage src={img} alt={title} variant={variant} story={story} />
         <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-pure-black/45 to-transparent pointer-events-none" />
       </div>
-      <div className="relative flex flex-1 flex-col p-4 bg-panel">
+      <div className="relative flex flex-col p-4 bg-panel">
         <div className="flex items-center gap-2 mb-3">
           <span className={`text-[9px] px-2 py-1 rounded-md uppercase font-black tracking-widest border ${badge[story.category]}`}>
             {story.category}
@@ -228,10 +228,10 @@ function StoryCard({ story, variant }: { story: NewsStory; variant: "lead" | "wi
         <h2 className={`${titleSize} font-black leading-[1.12] tracking-tight text-ink group-hover:text-neon transition break-words`}>
           {title}
         </h2>
-        {variant !== "normal" && snippet && (
-          <p className="mt-3 text-sm text-mute break-words line-clamp-4 max-w-2xl">{snippet}</p>
+        {snippet && (
+          <p className={`mt-3 text-sm text-mute break-words max-w-2xl ${variant === "normal" ? "line-clamp-2" : "line-clamp-3"}`}>{snippet}</p>
         )}
-        <div className="mt-auto pt-4 text-[10px] uppercase tracking-widest text-mute font-bold">
+        <div className="mt-4 text-[10px] uppercase tracking-widest text-mute font-bold">
           {dateLabel(story.pubDate)}
         </div>
       </div>

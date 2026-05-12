@@ -12,11 +12,7 @@ import { usePlayer, useWatchlist, type PlayerTrack } from "@/lib/store";
 import { toast } from "@/lib/toast";
 import { RiskBadge } from "./RiskBadge";
 import type { AudiusCoin } from "@/lib/audiusCoins";
-import { fmtUsdDisplay } from "@/lib/formatters";
-
-function fmtUsd(n: number, digits = 4) {
-  return fmtUsdDisplay(n, digits);
-}
+import { useUsdToDisplayRate } from "@/lib/fiat";
 
 /* Prestige tier based on market cap */
 function getTier(cap: number): { label: string; color: string; glow: string } {
@@ -41,6 +37,7 @@ export function CoinCard({
   const router = useRouter();
   const watchlist = useWatchlist();
   const { current, playing, playTrack, toggle } = usePlayer();
+  const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
   const isWatched = watchlist.items.includes(c.mint);
 
   const change = c.priceChange24hPercent ?? 0;
@@ -52,7 +49,7 @@ export function CoinCard({
   const isOpenAudio = Boolean(c.isOpenAudioCoin || c.source === "open_audio" || c.source === "audius_public");
   const isSongDaqLocal = !isOpenAudio && Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
   const marketValueReliable = !isSongDaqLocal || (c as any).isMarketValueReliable !== false;
-  const marketValueLabel = marketValueReliable && Number(c.marketCap ?? 0) > 0 ? fmtUsd(c.marketCap ?? 0, 0) : "Not priced";
+  const marketValueLabel = marketValueReliable && Number(c.marketCap ?? 0) > 0 ? formatDisplayFiat(c.marketCap ?? 0, 0) : "Not priced";
   const assetLabel = isSongDaqLocal ? "song-daq Song Coin" : "Open Audio Artist Coin";
   const sourceHelp = isSongDaqLocal
     ? "This coin was created through song-daq."
@@ -161,7 +158,7 @@ export function CoinCard({
         content={
           <div className="space-y-2 text-[12px] leading-relaxed text-mute">
             <div><span className="font-black text-neon">Price:</span> what one coin costs right now.</div>
-            <div><span className="font-black text-neon">Market value:</span> coin price multiplied by the public tradable supply, not the whole minted supply.</div>
+            <div><span className="font-black text-neon">Public value:</span> coin price multiplied by the public tradable supply, not the whole minted supply.</div>
             <div><span className="font-black text-neon">Holders:</span> wallets that currently hold the coin.</div>
             <div><span className="font-black text-neon">Liquidity:</span> the public market money that lets fans buy and sell.</div>
           </div>
@@ -180,14 +177,14 @@ export function CoinCard({
             {assetLabel}
           </h2>
           <span className="text-[9px] text-mute uppercase tracking-widest font-black mb-1">Price</span>
-          <span className="num text-xl font-black tracking-tight text-ink">{fmtUsd(c.price ?? 0, 6)}</span>
+          <span className="num text-xl font-black tracking-tight text-ink">{formatDisplayFiat(c.price ?? 0, 6)}</span>
           <div className="flex items-center gap-3 mt-1.5">
             <span className="text-[9px] text-mute uppercase tracking-widest font-bold">
-              Value <span className="text-ink ml-1">{marketValueLabel}</span>
+              Public <span className="text-ink ml-1">{marketValueLabel}</span>
             </span>
             <span className="w-0.5 h-0.5 rounded-full bg-white/[0.06]" />
             <span className="text-[9px] text-mute uppercase tracking-widest font-bold">
-              Vol <span className="text-ink ml-1">{fmtUsd(c.v24hUSD ?? 0, 0)}</span>
+              Vol <span className="text-ink ml-1">{formatDisplayFiat(c.v24hUSD ?? 0, 0)}</span>
             </span>
           </div>
         </div>
@@ -253,13 +250,14 @@ export function CoinListRow({
 }) {
   const router = useRouter();
   const watchlist = useWatchlist();
+  const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
   const change = c.priceChange24hPercent ?? 0;
   const tier = getTier(c.marketCap ?? 0);
   const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || null;
   const isOpenAudio = Boolean(c.isOpenAudioCoin || c.source === "open_audio" || c.source === "audius_public");
   const isSongDaqLocal = !isOpenAudio && Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
   const marketValueReliable = !isSongDaqLocal || (c as any).isMarketValueReliable !== false;
-  const marketValueLabel = marketValueReliable && Number(c.marketCap ?? 0) > 0 ? fmtUsd(c.marketCap ?? 0, 0) : "Not priced";
+  const marketValueLabel = marketValueReliable && Number(c.marketCap ?? 0) > 0 ? formatDisplayFiat(c.marketCap ?? 0, 0) : "Not priced";
 
   return (
     <motion.div
@@ -296,10 +294,10 @@ export function CoinListRow({
       </div>
       <div className="w-[calc(50%-0.375rem)] sm:w-28 text-left sm:text-right rounded-xl sm:rounded-none border border-edge sm:border-0 bg-white/[0.035] sm:bg-transparent px-3 py-2 sm:p-0">
         <div className="num text-xs font-bold text-ink tracking-wider">{marketValueLabel}</div>
-        <div className="text-[9px] text-mute uppercase tracking-widest mt-0.5">Market Value</div>
+        <div className="text-[9px] text-mute uppercase tracking-widest mt-0.5">Public Value</div>
       </div>
       <div className="w-[calc(50%-0.375rem)] sm:w-28 text-left sm:text-right rounded-xl sm:rounded-none border border-edge sm:border-0 bg-white/[0.035] sm:bg-transparent px-3 py-2 sm:p-0">
-        <div className="num text-xs font-bold text-ink tracking-wider">{fmtUsd(c.price ?? 0, 6)}</div>
+        <div className="num text-xs font-bold text-ink tracking-wider">{formatDisplayFiat(c.price ?? 0, 6)}</div>
         <div className={`num text-[10px] font-black uppercase tracking-widest mt-0.5 ${change >= 0 ? "text-neon" : "text-red"}`}>
           {change >= 0 ? "▲" : "▼"} {fmtPct(change)}
         </div>
