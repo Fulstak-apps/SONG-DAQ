@@ -136,7 +136,7 @@ export function SongIPOPanel({ assets = [], limit = 3 }: { assets?: GamifiedAsse
         </div>
         <span className="chip text-violet border-violet/25 bg-violet/10">{ipos.length} launches</span>
       </div>
-      <div className="grid gap-3 lg:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-2">
         {ipos.map((ipo) => <IPOCard key={ipo.id} ipo={ipo} compact />)}
       </div>
     </section>
@@ -192,7 +192,7 @@ export function UndervaluedSignalsPanel({ assets = [], limit = 3 }: { assets?: G
         </div>
         <span className="chip text-cyan border-cyan/25 bg-cyan/10">Discovery only</span>
       </div>
-      <div className="grid gap-3 lg:grid-cols-3">
+      <div className="grid gap-3 md:grid-cols-2">
         {signals.map((signal) => <SignalCard key={signal.id} signal={signal} />)}
       </div>
     </section>

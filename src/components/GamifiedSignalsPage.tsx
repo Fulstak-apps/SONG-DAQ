@@ -117,8 +117,6 @@ export function GamifiedSignalsPage() {
             <UndervaluedSignalsPanel assets={signalAssets as any[]} limit={3} />
           </section>
 
-          <UndervaluedSignalsPanel assets={signalAssets as any[]} limit={6} />
-
           <section className="panel-elevated grain p-5 md:p-6">
             <div className="flex items-start gap-3">
               <div className="grid h-10 w-10 place-items-center rounded-2xl border border-violet/25 bg-violet/10 text-violet">
