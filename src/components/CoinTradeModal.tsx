@@ -417,7 +417,7 @@ export function CoinTradeModal({
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-        className="fixed inset-0 z-50 grid items-start justify-items-center overflow-y-auto bg-black/60 backdrop-blur-lg p-2 sm:place-items-center sm:p-4 overscroll-contain"
+        className="mobile-safe-overlay fixed inset-0 z-50 grid items-start justify-items-center overflow-y-auto bg-black/60 backdrop-blur-lg sm:place-items-center overscroll-contain"
         onClick={onClose}
         onWheel={(e) => e.stopPropagation()}
       >
@@ -426,7 +426,7 @@ export function CoinTradeModal({
           animate={{ scale: 1, opacity: 1, y: 0, filter: "blur(0px)" }}
           exit={{ scale: 0.95, opacity: 0, y: 24, filter: "blur(4px)" }}
           transition={{ type: "spring", damping: 28, stiffness: 350 }}
-          className="relative w-full max-w-full sm:w-[min(1120px,calc(100vw-2rem))] max-h-[calc(100dvh-1rem)] sm:max-h-[92vh] overflow-y-auto overscroll-contain rounded-2xl sm:rounded-3xl border border-edge bg-panel text-ink backdrop-blur-3xl shadow-[0_0_80px_rgba(0,0,0,0.65)] grain"
+          className="mobile-safe-sheet relative w-full max-w-full sm:w-[min(1120px,calc(100vw-2rem))] overflow-y-auto overscroll-contain rounded-2xl sm:rounded-3xl border border-edge bg-panel text-ink backdrop-blur-3xl shadow-[0_0_80px_rgba(0,0,0,0.65)] grain"
           onClick={(e) => e.stopPropagation()}
           onWheel={(e) => e.stopPropagation()}
         >

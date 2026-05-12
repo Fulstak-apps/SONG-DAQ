@@ -29,7 +29,7 @@ export default function GlobalError({
   }, [address, error]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-bg text-ink p-6">
+    <div className="min-h-[100dvh] flex items-center justify-center bg-bg text-ink p-6">
       <div className="max-w-md w-full p-8 rounded-3xl border border-edge bg-panel backdrop-blur-xl shadow-2xl text-center space-y-6 relative overflow-hidden grain">
         <div className="absolute top-0 right-0 w-32 h-32 bg-red/10 rounded-full blur-3xl pointer-events-none" />
         <div className="w-16 h-16 rounded-full bg-red/10 flex items-center justify-center mx-auto mb-2 border border-red/20 shadow-[0_0_20px_rgba(255,51,102,0.2)]">

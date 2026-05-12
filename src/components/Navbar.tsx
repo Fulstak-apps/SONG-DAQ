@@ -137,7 +137,7 @@ export function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-40 border-b border-edge transition-colors duration-500">
+    <header className="mobile-header-safe sticky top-0 z-40 border-b border-edge transition-colors duration-500">
       {/* Glass background with premium blur */}
       <div className="absolute inset-0 bg-bg/92 backdrop-blur-2xl" />
       {/* Top highlight line */}

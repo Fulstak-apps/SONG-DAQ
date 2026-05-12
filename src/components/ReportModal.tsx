@@ -42,8 +42,8 @@ export function ReportModal({ mint, songId, onClose }: { mint?: string; songId?:
   }
 
   return (
-    <div className="fixed inset-0 z-50 grid items-start justify-items-center overflow-y-auto bg-pure-black/65 backdrop-blur-xl p-2 sm:place-items-center sm:p-4" onClick={onClose}>
-      <motion.div initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="w-full sm:w-[520px] max-w-full max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-2xl sm:rounded-3xl border border-edge bg-panel p-4 sm:p-5 text-ink shadow-depth" onClick={(e) => e.stopPropagation()}>
+    <div className="mobile-safe-overlay fixed inset-0 z-50 grid items-start justify-items-center overflow-y-auto bg-pure-black/65 backdrop-blur-xl sm:place-items-center" onClick={onClose}>
+      <motion.div initial={{ opacity: 0, y: 16, scale: 0.96 }} animate={{ opacity: 1, y: 0, scale: 1 }} className="mobile-safe-sheet w-full sm:w-[520px] max-w-full overflow-y-auto rounded-2xl sm:rounded-3xl border border-edge bg-panel p-4 sm:p-5 text-ink shadow-depth" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between gap-3 border-b border-edge pb-4">
           <div>
             <div className="text-[11px] uppercase tracking-widest font-black text-red">Report / Takedown</div>

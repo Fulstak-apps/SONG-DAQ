@@ -152,7 +152,7 @@ export default function SongTradingPage() {
 
   if (advancedMode) {
     return (
-      <div className="fixed inset-0 z-[100] bg-bg text-ink flex flex-col font-sans overflow-y-auto lg:overflow-hidden">
+      <div className="mobile-fullscreen-safe fixed inset-0 z-[100] bg-bg text-ink flex flex-col font-sans overflow-y-auto lg:overflow-hidden">
         {/* Top Navbar */}
         <div className="min-h-16 border-b border-edge flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 shrink-0 bg-bg shadow-md z-10">
           <div className="flex min-w-0 flex-wrap items-center gap-3 sm:gap-4">

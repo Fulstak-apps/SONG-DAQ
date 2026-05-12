@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
@@ -93,6 +93,12 @@ export const metadata: Metadata = {
   category: "finance",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({
   children,
 }: {
@@ -132,12 +138,12 @@ export default function RootLayout({
         <ThemeProvider>
           <Navbar />
           <MarketTicker />
-          <main className="mx-auto w-full max-w-[1680px] px-3 pb-36 pt-4 sm:px-4 sm:pb-32 sm:pt-6 md:px-6 md:pb-28 md:pt-8 2xl:px-8 relative">
+          <main className="app-main-safe mx-auto w-full max-w-[1680px] px-3 pt-4 sm:px-4 sm:pb-32 sm:pt-6 md:px-6 md:pb-28 md:pt-8 2xl:px-8 relative">
             {/* Ambient page glow */}
             <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] bg-gradient-to-b from-neon/5 to-transparent pointer-events-none rounded-full blur-3xl" />
             {children}
           </main>
-          <footer className="mx-auto w-full max-w-[1680px] px-3 pt-10 sm:px-4 md:px-6 md:pt-16 2xl:px-8 pb-28 relative z-10">
+          <footer className="app-footer-safe mx-auto w-full max-w-[1680px] px-3 pt-10 sm:px-4 md:px-6 md:pt-16 2xl:px-8 relative z-10">
             <div className="border-t border-edge pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-neon shadow-[0_0_6px_rgba(0,229,114,0.5)] animate-pulseDot" />

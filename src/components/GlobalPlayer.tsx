@@ -96,7 +96,7 @@ export function GlobalPlayer() {
   if (!current) return <audio ref={audioRef} className="hidden" preload="none" />;
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-50 border-t border-edge bg-bg/95 px-3 py-2 shadow-[0_-14px_42px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:px-4">
+    <div className="global-player-safe fixed inset-x-0 bottom-0 z-50 border-t border-edge bg-bg/95 px-3 pt-2 shadow-[0_-14px_42px_rgba(0,0,0,0.34)] backdrop-blur-2xl sm:px-4">
       <div className="mx-auto flex w-full max-w-[1680px] items-center gap-2.5">
         <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-lg border border-edge bg-panel2">
           <SafeImage src={current.artwork} alt={current.title} fill sizes="40px" fallback={current.title} className="object-cover" />

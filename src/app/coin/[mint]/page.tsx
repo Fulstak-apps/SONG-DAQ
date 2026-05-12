@@ -367,7 +367,7 @@ export default function CoinPage() {
 
   if (advancedMode) {
     return (
-      <div className="fixed inset-0 z-[100] bg-bg text-ink flex flex-col font-sans overflow-y-auto lg:overflow-hidden">
+      <div className="mobile-fullscreen-safe fixed inset-0 z-[100] bg-bg text-ink flex flex-col font-sans overflow-y-auto lg:overflow-hidden">
         {/* Top Navbar */}
         <div className="min-h-16 border-b border-edge flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 shrink-0 bg-bg shadow-md z-10">
           <div className="flex min-w-0 flex-wrap items-center gap-3 sm:gap-4">
@@ -894,7 +894,7 @@ export default function CoinPage() {
         {/* Chart */}
         <section className={`overflow-hidden border border-edge bg-black shadow-2xl ${
           chartFullscreen
-            ? "fixed inset-2 z-[9999] rounded-[1.75rem] p-4 sm:inset-6 sm:p-6"
+            ? "mobile-safe-overlay fixed inset-0 z-[9999] rounded-[1.75rem] p-4 sm:inset-6 sm:p-6"
             : "relative rounded-[2rem] p-4 sm:p-6"
         }`}>
           <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-neon/35 to-transparent" />
@@ -915,7 +915,7 @@ export default function CoinPage() {
               </button>
             </div>
           </div>
-          <div className={`relative z-10 ${chartFullscreen ? "h-[calc(100vh-230px)] min-h-[420px]" : "h-[330px] sm:h-[460px]"}`}>
+          <div className={`relative z-10 ${chartFullscreen ? "chart-fullscreen-height min-h-[360px] sm:min-h-[420px]" : "h-[330px] sm:h-[460px]"}`}>
             <PriceChart
               points={filtered}
               quote="USD"

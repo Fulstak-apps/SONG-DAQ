@@ -165,7 +165,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-[100] grid items-start justify-items-center overflow-y-auto bg-ink/30 backdrop-blur-sm p-2 sm:place-items-center sm:p-4"
+        className="mobile-safe-overlay fixed inset-0 z-[100] grid items-start justify-items-center overflow-y-auto bg-ink/30 backdrop-blur-sm sm:place-items-center"
         onClick={onClose}
       >
         <motion.div
@@ -173,7 +173,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.96, opacity: 0 }}
           transition={spring}
-          className="panel p-0 w-full sm:w-[440px] max-w-full max-h-[calc(100dvh-1rem)] overflow-y-auto relative shadow-lg"
+          className="mobile-safe-sheet panel p-0 w-full sm:w-[440px] max-w-full overflow-y-auto relative shadow-lg"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Progress bar */}

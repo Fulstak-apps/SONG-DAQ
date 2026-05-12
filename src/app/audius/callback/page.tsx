@@ -178,11 +178,11 @@ export default function AudiusCallback() {
   }, [status]);
 
   return (
-    <main className="min-h-screen bg-bg text-ink relative overflow-hidden">
+    <main className="min-h-[100dvh] bg-bg text-ink relative overflow-hidden">
       <div className="orb orb-violet w-[280px] h-[280px] -top-16 -right-10 opacity-30" />
       <div className="orb orb-neon w-[260px] h-[260px] -bottom-20 -left-12 opacity-20" />
 
-      <div className="relative z-10 min-h-screen px-6 py-10 grid place-items-center">
+      <div className="oauth-callback-safe relative z-10 min-h-[100dvh] px-6 grid place-items-center">
         <section className="w-full max-w-xl panel-elevated p-8 md:p-10 text-center grain">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-edge bg-panel2 shadow-sm">
             {icon}

@@ -61,7 +61,7 @@ export function HiddenAdminAccess() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[120] grid place-items-center bg-black/65 p-4 backdrop-blur-xl"
+          className="mobile-safe-overlay fixed inset-0 z-[120] grid place-items-center bg-black/65 backdrop-blur-xl"
           onClick={() => setOpen(false)}
         >
           <motion.form
@@ -70,7 +70,7 @@ export function HiddenAdminAccess() {
             exit={{ scale: 0.96, y: 14, opacity: 0 }}
             onSubmit={submit}
             onClick={(e) => e.stopPropagation()}
-            className="w-full max-w-md rounded-3xl border border-edge bg-panel p-6 shadow-[0_0_80px_rgba(0,0,0,0.72)]"
+            className="mobile-safe-sheet w-full max-w-md overflow-y-auto rounded-3xl border border-edge bg-panel p-6 shadow-[0_0_80px_rgba(0,0,0,0.72)]"
           >
             <div className="flex items-start justify-between gap-4">
               <div>
