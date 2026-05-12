@@ -1,14 +1,17 @@
 "use client";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, useUI } from "@/lib/store";
 import {
   WALLETS,
   connectWallet,
   isMobileWalletBrowser,
+  isKnownWalletId,
   openMobileWalletBrowser,
   reportWalletError,
   shouldOpenMobileWalletBrowser,
+  mobileWalletTargetUrl,
+  walletProviderAvailable,
   walletDiagnosticsSnapshot,
   type WalletId,
 } from "@/lib/wallet";
@@ -23,6 +26,18 @@ type Role = "ARTIST" | "INVESTOR";
 
 const spring = { type: "spring", stiffness: 500, damping: 35 } as const;
 const fade = { initial: { opacity: 0, y: 8 }, animate: { opacity: 1, y: 0 }, exit: { opacity: 0, y: -8 }, transition: { duration: 0.2 } };
+
+function requestedWalletFromUrl() {
+  if (typeof window === "undefined") return null;
+  const requestedWallet = new URLSearchParams(window.location.search).get("walletConnect");
+  return isKnownWalletId(requestedWallet) ? requestedWallet : null;
+}
+
+function requestedRoleFromUrl(audius: unknown): Role {
+  if (typeof window === "undefined") return audius ? "ARTIST" : "INVESTOR";
+  const requestedRole = new URLSearchParams(window.location.search).get("walletRole");
+  return requestedRole === "ARTIST" || audius ? "ARTIST" : "INVESTOR";
+}
 
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 12_000) {
   const ctrl = new AbortController();
@@ -52,10 +67,11 @@ function linkAudiusInBackground(body: unknown) {
 export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const { address, provider, audius, setSession } = useSession();
   const { setUserMode } = useUI();
-  const [role, setRole] = useState<Role | null>(null);
-  const [step, setStep] = useState<Step>("ROLE");
+  const [role, setRole] = useState<Role | null>(() => requestedWalletFromUrl() ? requestedRoleFromUrl(null) : null);
+  const [step, setStep] = useState<Step>(() => requestedWalletFromUrl() ? "WALLET" : "ROLE");
   const [busy, setBusy] = useState<string | null>(null);
   const [err, setErr] = useState<string | null>(null);
+  const autoWalletAttempted = useRef<string | null>(null);
   useWalletDiscoveryVersion();
   const mobileWallet = isOpen && isMobileWalletBrowser();
   const mobileAudiusOAuth = isOpen && isMobileAudiusOAuthBrowser();
@@ -63,6 +79,16 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   // Reset on open
   useEffect(() => {
     if (!isOpen) return;
+    const requestedWallet = requestedWalletFromUrl();
+    if (requestedWallet) {
+      const nextRole = requestedRoleFromUrl(audius);
+      setRole(nextRole);
+      setStep("WALLET");
+      setUserMode(nextRole);
+      setErr(null);
+      setBusy(null);
+      return;
+    }
     if (audius) {
       setRole("ARTIST");
       setStep("ARTIST_READY");
@@ -120,6 +146,16 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       } else {
         setStep("DONE");
       }
+      if (typeof window !== "undefined") {
+        const url = new URL(window.location.href);
+        if (url.searchParams.has("walletConnect")) {
+          url.searchParams.delete("walletConnect");
+          url.searchParams.delete("walletConnectSource");
+          url.searchParams.delete("walletConnectAt");
+          url.searchParams.delete("walletRole");
+          window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
+        }
+      }
     } catch (e: any) {
       reportWalletError("wallet_connect_failed", e, id, address).catch(() => {});
       setErr(e.message ?? String(e));
@@ -129,6 +165,18 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       setBusy(null);
     }
   }, [role, audius, setSession, setUserMode]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    const requestedWallet = requestedWalletFromUrl();
+    if (!requestedWallet) return;
+    if (autoWalletAttempted.current === requestedWallet) return;
+    if (shouldOpenMobileWalletBrowser(requestedWallet)) return;
+    if (!walletProviderAvailable(requestedWallet)) return;
+    autoWalletAttempted.current = requestedWallet;
+    const timer = window.setTimeout(() => handleWallet(requestedWallet), 350);
+    return () => window.clearTimeout(timer);
+  }, [isOpen, handleWallet]);
 
   const handleAudius = useCallback(async () => {
     setBusy("audius");
@@ -242,7 +290,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                   </div>
                   <div className="space-y-2">
                     {WALLETS.map(w => (
-                      <WalletRow key={w.id} w={w} busy={busy === w.id} onConnect={() => handleWallet(w.id)} />
+                      <WalletRow key={w.id} w={w} role={role ?? "INVESTOR"} busy={busy === w.id} onConnect={() => handleWallet(w.id)} />
                     ))}
                   </div>
                   {mobileWallet && (
@@ -357,10 +405,14 @@ function RoleCard({ icon, label, desc, color, onClick }: {
   );
 }
 
-function WalletRow({ w, busy, onConnect }: { w: any; busy: boolean; onConnect: () => void }) {
+function WalletRow({ w, role, busy, onConnect }: { w: any; role: Role; busy: boolean; onConnect: () => void }) {
   const installed = w.installed();
   const openMobile = shouldOpenMobileWalletBrowser(w.id);
-  const action = openMobile ? () => openMobileWalletBrowser(w.id) : installed ? onConnect : () => window.open(w.installUrl, "_blank");
+  const action = openMobile
+    ? () => openMobileWalletBrowser(w.id, mobileWalletTargetUrl(w.id, undefined, { walletRole: role }) ?? undefined)
+    : installed
+      ? onConnect
+      : () => window.open(w.installUrl, "_blank");
   return (
     <button
       onClick={action}

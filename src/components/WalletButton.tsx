@@ -10,6 +10,7 @@ import {
   openMobileWalletBrowser,
   reportWalletError,
   shouldOpenMobileWalletBrowser,
+  mobileWalletTargetUrl,
   walletDiagnosticsSnapshot,
   type WalletId,
 } from "@/lib/wallet";
@@ -144,6 +145,7 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
                 key={w.id}
                 w={w}
                 busy={busy === w.id}
+                role={userMode}
                 onConnect={() => onConnect(w.id)}
               />
             ))}
@@ -163,15 +165,21 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
 function WalletRow({
   w,
   busy,
+  role,
   onConnect,
 }: {
   w: { id: WalletId; label: string; installed: () => boolean; installUrl: string };
   busy: boolean;
+  role: "INVESTOR" | "ARTIST";
   onConnect: () => void;
 }) {
   const installed = w.installed();
   const openMobile = shouldOpenMobileWalletBrowser(w.id);
-  const action = openMobile ? () => openMobileWalletBrowser(w.id) : installed ? onConnect : () => window.open(w.installUrl, "_blank");
+  const action = openMobile
+    ? () => openMobileWalletBrowser(w.id, mobileWalletTargetUrl(w.id, undefined, { walletRole: role }) ?? undefined)
+    : installed
+      ? onConnect
+      : () => window.open(w.installUrl, "_blank");
   return (
     <button
       onClick={action}

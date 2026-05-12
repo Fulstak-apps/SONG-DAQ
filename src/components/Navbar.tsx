@@ -4,15 +4,16 @@ import { useState, useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import { Sun, Moon, Volume2, VolumeX, Search } from "lucide-react";
-import { WalletBalance } from "./WalletBalance";
+import { WalletBalance, useAudiusAudioBalance, useNativeBalance } from "./WalletBalance";
 import { CurrencySelector } from "./CurrencySelector";
 import { AudiusLoginButton } from "./AudiusLoginButton";
 import { RoleToggle } from "./RoleToggle";
 import { LoginModal } from "./LoginModal";
 import { WalletButton } from "./WalletButton";
-import { PAPER_WALLET_ADDRESS, PAPER_WALLET_PROVIDER, isPaperWalletAddress, usePaperTrading, useSession, useUI, usePrestige, useAlerts } from "@/lib/store";
+import { PAPER_WALLET_ADDRESS, PAPER_WALLET_PROVIDER, isPaperWalletAddress, usePaperTrading, useSession, useUI, usePrestige, useAlerts, type AudiusProfile } from "@/lib/store";
 import { safeJson } from "@/lib/safeJson";
-import { getCurrentWalletAddress, subscribeWalletChanges, type WalletId } from "@/lib/wallet";
+import { getCurrentWalletAddress, isKnownWalletId, subscribeWalletChanges, type WalletId } from "@/lib/wallet";
+import { useUsdToDisplayRate } from "@/lib/fiat";
 
 type NavItem = { href: string; label: string; icon: string; reqArtistMode?: boolean };
 
@@ -115,6 +116,15 @@ export function Navbar() {
     openLoginModal();
     router.replace(path || "/market", { scroll: false });
   }, [audius, openLoginModal, path, router, setUserMode]);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const searchParams = new URLSearchParams(window.location.search);
+    const requestedWallet = searchParams.get("walletConnect");
+    if (!isKnownWalletId(requestedWallet)) return;
+    const requestedRole = searchParams.get("walletRole");
+    if (requestedRole === "ARTIST") setUserMode("ARTIST");
+    openLoginModal();
+  }, [openLoginModal, setUserMode]);
 
   const isDarnellAudius = audius?.name?.trim().toLowerCase() === "darnell williams";
   const navItems = role === "ADMIN" || adminSession || isDarnellAudius ? [...NAV, { href: "/admin", label: "ADMIN", icon: "⚙" }] : NAV;
@@ -212,7 +222,7 @@ export function Navbar() {
 
           <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
             {mounted && audius && !hasSeparateExternalWallet ? (
-              <div className="shrink-0">
+              <div className="hidden shrink-0 sm:block">
                 <WalletButton compact connectOnly />
               </div>
             ) : null}
@@ -263,6 +273,15 @@ export function Navbar() {
             </button>
           </div>
         </div>
+        <MobileWalletSummary
+          mounted={mounted}
+          address={address}
+          provider={provider}
+          audius={audius}
+          paperMode={paperMode}
+          isPaperWallet={isPaperWallet}
+          hasExternalWallet={hasSeparateExternalWallet}
+        />
         <nav className="md:hidden border-t border-edge/70 py-1.5">
           <div className="no-scrollbar flex items-center gap-2 overflow-x-auto px-0.5">
             {navItems.map((n) => {
@@ -303,6 +322,82 @@ function PaperWalletPill() {
       <span className="h-1.5 w-1.5 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.8)]" />
       Paper Wallet
       <span className="font-mono text-[11px] text-neon/75">100 SOL · 2.5K AUDIO</span>
+    </div>
+  );
+}
+
+function MobileWalletSummary({
+  mounted,
+  address,
+  provider,
+  audius,
+  paperMode,
+  isPaperWallet,
+  hasExternalWallet,
+}: {
+  mounted: boolean;
+  address: string | null;
+  provider: string | null;
+  audius: AudiusProfile | null;
+  paperMode: boolean;
+  isPaperWallet: boolean;
+  hasExternalWallet: boolean;
+}) {
+  const { formatUsd } = useUsdToDisplayRate();
+  const native = useNativeBalance(hasExternalWallet ? address : null, hasExternalWallet ? "solana" : null);
+  const audioBalance = useAudiusAudioBalance(audius?.handle);
+  if (!mounted) return null;
+  if (!hasExternalWallet && !audius && !paperMode) return null;
+
+  const short = address ? `${address.slice(0, 4)}…${address.slice(-4)}` : null;
+  const audio = audioBalance ?? audius?.audioBalance ?? null;
+
+  return (
+    <div className="md:hidden border-t border-edge/60 py-1.5">
+      <div className="no-scrollbar flex min-w-0 items-center gap-2 overflow-x-auto px-0.5">
+        {hasExternalWallet ? (
+          <div className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3 text-left">
+            <span className="h-2 w-2 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.75)]" />
+            <span className="flex flex-col leading-tight">
+              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-neon">Wallet</span>
+              <span className="font-mono text-xs font-black text-ink">
+                {native.error ? "Balance unavailable" : native.balance != null ? `${native.balance.toFixed(3)} SOL` : "Loading SOL"}
+              </span>
+            </span>
+            <span className="font-mono text-[11px] font-bold text-mute">
+              {native.usd != null ? formatUsd(native.usd) : short}
+            </span>
+          </div>
+        ) : paperMode || isPaperWallet || provider === PAPER_WALLET_PROVIDER ? (
+          <div className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3">
+            <span className="h-2 w-2 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.75)]" />
+            <span className="flex flex-col leading-tight">
+              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-neon">Paper wallet</span>
+              <span className="font-mono text-xs font-black text-ink">100 SOL · 2.5K AUDIO</span>
+            </span>
+          </div>
+        ) : null}
+
+        {audius ? (
+          <div className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-violet/25 bg-violet/10 px-3">
+            <span className="h-2 w-2 rounded-full bg-violet shadow-[0_0_8px_rgba(155,81,224,0.75)]" />
+            <span className="flex flex-col leading-tight">
+              <span className="max-w-[130px] truncate text-[10px] font-black uppercase tracking-[0.18em] text-violet">
+                @{audius.handle}
+              </span>
+              <span className="font-mono text-xs font-black text-ink">
+                {audio != null ? `${audio.toLocaleString(undefined, { maximumFractionDigits: 0 })} AUDIO` : "Audius synced"}
+              </span>
+            </span>
+          </div>
+        ) : null}
+
+        {audius && !hasExternalWallet ? (
+          <div className="shrink-0">
+            <WalletButton compact connectOnly />
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -142,9 +142,26 @@ export function isMobileWalletBrowser() {
     (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
 }
 
+export function isKnownWalletId(value: unknown): value is WalletId {
+  return value === "phantom" || value === "solflare" || value === "backpack";
+}
+
+export function mobileWalletTargetUrl(id: WalletId, targetUrl?: string, extraParams?: Record<string, string | null | undefined>) {
+  if (typeof window === "undefined") return null;
+  const target = new URL(targetUrl || window.location.href, window.location.origin);
+  target.searchParams.set("walletConnect", id);
+  target.searchParams.set("walletConnectSource", "mobile");
+  target.searchParams.set("walletConnectAt", String(Date.now()));
+  for (const [key, value] of Object.entries(extraParams ?? {})) {
+    if (value == null || value === "") target.searchParams.delete(key);
+    else target.searchParams.set(key, value);
+  }
+  return target.toString();
+}
+
 export function mobileWalletBrowseUrl(id: WalletId, targetUrl?: string) {
   if (typeof window === "undefined") return null;
-  const rawTarget = targetUrl || window.location.href;
+  const rawTarget = targetUrl || mobileWalletTargetUrl(id) || window.location.href;
   const target = encodeURIComponent(rawTarget);
   const ref = encodeURIComponent(window.location.origin);
   if (id === "phantom") return `https://phantom.app/ul/browse/${target}?ref=${ref}`;
@@ -157,8 +174,12 @@ export function shouldOpenMobileWalletBrowser(id: WalletId) {
   return isMobileWalletBrowser() && !providerFor(id);
 }
 
-export function openMobileWalletBrowser(id: WalletId) {
-  const url = mobileWalletBrowseUrl(id);
+export function walletProviderAvailable(id: WalletId) {
+  return !!providerFor(id);
+}
+
+export function openMobileWalletBrowser(id: WalletId, targetUrl?: string) {
+  const url = mobileWalletBrowseUrl(id, targetUrl);
   if (!url) return false;
   window.location.href = url;
   return true;

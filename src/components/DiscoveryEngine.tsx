@@ -236,7 +236,7 @@ export default function DiscoveryEngine() {
   const [networkStats, setNetworkStats] = useState({ tradingVolume: 0, activeArtists: 0, artistCoins: 0, songCoins: 0, songsTokenized: 0 });
   const [networkStatsLoaded, setNetworkStatsLoaded] = useState(false);
   const heroText = [
-    { a: "Trade Music", b: "Like Markets.", color: "text-gradient-neon" },
+    { a: "Buy music", b: "coins.", color: "text-gradient-neon" },
     { a: "100% verified", b: "on-chain.", color: "text-gradient-violet" },
     { a: "Launch in", b: "under 2 min.", color: "text-gradient-cyan" },
     { a: "Instant creator", b: "tokenization.", color: "text-gradient-gold" },
