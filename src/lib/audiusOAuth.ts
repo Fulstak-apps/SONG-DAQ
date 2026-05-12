@@ -32,7 +32,7 @@ export interface AudiusProfile {
   wallets?: { sol: string | null; eth: string | null };
 }
 
-async function exchangeCodeForProfile(code: string, codeVerifier: string, redirectUri: string, timeoutMs = 22_000) {
+async function exchangeCodeForProfile(code: string, codeVerifier: string, redirectUri: string, timeoutMs = 45_000) {
   const ctrl = new AbortController();
   const timeout = setTimeout(() => ctrl.abort(), timeoutMs);
   try {
@@ -47,7 +47,7 @@ async function exchangeCodeForProfile(code: string, codeVerifier: string, redire
     return j.profile as AudiusProfile;
   } catch (e: any) {
     if (e?.name === "AbortError") {
-      throw new Error("Audius sign-in is taking longer than expected. Please retry, or use full-page sign-in if the popup keeps timing out.");
+      throw new Error("Audius sign-in is taking longer than expected. Please retry. On mobile, song-daq will use full-page sign-in so email codes do not interrupt the session.");
     }
     throw e;
   } finally {
@@ -139,6 +139,12 @@ async function buildAudiusAuthorizeUrl(display: "popup" | "fullScreen" = "popup"
   return url.toString();
 }
 
+export function isMobileAudiusOAuthBrowser() {
+  if (typeof navigator === "undefined") return false;
+  return /Android|iPhone|iPad|iPod|Mobile|CriOS|FxiOS|EdgiOS/i.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 1 && /Macintosh/i.test(navigator.userAgent));
+}
+
 export async function redirectToAudiusLogin() {
   if (typeof window === "undefined") throw new Error("client only");
   const url = await buildAudiusAuthorizeUrl("fullScreen");
@@ -151,6 +157,9 @@ export function loginWithAudius(): Promise<AudiusProfile> {
     return Promise.reject(
       new Error("Audius sign-in is not configured yet. Add NEXT_PUBLIC_AUDIUS_API_KEY to your environment, then restart the app."),
     );
+  }
+  if (isMobileAudiusOAuthBrowser()) {
+    return redirectToAudiusLogin().then(() => new Promise<AudiusProfile>(() => {}));
   }
   // POPUP MUST OPEN SYNCHRONOUSLY — open it now with about:blank, then
   // navigate it to the auth URL after we finish hashing.
@@ -230,7 +239,7 @@ export function loginWithAudius(): Promise<AudiusProfile> {
       settled = true; cleanup();
       try { popup.close(); } catch {}
       reject(new Error("Audius login timed out. Please retry, or use full-page sign-in if the popup keeps timing out."));
-    }, 45_000);
+    }, 300_000);
 
     // Fallback: poll localStorage in case postMessage was missed.
     pollTimer = setInterval(() => {

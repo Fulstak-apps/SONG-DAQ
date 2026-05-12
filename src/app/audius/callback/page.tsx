@@ -5,6 +5,16 @@ import { useSession, useUI, type AudiusProfile } from "@/lib/store";
 
 type Status = "loading" | "success" | "error";
 
+function safeReturnPath(raw: string | null | undefined) {
+  if (!raw) return "/market?artistWallet=1";
+  try {
+    if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
+    const url = new URL(raw, window.location.origin);
+    if (url.origin === window.location.origin) return `${url.pathname}${url.search}${url.hash}`;
+  } catch {}
+  return "/market?artistWallet=1";
+}
+
 async function readExchangeJson(res: Response) {
   const text = await res.text().catch(() => "");
   if (!text.trim()) return {};
@@ -119,6 +129,7 @@ export default function AudiusCallback() {
 
       if (!window.opener || window.opener.closed) {
         setMsg("Audius connected. Finalizing your song-daq session...");
+        const returnTo = safeReturnPath(sessionStorage.getItem("audius-pkce-return") || localStorage.getItem("audius-pkce-return"));
         const profile = await exchangeInCallback(String(code), state ? String(state) : null);
         if (cancelled) return;
         const sol = profile.wallets?.sol ?? null;
@@ -135,7 +146,7 @@ export default function AudiusCallback() {
         setStatus("success");
         setMsg("Audius connected. Returning to song-daq...");
         setTimeout(() => {
-          window.location.replace("/market?artistWallet=1");
+          window.location.replace(returnTo);
         }, 700);
       } else {
         setStatus("success");

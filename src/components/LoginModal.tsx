@@ -12,7 +12,7 @@ import {
   walletDiagnosticsSnapshot,
   type WalletId,
 } from "@/lib/wallet";
-import { loginWithAudius } from "@/lib/audiusOAuth";
+import { isMobileAudiusOAuthBrowser, loginWithAudius, redirectToAudiusLogin } from "@/lib/audiusOAuth";
 import { safeJson } from "@/lib/safeJson";
 import { Music, TrendingUp, ShieldCheck, ChevronLeft, Loader2, CheckCircle2, AlertCircle } from "lucide-react";
 import { toast } from "@/lib/toast";
@@ -58,6 +58,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   const [err, setErr] = useState<string | null>(null);
   useWalletDiscoveryVersion();
   const mobileWallet = isOpen && isMobileWalletBrowser();
+  const mobileAudiusOAuth = isOpen && isMobileAudiusOAuthBrowser();
 
   // Reset on open
   useEffect(() => {
@@ -133,6 +134,10 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     setBusy("audius");
     setErr(null);
     try {
+      if (mobileAudiusOAuth) {
+        await redirectToAudiusLogin();
+        return;
+      }
       const profile = await loginWithAudius();
       const solWallet = profile.wallets?.sol || null;
       const hasExternalWallet = !!address && provider !== "audius" && provider !== "paper";
@@ -148,7 +153,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     } finally {
       setBusy(null);
     }
-  }, [address, provider, setSession, setUserMode]);
+  }, [address, provider, setSession, setUserMode, mobileAudiusOAuth]);
 
   if (!isOpen) return null;
 
@@ -256,6 +261,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                     busy={busy}
                     err={err}
                     onOAuth={handleAudius}
+                    mobileOAuth={mobileAudiusOAuth}
                   />
                 </motion.div>
               )}
@@ -371,9 +377,10 @@ function WalletRow({ w, busy, onConnect }: { w: any; busy: boolean; onConnect: (
   );
 }
 
-function AudiusStep({ busy, err, onOAuth }: {
+function AudiusStep({ busy, err, onOAuth, mobileOAuth }: {
   busy: string | null; err: string | null;
   onOAuth: () => void;
+  mobileOAuth: boolean;
 }) {
   return (
     <div className="space-y-5">
@@ -382,7 +389,11 @@ function AudiusStep({ busy, err, onOAuth }: {
           <ShieldCheck size={24} />
         </div>
         <h2 className="text-2xl font-semibold tracking-tight">Connect Audius</h2>
-        <p className="text-mute text-base mt-1">Use Sign in with Audius to verify artist identity. Manual handle linking is disabled for launch access.</p>
+        <p className="text-mute text-base mt-1">
+          {mobileOAuth
+            ? "Use full-page Audius sign-in so email codes do not interrupt your artist login."
+            : "Use Sign in with Audius to verify artist identity. Manual handle linking is disabled for launch access."}
+        </p>
       </div>
 
       <button
@@ -398,7 +409,9 @@ function AudiusStep({ busy, err, onOAuth }: {
       </button>
 
       <p className="text-sm text-mute leading-relaxed">
-        OAuth opens Audius in a popup. Your public profile and Audius-linked wallet are attached only after the Audius sign-in succeeds.
+        {mobileOAuth
+          ? "You can switch to your email app for the Audius code, then return here. song-daq saves the login state and finishes on the callback page."
+          : "OAuth opens Audius in a popup. Your public profile and Audius-linked wallet are attached only after the Audius sign-in succeeds."}
       </p>
 
       {err && <ErrorBanner message={err} />}

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { loginWithAudius, redirectToAudiusLogin } from "@/lib/audiusOAuth";
+import { isMobileAudiusOAuthBrowser, loginWithAudius, redirectToAudiusLogin } from "@/lib/audiusOAuth";
 import { useSession } from "@/lib/store";
 import { useUI } from "@/lib/store";
 import { SafeImage } from "./SafeImage";
@@ -15,6 +15,7 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
+  const mobileOAuth = mounted && isMobileAudiusOAuthBrowser();
 
   useEffect(() => setMounted(true), []);
   useEffect(() => {
@@ -29,6 +30,10 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
   async function loginOAuth() {
     setBusy("oauth"); setErr(null);
     try {
+      if (mobileOAuth) {
+        await redirectToAudiusLogin();
+        return;
+      }
       const profile = await loginWithAudius();
       const solWallet = profile.wallets?.sol || null;
       const hasExternalWallet = !!address && provider !== "audius" && provider !== "paper";
@@ -166,21 +171,25 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
               onClick={loginOAuth}
               disabled={!!busy}
             >
-              {busy === "oauth" ? <><Loader2 size={12} className="animate-spin" /> Opening Audius…</> : "Sign in with Audius (popup)"}
+              {busy === "oauth" ? <><Loader2 size={12} className="animate-spin" /> Opening Audius…</> : mobileOAuth ? "Sign in with Audius" : "Sign in with Audius (popup)"}
             </button>
             <p className="text-[11px] text-mute mt-3 leading-relaxed">
-              OAuth opens Audius in a popup. Artist launch access requires verified Audius sign-in through the official connection flow.
+              {mobileOAuth
+                ? "On mobile, song-daq opens Audius full-screen so you can leave for an email code and come back without losing the login."
+                : "OAuth opens Audius in a popup. Artist launch access requires verified Audius sign-in through the official connection flow."}
             </p>
-            <button
-              className="btn w-full mt-3 text-[11px] font-black uppercase tracking-widest"
-              onClick={() => {
-                setErr(null);
-                void redirectToAudiusLogin().catch((e: any) => setErr(e?.message ?? String(e)));
-              }}
-              disabled={!!busy}
-            >
-              Try full-page sign in
-            </button>
+            {!mobileOAuth && (
+              <button
+                className="btn w-full mt-3 text-[11px] font-black uppercase tracking-widest"
+                onClick={() => {
+                  setErr(null);
+                  void redirectToAudiusLogin().catch((e: any) => setErr(e?.message ?? String(e)));
+                }}
+                disabled={!!busy}
+              >
+                Try full-page sign in
+              </button>
+            )}
             {err && <div className="text-red text-[11px] mt-2 bg-red/5 border border-red/10 rounded-lg px-3 py-2 font-bold">{err}</div>}
           </motion.div>
         )}
