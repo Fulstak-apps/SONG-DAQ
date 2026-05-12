@@ -9,7 +9,7 @@ import { SafeImage } from "@/components/SafeImage";
 import { CoinPreviewModal } from "@/components/CoinPreviewModal";
 import { CoinTradeModal } from "@/components/CoinTradeModal";
 import { ArtistIntel } from "@/components/ArtistIntel";
-import { BadgeRail, HypeMeterCard, MilestoneGrid, SongIPOPanel, UndervaluedSignalsPanel } from "@/components/GamificationLayer";
+import { HypeMeterCard, SongIPOPanel, UndervaluedSignalsPanel } from "@/components/GamificationLayer";
 import { fmtNum, fmtPct } from "@/lib/pricing";
 import type { AudiusCoin } from "@/lib/audiusCoins";
 import { usePlayer, useSession, type PlayerTrack } from "@/lib/store";
@@ -202,11 +202,6 @@ export default function ArtistProfilePage() {
           <SongIPOPanel assets={gamifiedAssets} limit={2} />
           <UndervaluedSignalsPanel assets={gamifiedAssets} limit={2} />
         </div>
-      </section>
-
-      <section className="grid gap-4 xl:grid-cols-2">
-        <MilestoneGrid asset={gamifiedAssets[0]} compact />
-        <BadgeRail asset={gamifiedAssets[0]} limit={3} />
       </section>
 
       <ArtistIntel

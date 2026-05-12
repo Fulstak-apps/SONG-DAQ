@@ -1,21 +1,3 @@
-export type BadgeRarity = "Common" | "Rare" | "Epic" | "Legendary";
-
-export type BadgeDefinition = {
-  id: string;
-  icon: string;
-  name: string;
-  rarity: BadgeRarity;
-  unlockCondition: string;
-};
-
-export type UserBadge = BadgeDefinition & {
-  unlocked: boolean;
-  progress: number;
-  dateEarned?: string;
-  relatedAsset?: string;
-  mode?: "paper" | "live";
-};
-
 export type HypeLevel = "Cold" | "Warming Up" | "Hot" | "On Fire" | "Viral Risk";
 
 export type HypeScore = {
@@ -46,16 +28,6 @@ export type SongIPO = {
   earlyBackers: number;
   openingPriceUsd: number;
   currentPriceUsd: number;
-};
-
-export type Milestone = {
-  id: string;
-  assetId: string;
-  name: string;
-  progress: number;
-  reward: string;
-  dateUnlocked?: string;
-  relatedBadge?: string;
 };
 
 export type UndervaluedSignal = {
@@ -96,31 +68,9 @@ export type GamifiedAsset = {
   royaltyBacked?: boolean | null;
 };
 
-export const badges: BadgeDefinition[] = [
-  { id: "day-one-backer", icon: "spark", name: "Day One Backer", rarity: "Common", unlockCondition: "Bought during the first 24 hours." },
-  { id: "first-100", icon: "100", name: "First 100", rarity: "Rare", unlockCondition: "Bought before the first 100 backers." },
-  { id: "diamond-ears", icon: "diamond", name: "Diamond Ears", rarity: "Epic", unlockCondition: "Backed a song before major growth." },
-  { id: "ar-demon", icon: "target", name: "A&R Demon", rarity: "Epic", unlockCondition: "Made 10 profitable early picks." },
-  { id: "paper-millionaire", icon: "paper", name: "Paper Millionaire", rarity: "Legendary", unlockCondition: "Reached $1M in Paper Mode value." },
-  { id: "underground-king", icon: "crown", name: "Underground King", rarity: "Epic", unlockCondition: "Backed 25 artists under 10K listeners." },
-  { id: "hit-hunter", icon: "music", name: "Hit Hunter", rarity: "Rare", unlockCondition: "Backed a song before it hit 1M streams." },
-  { id: "whale-watcher", icon: "eye", name: "Whale Watcher", rarity: "Rare", unlockCondition: "Spotted a large buy early." },
-  { id: "exit-genius", icon: "exit", name: "Exit Genius", rarity: "Epic", unlockCondition: "Sold near a local top." },
-  { id: "viral-prophet", icon: "flame", name: "Viral Prophet", rarity: "Legendary", unlockCondition: "Predicted a song before it moved up." },
-  { id: "early-signal", icon: "signal", name: "Early Signal", rarity: "Common", unlockCondition: "Watched a song before its Hype Meter spiked." },
-  { id: "ipo-hunter", icon: "ipo", name: "IPO Hunter", rarity: "Rare", unlockCondition: "Joined multiple Song IPO launches early." },
-  { id: "milestone-maker", icon: "unlock", name: "Milestone Maker", rarity: "Rare", unlockCondition: "Held a song through a major milestone unlock." },
-];
-
 export const hypeScores: HypeScore[] = [];
-export const userBadges: UserBadge[] = [];
 export const songIPOs: SongIPO[] = [];
-export const milestones: Milestone[] = [];
 export const undervaluedSignals: UndervaluedSignal[] = [];
-export const paperModeRewards = [
-  { id: "paper-millionaire", name: "Paper Millionaire", targetUsd: 1_000_000 },
-  { id: "paper-ipo-hunter", name: "Paper IPO Hunter", targetIpos: 3 },
-];
 export const songMetrics = [
   "trading volume",
   "watchlist growth",
@@ -208,24 +158,6 @@ export function getHypeScore(asset?: GamifiedAsset | null): HypeScore {
   };
 }
 
-export function getUserBadges(options: { mode?: "paper" | "live"; asset?: GamifiedAsset | null; portfolioValueUsd?: number } = {}): UserBadge[] {
-  const s = seed(options.asset) + Math.round(options.portfolioValueUsd || 0);
-  return badges.map((badge, index) => {
-    const rawProgress = badge.id === "paper-millionaire" && options.mode === "paper"
-      ? Math.min(100, ((options.portfolioValueUsd || 0) / 1_000_000) * 100)
-      : (s + index * 17) % 115;
-    const unlocked = rawProgress >= 100 || index < 2;
-    return {
-      ...badge,
-      progress: unlocked ? 100 : clamp(rawProgress),
-      unlocked,
-      dateEarned: unlocked ? new Date(Date.now() - (index + 1) * 86400000).toISOString() : undefined,
-      relatedAsset: assetTitle(options.asset),
-      mode: options.mode || "live",
-    };
-  });
-}
-
 export function getSongIPO(asset?: GamifiedAsset | null): SongIPO {
   const s = seed(asset);
   const price = Number(asset?.price || 0);
@@ -255,31 +187,6 @@ export function getSongIPOs(assets: GamifiedAsset[] = [], limit = 4) {
   return (assets.length ? assets : [{ ticker: "IPO", title: "Demo Song IPO", artist_name: "SONG·DAQ" }])
     .slice(0, Math.max(limit, 1))
     .map(getSongIPO);
-}
-
-export function getMilestones(asset?: GamifiedAsset | null): Milestone[] {
-  const s = seed(asset);
-  const names = [
-    ["10K streams", "Hit Hunter progress"],
-    ["100K streams", "Early backers earned momentum credit"],
-    ["First 100 investors", "First 100 badge eligibility"],
-    ["First $1,000 volume", "Milestone Maker progress"],
-    ["First royalty payout", "Royalty signal unlocked"],
-    ["First Hype Meter spike", "Early Signal progress"],
-  ];
-  return names.map(([name, reward], index) => {
-    const progress = clamp(((s >> index) % 115));
-    const unlocked = progress >= 100 || index === 0;
-    return {
-      id: `${assetId(asset)}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`,
-      assetId: assetId(asset),
-      name,
-      progress: unlocked ? 100 : progress,
-      reward,
-      dateUnlocked: unlocked ? new Date(Date.now() - (index + 2) * 86400000).toISOString() : undefined,
-      relatedBadge: index === 1 ? "Hit Hunter" : index === 2 ? "First 100" : index === 5 ? "Early Signal" : undefined,
-    };
-  });
 }
 
 export function getUndervaluedSignal(asset?: GamifiedAsset | null): UndervaluedSignal {

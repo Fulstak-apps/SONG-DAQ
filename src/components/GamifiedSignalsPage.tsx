@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { BadgeRail, HypeMeterCard, MilestoneGrid, SongIPOPanel, UndervaluedSignalsPanel } from "@/components/GamificationLayer";
+import { HypeMeterCard, SongIPOPanel, UndervaluedSignalsPanel } from "@/components/GamificationLayer";
 import { CardGridSkeleton, StatRowSkeleton } from "@/components/Skeleton";
 import { useCoins } from "@/lib/useCoins";
 import { usePaperTrading } from "@/lib/store";
@@ -76,13 +76,13 @@ export function GamifiedSignalsPage() {
               <Radar size={13} /> Music Investing Signals
             </div>
             <h1 className="mt-4 text-3xl font-black tracking-tight text-ink sm:text-4xl lg:text-5xl">
-              Hype, IPOs, badges, milestones, and undervalued picks.
+              Hype, IPOs, and undervalued picks.
             </h1>
           </div>
           <div className="flex flex-wrap gap-2 lg:justify-end">
             {paperMode && (
               <span className="rounded-full border border-neon/30 bg-neon/12 px-3 py-2 text-[11px] font-black uppercase tracking-widest text-neon">
-                Paper Mode Rewards Active
+                Paper Mode Active
               </span>
             )}
             {loading && (
@@ -114,10 +114,9 @@ export function GamifiedSignalsPage() {
 
           <section className="grid gap-4 xl:grid-cols-[1fr_1fr]">
             <SongIPOPanel assets={signalAssets as any[]} limit={3} />
-            <BadgeRail asset={(topHype[0] || signalAssets[0]) as any} mode={paperMode ? "paper" : "live"} limit={4} />
+            <UndervaluedSignalsPanel assets={signalAssets as any[]} limit={3} />
           </section>
 
-          <MilestoneGrid asset={(topHype[0] || signalAssets[0]) as any} />
           <UndervaluedSignalsPanel assets={signalAssets as any[]} limit={6} />
 
           <section className="panel-elevated grain p-5 md:p-6">
@@ -128,7 +127,7 @@ export function GamifiedSignalsPage() {
               <div>
                 <h2 className="text-lg font-black text-ink">How to use Signals</h2>
                 <p className="mt-1 max-w-3xl text-sm leading-relaxed text-mute">
-                  Signals help you discover movement before it is obvious: rising Hype Meter scores, launch events, milestone unlocks, badge eligibility, and songs that may be undernoticed. They are discovery tools, not financial advice.
+                  Signals help you discover movement before it is obvious: rising Hype Meter scores, launch events, and songs that may be undernoticed. They are discovery tools, not financial advice.
                 </p>
               </div>
             </div>
