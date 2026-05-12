@@ -7,7 +7,7 @@ export function CurrencySelector({ compact = false }: { compact?: boolean }) {
   return (
     <label
       className={`inline-flex items-center gap-2 rounded-xl border border-edge bg-white/[0.055] text-mute transition hover:border-neon/30 hover:text-ink ${
-        compact ? "min-h-10 px-2.5 text-[11px]" : "min-h-11 px-3 text-[11px]"
+        compact ? "min-h-9 px-2.5 text-[11px] sm:min-h-10" : "min-h-11 px-3 text-[11px]"
       }`}
       title={error || priceAgeText(updatedAt)}
     >
