@@ -540,7 +540,7 @@ export default function PortfolioPage() {
             <div className="min-w-0">
               <div className="text-[11px] uppercase tracking-widest font-black">Wallet visibility note</div>
               <p className="mt-1 text-xs leading-relaxed text-neon/85">
-                Real trading uses your external Solana wallet. Your Audius vault is shown separately for identity and AUDIO visibility, but it cannot sign song-daq swaps yet. If Phantom hides a brand-new token as spam, open Phantom Hidden Tokens, mark it as Not Spam, then hit Refresh Wallet here.
+                Real trading uses your external Solana wallet. Your Audius vault is shown separately for identity and AUDIO visibility, but it cannot sign SONG·DAQ swaps yet. If Phantom hides a brand-new token as spam, open Phantom Hidden Tokens, mark it as Not Spam, then hit Refresh Wallet here.
               </p>
             </div>
           </div>
@@ -550,7 +550,7 @@ export default function PortfolioPage() {
           <div className="rounded-2xl border border-amber/25 bg-amber/10 p-4 text-amber">
             <div className="text-[11px] uppercase tracking-widest font-black">Portfolio index is reconnecting</div>
             <p className="mt-1 text-xs leading-relaxed text-amber/85">
-              Your wallet balances still load directly from Solana. song-daq trade history and cost basis will refresh when the database connection is available.
+              Your wallet balances still load directly from Solana. SONG·DAQ trade history and cost basis will refresh when the database connection is available.
             </p>
           </div>
         )}
@@ -559,13 +559,13 @@ export default function PortfolioPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-black tracking-tight">Artist Coins</h2>
-              <p className="text-mute text-xs mt-1">Read from Solana token accounts, Audius artist-token metadata, and confirmed song-daq trade records.</p>
+              <p className="text-mute text-xs mt-1">Read from Solana token accounts, Audius artist-token metadata, and confirmed SONG·DAQ trade records.</p>
             </div>
             {(tradingTokens.loading || audiusTokens.loading) && <span className="text-[11px] uppercase tracking-widest text-neon animate-pulse">Syncing</span>}
           </div>
           <div className="space-y-2">
             {artistTokens.length ? artistTokens.map((t) => <TokenRow key={t.mint} t={t} />) : (
-              <Empty icon={<Music2 size={18} />} title="No Artist Coins Found" text="Your connected Solana wallet, Audius vault, and confirmed song-daq trade records do not currently show Artist Coins." />
+              <Empty icon={<Music2 size={18} />} title="No Artist Coins Found" text="Your connected Solana wallet, Audius vault, and confirmed SONG·DAQ trade records do not currently show Artist Coins." />
             )}
           </div>
         </div>
@@ -574,7 +574,7 @@ export default function PortfolioPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-black tracking-tight">External Wallet Assets</h2>
-              <p className="text-mute text-xs mt-1">Everything visible in your connected Solana wallet, including meme coins and non-song-daq tokens. Fiat estimates use Jupiter prices when available.</p>
+              <p className="text-mute text-xs mt-1">Everything visible in your connected Solana wallet, including meme coins and non-SONG·DAQ tokens. Fiat estimates use Jupiter prices when available.</p>
             </div>
             <span className="text-[11px] uppercase tracking-widest text-neon font-black">{formatUsdDisplay(otherWalletValueUsd)}</span>
           </div>
@@ -589,7 +589,7 @@ export default function PortfolioPage() {
           <div className="flex items-center justify-between mb-4">
             <div>
               <h2 className="text-xl font-black tracking-tight">Song Coins</h2>
-              <p className="text-mute text-xs mt-1">Indexed from song-daq song-coin positions and on-platform holdings.</p>
+              <p className="text-mute text-xs mt-1">Indexed from SONG·DAQ song-coin positions and on-platform holdings.</p>
             </div>
           </div>
           <div className="space-y-2">
@@ -608,7 +608,7 @@ export default function PortfolioPage() {
                 </div>
               </Link>
             )) : (
-              <Empty icon={<Music2 size={18} />} title="No Song Coins Found" text="Song-coin positions will appear here after you buy or receive them on song-daq." />
+              <Empty icon={<Music2 size={18} />} title="No Song Coins Found" text="Song-coin positions will appear here after you buy or receive them on SONG·DAQ." />
             )}
           </div>
         </div>
@@ -809,7 +809,7 @@ function PortfolioPerformanceChart({
         </div>
       </div>
       <p className={`mt-2 text-xs leading-relaxed text-mute ${compact ? "hidden" : "hidden md:block"}`}>
-        This chart combines wallet value, AUDIO, Song Coins, Artist Coins, and indexed song-daq positions when data is available. If historical wallet data is still syncing, song-daq anchors the chart to the current portfolio value.
+        This chart combines wallet value, AUDIO, Song Coins, Artist Coins, and indexed SONG·DAQ positions when data is available. If historical wallet data is still syncing, SONG·DAQ anchors the chart to the current portfolio value.
       </p>
     </section>
   );

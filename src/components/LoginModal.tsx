@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSession, useUI } from "@/lib/store";
+import { useSession, useUI, type AudiusProfile } from "@/lib/store";
 import {
   WALLETS,
   connectWallet,
@@ -37,6 +37,20 @@ function requestedRoleFromUrl(audius: unknown): Role {
   if (typeof window === "undefined") return audius ? "ARTIST" : "INVESTOR";
   const requestedRole = new URLSearchParams(window.location.search).get("walletRole");
   return requestedRole === "ARTIST" || audius ? "ARTIST" : "INVESTOR";
+}
+
+function audiusHandoffParams(audius?: AudiusProfile | null) {
+  const params: Record<string, string> = {};
+  if (!audius?.handle) return params;
+  params.audiusHandle = audius.handle;
+  if (audius.userId) params.audiusUserId = audius.userId;
+  if (audius.name) params.audiusName = audius.name;
+  return params;
+}
+
+function audiusHandleFromUrl() {
+  if (typeof window === "undefined") return "";
+  return (new URLSearchParams(window.location.search).get("audiusHandle") || "").replace(/^@/, "").trim();
 }
 
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 12_000) {
@@ -75,6 +89,23 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
   useWalletDiscoveryVersion();
   const mobileWallet = isOpen && isMobileWalletBrowser();
   const mobileAudiusOAuth = isOpen && isMobileAudiusOAuthBrowser();
+
+  const restoreAudiusFromWalletHandoff = useCallback(async () => {
+    if (audius) return audius;
+    const handle = audiusHandleFromUrl();
+    if (!handle) return null;
+    try {
+      const r = await fetchWithTimeout(`/api/audius/profile?handle=${encodeURIComponent(handle)}`, { cache: "no-store" }, 6_500);
+      const j = await safeJson(r);
+      if (!r.ok || !(j as any)?.profile) return null;
+      const profile = (j as any).profile as AudiusProfile;
+      setSession({ audius: profile });
+      setUserMode("ARTIST");
+      return profile;
+    } catch {
+      return null;
+    }
+  }, [audius, setSession, setUserMode]);
 
   // Reset on open
   useEffect(() => {
@@ -138,10 +169,13 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     setErr(null);
     try {
       const r = await connectWallet(id);
-      setSession({ address: r.address, kind: r.kind, provider: r.provider });
-      const artistContext = role === "ARTIST" || !!audius;
-      if (artistContext && audius) {
-        linkAudiusInBackground({ wallet: r.address, walletType: r.kind, profile: audius, role: "ARTIST" });
+      const artistContext = role === "ARTIST" || !!audius || !!audiusHandleFromUrl();
+      const profileForLink = artistContext ? await restoreAudiusFromWalletHandoff() : audius;
+      setSession(profileForLink
+        ? { address: r.address, kind: r.kind, provider: r.provider, audius: profileForLink }
+        : { address: r.address, kind: r.kind, provider: r.provider });
+      if (artistContext && profileForLink) {
+        linkAudiusInBackground({ wallet: r.address, walletType: r.kind, profile: profileForLink, role: "ARTIST" });
         setUserMode("ARTIST");
         setStep("DONE");
       } else {
@@ -154,18 +188,21 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
           url.searchParams.delete("walletConnectSource");
           url.searchParams.delete("walletConnectAt");
           url.searchParams.delete("walletRole");
+          url.searchParams.delete("audiusHandle");
+          url.searchParams.delete("audiusUserId");
+          url.searchParams.delete("audiusName");
           window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
         }
       }
     } catch (e: any) {
       reportWalletError("wallet_connect_failed", e, id, address).catch(() => {});
       setErr(e.message ?? String(e));
-      console.error("song-daq wallet connect failed", e);
-      console.info("song-daq wallet diagnostics", walletDiagnosticsSnapshot());
+      console.error("SONG·DAQ wallet connect failed", e);
+      console.info("SONG·DAQ wallet diagnostics", walletDiagnosticsSnapshot());
     } finally {
       setBusy(null);
     }
-  }, [role, audius, setSession, setUserMode]);
+  }, [role, audius, restoreAudiusFromWalletHandoff, setSession, setUserMode]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -258,7 +295,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
               {step === "ROLE" && (
                 <motion.div key="role" {...fade} className="space-y-5">
                   <div className="text-center">
-                    <h2 className="text-2xl font-semibold tracking-tight">Welcome to song-daq</h2>
+                    <h2 className="text-2xl font-semibold tracking-tight">Welcome to SONG·DAQ</h2>
                     <p className="text-mute text-base mt-1">How would you like to participate?</p>
                   </div>
                   <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-3">
@@ -293,12 +330,12 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
                   </div>
                   <div className="space-y-2">
                     {WALLETS.map(w => (
-                      <WalletRow key={w.id} w={w} role={role ?? "INVESTOR"} busy={busy === w.id} onConnect={() => handleWallet(w.id)} />
+                      <WalletRow key={w.id} w={w} role={role ?? "INVESTOR"} audius={audius} busy={busy === w.id} onConnect={() => handleWallet(w.id)} />
                     ))}
                   </div>
                   {mobileWallet && (
                     <div className="rounded-xl border border-edge bg-panel2 px-3 py-2 text-[12px] font-bold leading-relaxed text-mute">
-                      On mobile, external wallets connect from inside the wallet app browser. Tap a wallet to open song-daq there, then tap Connect again.
+                      On mobile, external wallets connect from inside the wallet app browser. Tap a wallet to open SONG·DAQ there, then tap Connect again.
                     </div>
                   )}
                   {err && <ErrorBanner message={err} />}
@@ -408,11 +445,14 @@ function RoleCard({ icon, label, desc, color, onClick }: {
   );
 }
 
-function WalletRow({ w, role, busy, onConnect }: { w: any; role: Role; busy: boolean; onConnect: () => void }) {
+function WalletRow({ w, role, audius, busy, onConnect }: { w: any; role: Role; audius?: AudiusProfile | null; busy: boolean; onConnect: () => void }) {
   const installed = w.installed();
   const openMobile = shouldOpenMobileWalletBrowser(w.id);
+  const handoffParams = role === "ARTIST"
+    ? { walletRole: role, ...audiusHandoffParams(audius) }
+    : { walletRole: role };
   const action = openMobile
-    ? () => openMobileWalletBrowser(w.id, mobileWalletTargetUrl(w.id, undefined, { walletRole: role }) ?? undefined)
+    ? () => openMobileWalletBrowser(w.id, mobileWalletTargetUrl(w.id, undefined, handoffParams) ?? undefined)
     : installed
       ? onConnect
       : () => window.open(w.installUrl, "_blank");
@@ -465,7 +505,7 @@ function AudiusStep({ busy, err, onOAuth, mobileOAuth }: {
 
       <p className="text-sm text-mute leading-relaxed">
         {mobileOAuth
-          ? "You can switch to your email app for the Audius code, then return here. song-daq saves the login state and finishes on the callback page."
+          ? "You can switch to your email app for the Audius code, then return here. SONG·DAQ saves the login state and finishes on the callback page."
           : "OAuth opens Audius in a popup. Your public profile and Audius-linked wallet are attached only after the Audius sign-in succeeds."}
       </p>
 

@@ -86,7 +86,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
   const audiusVisibility =
     launchKind === "ARTIST"
       ? "Audius-visible Open Audio Artist Coin"
-      : "song-daq song coin linked to Audius catalog";
+      : "SONG·DAQ song coin linked to Audius catalog";
 
   // Step 1: track selection
   const [tracks, setTracks] = useState<AudiusTrack[]>([]);
@@ -404,7 +404,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       });
       setResult(r);
       setLiquidityStage("preparing");
-      setLiquidityMessage("Coin created. Now song-daq is preparing launch liquidity so fans can buy and sell it.");
+      setLiquidityMessage("Coin created. Now SONG·DAQ is preparing launch liquidity so fans can buy and sell it.");
 
       let liquidityTxSig: string | null = null;
       let liquidityPrep: {
@@ -437,7 +437,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         liquidityTxSig = await sendSerializedTransaction(walletId as WalletId, prep.transaction);
 
         setLiquidityStage("confirming");
-        setLiquidityMessage("Liquidity transaction sent. Solana and the pool router may need a moment to index it, so song-daq is verifying before opening trading to fans.");
+        setLiquidityMessage("Liquidity transaction sent. Solana and the pool router may need a moment to index it, so SONG·DAQ is verifying before opening trading to fans.");
         let live: any = null;
         let lastLiquidityError: any = null;
         for (let attempt = 0; attempt < 10; attempt++) {
@@ -465,7 +465,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         if (!live) {
           setLiquidityStage("confirming");
           setLiquidityMessage(
-            `Liquidity transaction was sent, but song-daq is still waiting for the pool to index. Transaction: ${liquidityTxSig}. Refresh the coin page in a moment if it does not switch to live automatically.`,
+            `Liquidity transaction was sent, but SONG·DAQ is still waiting for the pool to index. Transaction: ${liquidityTxSig}. Refresh the coin page in a moment if it does not switch to live automatically.`,
           );
           setResult({
             ...r,
@@ -489,7 +489,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
         if (liquidityTxSig) {
           setLiquidityStage("confirming");
           setLiquidityMessage(
-            `Liquidity transaction was sent, but song-daq could not finish verification yet. Transaction: ${liquidityTxSig}. This usually means Solana or the pool router is still indexing it.`,
+            `Liquidity transaction was sent, but SONG·DAQ could not finish verification yet. Transaction: ${liquidityTxSig}. This usually means Solana or the pool router is still indexing it.`,
           );
           setResult({
             ...r,
@@ -536,7 +536,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       launch: {
         mintTx: `paper_launch_${now.toString(36)}`,
         tradingStatus: "PAPER",
-        metadataUri: "paper://song-daq/demo-launch",
+        metadataUri: "paper://SONG·DAQ/demo-launch",
       },
     });
     onLaunched?.();
@@ -607,7 +607,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
     } catch (e: any) {
       setErr(e?.message ?? "Artist Coin launch failed");
       setLiquidityStage("failed");
-      setLiquidityMessage("Artist Coin launch did not complete. No live song-daq market opens until the transaction is confirmed.");
+      setLiquidityMessage("Artist Coin launch did not complete. No live SONG·DAQ market opens until the transaction is confirmed.");
     } finally {
       setBusy(false);
     }
@@ -625,7 +625,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
     }
     setImportBusy(true);
     setErr(null);
-    setImportMessage("Checking the Audius coin list and preparing the song-daq market page.");
+    setImportMessage("Checking the Audius coin list and preparing the SONG·DAQ market page.");
     try {
       if (audius) {
         const link = await fetch("/api/audius/link", {
@@ -650,8 +650,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       });
       setResult(imported);
       setLiquidityStage("live");
-      setLiquidityMessage("Imported from Audius/Open Audio. song-daq now has the coin page, trading context, portfolio record, royalty setup, and admin tracking.");
-      setImportMessage("Imported. Open the token detail page to manage the song-daq side.");
+      setLiquidityMessage("Imported from Audius/Open Audio. SONG·DAQ now has the coin page, trading context, portfolio record, royalty setup, and admin tracking.");
+      setImportMessage("Imported. Open the token detail page to manage the SONG·DAQ side.");
       setStep(5);
       onLaunched?.();
     } catch (e: any) {
@@ -717,7 +717,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
           onClick={() => { setLaunchKind("SONG"); setLiquidityPairAsset("SOL"); setBasePrice(0.001); setCurveSlope(0.0000005); setStep(1); setErr(null); }}
           className={`rounded-xl px-4 py-3 text-[11px] uppercase tracking-widest font-black transition ${launchKind === "SONG" ? "bg-neon/15 text-neon border border-neon/25" : "text-mute hover:text-ink"}`}
         >
-          Song Coin · song-daq
+          Song Coin · SONG·DAQ
         </button>
         <button
           type="button"
@@ -731,7 +731,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
       <div className="relative z-10 rounded-2xl border border-edge bg-panel p-4">
         <div className="text-[11px] uppercase tracking-widest font-black text-mute">Audius sync</div>
         <p className="mt-2 text-xs leading-relaxed text-mute">
-          Audius/Open Audio coins launched on Audius can be imported into song-daq by mint address. Coins launched on song-daq show on Audius only when they use the official Open Audio Artist Coin path: $AUDIO quote, Meteora bonding curve, 1B supply, 9 decimals, and artist vesting. Custom song coins stay visible in song-daq while linking back to the Audius track and artist.
+          Audius/Open Audio coins launched on Audius can be imported into SONG·DAQ by mint address. Coins launched on SONG·DAQ show on Audius only when they use the official Open Audio Artist Coin path: $AUDIO quote, Meteora bonding curve, 1B supply, 9 decimals, and artist vesting. Custom song coins stay visible in SONG·DAQ while linking back to the Audius track and artist.
         </p>
       </div>
 
@@ -741,7 +741,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
           <div className="min-w-0">
             <div className="text-[11px] uppercase tracking-widest font-black">Audius wallet recognized</div>
             <div className="mt-1 text-xs leading-relaxed text-violet/85">
-              song-daq can use your Audius wallet for artist identity, imported Audius/Open Audio coins, and coin setup records. A live Solana mint still needs an external wallet signature until Open Audio exposes an in-app signing bridge for third-party apps.
+              SONG·DAQ can use your Audius wallet for artist identity, imported Audius/Open Audio coins, and coin setup records. A live Solana mint still needs an external wallet signature until Open Audio exposes an in-app signing bridge for third-party apps.
             </div>
             <div className="mt-3 flex flex-wrap items-center gap-2">
               <span className="rounded-xl border border-violet/25 bg-panel px-3 py-2 font-mono text-[11px] text-ink">
@@ -795,7 +795,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <div className="rounded-2xl border border-violet/25 bg-violet/10 p-4">
                       <div className="text-[11px] uppercase tracking-widest font-black text-violet">Two-way Audius sync</div>
                       <p className="mt-2 text-xs leading-relaxed text-violet/85">
-                        Launch an Artist Coin here with the Open Audio path and it is built for Audius/Open Audio indexing. If you already launched on Audius, paste the official mint here and song-daq will build the coin page, chart, portfolio, royalty setup, admin tracking, and trading context around it.
+                        Launch an Artist Coin here with the Open Audio path and it is built for Audius/Open Audio indexing. If you already launched on Audius, paste the official mint here and SONG·DAQ will build the coin page, chart, portfolio, royalty setup, admin tracking, and trading context around it.
                       </p>
                       <div className="mt-4 grid gap-2 sm:grid-cols-[1fr_auto]">
                         <input
@@ -822,7 +822,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                         >
                           Open Audius Coins
                         </a>
-                        <span className="text-[11px] leading-relaxed text-mute">Audius → song-daq works by import. song-daq → Audius works when the launch uses the Open Audio Artist Coin standard.</span>
+                        <span className="text-[11px] leading-relaxed text-mute">Audius → SONG·DAQ works by import. SONG·DAQ → Audius works when the launch uses the Open Audio Artist Coin standard.</span>
                       </div>
                       {importMessage && <div className="mt-3 text-xs font-bold text-neon">{importMessage}</div>}
                     </div>
@@ -961,7 +961,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                           <LaunchMetric
                             k="Reserve"
                             v={`${(reserveBps / 100).toFixed(0)}%`}
-                            help="Reserve coins are not sent to the artist wallet. They stay in the song-daq reserve/treasury for future liquidity support, royalty pool mechanics, or admin-controlled platform operations."
+                            help="Reserve coins are not sent to the artist wallet. They stay in the SONG·DAQ reserve/treasury for future liquidity support, royalty pool mechanics, or admin-controlled platform operations."
                           />
                           <LaunchMetric
                             k="Wallet cap"
@@ -1042,7 +1042,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 <div className="rounded-xl border border-violet/20 bg-violet/10 p-3 text-xs leading-relaxed text-violet/85">
                     {launchKind === "ARTIST"
                       ? "Audius-style artist coins use a 1B supply, 9 decimals, $AUDIO quote asset, Meteora bonding curve, and 50% creator vesting. This is the path that can show on Audius/Open Audio after indexing."
-                      : "Song Coins are tied to one Audius track and show in song-daq. They use Audius catalog metadata, but they are not automatically listed on Audius unless Open Audio adds song-level coin indexing."}
+                      : "Song Coins are tied to one Audius track and show in SONG·DAQ. They use Audius catalog metadata, but they are not automatically listed on Audius unless Open Audio adds song-level coin indexing."}
                   </div>
                   <div className="space-y-2">
                     <label className="text-[11px] uppercase tracking-widest font-bold text-mute px-1">Settlement Distributor</label>
@@ -1236,11 +1236,11 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                 <Row k="Market source" v={launchKind === "ARTIST" ? "Meteora Dynamic Bonding Curve" : "Public pool approval"} help="This tells you where fans will buy. The public pool or curve is the market, not a hidden artist wallet." />
                 <Row
                   k="Audius visibility"
-                  v={launchKind === "ARTIST" ? "Indexes on Audius/Open Audio" : "song-daq only"}
+                  v={launchKind === "ARTIST" ? "Indexes on Audius/Open Audio" : "SONG·DAQ only"}
                   color={launchKind === "ARTIST" ? "text-neon" : "text-amber"}
                   help={launchKind === "ARTIST"
                     ? "This uses the official Open Audio Artist Coin shape, so it is designed to appear in Audius/Open Audio coin lists after indexing."
-                    : "This is a song-level song-daq coin linked to an Audius track. It can be traded here, but Audius may not list custom song coins on its own app."}
+                    : "This is a song-level SONG·DAQ coin linked to an Audius track. It can be traded here, but Audius may not list custom song coins on its own app."}
                 />
                 <Row k="Trust lock" v={launchKind === "ARTIST" ? "50% creator vesting over 5 years" : `${liquidityLockDays} days required`} color="text-neon" help="A lock or vesting schedule helps show fans the launch is not just a quick sellout by the artist." />
                 <div className="pt-1 text-[11px] uppercase tracking-widest text-mute">{fiatAge}</div>
@@ -1291,7 +1291,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <Row k="Market" v={launchKind === "ARTIST" ? `Meteora DBC vs $AUDIO · ${formatCryptoWithFiat(liquidityPairAmount, "AUDIO", creatorFirstBuyUsd, currency)}` : `${fmtNum(liquidityTokenAmount)} coins + ${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)}`} color="text-neon" />
                       <Row
                         k="Audius sync"
-                        v={launchKind === "ARTIST" ? "Can appear on Audius after indexing" : "Visible on song-daq, linked to Audius track"}
+                        v={launchKind === "ARTIST" ? "Can appear on Audius after indexing" : "Visible on SONG·DAQ, linked to Audius track"}
                         color={launchKind === "ARTIST" ? "text-neon" : "text-amber"}
                       />
                       <Row k="Estimated setup + network" v={formatCryptoWithFiat(estimatedSetupRentSol, "SOL", estimatedSetupRentUsd, currency)} />
@@ -1325,7 +1325,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <div className="text-[11px] uppercase tracking-widest font-black text-white">Wallet approval preview</div>
                       <div className="space-y-3 text-xs leading-relaxed text-mute">
                         <div>
-                          <span className="font-black text-neon">Approval 1:</span> {launchKind === "ARTIST" ? "creates the Artist Coin pool on Meteora Dynamic Bonding Curve using the AUDIO quote mint." : `creates the SPL mint, attaches song-daq metadata, mints ${fmtNum(artistVestedTokenAmount)} artist-hold coins plus ${fmtNum(launchLiquidityTokenAmount)} liquidity-staging coins to your wallet, sends ${fmtNum(reserveTokenAmount)} reserve coins to treasury, disables freeze authority, and revokes mint authority.`}
+                          <span className="font-black text-neon">Approval 1:</span> {launchKind === "ARTIST" ? "creates the Artist Coin pool on Meteora Dynamic Bonding Curve using the AUDIO quote mint." : `creates the SPL mint, attaches SONG·DAQ metadata, mints ${fmtNum(artistVestedTokenAmount)} artist-hold coins plus ${fmtNum(launchLiquidityTokenAmount)} liquidity-staging coins to your wallet, sends ${fmtNum(reserveTokenAmount)} reserve coins to treasury, disables freeze authority, and revokes mint authority.`}
                         </div>
                         <div>
                           <span className="font-black text-neon">{launchKind === "ARTIST" ? "Optional first buy:" : "Approval 2:"}</span> {launchKind === "ARTIST" ? `if entered, your wallet also buys with ${formatCryptoWithFiat(liquidityPairAmount || 0, "AUDIO", creatorFirstBuyUsd, currency)} in the same launch flow.` : `creates the public liquidity pool with the coin amount and ${formatCryptoWithFiat(liquidityPairAmount, liquidityPairAsset, liquidityPairUsd, currency)} shown here. Total estimated wallet spend: ${formatFiatEstimate(estimatedTotalSpendUsd, currency)}.`}
@@ -1368,8 +1368,8 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                   <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-left text-xs leading-relaxed text-neon/85">
                     <div className="mb-1 text-[11px] uppercase tracking-widest font-black text-neon">{fiatAge}</div>
                     {launchKind === "ARTIST"
-                      ? "Open Audio Artist Coins use a $AUDIO-paired public bonding curve plus artist vesting. Your wallet signs the live transaction and song-daq shows the real wallet or backend result."
-                      : "Audius-style launches use a public market curve plus artist vesting. Your wallet signs the live transaction and song-daq shows the real wallet or backend result."}
+                      ? "Open Audio Artist Coins use a $AUDIO-paired public bonding curve plus artist vesting. Your wallet signs the live transaction and SONG·DAQ shows the real wallet or backend result."
+                      : "Audius-style launches use a public market curve plus artist vesting. Your wallet signs the live transaction and SONG·DAQ shows the real wallet or backend result."}
                   </div>
                   <button
                     type="button"
@@ -1410,7 +1410,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <h3 className="text-2xl font-black tracking-tighter text-white uppercase">Market Created</h3>
                     <div className="text-mute text-sm font-medium">
                       {result.launch?.mintTx === "Imported from Audius/Open Audio"
-                        ? `Successfully imported ${result.song?.symbol} into song-daq.`
+                        ? `Successfully imported ${result.song?.symbol} into SONG·DAQ.`
                         : `Successfully minted ${result.song?.symbol} on Solana.`}
                     </div>
                     <div className="text-mute font-mono text-[11px] break-all">{result.song?.mintAddress}</div>
@@ -1423,7 +1423,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     <div className="rounded-xl border border-neon/20 bg-neon/10 p-3 text-xs leading-relaxed text-neon">
                       {launchKind === "ARTIST"
                         ? "This launch used the Open Audio Artist Coin path, so it is built for Audius/Open Audio coin indexing. Indexing can take a little time after the transaction confirms."
-                        : "Wallet visibility metadata is attached on-chain. This song-daq song coin is linked to Audius catalog data, but Audius may not list custom song coins in its own app yet."}
+                        : "Wallet visibility metadata is attached on-chain. This SONG·DAQ song coin is linked to Audius catalog data, but Audius may not list custom song coins in its own app yet."}
                     </div>
                     <div className={`rounded-xl border p-3 text-xs leading-relaxed ${
                       liquidityStage === "live"
@@ -1435,7 +1435,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                       <div className="mb-1 text-[11px] uppercase tracking-widest font-black">
                         {liquidityStage === "live" ? "Liquidity live" : liquidityStage === "failed" ? "Liquidity still needed" : "Liquidity setup running"}
                       </div>
-                      {liquidityMessage || "song-daq is preparing the launch liquidity step."}
+                      {liquidityMessage || "SONG·DAQ is preparing the launch liquidity step."}
                     </div>
                     <div className="rounded-xl border border-edge bg-panel p-3 text-left text-xs leading-relaxed text-mute">
                       Fans buy from the liquidity pool, not from a hidden artist wallet. The artist hold is separate. The launch-liquidity portion moves into the public pool with paired SOL, USDC, or AUDIO so buyers have a market to trade against.
@@ -1711,8 +1711,8 @@ function LaunchSuccessChecklist({
     ["Coin minted", Boolean(result?.song?.mintAddress), "The token mint exists and can be inspected by wallet or explorer."],
     ["Metadata live", Boolean(result?.launch?.metadataUri || result?.song?.mintAddress), "Name, symbol, image, description, and trust details are attached."],
     ["Liquidity added", liquidityStage === "live", "Liquidity is the public market money that lets fans buy and sell."],
-    ["Market page visible", Boolean(result?.song?.id), "The coin can be opened from song-daq and indexed into market views."],
-    ["Portfolio visible", Boolean(result?.song?.mintAddress), "Wallet/portfolio indexing can now resolve this mint as a song-daq asset."],
+    ["Market page visible", Boolean(result?.song?.id), "The coin can be opened from SONG·DAQ and indexed into market views."],
+    ["Portfolio visible", Boolean(result?.song?.mintAddress), "Wallet/portfolio indexing can now resolve this mint as a SONG·DAQ asset."],
     ["Splits optional", true, launchKind === "ARTIST" ? "Royalty split setup can be completed after launch." : "Song royalty split setup can be added later from the coin or artist page."],
   ] as const;
 

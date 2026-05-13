@@ -71,7 +71,7 @@ export async function GET() {
       updatedAt: new Date().toISOString(),
       sources: [
         "Audius live music tokens",
-        ...(localSongCoins.length ? ["song-daq launched song coins"] : []),
+        ...(localSongCoins.length ? ["SONG·DAQ launched song coins"] : []),
       ],
       databaseAvailable: canUseDatabaseForStats(),
     };

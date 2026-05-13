@@ -36,21 +36,21 @@ const SYNCING_TICKS: NewsTick[] = [
     category: "TRENDING",
     title: "Syncing live song coin, artist coin, and Open Audio market data",
     link: "/market",
-    source: "song-daq",
+    source: "SONG·DAQ",
   },
   {
     kind: "news",
     category: "MUSIC",
     title: "Music news and creator market intelligence are loading",
     link: "/social",
-    source: "song-daq",
+    source: "SONG·DAQ",
   },
   {
     kind: "news",
     category: "TECH",
     title: "Wallet, liquidity, and price feeds are refreshing",
     link: "/portfolio",
-    source: "song-daq",
+    source: "SONG·DAQ",
   },
 ];
 

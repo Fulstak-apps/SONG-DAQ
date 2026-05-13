@@ -50,7 +50,7 @@ export default function AdminLoginPage() {
           <Lock size={20} />
         </div>
         <div>
-          <div className="text-[11px] uppercase tracking-[0.28em] font-black text-mute">song-daq admin</div>
+          <div className="text-[11px] uppercase tracking-[0.28em] font-black text-mute">SONG·DAQ admin</div>
           <h1 className="mt-2 text-3xl font-black text-ink">Operations Login</h1>
           <p className="mt-2 text-sm text-mute leading-relaxed">
             Admin access is protected by server-side credentials and role checks. The subtle Support-page Admin link is only a doorway, not security.

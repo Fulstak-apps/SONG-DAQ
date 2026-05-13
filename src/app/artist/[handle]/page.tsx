@@ -236,7 +236,7 @@ export default function ArtistProfilePage() {
             <div className="rounded-xl border border-edge bg-panel p-5">
               <div className="text-lg font-black text-white">No Artist Token yet</div>
               <p className="text-sm text-mute mt-2 leading-relaxed">
-                This artist is live on Audius, but song-daq does not currently list an Artist Token or Song Coin for them.
+                This artist is live on Audius, but SONG·DAQ does not currently list an Artist Token or Song Coin for them.
               </p>
               <div className="mt-4 rounded-lg bg-violet/10 border border-violet/20 p-3 text-xs text-violet/90 leading-relaxed">
                 Upcoming-token information will appear here when the artist connects their Audius login or submits a launch.

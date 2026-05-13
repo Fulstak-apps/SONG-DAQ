@@ -14,7 +14,7 @@ export default function ArtistOnboardingPage() {
     <main className="space-y-6">
       <section className="panel-elevated p-6 md:p-10 space-y-4">
         <div className="text-[11px] uppercase tracking-[0.3em] font-black text-neon">Artist onboarding</div>
-        <h1 className="text-4xl md:text-6xl font-black text-ink">Launch a song coin on song-daq</h1>
+        <h1 className="text-4xl md:text-6xl font-black text-ink">Launch a song coin on SONG·DAQ</h1>
         <p className="max-w-3xl text-mute leading-relaxed">
           This walkthrough separates the two money systems: launch liquidity gets the coin live, and royalty activity can support the coin after launch once distributor splits are verified.
         </p>

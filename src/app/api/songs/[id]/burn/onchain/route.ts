@@ -78,7 +78,7 @@ export async function POST(req: NextRequest, ctx: { params: { id: string } }) {
       payerKey: owner,
       recentBlockhash: latest.blockhash,
       instructions: [
-        memo(`song-daq burn: permanently destroy ${uiAmount.toLocaleString()} $${song.symbol}.`),
+        memo(`SONG·DAQ burn: permanently destroy ${uiAmount.toLocaleString()} $${song.symbol}.`),
         createBurnInstruction(source, mint, owner, rawAmount, [], TOKEN_PROGRAM_ID),
       ],
     }).compileToV0Message();

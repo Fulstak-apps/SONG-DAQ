@@ -175,7 +175,7 @@ function MarketPrimer({ onConnect }: { onConnect: () => void }) {
     {
       icon: <Music size={18} />,
       title: "Artists connect Audius first",
-      text: "Artist mode starts with your Audius identity. If your Audius profile has a Solana wallet, song-daq can use it; external wallets are optional.",
+      text: "Artist mode starts with your Audius identity. If your Audius profile has a Solana wallet, SONG·DAQ can use it; external wallets are optional.",
       tone: "text-violet border-violet/20 bg-violet/8",
     },
     {
@@ -707,7 +707,7 @@ export default function DiscoveryEngine() {
           <div className="flex w-full flex-wrap items-center gap-1.5 xl:w-auto">
             {[
               ["all", "All Sources"],
-              ["songdaq", "song-daq"],
+              ["songdaq", "SONG·DAQ"],
               ["open_audio", "Audius"],
               ["mine", "My Coins"],
             ].map(([id, label]) => (
@@ -758,9 +758,9 @@ export default function DiscoveryEngine() {
                 animate={{ opacity: 1 }}
                 className="grid grid-cols-2 md:grid-cols-4 gap-3"
               >
-                <Stat k="Listed" v={fmtNum(coins.length)} tooltip="Public Open Audio/Audius market coins plus any song-daq coins launched through this app." />
-                <Stat k="Combined Public Value" v={`$${fmtNum(coinTotals.cap)}`} tooltip="Combined public-market value for Open Audio listings and song-daq launches currently visible here." />
-                <Stat k="24h Volume" v={`$${fmtNum(coinTotals.vol)}`} tooltip="Total dollar volume from the public coin index and local song-daq market records." />
+                <Stat k="Listed" v={fmtNum(coins.length)} tooltip="Public Open Audio/Audius market coins plus any SONG·DAQ coins launched through this app." />
+                <Stat k="Combined Public Value" v={`$${fmtNum(coinTotals.cap)}`} tooltip="Combined public-market value for Open Audio listings and SONG·DAQ launches currently visible here." />
+                <Stat k="24h Volume" v={`$${fmtNum(coinTotals.vol)}`} tooltip="Total dollar volume from the public coin index and local SONG·DAQ market records." />
                 <Stat k="Holders" v={fmtNum(coinTotals.holders)} tooltip="Total unique holder count reported by the public coin index where available." />
               </motion.section>
             ) : (

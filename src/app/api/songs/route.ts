@@ -332,9 +332,9 @@ export async function POST(req: NextRequest) {
         walletVisibility: {
           metaplexMetadataAttached: true,
           stableMetadataUri: true,
-          source: "song-daq + Audius",
+          source: "SONG·DAQ + Audius",
           phantomMayStillHideNewTokens: true,
-          openAudioModel: "Audius-style artist coins use a public $AUDIO market curve and creator vesting. song-daq opens trading after verified liquidity exists.",
+          openAudioModel: "Audius-style artist coins use a public $AUDIO market curve and creator vesting. SONG·DAQ opens trading after verified liquidity exists.",
         },
       }),
     },

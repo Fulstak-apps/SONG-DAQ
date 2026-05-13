@@ -41,7 +41,7 @@ export function createLaunchMemo(symbol: string) {
     keys: [],
     programId: MEMO_PROGRAM_ID,
     data: Buffer.from(
-      `song-daq Open Audio Artist Coin: $${sanitizeArtistCoinSymbol(symbol)}. AUDIO-paired Meteora bonding curve, 1B supply, 9 decimals, 50% artist vesting.`,
+      `SONG·DAQ Open Audio Artist Coin: $${sanitizeArtistCoinSymbol(symbol)}. AUDIO-paired Meteora bonding curve, 1B supply, 9 decimals, 50% artist vesting.`,
       "utf8",
     ),
   });
@@ -62,7 +62,7 @@ export async function buildOpenAudioArtistCoinLaunchTransaction({
 }) {
   const readiness = openAudioArtistCoinReadiness();
   if (!readiness.configured) {
-    throw new Error("OPEN_AUDIO_ARTIST_COIN_CONFIG is required before song-daq can launch official AUDIO-paired Artist Coins.");
+    throw new Error("OPEN_AUDIO_ARTIST_COIN_CONFIG is required before SONG·DAQ can launch official AUDIO-paired Artist Coins.");
   }
 
   const [{ DynamicBondingCurveClient, deriveDbcPoolAddress }, { default: BNModule }] = await Promise.all([

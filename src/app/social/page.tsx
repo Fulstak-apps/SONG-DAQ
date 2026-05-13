@@ -178,7 +178,7 @@ export default function SocialPage() {
           <div className="text-sm">Try a different category filter or check back soon.</div>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-4 auto-rows-auto gap-3">
+        <div className="grid grid-cols-1 items-start gap-3 md:grid-cols-4">
           {lead && <StoryCard story={lead} variant="lead" />}
           {rest.map((story, i) => (
             <StoryCard
@@ -195,9 +195,9 @@ export default function SocialPage() {
 
 function StoryCard({ story, variant }: { story: NewsStory; variant: "lead" | "wide" | "tall" | "normal" }) {
   const className =
-    variant === "lead" ? "md:col-span-2 md:row-span-2" :
+    variant === "lead" ? "md:col-span-2" :
     variant === "wide" ? "md:col-span-2" :
-    variant === "tall" ? "md:row-span-2" :
+    variant === "tall" ? "" :
     "";
   const titleSize = variant === "lead" ? "text-xl sm:text-2xl md:text-3xl" : variant === "wide" ? "text-lg sm:text-xl md:text-2xl" : "text-base sm:text-lg";
   const img = story.thumbnail || categoryImage(story.category);

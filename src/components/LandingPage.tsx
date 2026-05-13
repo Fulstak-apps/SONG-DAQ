@@ -136,7 +136,7 @@ export function LandingPage() {
             transition={{ duration: 0.7, delay: 0.35 }}
             className="text-mute text-sm sm:text-base md:text-lg max-w-xl font-medium leading-relaxed mx-auto lg:mx-0"
           >
-            song-daq turns music into a clear market experience. Artists can launch music coins tied to an artist profile or a specific song. Fans can discover those markets, review price, liquidity, royalty status, artist momentum, and wallet costs, then buy or sell with the same kind of clarity they expect from a finance app.
+            SONG·DAQ turns music into a clear market experience. Artists can launch music coins tied to an artist profile or a specific song. Fans can discover those markets, review price, liquidity, royalty status, artist momentum, and wallet costs, then buy or sell with the same kind of clarity they expect from a finance app.
           </motion.p>
 
           <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
@@ -234,7 +234,7 @@ export function LandingPage() {
 
       <Section>
         <div className="text-center mb-12">
-          <div className="text-[11px] uppercase tracking-[0.3em] font-black text-mute mb-3">How song-daq Works</div>
+          <div className="text-[11px] uppercase tracking-[0.3em] font-black text-mute mb-3">How SONG·DAQ Works</div>
           <h2 className="text-3xl md:text-5xl font-black tracking-tight text-gradient-hero">Six steps to a song coin</h2>
         </div>
       </Section>
@@ -243,7 +243,7 @@ export function LandingPage() {
         <Section className="h-full" delay={0}><Step num={1} title="Upload" icon={<CloudUpload className="text-violet" size={34} />} desc="Start with a real Audius track, artwork, artist identity, and song metadata so the coin page does not feel empty." /></Section>
         <Section className="h-full" delay={0.05}><Step num={2} title="Distribute" icon={<Globe className="text-violet" size={34} />} desc="Release through your distributor so the song has proper rights, splits, ISRC/UPC data, and a royalty path." /></Section>
         <Section className="h-full" delay={0.1}><Step num={3} title="Launch Coin" icon={<CircleDollarSign className="text-violet" size={34} />} desc="Choose Artist Coin or Song Coin, set the ticker, use a preset, and review all crypto plus fiat costs before signing." active /></Section>
-        <Section className="h-full" delay={0.15}><Step num={4} title="Lock Splits" icon={<Lock className="text-neon" size={34} />} desc="After launch, add song-daq as a distributor split recipient so royalty activity can be verified later." /></Section>
+        <Section className="h-full" delay={0.15}><Step num={4} title="Lock Splits" icon={<Lock className="text-neon" size={34} />} desc="After launch, add SONG·DAQ as a distributor split recipient so royalty activity can be verified later." /></Section>
         <Section className="h-full" delay={0.2}><Step num={5} title="Verify" icon={<ShieldCheck className="text-violet" size={34} />} desc="Admin reviews the distributor split and updates the public royalty status only when the information matches." /></Section>
         <Section className="h-full" delay={0.25}><Step num={6} title="Fans Invest" icon={<Users className="text-violet" size={34} />} desc="Fans trade from the public pool, follow momentum, watch royalty updates, and track the position in portfolio." /></Section>
       </div>
@@ -369,10 +369,10 @@ export function LandingPage() {
                 Built to make coin launches and trades legible before anyone risks real money.
               </h3>
               <p className="mt-4 mb-8 text-base md:text-lg leading-relaxed text-mute max-w-2xl">
-                song-daq is designed so wallet approvals, artist identity, royalty status, liquidity protection, and contract visibility are understandable before anyone commits funds. The page should answer the trust questions first, not make you hunt for them in tiny hover states.
+                SONG·DAQ is designed so wallet approvals, artist identity, royalty status, liquidity protection, and contract visibility are understandable before anyone commits funds. The page should answer the trust questions first, not make you hunt for them in tiny hover states.
               </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <TrustCard title="Wallet approvals are required for every transaction" body="song-daq can prepare trades and launches, but user funds do not move unless the connected Solana wallet signs and approves the exact action." />
+                <TrustCard title="Wallet approvals are required for every transaction" body="SONG·DAQ can prepare trades and launches, but user funds do not move unless the connected Solana wallet signs and approves the exact action." />
                 <TrustCard title="Audius sign-in verifies artist identity" body="Artist launch access uses Sign in with Audius instead of pasted handles, reducing impersonation risk and tying the launch flow to a real public music identity." />
                 <TrustCard title="Locked split status is visible before trading" body="Coin pages and launch review screens show whether royalty split routing is locked, pending, or still unverified, so buyers can understand revenue status before they buy." />
                 <TrustCard title="Liquidity is required before launch" body="A token cannot go live, become tradable, or appear in the public market until starting liquidity is added and validated, so buyers are not dropped into a frozen market." />
@@ -686,7 +686,7 @@ function TrustCard({ title, body }: { title: string; body: string }) {
 function supportDetail(text: string) {
   const details: Record<string, string> = {
     "Minimum 10% royalty commitment required": "Artists must commit a meaningful royalty share before launch. That protects buyers from empty tokens and makes the asset tied to real music revenue.",
-    "Wallet approvals are required for every transaction": "song-daq can prepare transactions, but user funds do not move unless the connected Solana wallet signs and approves the action.",
+    "Wallet approvals are required for every transaction": "SONG·DAQ can prepare transactions, but user funds do not move unless the connected Solana wallet signs and approves the action.",
     "Audius sign-in verifies artist identity": "Artist launch access uses Sign in with Audius rather than pasted handles, reducing impersonation risk and tying launches to a real content identity.",
     "External wallets stay optional for artists": "Artists can use an Audius-linked wallet when available and attach a separate Solana wallet only when they deliberately choose to.",
     "Locked split status is visible before trading": "Coin pages and previews show whether royalty split routing is locked, pending, or unavailable so investors understand the revenue status.",
@@ -698,13 +698,13 @@ function supportDetail(text: string) {
     "On-chain transparency — verify everything": "Mint addresses, wallets, launch data, and market activity should be inspectable on Solana. The UI summarizes it, but the chain remains the source of truth.",
     "Artist tokens are vested (no rug pulls)": "Artist allocations should release over time instead of all at once. Vesting helps prevent instant dumping and makes incentives line up with long-term fan support.",
     "Suspicious coin monitoring": "Large holder changes, unusual activity, and identity mismatches should be highlighted so users can judge risk before buying.",
-    "Real-time audit of distributor accounts": "When distributor or Audius signals update, song-daq should surface those changes quickly so the market can react to real artist activity.",
+    "Real-time audit of distributor accounts": "When distributor or Audius signals update, SONG·DAQ should surface those changes quickly so the market can react to real artist activity.",
     "Liquidity is required before launch": "A token cannot go live until the artist adds starting liquidity. That gives fans a working market on day one and stops frozen launches from appearing as tradable assets.",
     "Liquidity lock settings are visible": "The launch flow captures lock duration and displays it publicly so buyers can see whether liquidity is protected or still vulnerable to removal.",
     "Artist wallet caps limit concentration": "Wallet-cap settings can stop one address from absorbing too much supply during launch and make it harder for a single buyer to dominate early trading.",
-    "Launch review happens before minting": "Before the mint is created, song-daq shows supply, allocation, price, liquidity, and warnings so the artist must acknowledge the risk settings they are putting on-chain.",
+    "Launch review happens before minting": "Before the mint is created, SONG·DAQ shows supply, allocation, price, liquidity, and warnings so the artist must acknowledge the risk settings they are putting on-chain.",
   };
-  return details[text] ?? `${text}. This control exists to make song-daq easier to understand before committing money.`;
+  return details[text] ?? `${text}. This control exists to make SONG·DAQ easier to understand before committing money.`;
 }
 
 function WinCard({ icon, title, items, color }: { icon: React.ReactNode; title: string; items: string[]; color: string }) {

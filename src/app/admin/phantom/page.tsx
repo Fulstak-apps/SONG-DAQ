@@ -15,7 +15,7 @@ export default function AdminPhantomPage() {
         <div className="text-[11px] uppercase tracking-[0.3em] font-black text-neon">Admin · wallet trust</div>
         <h1 className="text-4xl md:text-6xl font-black text-ink">Phantom review status</h1>
         <p className="max-w-3xl text-mute leading-relaxed">
-          Phantom/Blowfish can block a live domain before users ever see the transaction. song-daq pauses live signing until this page shows approved.
+          Phantom/Blowfish can block a live domain before users ever see the transaction. SONG·DAQ pauses live signing until this page shows approved.
         </p>
       </section>
 
@@ -29,14 +29,14 @@ export default function AdminPhantomPage() {
         <div className="panel p-6 space-y-4">
           <h2 className="text-2xl font-black text-ink flex items-center gap-2"><FileText size={20} /> What to send Phantom</h2>
           <div className="rounded-2xl border border-edge bg-panel2 p-4 text-sm leading-relaxed text-ink/85 space-y-3">
-            <p>Email <span className="font-mono text-neon">review@phantom.com</span> with the subject: <span className="font-mono">song-daq dApp review request</span>.</p>
+            <p>Email <span className="font-mono text-neon">review@phantom.com</span> with the subject: <span className="font-mono">SONG·DAQ dApp review request</span>.</p>
             <ul className="space-y-2">
               <li>Live URL: <span className="font-mono text-ink">{appUrl}</span></li>
               <li>Support contact: <span className="font-mono text-ink">admin@song-daq.com</span></li>
               <li>Short product description: music coin marketplace using Solana wallet signatures only for real launch, liquidity, and swap transactions.</li>
               <li>Clean screenshots/video of wallet connect, token launch preview, liquidity preview, buy/sell preview, and final confirmation screens.</li>
               <li>Example mint transaction, metadata URL, liquidity transaction, and swap transaction after test launch is available.</li>
-              <li>Confirmation that song-daq does not request private keys, seed phrases, unlimited approvals, or fake message signatures for trades.</li>
+              <li>Confirmation that SONG·DAQ does not request private keys, seed phrases, unlimited approvals, or fake message signatures for trades.</li>
             </ul>
           </div>
         </div>

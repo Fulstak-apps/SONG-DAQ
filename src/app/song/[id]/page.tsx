@@ -392,7 +392,7 @@ export default function SongTradingPage() {
           <Stat
             k="Burned"
             v={fmtNum(song.burnedSupply || song.supplyDistribution?.burnedSupply || 0)}
-            tooltip="Burned coins are permanently removed from supply. After a burn, song-daq updates total supply, artist hold, public pool, reserve, and portfolio values."
+            tooltip="Burned coins are permanently removed from supply. After a burn, SONG·DAQ updates total supply, artist hold, public pool, reserve, and portfolio values."
           />
           <Stat k="Reserve" v={`${fmtSol(song.reserveSol, 2)} SOL`} tooltip="Liquidity pool backing the bonding curve." />
           <Stat k="Royalty Pool" v={`${fmtSol(song.royaltyPool, 4)} SOL`} tooltip="Accumulated streaming royalties awaiting distribution." />
@@ -599,7 +599,7 @@ function SupplyDistributionPanel({ song }: { song: any }) {
           ))}
         </div>
         <p className="text-xs leading-relaxed text-mute">
-          When coins are burned, song-daq records the burn event, reduces indexed supply, updates the public value math, and refreshes the artist/public/reserve split shown here.
+          When coins are burned, SONG·DAQ records the burn event, reduces indexed supply, updates the public value math, and refreshes the artist/public/reserve split shown here.
         </p>
       </div>
     </div>
@@ -658,7 +658,7 @@ function TokenTrustPanel({ song, isTradable }: { song: any; isTradable: boolean 
         <div className="min-w-0">
           <div className="text-[11px] uppercase tracking-widest font-black text-neon">Token Trust Check</div>
           <p className="mt-1 text-xs leading-relaxed text-mute">
-            song-daq only opens trading after a real liquidity route is verified. Royalty status is separate from launch liquidity.
+            SONG·DAQ only opens trading after a real liquidity route is verified. Royalty status is separate from launch liquidity.
           </p>
         </div>
       </div>
@@ -680,7 +680,7 @@ function TokenTrustPanel({ song, isTradable }: { song: any; isTradable: boolean 
       }`}>
         {isTradable
           ? "Trading is enabled because launch liquidity is verified. Wallet approval should only appear for real on-chain swaps."
-          : "Trading needs launch liquidity before a real swap route can execute. If you try before a route exists, song-daq will show the actual router or backend error."}
+          : "Trading needs launch liquidity before a real swap route can execute. If you try before a route exists, SONG·DAQ will show the actual router or backend error."}
       </div>
     </div>
   );
@@ -719,7 +719,7 @@ function PendingLiquidityPanel({ song, isOwner = false }: { song: any; isOwner?:
           <div className="text-[11px] uppercase tracking-widest font-black text-orange-500">{status}</div>
           <h3 className="mt-1 text-lg font-black tracking-tight text-white">Trading route not live yet</h3>
           <p className="mt-2 text-xs text-mute leading-relaxed">
-            This Song Coin can be inspected on-chain, but song-daq will not enable buy or sell actions until the artist adds the reserved coins plus SOL/USDC into a verified liquidity pool.
+            This Song Coin can be inspected on-chain, but SONG·DAQ will not enable buy or sell actions until the artist adds the reserved coins plus SOL/USDC into a verified liquidity pool.
           </p>
         </div>
       </div>
@@ -982,7 +982,7 @@ function BurnTokensPanel({ song, onBurned }: { song: any; onBurned?: () => void 
         }
       }
       if (!verified) {
-        setStatus(`Burn transaction was sent, but song-daq is still waiting for confirmation. Transaction: ${sig}. Refresh in a moment.`);
+        setStatus(`Burn transaction was sent, but SONG·DAQ is still waiting for confirmation. Transaction: ${sig}. Refresh in a moment.`);
         setErr(lastError?.message || null);
         return;
       }
@@ -992,7 +992,7 @@ function BurnTokensPanel({ song, onBurned }: { song: any; onBurned?: () => void 
       onBurned?.();
     } catch (e: any) {
       if (sig) {
-        setStatus(`Burn transaction was sent, but song-daq could not finish verification yet. Transaction: ${sig}. Refresh in a moment.`);
+        setStatus(`Burn transaction was sent, but SONG·DAQ could not finish verification yet. Transaction: ${sig}. Refresh in a moment.`);
         setErr(e.message ?? null);
       } else {
         setErr(e.message ?? "Failed to burn tokens");
@@ -1137,7 +1137,7 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
         }
       }
       if (!verified) {
-        setStatus(`Liquidity transaction was sent, but song-daq is still waiting for router/indexer confirmation. Transaction: ${sig}. Refresh this page in a moment.`);
+        setStatus(`Liquidity transaction was sent, but SONG·DAQ is still waiting for router/indexer confirmation. Transaction: ${sig}. Refresh this page in a moment.`);
         setErr(lastError?.message || null);
         return;
       }
@@ -1145,7 +1145,7 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
       window.location.reload();
     } catch (e: any) {
       if (sig) {
-        setStatus(`Liquidity transaction was sent, but song-daq could not finish verification yet. Transaction: ${sig}. Refresh this page in a moment.`);
+        setStatus(`Liquidity transaction was sent, but SONG·DAQ could not finish verification yet. Transaction: ${sig}. Refresh this page in a moment.`);
         setErr(e.message ?? null);
       } else {
         setErr(e.message ?? "Failed to add liquidity");
@@ -1201,7 +1201,7 @@ function LiquidityTopUp({ song, mintLabel }: { song: any; mintLabel: string }) {
           <div className="rounded-xl border border-edge bg-panel p-3 text-xs text-mute">
             {hasExistingLiquidity
               ? "This adds another layer of market depth to the public pool. It can help fans buy and sell with less price jump, but it is still your money going into liquidity."
-              : "This sends the reserved launch coins plus paired SOL/USDC into the public pool. Once the transaction is verified, song-daq marks the coin live so fans can buy and sell."}
+              : "This sends the reserved launch coins plus paired SOL/USDC into the public pool. Once the transaction is verified, SONG·DAQ marks the coin live so fans can buy and sell."}
           </div>
           <div className="rounded-2xl border border-neon/25 bg-neon/10 p-4">
             <div className="flex items-center gap-1.5 text-[11px] uppercase tracking-widest font-black text-neon">

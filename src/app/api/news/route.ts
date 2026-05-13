@@ -32,7 +32,7 @@ const FALLBACK_NEWS = [
     title: "Music markets are syncing live signals",
     link: "https://audius.co",
     pubDate: new Date().toISOString(),
-    source: "song-daq",
+    source: "SONG·DAQ",
     category: "MUSIC" as NewsCategory,
   },
   {
@@ -40,7 +40,7 @@ const FALLBACK_NEWS = [
     title: "Streaming, wallets, and token activity continue updating",
     link: "https://solana.com",
     pubDate: new Date().toISOString(),
-    source: "song-daq",
+    source: "SONG·DAQ",
     category: "TECH" as NewsCategory,
   },
   {
@@ -48,7 +48,7 @@ const FALLBACK_NEWS = [
     title: "AI music and creator tooling signals are temporarily delayed",
     link: "https://audius.co",
     pubDate: new Date().toISOString(),
-    source: "song-daq",
+    source: "SONG·DAQ",
     category: "AI" as NewsCategory,
   },
   {
@@ -56,7 +56,7 @@ const FALLBACK_NEWS = [
     title: "Creator economy signals are temporarily delayed",
     link: "https://song-daq.onrender.com/market",
     pubDate: new Date().toISOString(),
-    source: "song-daq",
+    source: "SONG·DAQ",
     category: "CREATOR" as NewsCategory,
   },
   {
@@ -64,7 +64,7 @@ const FALLBACK_NEWS = [
     title: "Market moving news source temporarily delayed",
     link: "https://song-daq.onrender.com/market",
     pubDate: new Date().toISOString(),
-    source: "song-daq",
+    source: "SONG·DAQ",
     category: "TRENDING" as NewsCategory,
   },
 ];

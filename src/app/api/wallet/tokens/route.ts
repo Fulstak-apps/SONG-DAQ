@@ -331,7 +331,7 @@ export async function GET(req: NextRequest) {
       isVerified: meta?.isVerified ?? false,
       organicScoreLabel: meta?.organicScoreLabel ?? null,
       tags: meta?.tags ?? [],
-      metadataSource: song ? "song-daq" : coin ? "audius" : meta ? "jupiter" : "wallet",
+      metadataSource: song ? "SONG·DAQ" : coin ? "audius" : meta ? "jupiter" : "wallet",
     };
   });
   enriched.sort((a, b) => (b.countedValueUsd ?? b.valueUsd ?? 0) - (a.countedValueUsd ?? a.valueUsd ?? 0));

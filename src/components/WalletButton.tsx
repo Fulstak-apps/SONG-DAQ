@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { useSession, useUI } from "@/lib/store";
+import { useSession, useUI, type AudiusProfile } from "@/lib/store";
 import {
   WALLETS,
   connectWallet,
@@ -22,6 +22,15 @@ import { useWalletDiscoveryVersion } from "@/lib/useWalletDiscovery";
 function shortAddr(a: string) {
   if (!a) return "";
   return a.length > 12 ? `${a.slice(0, 4)}…${a.slice(-4)}` : a;
+}
+
+function audiusHandoffParams(audius?: AudiusProfile | null) {
+  const params: Record<string, string> = {};
+  if (!audius?.handle) return params;
+  params.audiusHandle = audius.handle;
+  if (audius.userId) params.audiusUserId = audius.userId;
+  if (audius.name) params.audiusName = audius.name;
+  return params;
 }
 
 function postAudiusLinkInBackground(body: unknown) {
@@ -78,8 +87,8 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
     } catch (e: any) {
       reportWalletError("wallet_connect_failed", e, id, address).catch(() => {});
       setErr(e.message ?? String(e));
-      console.error("song-daq wallet connect failed", e);
-      console.info("song-daq wallet diagnostics", walletDiagnosticsSnapshot());
+      console.error("SONG·DAQ wallet connect failed", e);
+      console.info("SONG·DAQ wallet diagnostics", walletDiagnosticsSnapshot());
     } finally {
       setBusy(null);
     }
@@ -152,6 +161,7 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
                 w={w}
                 busy={busy === w.id}
                 role={userMode}
+                audius={audius}
                 onConnect={() => onConnect(w.id)}
               />
             ))}
@@ -172,17 +182,22 @@ function WalletRow({
   w,
   busy,
   role,
+  audius,
   onConnect,
 }: {
   w: { id: WalletId; label: string; installed: () => boolean; installUrl: string };
   busy: boolean;
   role: "INVESTOR" | "ARTIST";
+  audius?: AudiusProfile | null;
   onConnect: () => void;
 }) {
   const installed = w.installed();
   const openMobile = shouldOpenMobileWalletBrowser(w.id);
+  const handoffParams = role === "ARTIST"
+    ? { walletRole: role, ...audiusHandoffParams(audius) }
+    : { walletRole: role };
   const action = openMobile
-    ? () => openMobileWalletBrowser(w.id, mobileWalletTargetUrl(w.id, undefined, { walletRole: role }) ?? undefined)
+    ? () => openMobileWalletBrowser(w.id, mobileWalletTargetUrl(w.id, undefined, handoffParams) ?? undefined)
     : installed
       ? onConnect
       : () => window.open(w.installUrl, "_blank");

@@ -61,7 +61,7 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
     decimals: 6,
     owner_id: song.artistWallet?.audiusUserId || song.artistWalletId || "",
     logo_uri: song.artworkUrl || song.artistWallet?.audiusAvatar || undefined,
-    description: `${song.title} by ${song.artistName}. song-daq song coin.`,
+    description: `${song.title} by ${song.artistName}. SONG·DAQ song coin.`,
     price: valuation.priceUsd || undefined,
     marketCap: valuation.marketValueUsd || undefined,
     liquidity: valuation.liquidityUsd || undefined,

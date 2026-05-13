@@ -422,6 +422,9 @@ function MobileWalletSummary({
       url.searchParams.set("walletConnect", "phantom");
       url.searchParams.set("walletRole", "ARTIST");
       url.searchParams.set("walletConnectSource", "mobile-header");
+      if (audius?.handle) url.searchParams.set("audiusHandle", audius.handle);
+      if (audius?.userId) url.searchParams.set("audiusUserId", audius.userId);
+      if (audius?.name) url.searchParams.set("audiusName", audius.name);
       window.history.replaceState({}, "", `${url.pathname}${url.search}${url.hash}`);
     }
     openLoginModal();

@@ -38,7 +38,7 @@ export const metadata: Metadata = {
   generator: "Next.js",
   referrer: "origin-when-cross-origin",
   keywords: [
-    "song-daq",
+    "SONG·DAQ",
     "SONG·DAQ",
     "music coins",
     "song coins",
@@ -149,7 +149,7 @@ export default function RootLayout({
               <div className="flex items-center gap-3">
                 <span className="w-1.5 h-1.5 rounded-full bg-neon shadow-[0_0_6px_rgba(0,229,114,0.5)] animate-pulseDot" />
                 <span className="text-[11px] tracking-[0.18em] font-black text-mute">
-                  song-daq <span className="text-mute mx-2">·</span> Institutional Music Exchange
+                  SONG·DAQ <span className="text-mute mx-2">·</span> Institutional Music Exchange
                 </span>
               </div>
               <div className="flex flex-wrap items-center justify-center gap-3 text-[11px] uppercase tracking-widest font-bold text-mute">

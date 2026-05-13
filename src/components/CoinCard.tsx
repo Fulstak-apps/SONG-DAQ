@@ -50,10 +50,10 @@ export function CoinCard({
   const isSongDaqLocal = !isOpenAudio && Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
   const marketValueReliable = !isSongDaqLocal || (c as any).isMarketValueReliable !== false;
   const marketValueLabel = marketValueReliable && Number(c.marketCap ?? 0) > 0 ? formatDisplayFiat(c.marketCap ?? 0, 0) : "Not priced";
-  const assetLabel = isSongDaqLocal ? "song-daq Song Coin" : "Open Audio Artist Coin";
+  const assetLabel = isSongDaqLocal ? "SONG·DAQ Song Coin" : "Open Audio Artist Coin";
   const sourceHelp = isSongDaqLocal
-    ? "This coin was created through song-daq."
-    : "This is a public Audius/Open Audio market coin imported from the public coin index. It was not minted by a user on song-daq.";
+    ? "This coin was created through SONG·DAQ."
+    : "This is a public Audius/Open Audio market coin imported from the public coin index. It was not minted by a user on SONG·DAQ.";
 
   const trackTitle = c.audius_track_title ?? null;
   const audioUrl = c.audius_track_id ? `https://api.audius.co/v1/tracks/${c.audius_track_id}/stream?app_name=songdaq` : null;
@@ -114,7 +114,7 @@ export function CoinCard({
                 <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest ${
                   isSongDaqLocal ? "border-neon/25 bg-neon/10 text-neon" : "border-violet/25 bg-violet/10 text-violet"
                 }`}>
-                  {isSongDaqLocal ? "song-daq" : "Open Audio"}
+                  {isSongDaqLocal ? "SONG·DAQ" : "Open Audio"}
                 </span>
               </Tooltip>
             </div>
@@ -287,7 +287,7 @@ export function CoinListRow({
           <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest ${
             isSongDaqLocal ? "border-neon/25 bg-neon/10 text-neon" : "border-violet/25 bg-violet/10 text-violet"
           }`}>
-            {isSongDaqLocal ? "song-daq" : "Open Audio"}
+            {isSongDaqLocal ? "SONG·DAQ" : "Open Audio"}
           </span>
           {tier.label && <span className={`text-[11px] font-black uppercase tracking-widest px-1 py-0.5 rounded border ${tier.color}`}>{tier.label}</span>}
             <span className="text-[11px] text-mute uppercase tracking-widest font-bold">{c.holder ?? 0} holders</span>

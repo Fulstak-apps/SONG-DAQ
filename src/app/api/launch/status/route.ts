@@ -48,7 +48,7 @@ export async function GET(req: NextRequest) {
     treasuryAuditApproved,
     royaltyAutomationAllowed,
     treasuryAutomationAllowed,
-    jupiterIndexingNote: "New pools can take time to index. song-daq should show route-waiting states instead of asking wallets to sign until Jupiter returns a live route.",
+    jupiterIndexingNote: "New pools can take time to index. SONG·DAQ should show route-waiting states instead of asking wallets to sign until Jupiter returns a live route.",
     manualRoyaltyMode: !royaltyAutomationAllowed,
     manualTreasuryMode: !treasuryAutomationAllowed,
     treasuryWallet,

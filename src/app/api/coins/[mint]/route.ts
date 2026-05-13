@@ -48,7 +48,7 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
     decimals: 6,
     owner_id: song.artistWallet?.audiusUserId || song.artistWalletId || "",
     logo_uri: song.artworkUrl || song.artistWallet?.audiusAvatar || undefined,
-    description: `${song.title} by ${song.artistName}. song-daq song coin.`,
+    description: `${song.title} by ${song.artistName}. SONG·DAQ song coin.`,
     price: valuation.priceUsd || undefined,
     marketCap: valuation.marketValueUsd || undefined,
     liquidity: valuation.liquidityUsd || undefined,
@@ -137,7 +137,7 @@ export async function GET(_req: NextRequest, ctx: { params: { mint: string } }) 
     if (!c && localFirst) {
       return NextResponse.json({ coin: { ...localFirst, ...localSongToCoin(localFirst, rates) } });
     }
-    if (!c) return NextResponse.json({ error: "Coin not found yet. Refresh in a moment while song-daq syncs the new mint." }, { status: 404 });
+    if (!c) return NextResponse.json({ error: "Coin not found yet. Refresh in a moment while SONG·DAQ syncs the new mint." }, { status: 404 });
     const [enriched] = await hydrateArtists([c]);
     const local = await prisma.songToken.findFirst({
       where: {

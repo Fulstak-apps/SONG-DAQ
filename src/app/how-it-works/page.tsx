@@ -18,8 +18,8 @@ import { ROYALTY_EMAIL } from "@/lib/appMode";
 import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
 
 const artistSteps = [
-  ["Connect Audius", "The artist signs in so song-daq can attach the market to a real profile, catalog, artwork, and music identity."],
-  ["Choose Artist Coin or Song Coin", "Artist Coins follow the Audius/Open Audio style. Song Coins are song-daq markets tied to a specific track."],
+  ["Connect Audius", "The artist signs in so SONG·DAQ can attach the market to a real profile, catalog, artwork, and music identity."],
+  ["Choose Artist Coin or Song Coin", "Artist Coins follow the Audius/Open Audio style. Song Coins are SONG·DAQ markets tied to a specific track."],
   ["Pick a launch preset", "Fan First, Balanced, and Premium presets set supply, artist allocation, liquidity, and wallet caps in one click."],
   ["Launch and add liquidity", "Liquidity puts public market money behind the coin so fans can buy and sell from a pool or curve."],
   ["Set up royalties later", "Royalty splits are optional after launch. Admin verification keeps royalty status separate from the initial launch."],
@@ -28,7 +28,7 @@ const artistSteps = [
 const investorSteps = [
   ["Browse the market", "Compare Song Coins, Artist Coins, Hype Meter, liquidity, price, volume, and royalty status."],
   ["Open a coin page", "Review chart movement, artist info, discography, token source, liquidity, market value, and risk/trust signals."],
-  ["Choose buy or sell amount", "Enter USD, SOL, AUDIO, or token amount. song-daq shows crypto and fiat estimates before confirmation."],
+  ["Choose buy or sell amount", "Enter USD, SOL, AUDIO, or token amount. SONG·DAQ shows crypto and fiat estimates before confirmation."],
   ["Confirm in wallet", "Live mode uses a real Solana wallet. Paper Mode simulates the same flow with fake funds."],
   ["Track portfolio", "Portfolio rolls up SOL, AUDIO, Song Coins, Artist Coins, other wallet assets, P/L, and recent activity."],
 ] as const;
@@ -43,9 +43,9 @@ const glossary = [
 ];
 
 const supportTopics = [
-  ["Launch help", "Create the coin, review supply, choose a launch preset, then add liquidity so the public market can open. song-daq shows crypto and fiat estimates before money moves."],
+  ["Launch help", "Create the coin, review supply, choose a launch preset, then add liquidity so the public market can open. SONG·DAQ shows crypto and fiat estimates before money moves."],
   ["Wallet help", "Live mode uses your connected Solana wallet. Paper Mode gives you a simulated wallet so you can test launching, buying, selling, and portfolio changes with no real funds."],
-  ["Royalty help", `Royalty splits happen after launch. Artists add ${ROYALTY_EMAIL} inside their distributor dashboard, return to song-daq, and submit the setup request for verification.`],
+  ["Royalty help", `Royalty splits happen after launch. Artists add ${ROYALTY_EMAIL} inside their distributor dashboard, return to SONG·DAQ, and submit the setup request for verification.`],
   ["Portfolio help", "Portfolio rolls up SOL, AUDIO, Song Coins, Artist Coins, other wallet assets, profit/loss, and recent activity so investors can see the whole account in one place."],
   ["Liquidity help", "Liquidity is still called liquidity, but the app explains it as the public market money that lets fans buy and sell without waiting for a private buyer."],
   ["Admin help", "Admin-only review, royalty verification, payment records, support requests, and asset sync health live inside the admin dashboard, not in the public launch flow."],
@@ -64,12 +64,12 @@ export default function HowItWorksPage() {
       <section className="panel-elevated grain overflow-hidden p-6 md:p-10">
         <div className="grid gap-8 xl:grid-cols-[1fr_0.9fr] xl:items-center">
           <div>
-            <div className="text-[11px] uppercase tracking-[0.3em] font-black text-neon">How song-daq works</div>
+            <div className="text-[11px] uppercase tracking-[0.3em] font-black text-neon">How SONG·DAQ works</div>
             <h1 className="mt-4 max-w-4xl text-4xl font-black leading-[0.95] tracking-tight text-ink md:text-6xl">
               Buy music coins and follow the live music economy.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-relaxed text-mute md:text-lg">
-              song-daq lets fans invest in their favorite music and lets artists launch music coins with visible price, liquidity, wallet, and royalty signals. The goal is to make every market feel understandable before anyone spends money.
+              SONG·DAQ lets fans invest in their favorite music and lets artists launch music coins with visible price, liquidity, wallet, and royalty signals. The goal is to make every market feel understandable before anyone spends money.
             </p>
             <p className="mt-3 max-w-3xl text-base font-semibold leading-relaxed text-ink/75 md:text-lg">
               100% verified on-chain means the app surfaces the mint, wallet, pool, launch, and market records users need to inspect. Artists can launch coin markets for fans, and investors can compare Song Coins and Artist Coins from one clean screen.
@@ -147,7 +147,7 @@ export default function HowItWorksPage() {
           </div>
           <div className="mt-5 grid gap-3">
             <InfoRow title="Launch liquidity gets the coin live" body="The artist pairs song coins with SOL, USDC, or AUDIO-style market money so buyers and sellers have a place to trade." />
-            <InfoRow title="Royalties happen later" body="The artist can set up distributor splits after the coin exists. song-daq records royalty status only after verification." />
+            <InfoRow title="Royalties happen later" body="The artist can set up distributor splits after the coin exists. SONG·DAQ records royalty status only after verification." />
             <InfoRow title="The two systems stay separate" body="A coin can be live before royalties are verified. Royalty status should never be confused with launch liquidity." />
           </div>
         </section>
@@ -157,7 +157,7 @@ export default function HowItWorksPage() {
             <BadgeCheck size={15} /> Trust signals
           </div>
           <div className="mt-5 grid gap-3">
-            <InfoRow title="Source label" body="Every coin should make clear whether it came from song-daq or Open Audio/Audius-style artist coin data." />
+            <InfoRow title="Source label" body="Every coin should make clear whether it came from SONG·DAQ or Open Audio/Audius-style artist coin data." />
             <InfoRow title="Visible supply logic" body="Artist allocation, public allocation, liquidity allocation, reserve, and burned supply should update everywhere." />
             <InfoRow title="Wallet-readable actions" body="Live actions should show clear wallet prompts, estimated fiat cost, network fee, and real backend or wallet errors." />
           </div>
@@ -183,7 +183,7 @@ export default function HowItWorksPage() {
       </section>
 
       <section className="rounded-2xl border border-amber/25 bg-amber/10 p-5 text-base font-semibold leading-relaxed text-amber/90">
-        song-daq shows market data, music signals, liquidity, royalties, and portfolio estimates to help users understand the asset. Prices can move down or up, and users are responsible for their own decisions.
+        SONG·DAQ shows market data, music signals, liquidity, royalties, and portfolio estimates to help users understand the asset. Prices can move down or up, and users are responsible for their own decisions.
       </section>
     </main>
   );

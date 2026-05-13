@@ -282,10 +282,10 @@ export default function CoinPage() {
     if (coin.artist_handle) params.set("artist", coin.artist_handle);
     return `/artist?${params.toString()}`;
   };
-  const assetSourceLabel = isSongDaqLocal ? "song-daq Song Coin" : "Open Audio Artist Coin";
+  const assetSourceLabel = isSongDaqLocal ? "SONG·DAQ Song Coin" : "Open Audio Artist Coin";
   const assetSourceNote = isSongDaqLocal
-    ? "Created through song-daq."
-    : "Imported from the public Audius/Open Audio coin index. This was not minted by a song-daq user.";
+    ? "Created through SONG·DAQ."
+    : "Imported from the public Audius/Open Audio coin index. This was not minted by a SONG·DAQ user.";
   const watching = isWatched(coin.mint);
   const livePrice = coin.price ?? 0;
   const marketValueReliable = !isSongDaqLocal || (coin as any).isMarketValueReliable !== false;
@@ -518,7 +518,7 @@ export default function CoinPage() {
                     <KV k="Public Pool" v={publicPoolLabel} tooltip="The public pool is the coin amount fans can trade against in the liquidity route." />
                     <KV k="Artist Hold" v={artistHoldLabel} tooltip="Artist hold is separate from the public market. If the artist burns coins from their wallet, this split updates." />
                     <KV k="Burned" v={burnedSupplyLabel} tooltip="Burned coins are permanently removed from supply and no longer count in the indexed supply split." />
-                    <KV k="Supply" v={fullSupplyLabel} tooltip="Total supply is the full amount minted. song-daq does not count every minted coin as market value until it is actually in the public market." />
+                    <KV k="Supply" v={fullSupplyLabel} tooltip="Total supply is the full amount minted. SONG·DAQ does not count every minted coin as market value until it is actually in the public market." />
                   </div>
                 </div>
               </section>
@@ -645,11 +645,11 @@ export default function CoinPage() {
               <div className="text-[11px] uppercase tracking-widest font-black text-neon">What is this coin?</div>
               <p className="mt-2 text-xs leading-relaxed text-mute">
                 {isSongDaqLocal
-                  ? "A song-daq Song Coin is tied to one song and traded inside song-daq with song, chart, liquidity, and royalty status shown together."
-                  : "An Open Audio Artist Coin is an Audius/Open Audio-visible artist coin imported into song-daq so fans can view market and portfolio context here."}
+                  ? "A SONG·DAQ Song Coin is tied to one song and traded inside SONG·DAQ with song, chart, liquidity, and royalty status shown together."
+                  : "An Open Audio Artist Coin is an Audius/Open Audio-visible artist coin imported into SONG·DAQ so fans can view market and portfolio context here."}
               </p>
               <div className="mt-3 grid grid-cols-2 gap-2">
-                <KV k="Source" v={isSongDaqLocal ? "song-daq" : "Open Audio"} />
+                <KV k="Source" v={isSongDaqLocal ? "SONG·DAQ" : "Open Audio"} />
                 <KV k="Liquidity" v={formatDisplayFiat(coin.liquidity ?? 0, 0)} />
                 <KV k="Royalty Status" v={(coin as any).splitsLocked ? "Verified" : "Not submitted"} />
                 <KV k="Risk / Trust" v={isOwner ? "Creator" : "Review"} />
@@ -662,7 +662,7 @@ export default function CoinPage() {
             {isSongDaqLocal ? (
               <div className="w-full rounded-2xl border border-neon/20 bg-neon/5 p-4 text-left">
                 <div className="text-[11px] uppercase tracking-widest font-black text-neon">Creator Tools</div>
-                <div className="mt-2 text-sm font-black text-white">Manage this song-daq coin</div>
+                <div className="mt-2 text-sm font-black text-white">Manage this SONG·DAQ coin</div>
                 <p className="mt-2 text-xs leading-relaxed text-mute">
                   Look up this coin anytime by symbol, song name, artist, or mint. Add liquidity to make the market tradable, or submit royalty splits after your distributor invitation is sent.
                 </p>
@@ -906,7 +906,7 @@ export default function CoinPage() {
           <div className="pointer-events-none absolute inset-x-8 top-0 h-px bg-gradient-to-r from-transparent via-neon/35 to-transparent" />
           <div className="relative z-10 mb-3 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <div className="text-[11px] font-black tracking-widest text-mute">song-daq chart</div>
+              <div className="text-[11px] font-black tracking-widest text-mute">SONG·DAQ chart</div>
               <div className="mt-1 flex flex-wrap items-center gap-2 text-[11px] font-black uppercase tracking-widest">
                 <span className="rounded-full bg-[#58d64f]/15 px-2 py-1 text-[#58d64f]">Live price · {currency}</span>
                 <span className="rounded-full bg-white/10 px-2 py-1 text-white/70">Advanced Chart</span>
@@ -1448,9 +1448,9 @@ function RoyaltyTransparency({ coin }: { coin: any }) {
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
           <div className="text-[11px] uppercase tracking-widest font-bold text-mute mb-2">Royalty Transparency</div>
-          <h2 className="text-2xl font-black text-ink">song-daq Royalty Pool</h2>
+          <h2 className="text-2xl font-black text-ink">SONG·DAQ Royalty Pool</h2>
           <p className="mt-2 max-w-3xl text-sm text-mute leading-relaxed">
-            When a verified artist assigns royalties to song-daq through their distributor, song-daq receives the monthly royalty split and can add that value into the song coin ecosystem through Royalty Pool contributions, liquidity support, buybacks, holder rewards, and/or protocol reserves.
+            When a verified artist assigns royalties to SONG·DAQ through their distributor, SONG·DAQ receives the monthly royalty split and can add that value into the song coin ecosystem through Royalty Pool contributions, liquidity support, buybacks, holder rewards, and/or protocol reserves.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
@@ -1463,7 +1463,7 @@ function RoyaltyTransparency({ coin }: { coin: any }) {
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <KV k="Royalty Split" v={coin.royaltyPercentageCommitted ? `${coin.royaltyPercentageCommitted}%` : "Not verified"} />
         <KV k="Total Royalties Received" v={formatDisplayFiat(Number(coin.totalRoyaltiesReceivedUsd || 0), 2)} />
-        <KV k="Royalty Pool Added" v={formatDisplayFiat(Number(coin.totalRoyaltyPoolContributionsUsd || 0), 2)} tooltip="The Royalty Pool shows royalty money received by song-daq and added into this coin’s ecosystem." />
+        <KV k="Royalty Pool Added" v={formatDisplayFiat(Number(coin.totalRoyaltyPoolContributionsUsd || 0), 2)} tooltip="The Royalty Pool shows royalty money received by SONG·DAQ and added into this coin’s ecosystem." />
         <KV k="Liquidity Support" v={formatDisplayFiat(Number(coin.totalLiquidityAddedUsd || 0), 2)} tooltip="Liquidity shows how easily people can buy or sell without moving the price too much." />
         <KV k="Total Buybacks" v={formatDisplayFiat(Number(coin.totalBuybacksUsd || 0), 2)} />
         <KV k="Holder Rewards" v={formatDisplayFiat(Number(coin.totalHolderRewardsUsd || 0), 2)} />

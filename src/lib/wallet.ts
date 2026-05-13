@@ -2,7 +2,7 @@
 
 /**
  * Solana wallet detector. Talks to injected providers directly so we
- * stay framework-agnostic while keeping song-daq settlement Solana-only.
+ * stay framework-agnostic while keeping SONG·DAQ settlement Solana-only.
  *
  *   Solana: Phantom, Solflare, Backpack
  */
@@ -620,7 +620,7 @@ export async function createArtistPaidSongMint(
     recentBlockhash: latest.blockhash,
   }).add(
     createMemoInstruction(
-      `song-daq launch: $${memoSymbol}. Artist/liquidity staged, reserve separated, freeze off, mint revoked.`,
+      `SONG·DAQ launch: $${memoSymbol}. Artist/liquidity staged, reserve separated, freeze off, mint revoked.`,
     ),
     SystemProgram.createAccount({
       fromPubkey: payer,
@@ -719,7 +719,7 @@ function createMetadataInstruction({
     ],
     TOKEN_METADATA_PROGRAM_ID,
   );
-  const safeName = name.trim().slice(0, 32) || "song-daq Token";
+  const safeName = name.trim().slice(0, 32) || "SONG·DAQ Token";
   const safeSymbol = symbol.replace(/^\$/, "").trim().slice(0, 10).toUpperCase() || "SONG";
   const safeUri = uri.trim().slice(0, 200);
 

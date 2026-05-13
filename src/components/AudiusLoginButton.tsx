@@ -175,7 +175,7 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
             </button>
             <p className="text-[11px] text-mute mt-3 leading-relaxed">
               {mobileOAuth
-                ? "On mobile, song-daq opens Audius full-screen so you can leave for an email code and come back without losing the login."
+                ? "On mobile, SONG·DAQ opens Audius full-screen so you can leave for an email code and come back without losing the login."
                 : "OAuth opens Audius in a popup. Artist launch access requires verified Audius sign-in through the official connection flow."}
             </p>
             {!mobileOAuth && (

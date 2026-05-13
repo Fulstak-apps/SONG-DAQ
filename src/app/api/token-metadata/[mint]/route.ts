@@ -20,9 +20,9 @@ function fallbackMetadata(req: NextRequest, mint: string) {
   const base = appUrl(req);
   return NextResponse.json(
     {
-      name: "song-daq Song Coin",
+      name: "SONG·DAQ Song Coin",
       symbol: "SONG",
-      description: "song-daq token metadata is being indexed. This is a song-linked market token. Fans buy from a public curve or liquidity pool after liquidity is verified; artist allocation and royalty verification are tracked separately.",
+      description: "SONG·DAQ token metadata is being indexed. This is a song-linked market token. Fans buy from a public curve or liquidity pool after liquidity is verified; artist allocation and royalty verification are tracked separately.",
       image: `${base}/api/token-image/${mint}`,
       external_url: `${base}/market`,
       seller_fee_basis_points: 0,
@@ -32,7 +32,7 @@ function fallbackMetadata(req: NextRequest, mint: string) {
         creators: [],
       },
       attributes: [
-        { trait_type: "Protocol", value: "song-daq" },
+        { trait_type: "Protocol", value: "SONG·DAQ" },
         { trait_type: "Asset Type", value: "Song Coin" },
         { trait_type: "Status", value: "Indexing" },
         { trait_type: "Mint Policy", value: "Fixed supply" },
@@ -100,7 +100,7 @@ export async function GET(req: NextRequest, { params }: { params: { mint: string
       symbol,
       description: [
         `${song.title} by ${artistName}.`,
-        "Created through song-daq as a song-linked market token.",
+        "Created through SONG·DAQ as a song-linked market token.",
         "Buying this token does not automatically grant copyright ownership or guaranteed royalty rights unless separately stated in verified legal terms.",
       ].join(" "),
       image: song.artworkUrl || `${base}/api/token-image/${mint}`,
@@ -122,7 +122,7 @@ export async function GET(req: NextRequest, { params }: { params: { mint: string
         ],
       },
       attributes: [
-        { trait_type: "Protocol", value: "song-daq" },
+        { trait_type: "Protocol", value: "SONG·DAQ" },
         { trait_type: "Asset Type", value: "Song Coin" },
         { trait_type: "Song Title", value: song.title },
         { trait_type: "Artist", value: artistName },

@@ -8,12 +8,12 @@ export default function InvestorOnboardingPage() {
         <div className="text-[11px] uppercase tracking-[0.3em] font-black text-neon">Investor onboarding</div>
         <h1 className="text-4xl md:text-6xl font-black text-ink">Trade song coins with clear risk signals.</h1>
         <p className="max-w-3xl text-mute leading-relaxed">
-          Before buying, song-daq shows wallet, crypto plus fiat values, token amount, slippage, fees, royalty status, and risk acknowledgments in plain English.
+          Before buying, SONG·DAQ shows wallet, crypto plus fiat values, token amount, slippage, fees, royalty status, and risk acknowledgments in plain English.
         </p>
       </section>
       <section className="grid gap-4 md:grid-cols-3">
         <Card icon={<Wallet />} title="Connect Wallet" body="Use an external Solana wallet for real buys and sells. Paper Mode uses simulated balances." />
-        <Card icon={<ShieldCheck />} title="Understand Market Signals" body="Song-daq shows price, liquidity, wallet cost, and royalty status before you buy so you can judge the market clearly." />
+        <Card icon={<ShieldCheck />} title="Understand Market Signals" body="SONG·DAQ shows price, liquidity, wallet cost, and royalty status before you buy so you can judge the market clearly." />
         <Card icon={<TrendingUp />} title="Explore Coins" body="Browse royalty verified, in-progress, new launch, highest volume, and watched song coins." />
       </section>
       <section className="panel p-6 space-y-3">

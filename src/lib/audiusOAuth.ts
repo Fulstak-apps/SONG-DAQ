@@ -47,7 +47,7 @@ async function exchangeCodeForProfile(code: string, codeVerifier: string, redire
     return j.profile as AudiusProfile;
   } catch (e: any) {
     if (e?.name === "AbortError") {
-      throw new Error("Audius sign-in is taking longer than expected. Please retry. On mobile, song-daq will use full-page sign-in so email codes do not interrupt the session.");
+      throw new Error("Audius sign-in is taking longer than expected. Please retry. On mobile, SONG·DAQ will use full-page sign-in so email codes do not interrupt the session.");
     }
     throw e;
   } finally {
