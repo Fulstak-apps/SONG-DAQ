@@ -48,6 +48,7 @@ export function CoinCard({
   const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || (c.mint ? `/api/token-image/${c.mint}` : null);
   const isOpenAudio = Boolean(c.isOpenAudioCoin || c.source === "open_audio" || c.source === "audius_public");
   const isSongDaqLocal = !isOpenAudio && Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
+  const artistVerified = Boolean(c.audiusVerified || c.songDaqVerified);
   const marketValueReliable = !isSongDaqLocal || (c as any).isMarketValueReliable !== false;
   const marketValueLabel = marketValueReliable && Number(c.marketCap ?? 0) > 0 ? formatDisplayFiat(c.marketCap ?? 0, 0) : "Not priced";
   const assetLabel = isSongDaqLocal ? "SONG·DAQ Song Coin" : "Open Audio Artist Coin";
@@ -110,6 +111,13 @@ export function CoinCard({
                 </Tooltip>
               )}
               <RiskBadge coin={c as any} compact />
+              {artistVerified && (
+                <Tooltip content="This artist is verified on Audius/Open Audio, so SONG·DAQ marks the artist identity as verified too.">
+                  <span className="rounded-md border border-neon/25 bg-neon/10 px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest text-neon">
+                    SONG·DAQ verified
+                  </span>
+                </Tooltip>
+              )}
               <Tooltip content={sourceHelp}>
                 <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest ${
                   isSongDaqLocal ? "border-neon/25 bg-neon/10 text-neon" : "border-violet/25 bg-violet/10 text-violet"

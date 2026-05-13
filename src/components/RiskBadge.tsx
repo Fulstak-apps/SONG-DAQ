@@ -20,9 +20,10 @@ export function RiskBadge({ coin, compact = false }: { coin: Partial<AudiusCoin>
 export function MarketSafetyPanel({ coin }: { coin: Partial<AudiusCoin> & Record<string, any> }) {
   const risk = calculateCoinRisk(coin);
   const isCompanyCoin = isAudiusCompanyCoin(coin);
+  const artistVerified = Boolean(coin.audiusVerified || coin.songDaqVerified || coin.artistWallet?.audiusVerified);
   const rows = [
     ["Asset type", isCompanyCoin ? "Official Audius company coin" : "Artist / song market asset"],
-    ["Artist verification", isCompanyCoin ? "Official" : coin.artist_handle || coin.audiusVerified ? "Connected" : "Unverified"],
+    ["Artist verification", isCompanyCoin ? "Official" : artistVerified ? "SONG·DAQ verified via Audius" : coin.artist_handle ? "Audius linked" : "Unverified"],
     ["Song verification", isCompanyCoin ? "Not applicable" : coin.audius_track_id || coin.audiusTrackId ? "Catalog linked" : "Pending"],
     ["Royalty signal", isCompanyCoin ? "Not applicable" : coin.splitsLocked || coin.royaltyStatus === "LOCKED" ? "Locked/verified" : "Unverified"],
     ["Liquidity status", isCompanyCoin ? "Official market asset" : Number(coin.liquidity ?? coin.reserveSol ?? coin.liquidityPairAmount ?? 0) > 0 ? "Active" : "No liquidity"],

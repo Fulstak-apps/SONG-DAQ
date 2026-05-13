@@ -1131,7 +1131,13 @@ export default function CoinPage() {
             <TrustCheck label="Mint" value={coin.mint ? shortMint(coin.mint) : "Missing"} ok={!!coin.mint} />
             <TrustCheck label="Metadata" value={coin.logo_uri || coin.name ? "Attached" : "Fallback"} ok={!!(coin.logo_uri || coin.name)} />
             <TrustCheck label="Pool / Liquidity" value={Number(coin.liquidity ?? 0) > 0 ? formatDisplayFiat(coin.liquidity ?? 0, 0) : "Waiting"} ok={Number(coin.liquidity ?? 0) > 0} />
-            <TrustCheck label="Artist" value={coin.artist_name || "Unknown"} ok={Boolean(coin.artist_name)} />
+            <TrustCheck
+              label="Artist"
+              value={(coin as any).audiusVerified || (coin as any).songDaqVerified
+                ? `${coin.artist_name || "Unknown"} · SONG·DAQ verified via Audius`
+                : coin.artist_name || "Unknown"}
+              ok={Boolean((coin as any).audiusVerified || (coin as any).songDaqVerified || coin.artist_name)}
+            />
             <TrustCheck label="Royalty" value={String((coin as any).royalty_status ?? (coin as any).royaltyVerificationStatus ?? "Not submitted")} ok={String((coin as any).royalty_status ?? (coin as any).royaltyVerificationStatus ?? "").toLowerCase().includes("verified")} />
             <TrustCheck label="Risk" value={String((coin as any).riskLevel ?? "Review")} ok={String((coin as any).riskLevel ?? "").toLowerCase() === "low"} />
             <TrustCheck label="Trading" value={Number(coin.liquidity ?? 0) > 0 ? "Market route expected" : "Needs liquidity"} ok={Number(coin.liquidity ?? 0) > 0} />

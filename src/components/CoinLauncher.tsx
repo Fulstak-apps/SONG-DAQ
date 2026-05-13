@@ -755,7 +755,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
 
       <LaunchReadinessChecklist
         walletConnected={!!launchIdentityWallet}
-        artistVerified={!!audius?.userId}
+        artistVerified={!!audius?.verified}
         metadataReady={!!(process.env.NEXT_PUBLIC_APP_URL || typeof window !== "undefined")}
         liquidityReady={liquidityValid}
         tokenTrustReady={!allocationRisk && ownershipConfirmed && riskAcknowledged}
@@ -1599,7 +1599,7 @@ function LaunchReadinessChecklist({
 }) {
   const items = [
     ["Wallet connected", walletConnected, "External Solana wallet is needed for real launch signing."],
-    ["Audius artist verified", artistVerified, "Audius identity links the coin to the real artist account."],
+    ["SONG·DAQ artist verified", artistVerified, "Verified Audius artists are automatically treated as verified artist identities on SONG·DAQ."],
     ["Metadata ready", metadataReady, "Name, symbol, image, description, and token traits are prepared."],
     ["Liquidity ready", liquidityReady, "Public market liquidity is required before fans can buy."],
     ["Coin details", tokenTrustReady, "Rights, risk, vesting, and cap settings are accepted."],

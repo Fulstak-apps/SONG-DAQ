@@ -140,6 +140,7 @@ export function CoinPreviewModal({
   const activeCoin = coin;
   const isOpenAudio = Boolean(activeCoin.isOpenAudioCoin || activeCoin.source === "open_audio" || activeCoin.source === "audius_public");
   const isSongDaqLocal = !isOpenAudio && Boolean(activeCoin.isSongDaqLocal || activeCoin.songId || activeCoin.mintAddress);
+  const artistVerified = Boolean(activeCoin.audiusVerified || activeCoin.songDaqVerified);
   const assetLabel = isSongDaqLocal ? "SONG·DAQ Song Coin" : "Open Audio Artist Coin";
   const signedInArtistOwnsCoin = Boolean(
     isOwner ||
@@ -526,6 +527,7 @@ export function CoinPreviewModal({
                 <div className="grid gap-2 text-[11px] text-mute">
                   <TrustLine ok label="Solana SPL token" />
                   <TrustLine ok={!!coin.artist_handle} label={coin.artist_handle ? "Audius artist resolved" : "Audius profile pending"} />
+                  <TrustLine ok={artistVerified} label={artistVerified ? "SONG·DAQ artist verified via Audius" : "SONG·DAQ artist verification pending"} />
                   <TrustLine ok={(coin as any).splitsLocked} label={(coin as any).splitsLocked ? "Royalty splits locked" : "Royalty splits pending"} />
                 </div>
               </div>

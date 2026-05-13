@@ -67,7 +67,7 @@ export default function ArtistProfilePage() {
   const totalPlays = tracks.reduce((n, t) => n + (t.play_count ?? 0), 0);
   const totalFavorites = tracks.reduce((n, t) => n + (t.favorite_count ?? 0), 0);
   const totalCap = artistCoins.reduce((n, c) => n + (c.marketCap ?? 0), 0);
-  const verified = Boolean(user?.is_verified || artistCoins.some((c: any) => c.artist_handle || c.audiusVerified));
+  const verified = Boolean(user?.is_verified || user?.verified || artistCoins.some((c: any) => c.audiusVerified || c.songDaqVerified));
   const pendingLiquidity = artistCoins.filter((c: any) => Number(c.liquidity ?? c.reserveSol ?? c.liquidityPairAmount ?? 0) <= 0).length;
   const artistName = user?.name || user?.handle || decoded;
   const gamifiedAssets = useMemo(() => {
@@ -190,7 +190,7 @@ export default function ArtistProfilePage() {
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <Insight icon={<ShieldCheck size={16} />} label="Verification" value={verified ? "Verified" : "Unverified"} tone={verified ? "neon" : "amber"} />
+        <Insight icon={<ShieldCheck size={16} />} label="Verification" value={verified ? "SONG·DAQ verified" : "Unverified"} tone={verified ? "neon" : "amber"} />
         <Insight icon={<LockKeyhole size={16} />} label="Liquidity" value={pendingLiquidity ? `${pendingLiquidity} Pending` : "Active"} tone={pendingLiquidity ? "amber" : "neon"} />
         <Insight icon={<TrendingUp size={16} />} label="Market Cap" value={`$${fmtNum(totalCap)}`} tone="neon" />
         <Insight icon={<Radio size={16} />} label="Social Traction" value={`${fmtNum(totalPlays)} Plays`} tone="violet" />

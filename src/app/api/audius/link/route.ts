@@ -77,7 +77,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "wallet and profile required" }, { status: 400 });
   }
   const adminProfile = isAdminAudiusProfile(profile);
-  const nextRole = adminProfile ? "ADMIN" : role;
+  const profileVerified = Boolean(profile.verified);
+  const nextRole = adminProfile ? "ADMIN" : profileVerified ? "ARTIST" : role;
 
   if (shouldSkipDatabaseLink()) {
     return pendingLinkResponse(wallet, walletType, profile, nextRole);

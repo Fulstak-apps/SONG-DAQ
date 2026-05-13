@@ -89,7 +89,7 @@ export default function ArtistPage() {
         <div className="relative z-10">
           <h1 className="text-4xl font-extrabold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-white to-white/60 flex items-center gap-3">
             Song Studio
-            {audius?.verified && <span className="text-[11px] uppercase tracking-widest text-black bg-neon px-2 py-0.5 rounded shadow-[0_0_10px_rgba(0,229,114,0.5)] font-bold">Verified</span>}
+            {audius?.verified && <span className="text-[11px] uppercase tracking-widest text-black bg-neon px-2 py-0.5 rounded shadow-[0_0_10px_rgba(0,229,114,0.5)] font-bold">SONG·DAQ verified</span>}
             {paperMode && !audius && <span className="text-[11px] uppercase tracking-widest text-black bg-neon px-2 py-0.5 rounded shadow-[0_0_10px_rgba(0,229,114,0.5)] font-bold">Paper Mode</span>}
           </h1>
           <p className="text-mute mt-2 font-medium break-words whitespace-normal">

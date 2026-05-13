@@ -47,6 +47,9 @@ export interface AudiusCoin {
   artist_handle?: string;
   artist_name?: string;
   artist_avatar?: string | null;
+  /** Audius/Open Audio profile verification. SONG·DAQ treats this as artist verification. */
+  audiusVerified?: boolean;
+  songDaqVerified?: boolean;
   /** ~32-point downsampled price series for inline sparklines on cards. */
   sparkline?: number[];
   /**
@@ -237,6 +240,8 @@ export async function hydrateArtists(coins: AudiusCoin[]): Promise<AudiusCoin[]>
           artist_handle: handle,
           artist_name: u.name,
           artist_avatar: artistAvatar,
+          audiusVerified: Boolean(u.is_verified ?? u.verified),
+          songDaqVerified: Boolean(u.is_verified ?? u.verified),
           ...(topTrack && handle ? {
             audius_track_id: String(topTrack.id),
             audius_track_title: topTrack.title,

@@ -363,7 +363,7 @@ export default function DiscoveryEngine() {
       list = list.filter((c) => {
         const risk = calculateCoinRisk(c as any);
         const liquidity = Number((c as any).liquidity ?? (c as any).reserveSol ?? (c as any).liquidityPairAmount ?? 0);
-        const verified = Boolean((c as any).artist_handle || (c as any).audiusVerified || (c as any).audius_track_id);
+        const verified = Boolean((c as any).audiusVerified || (c as any).songDaqVerified || (c as any).artist_handle || (c as any).audius_track_id);
         const openAudio = isOpenAudioMarketCoin(c);
         const localLaunch = isSongDaqMarketCoin(c);
         switch (marketFilter) {

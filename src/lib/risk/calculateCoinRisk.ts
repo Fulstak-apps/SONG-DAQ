@@ -27,7 +27,9 @@ export function calculateCoinRisk(input: Partial<AudiusCoin> & Record<string, an
   const badges: string[] = [];
   let score = 100;
 
-  const verifiedArtist = Boolean(input.artist_handle || input.audius_track_id || input.audiusVerified);
+  const audiusVerifiedArtist = Boolean(input.audiusVerified || input.songDaqVerified || input.artistWallet?.audiusVerified);
+  const artistResolved = Boolean(input.artist_handle || input.audius_track_id || input.audiusTrackId);
+  const verifiedArtist = audiusVerifiedArtist || artistResolved;
   const royaltyVerified = Boolean(input.splitsLocked || input.royaltyStatus === "LOCKED" || input.royaltyStatus === "VERIFIED");
   const liquidity = Number(input.liquidity ?? input.reserveSol ?? input.liquidityPairAmount ?? 0);
   const liquidityLocked = Boolean(input.liquidityLocked || input.splitsLocked);
@@ -36,7 +38,9 @@ export function calculateCoinRisk(input: Partial<AudiusCoin> & Record<string, an
   const reportCount = Number(input.reportCount ?? 0);
   const change = Math.abs(Number(input.priceChange24hPercent ?? 0));
 
-  if (!verifiedArtist) { score -= 22; warnings.push("Artist identity is not fully verified."); badges.push("Unverified artist"); }
+  if (audiusVerifiedArtist) badges.push("Audius verified artist");
+  else if (artistResolved) badges.push("Audius-linked artist");
+  else { score -= 22; warnings.push("Artist identity is not fully verified."); badges.push("Unverified artist"); }
   if (!input.audius_track_id && !input.audiusTrackId) { score -= 12; warnings.push("Song source is not linked to a verified catalog track."); badges.push("Song source pending"); }
   if (!royaltyVerified) { score -= 10; warnings.push("Royalty-backed transparency signal is not verified."); badges.push("Royalty unverified"); }
   if (liquidity <= 0) { score -= 35; warnings.push("No verified liquidity is available."); badges.push("No liquidity"); }
