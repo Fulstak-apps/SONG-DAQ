@@ -139,7 +139,8 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
     try {
       const r = await connectWallet(id);
       setSession({ address: r.address, kind: r.kind, provider: r.provider });
-      if (role === "ARTIST" && audius) {
+      const artistContext = role === "ARTIST" || !!audius;
+      if (artistContext && audius) {
         linkAudiusInBackground({ wallet: r.address, walletType: r.kind, profile: audius, role: "ARTIST" });
         setUserMode("ARTIST");
         setStep("DONE");

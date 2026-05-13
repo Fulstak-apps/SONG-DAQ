@@ -294,9 +294,9 @@ export default function DiscoveryEngine() {
     return () => { alive = false; clearInterval(i); };
   }, [market, songSort]);
 
-  const role = me?.role ?? "INVESTOR";
+  const role = audius ? "ARTIST" : (me?.role ?? "INVESTOR");
   const isArtist = role === "ARTIST";
-  const mode = (me?.preferredMode ?? "INVESTOR") as "ARTIST" | "INVESTOR";
+  const mode = (audius ? "ARTIST" : (me?.preferredMode ?? "INVESTOR")) as "ARTIST" | "INVESTOR";
 
   // ─── Aggregate stats ──
   const coinTotals = useMemo(() => coins.reduce(

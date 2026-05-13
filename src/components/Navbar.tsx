@@ -118,8 +118,8 @@ export function Navbar() {
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const unreadAlerts = alerts.filter(a => a.triggered && !a.triggered).length;
   useEffect(() => {
-    if (audius) setUserMode("ARTIST");
-  }, [audius, setUserMode]);
+    if (audius && userMode !== "ARTIST") setUserMode("ARTIST");
+  }, [audius, setUserMode, userMode]);
   useEffect(() => {
     if (typeof window === "undefined" || !audius) return;
     const searchParams = new URLSearchParams(window.location.search);

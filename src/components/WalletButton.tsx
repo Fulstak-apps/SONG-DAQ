@@ -47,7 +47,7 @@ function postAudiusLinkInBackground(body: unknown) {
 
 export function WalletButton({ compact = false, connectOnly = false }: { compact?: boolean; connectOnly?: boolean }) {
   const { address, kind, provider, audius, setSession, clear } = useSession();
-  const { userMode } = useUI();
+  const { userMode, setUserMode } = useUI();
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState<WalletId | null>(null);
   const [err, setErr] = useState<string | null>(null);
@@ -66,11 +66,12 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
       const r = await connectWallet(id);
       setSession({ address: r.address, kind: r.kind, provider: r.provider });
       if (audius) {
+        setUserMode("ARTIST");
         postAudiusLinkInBackground({
           wallet: r.address,
           walletType: r.kind,
           profile: audius,
-          role: userMode === "ARTIST" ? "ARTIST" : undefined,
+          role: "ARTIST",
         });
       }
       setOpen(false);
@@ -86,7 +87,12 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
 
   async function onDisconnect() {
     await disconnectWallet(provider as WalletId | null);
-    clear();
+    if (audius) {
+      setSession({ address: null, kind: null, provider: null });
+      setUserMode("ARTIST");
+    } else {
+      clear();
+    }
   }
 
   if (!mounted) {
@@ -113,7 +119,7 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
         <button
           className="w-10 h-10 flex items-center justify-center rounded-xl bg-white/[0.055] border border-edge text-mute hover:text-red hover:bg-red/10 hover:border-red/25 transition"
           onClick={onDisconnect}
-          title="Disconnect all wallets"
+          title={audius ? "Disconnect external wallet" : "Disconnect wallet"}
         >
           <LogOut size={12} />
         </button>

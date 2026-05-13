@@ -4,25 +4,35 @@ import { motion } from "framer-motion";
 import { usePaperTrading, useSession, useUI } from "@/lib/store";
 
 export function RoleToggle() {
-  const { address } = useSession();
+  const { address, audius } = useSession();
   const { userMode, setUserMode } = useUI();
   const { enabled: paperMode } = usePaperTrading();
   const [me, setMe] = useState<any>(null);
 
   async function load() {
-    if (!address) return setMe(null);
+    if (audius && userMode !== "ARTIST") {
+      setUserMode("ARTIST");
+    }
+    if (!address) {
+      setMe(null);
+      return;
+    }
     const r = await fetch(`/api/me?wallet=${address}`).then((r) => r.json()).catch(() => ({}));
     setMe(r.user);
-    if (r.user?.preferredMode) setUserMode(r.user.preferredMode);
+    if (!audius && r.user?.preferredMode) setUserMode(r.user.preferredMode);
   }
-  useEffect(() => { load(); const i = setInterval(load, 6000); return () => clearInterval(i); }, [address]);
+  useEffect(() => { load(); const i = setInterval(load, 6000); return () => clearInterval(i); }, [address, audius?.userId, userMode]);
 
-  const artistCapable = me?.role === "ARTIST" || me?.role === "ADMIN";
-  if (!paperMode && (!me || !artistCapable)) return null;
+  const artistCapable = !!audius || me?.role === "ARTIST" || me?.role === "ADMIN";
+  if (!paperMode && !audius && (!me || !artistCapable)) return null;
 
   async function set(mode: "ARTIST" | "INVESTOR") {
+    if (audius && mode !== "ARTIST") {
+      setUserMode("ARTIST");
+      return;
+    }
     setUserMode(mode);
-    if (paperMode) return;
+    if (paperMode || audius) return;
     const r = await fetch("/api/me/mode", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -31,7 +41,7 @@ export function RoleToggle() {
     if (r.ok) load();
   }
 
-  const mode = ((paperMode ? userMode : me?.preferredMode) || "INVESTOR") as "ARTIST" | "INVESTOR";
+  const mode = (audius ? "ARTIST" : ((paperMode ? userMode : me?.preferredMode) || "INVESTOR")) as "ARTIST" | "INVESTOR";
   const investorActive = mode === "INVESTOR";
   const artistActive = mode === "ARTIST";
 
