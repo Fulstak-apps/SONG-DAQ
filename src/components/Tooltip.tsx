@@ -20,9 +20,11 @@ interface TooltipProps {
 export function Tooltip({ children, content, delay = 0.25, side = "top", width = 280, triggerClassName = "" }: TooltipProps) {
   const [open, setOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
-  const [pos, setPos] = useState({ left: 0, top: 0 });
+  const [pos, setPos] = useState({ left: 12, top: 12, width, side });
   const timer = useRef<NodeJS.Timeout | null>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
+  const tooltipRef = useRef<HTMLDivElement>(null);
+  const touchTriggered = useRef(false);
 
   useEffect(() => setMounted(true), []);
   useEffect(() => {
@@ -30,20 +32,40 @@ export function Tooltip({ children, content, delay = 0.25, side = "top", width =
     const update = () => {
       const rect = triggerRef.current?.getBoundingClientRect();
       if (!rect) return;
+      const viewport = window.visualViewport;
       const gap = 10;
-      const safeWidth = Math.min(width, window.innerWidth - 16);
-      const left = Math.min(Math.max(rect.left + rect.width / 2, safeWidth / 2 + 8), window.innerWidth - safeWidth / 2 - 8);
-      const top = side === "bottom"
-        ? Math.min(rect.bottom + gap, window.innerHeight - 24)
-        : Math.max(rect.top - gap, 24);
-      setPos({ left, top });
+      const margin = 12;
+      const viewportWidth = viewport?.width ?? window.innerWidth;
+      const viewportHeight = viewport?.height ?? window.innerHeight;
+      const viewportLeft = viewport?.offsetLeft ?? 0;
+      const viewportTop = viewport?.offsetTop ?? 0;
+      const safeWidth = Math.max(220, Math.min(width, viewportWidth - margin * 2));
+      const tooltipHeight = tooltipRef.current?.offsetHeight ?? 150;
+      const spaceAbove = rect.top - viewportTop - margin;
+      const spaceBelow = viewportTop + viewportHeight - rect.bottom - margin;
+      const resolvedSide = side === "top" && spaceAbove < tooltipHeight + gap && spaceBelow > spaceAbove
+        ? "bottom"
+        : side === "bottom" && spaceBelow < tooltipHeight + gap && spaceAbove > spaceBelow
+          ? "top"
+          : side;
+      const rawLeft = rect.left + rect.width / 2 - safeWidth / 2;
+      const rawTop = resolvedSide === "bottom" ? rect.bottom + gap : rect.top - tooltipHeight - gap;
+      const left = Math.min(Math.max(rawLeft, viewportLeft + margin), viewportLeft + viewportWidth - safeWidth - margin);
+      const top = Math.min(Math.max(rawTop, viewportTop + margin), viewportTop + viewportHeight - tooltipHeight - margin);
+      setPos({ left, top, width: safeWidth, side: resolvedSide });
     };
     update();
+    const raf = window.requestAnimationFrame(update);
     window.addEventListener("scroll", update, true);
     window.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("resize", update);
+    window.visualViewport?.addEventListener("scroll", update);
     return () => {
+      window.cancelAnimationFrame(raf);
       window.removeEventListener("scroll", update, true);
       window.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("resize", update);
+      window.visualViewport?.removeEventListener("scroll", update);
     };
   }, [open, side, width]);
 
@@ -62,24 +84,40 @@ export function Tooltip({ children, content, delay = 0.25, side = "top", width =
       className={`relative inline-flex items-center cursor-help ${triggerClassName}`}
       onMouseEnter={handleEnter}
       onMouseLeave={handleLeave}
-      onTouchStart={() => setOpen(true)}
-      onTouchEnd={() => setTimeout(() => setOpen(false), 3000)}
+      onClick={(e) => {
+        e.stopPropagation();
+        if (touchTriggered.current) {
+          touchTriggered.current = false;
+          return;
+        }
+        setOpen((v) => !v);
+      }}
+      onTouchStart={(e) => {
+        e.stopPropagation();
+        touchTriggered.current = true;
+        setOpen(true);
+      }}
+      onTouchEnd={(e) => {
+        e.stopPropagation();
+        setTimeout(() => setOpen(false), 3000);
+      }}
     >
       {children}
       {mounted ? createPortal(
       <AnimatePresence>
         {open && (
           <motion.div
-            initial={{ opacity: 0, y: side === "bottom" ? -6 : 6, scale: 0.95, filter: "blur(4px)" }}
+            ref={tooltipRef}
+            initial={{ opacity: 0, y: pos.side === "bottom" ? -6 : 6, scale: 0.95, filter: "blur(4px)" }}
             animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, y: side === "bottom" ? -4 : 4, scale: 0.95, filter: "blur(2px)" }}
+            exit={{ opacity: 0, y: pos.side === "bottom" ? -4 : 4, scale: 0.95, filter: "blur(2px)" }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            className="fixed -translate-x-1/2 max-w-[calc(100vw-1rem)] p-3.5 bg-panel/95 backdrop-blur-2xl border border-edge rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.6)] z-[200] pointer-events-none"
+            className="fixed max-w-[calc(100vw-1.5rem)] overflow-hidden p-3.5 bg-panel/95 backdrop-blur-2xl border border-edge rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.6)] z-[200] pointer-events-none"
             style={{
-              width: Math.min(width, typeof window !== "undefined" ? window.innerWidth - 16 : width),
+              width: pos.width,
               left: pos.left,
               top: pos.top,
-              transform: side === "bottom" ? "translateX(-50%)" : "translateX(-50%) translateY(-100%)",
+              maxHeight: "calc(100dvh - 24px)",
             }}
           >
             <div className="text-[13px] font-medium text-ink leading-relaxed">
