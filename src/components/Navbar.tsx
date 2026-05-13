@@ -163,7 +163,7 @@ export function Navbar() {
     <>
     <header className="mobile-header-safe sticky top-0 z-40 border-b border-edge transition-colors duration-500">
       {/* Glass background with premium blur */}
-      <div className="absolute inset-0 bg-bg/92 backdrop-blur-2xl" />
+      <div className="absolute inset-0 bg-bg shadow-[0_14px_34px_rgba(0,0,0,0.34)] backdrop-blur-2xl md:bg-bg/92 md:shadow-none" />
       {/* Top highlight line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
       
@@ -280,8 +280,9 @@ export function Navbar() {
 
             <button
               onClick={toggleTheme}
-              className="hidden h-10 w-10 items-center justify-center rounded-xl border border-edge bg-white/[0.055] text-mute transition-all hover:bg-white/[0.09] hover:text-ink sm:flex xl:h-10 xl:w-10"
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-edge bg-white/[0.055] text-mute transition-all hover:bg-white/[0.09] hover:text-ink sm:h-10 sm:w-10"
               title="Toggle theme"
+              aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
             >
               {theme === "dark" ? <Sun size={14} /> : <Moon size={14} />}
             </button>
@@ -444,18 +445,18 @@ function MobileWalletSummary({
   };
 
   return (
-    <div className="md:hidden border-t border-edge/60 py-1.5">
-      <div className="no-scrollbar flex min-w-0 items-center gap-2 overflow-x-auto px-0.5">
+    <div className="md:hidden border-t border-edge/60 py-2">
+      <div className="grid min-w-0 grid-cols-1 gap-2 px-0.5">
         {hasExternalWallet ? (
-          <div className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3 py-1.5 text-left">
-            <span className="h-2 w-2 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.75)]" />
-            <span className="flex flex-col leading-tight">
-              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-neon">Wallet</span>
-              <span className="font-mono text-xs font-black text-ink">
+          <div className="flex min-h-11 w-full min-w-0 items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3 py-2 text-left">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.75)]" />
+            <span className="flex min-w-0 flex-1 flex-col leading-tight">
+              <span className="text-[10px] font-black uppercase tracking-[0.12em] text-neon">External wallet</span>
+              <span className="truncate font-mono text-xs font-black text-ink">
                 {native.error ? "Balance unavailable" : native.balance != null ? `${native.balance.toFixed(3)} SOL` : "Loading SOL"}
               </span>
             </span>
-            <span className="font-mono text-[11px] font-bold text-mute">
+            <span className="max-w-[34%] shrink-0 truncate text-right font-mono text-[11px] font-bold text-mute">
               {native.usd != null ? formatUsd(native.usd) : short}
             </span>
             <button
@@ -469,11 +470,11 @@ function MobileWalletSummary({
             </button>
           </div>
         ) : paperMode || isPaperWallet || provider === PAPER_WALLET_PROVIDER ? (
-          <div className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3 py-1.5">
-            <span className="h-2 w-2 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.75)]" />
-            <span className="flex flex-col leading-tight">
-              <span className="text-[10px] font-black uppercase tracking-[0.18em] text-neon">Paper wallet</span>
-              <span className="font-mono text-xs font-black text-ink">100 SOL · 2.5K AUDIO</span>
+          <div className="flex min-h-11 w-full min-w-0 items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3 py-2">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.75)]" />
+            <span className="flex min-w-0 flex-1 flex-col leading-tight">
+              <span className="text-[10px] font-black uppercase tracking-[0.12em] text-neon">Paper wallet</span>
+              <span className="truncate font-mono text-xs font-black text-ink">100 SOL · 2.5K AUDIO</span>
             </span>
             <button
               type="button"
@@ -488,16 +489,16 @@ function MobileWalletSummary({
         ) : null}
 
         {audius ? (
-          <div className="flex min-h-11 max-w-[82vw] shrink-0 items-center gap-2 rounded-xl border border-violet/25 bg-violet/10 px-3 py-2">
-            <span className="h-2 w-2 rounded-full bg-violet shadow-[0_0_8px_rgba(155,81,224,0.75)]" />
-            <span className="flex min-w-0 flex-col leading-tight">
-              <span className="max-w-[210px] whitespace-normal break-words text-[10px] font-black uppercase leading-tight tracking-[0.12em] text-violet">
+          <div className="flex min-h-11 w-full min-w-0 items-center gap-2 rounded-xl border border-violet/25 bg-violet/10 px-3 py-2">
+            <span className="h-2 w-2 shrink-0 rounded-full bg-violet shadow-[0_0_8px_rgba(155,81,224,0.75)]" />
+            <span className="flex min-w-0 flex-1 flex-col leading-tight">
+              <span className="whitespace-normal break-words text-[10px] font-black uppercase leading-tight tracking-[0.08em] text-violet">
                 {audius.name || `@${audius.handle}`}
               </span>
-              <span className="mt-0.5 font-mono text-xs font-black text-ink">
+              <span className="mt-0.5 truncate font-mono text-xs font-black text-ink">
                 {audio != null ? `${audio.toLocaleString(undefined, { maximumFractionDigits: 0 })} AUDIO` : "Audius synced"}
               </span>
-              <span className="mt-0.5 font-mono text-[10px] font-bold uppercase tracking-widest text-mute">
+              <span className="mt-0.5 truncate font-mono text-[10px] font-bold uppercase tracking-[0.12em] text-mute">
                 Audius wallet {shortAudiusWallet}
               </span>
             </span>
@@ -517,9 +518,9 @@ function MobileWalletSummary({
           <button
             type="button"
             onClick={openArtistWalletConnect}
-            className="btn-primary min-h-11 shrink-0 px-3 text-[10px] font-black uppercase tracking-[0.16em]"
+            className="btn-primary min-h-11 w-full px-3 text-[10px] font-black uppercase tracking-[0.14em]"
           >
-            Connect wallet
+            Connect external wallet
           </button>
         ) : null}
       </div>

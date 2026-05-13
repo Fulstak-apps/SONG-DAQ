@@ -1452,7 +1452,12 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
                     />
                     <LaunchSuccessChecklist result={result} liquidityStage={liquidityStage} launchKind={launchKind} />
                   </div>
-                  <a className="btn-primary block w-full py-4 text-sm font-black tracking-widest" href={`/song/${result.song?.id}`}>
+                  <a
+                    className="btn-primary block w-full py-4 text-sm font-black tracking-widest"
+                    href={result.song?.mintAddress || result.song?.fakeTokenAddress || result.song?.id
+                      ? `/coin/${encodeURIComponent(result.song.mintAddress || result.song.fakeTokenAddress || result.song.id)}`
+                      : "/market"}
+                  >
                     {liquidityStage === "live" ? "OPEN LIVE COIN" : "OPEN COIN DETAIL"}
                   </a>
                 </div>
@@ -1684,7 +1689,7 @@ function LaunchPoolSummary({
           </a>
         ) : null}
         {result?.song?.id ? (
-          <a className="btn-primary h-9 flex-1 px-3 text-center text-[11px] uppercase tracking-widest font-black" href={`/song/${result.song.id}?liquidity=1#liquidity`}>
+          <a className="btn-primary h-9 flex-1 px-3 text-center text-[11px] uppercase tracking-widest font-black" href={`/song/${encodeURIComponent(result.song.id)}?liquidity=1#liquidity`}>
             Add More Liquidity
           </a>
         ) : null}
