@@ -275,7 +275,7 @@ export function CoinPreviewModal({
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="mobile-safe-overlay fixed inset-0 z-50 grid items-start justify-items-center overflow-y-auto bg-pure-black/60 backdrop-blur-xl sm:place-items-center overscroll-contain"
+        className="mobile-safe-overlay fixed inset-0 z-[9500] grid items-start justify-items-center overflow-y-auto bg-pure-black/70 backdrop-blur-xl sm:place-items-center overscroll-contain"
         onClick={onClose}
         onWheel={(e) => e.stopPropagation()}
       >

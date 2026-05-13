@@ -291,7 +291,7 @@ export function WhyDidThisMove({
             animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -6, scale: 0.95, filter: "blur(4px)" }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="absolute top-full mt-2 right-0 w-[min(380px,calc(100vw-1rem))] max-w-[calc(100vw-1rem)] rounded-2xl border border-edge bg-panel/95 backdrop-blur-2xl shadow-[0_24px_48px_rgba(0,0,0,0.7)] z-50 overflow-hidden"
+            className="absolute top-full mt-2 right-0 z-[9200] w-[min(380px,calc(100vw-1rem))] max-w-[calc(100vw-1rem)] rounded-2xl border border-edge bg-panel/95 backdrop-blur-2xl shadow-[0_24px_48px_rgba(0,0,0,0.7)] overflow-hidden"
           >
             {/* Header */}
             <div className="px-5 py-4 border-b border-edge flex items-center justify-between bg-panel2">
@@ -401,7 +401,7 @@ export function OnboardingHint({
         initial={{ opacity: 0, y: 20, scale: 0.95, filter: "blur(4px)" }}
         animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
         exit={{ opacity: 0, y: 10, scale: 0.95 }}
-        className="fixed bottom-24 right-6 w-[340px] max-w-[calc(100vw-2rem)] p-4 rounded-2xl border border-edge bg-panel/95 backdrop-blur-2xl shadow-[0_20px_40px_rgba(0,0,0,0.6)] z-50 text-ink"
+        className="fixed bottom-24 right-6 z-[9200] w-[340px] max-w-[calc(100vw-2rem)] p-4 rounded-2xl border border-edge bg-panel/95 backdrop-blur-2xl shadow-[0_20px_40px_rgba(0,0,0,0.6)] text-ink"
       >
         <div className="flex items-start gap-3">
           <div className="w-8 h-8 rounded-xl bg-neon/10 flex items-center justify-center text-neon shrink-0">

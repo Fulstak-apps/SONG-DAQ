@@ -259,7 +259,7 @@ export function Navbar() {
 
   return (
     <>
-    <header className="mobile-header-safe sticky top-0 z-40 border-b border-edge transition-colors duration-500">
+    <header className="mobile-header-safe sticky top-0 z-[80] border-b border-edge transition-colors duration-500">
       {/* Glass background with premium blur */}
       <div className="absolute inset-0 bg-bg shadow-[0_14px_34px_rgba(0,0,0,0.34)] backdrop-blur-xl md:bg-bg/92 md:shadow-none md:backdrop-blur-2xl" />
       {/* Top highlight line */}
@@ -341,7 +341,7 @@ export function Navbar() {
               {(address || paperMode) ? <div className="hidden 2xl:block shrink-0"><RoleToggle /></div> : null}
           </div>
 
-          <div className="ml-auto flex shrink-0 items-center gap-1 sm:gap-1.5">
+          <div className="ml-auto flex max-w-[calc(100vw-7.25rem)] shrink-0 items-center justify-end gap-1 overflow-x-auto overscroll-contain no-scrollbar sm:max-w-none sm:gap-1.5">
             {mounted && audius && !hasSeparateExternalWallet ? (
               <div className="hidden shrink-0 sm:block">
                 <WalletButton compact connectOnly />
@@ -350,7 +350,7 @@ export function Navbar() {
 
             {mounted && !(address || audius || paperMode) ? (
               <button
-                className="btn-primary h-9 min-h-0 px-2.5 py-0 text-[10px] font-black tracking-widest shadow-neon-glow min-[390px]:px-3.5 sm:h-10 sm:px-5 sm:text-xs"
+                className="btn-primary h-9 min-h-0 px-2.5 py-0 text-[10px] font-black tracking-widest shadow-neon-glow min-[390px]:px-3 sm:h-10 sm:px-5 sm:text-xs"
                 onClick={openLoginModal}
               >
                 <span className="relative z-10">CONNECT</span>
@@ -367,7 +367,7 @@ export function Navbar() {
 
             <button
               onClick={togglePaperMode}
-              className={`h-9 shrink-0 rounded-xl border px-2 text-[10px] font-black uppercase tracking-widest transition-all min-[390px]:px-2.5 sm:h-10 sm:px-3 sm:text-[11px] xl:px-3 ${
+              className={`h-9 shrink-0 rounded-xl border px-2 text-[10px] font-black uppercase tracking-widest transition-all sm:h-10 sm:px-3 sm:text-[11px] xl:px-3 ${
                 paperMode
                   ? "border-neon/40 bg-neon text-[#020403] shadow-[0_0_18px_rgba(0,229,114,0.22)]"
                   : "border-neon/20 bg-neon/10 text-neon hover:bg-neon/15"
@@ -412,9 +412,8 @@ export function Navbar() {
           hasExternalWallet={hasSeparateExternalWallet}
         />
       </div>
-
-      <LoginModal isOpen={loginModalOpen} onClose={closeLoginModal} />
     </header>
+    <LoginModal isOpen={loginModalOpen} onClose={closeLoginModal} />
     <MobileBottomNav navItems={navItems} userMode={userMode} paperMode={paperMode} path={path} navigate={navigate} setUserMode={setUserMode} notificationCounts={notificationCounts} />
     </>
   );
@@ -444,7 +443,7 @@ function HeaderClock() {
   if (!time) return null;
 
   return (
-    <span className="inline-flex shrink-0 rounded-xl border border-edge bg-white/[0.045] px-1.5 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-mute min-[390px]:px-2.5 min-[390px]:py-1.5 min-[390px]:text-[10px] xl:px-3 xl:text-[11px]">
+    <span className="hidden shrink-0 rounded-xl border border-edge bg-white/[0.045] px-2.5 py-1.5 font-mono text-[10px] font-black uppercase tracking-widest text-mute md:inline-flex xl:px-3 xl:text-[11px]">
       {time}
     </span>
   );

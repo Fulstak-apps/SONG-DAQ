@@ -251,7 +251,7 @@ export function LoginModal({ isOpen, onClose }: { isOpen: boolean; onClose: () =
       <motion.div
         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
         transition={{ duration: 0.15 }}
-        className="mobile-safe-overlay fixed inset-0 z-[100] grid items-start justify-items-center overflow-y-auto bg-ink/30 backdrop-blur-sm sm:place-items-center"
+        className="mobile-safe-overlay fixed inset-0 z-[9500] grid items-start justify-items-center overflow-y-auto bg-pure-black/72 backdrop-blur-xl sm:place-items-center"
         onClick={onClose}
       >
         <motion.div

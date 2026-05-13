@@ -81,7 +81,7 @@ export function CommandPalette() {
       {open && (
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="mobile-safe-overlay fixed inset-0 z-[100] grid place-items-start bg-ink/30 backdrop-blur-lg sm:pt-[10svh]"
+          className="mobile-safe-overlay fixed inset-0 z-[9500] grid place-items-start bg-ink/40 backdrop-blur-xl sm:pt-[10svh]"
           onClick={() => setOpen(false)}
         >
           <motion.div

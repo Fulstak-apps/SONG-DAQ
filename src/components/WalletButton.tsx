@@ -152,7 +152,7 @@ export function WalletButton({ compact = false, connectOnly = false }: { compact
             animate={{ opacity: 1, y: 0, scale: 1, filter: "blur(0px)" }}
             exit={{ opacity: 0, y: -4, scale: 0.97 }}
             transition={{ type: "spring", stiffness: 350, damping: 28 }}
-            className="absolute right-0 top-12 w-[min(18rem,calc(100vw-1rem))] max-w-[calc(100vw-1rem)] rounded-2xl border border-edge bg-panel backdrop-blur-3xl p-3 z-40 shadow-[0_20px_40px_rgba(0,0,0,0.6)] text-ink"
+            className="fixed inset-x-3 top-[calc(env(safe-area-inset-top,0px)+4.75rem)] z-[9500] max-h-[calc(100dvh-env(safe-area-inset-top,0px)-env(safe-area-inset-bottom,0px)-6rem)] overflow-y-auto rounded-2xl border border-edge bg-panel p-3 text-ink shadow-[0_24px_70px_rgba(0,0,0,0.72)] backdrop-blur-3xl sm:absolute sm:inset-x-auto sm:right-0 sm:top-12 sm:w-[min(18rem,calc(100vw-1rem))] sm:max-w-[calc(100vw-1rem)] sm:max-h-none sm:overflow-visible"
           >
             <div className="px-2 py-1.5 label">Solana wallets · {network}</div>
             {WALLETS.map((w) => (

@@ -61,7 +61,7 @@ export function HiddenAdminAccess() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="mobile-safe-overlay fixed inset-0 z-[120] grid place-items-center bg-black/65 backdrop-blur-xl"
+          className="mobile-safe-overlay fixed inset-0 z-[9500] grid place-items-center bg-black/72 backdrop-blur-xl"
           onClick={() => setOpen(false)}
         >
           <motion.form
