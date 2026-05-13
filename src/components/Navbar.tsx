@@ -15,6 +15,7 @@ import {
   Volume2,
   VolumeX,
   WalletCards,
+  X,
 } from "lucide-react";
 import { WalletBalance, useAudiusAudioBalance, useNativeBalance } from "./WalletBalance";
 import { CurrencySelector } from "./CurrencySelector";
@@ -24,7 +25,7 @@ import { LoginModal } from "./LoginModal";
 import { WalletButton } from "./WalletButton";
 import { PAPER_WALLET_ADDRESS, PAPER_WALLET_PROVIDER, isPaperWalletAddress, usePaperTrading, useSession, useUI, usePrestige, useAlerts, type AudiusProfile } from "@/lib/store";
 import { safeJson } from "@/lib/safeJson";
-import { getCurrentWalletAddress, isKnownWalletId, subscribeWalletChanges, type WalletId } from "@/lib/wallet";
+import { disconnectWallet, getCurrentWalletAddress, isKnownWalletId, subscribeWalletChanges, type WalletId } from "@/lib/wallet";
 import { useUsdToDisplayRate } from "@/lib/fiat";
 
 type NavItem = { href: string; label: string; icon: string; reqArtistMode?: boolean };
@@ -401,7 +402,9 @@ function MobileWalletSummary({
   hasExternalWallet: boolean;
 }) {
   const { formatUsd } = useUsdToDisplayRate();
+  const { setSession, clearAudius } = useSession();
   const { openLoginModal, setUserMode } = useUI();
+  const { setEnabled: setPaperMode } = usePaperTrading();
   const native = useNativeBalance(hasExternalWallet ? address : null, hasExternalWallet ? "solana" : null);
   const audioBalance = useAudiusAudioBalance(audius?.handle);
   if (!mounted) return null;
@@ -422,12 +425,29 @@ function MobileWalletSummary({
     }
     openLoginModal();
   };
+  const disconnectExternalWallet = async () => {
+    if (provider && provider !== "audius" && provider !== PAPER_WALLET_PROVIDER) {
+      await disconnectWallet(provider as WalletId);
+    }
+    setSession({ address: null, kind: null, provider: null });
+    if (audius) setUserMode("ARTIST");
+  };
+  const signOutAudius = () => {
+    clearAudius();
+    if (!hasExternalWallet && !paperMode) setUserMode("INVESTOR");
+  };
+  const turnOffPaperWallet = () => {
+    setPaperMode(false);
+    if (isPaperWallet || provider === PAPER_WALLET_PROVIDER) {
+      setSession({ address: null, kind: null, provider: null });
+    }
+  };
 
   return (
     <div className="md:hidden border-t border-edge/60 py-1.5">
       <div className="no-scrollbar flex min-w-0 items-center gap-2 overflow-x-auto px-0.5">
         {hasExternalWallet ? (
-          <div className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3 text-left">
+          <div className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3 py-1.5 text-left">
             <span className="h-2 w-2 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.75)]" />
             <span className="flex flex-col leading-tight">
               <span className="text-[10px] font-black uppercase tracking-[0.18em] text-neon">Wallet</span>
@@ -438,14 +458,32 @@ function MobileWalletSummary({
             <span className="font-mono text-[11px] font-bold text-mute">
               {native.usd != null ? formatUsd(native.usd) : short}
             </span>
+            <button
+              type="button"
+              onClick={disconnectExternalWallet}
+              className="ml-1 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-neon/25 bg-black/20 text-neon/80 transition hover:bg-neon/15 hover:text-neon active:scale-95"
+              title="Disconnect external wallet"
+              aria-label="Disconnect external wallet"
+            >
+              <X size={14} />
+            </button>
           </div>
         ) : paperMode || isPaperWallet || provider === PAPER_WALLET_PROVIDER ? (
-          <div className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3">
+          <div className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-neon/25 bg-neon/10 px-3 py-1.5">
             <span className="h-2 w-2 rounded-full bg-neon shadow-[0_0_8px_rgba(0,229,114,0.75)]" />
             <span className="flex flex-col leading-tight">
               <span className="text-[10px] font-black uppercase tracking-[0.18em] text-neon">Paper wallet</span>
               <span className="font-mono text-xs font-black text-ink">100 SOL · 2.5K AUDIO</span>
             </span>
+            <button
+              type="button"
+              onClick={turnOffPaperWallet}
+              className="ml-1 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-neon/25 bg-black/20 text-neon/80 transition hover:bg-neon/15 hover:text-neon active:scale-95"
+              title="Turn off Paper Mode"
+              aria-label="Turn off Paper Mode"
+            >
+              <X size={14} />
+            </button>
           </div>
         ) : null}
 
@@ -463,6 +501,15 @@ function MobileWalletSummary({
                 Audius wallet {shortAudiusWallet}
               </span>
             </span>
+            <button
+              type="button"
+              onClick={signOutAudius}
+              className="ml-1 grid h-8 w-8 shrink-0 place-items-center rounded-lg border border-violet/25 bg-black/20 text-violet/85 transition hover:bg-violet/15 hover:text-violet active:scale-95"
+              title="Sign out of Audius"
+              aria-label="Sign out of Audius"
+            >
+              <X size={14} />
+            </button>
           </div>
         ) : null}
 

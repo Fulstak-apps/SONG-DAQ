@@ -128,6 +128,20 @@ textarea {
   touch-action: manipulation;
 }
 
+@media (prefers-reduced-motion: no-preference) {
+  :where(button:not(:disabled), a[href], [role="button"]:not([aria-disabled="true"]), summary) {
+    transition-property: transform, filter, background-color, border-color, box-shadow, color, opacity;
+    transition-duration: 160ms;
+    transition-timing-function: var(--spring);
+  }
+
+  :where(button:not(:disabled), a[href], [role="button"]:not([aria-disabled="true"]), summary):active,
+  :where(button:not(:disabled), a[href], [role="button"]:not([aria-disabled="true"]), summary)[data-tap-active="true"] {
+    transform: translateY(1px) scale(0.985);
+    filter: brightness(1.08);
+  }
+}
+
 .mobile-safe-overlay {
   padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
   padding-right: max(0.5rem, env(safe-area-inset-right, 0px));

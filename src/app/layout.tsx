@@ -11,6 +11,7 @@ import { LocalTimeToggle } from "@/components/LocalTimeToggle";
 import { HiddenAdminAccess } from "@/components/HiddenAdminAccess";
 import { PaperModeFrame } from "@/components/PaperModeFrame";
 import { AudiusAutoShuffle } from "@/components/AudiusAutoShuffle";
+import { InteractionFeedback } from "@/components/InteractionFeedback";
 import { SITE_BRAND, SITE_DESCRIPTION, SITE_NAME, SITE_TITLE, getSiteOrigin, siteUrl } from "@/lib/site";
 
 const inter = Inter({
@@ -174,6 +175,7 @@ export default function RootLayout({
           <HiddenAdminAccess />
           <PaperModeFrame />
           <AudiusAutoShuffle />
+          <InteractionFeedback />
           <GlobalPlayer />
         </ThemeProvider>
       </body>

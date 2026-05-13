@@ -70,7 +70,7 @@ export const useSession = create<SessionState>()(
         };
       }),
       clear: () => set({ address: null, kind: null, provider: null, audius: null }),
-      clearAudius: () => set({ address: null, kind: null, provider: null, audius: null }),
+      clearAudius: () => set({ audius: null }),
     }),
     {
       name: "songdaq-session-tab",
