@@ -40,6 +40,17 @@ function normalizedImage(src?: string) {
   return src.replace(/([?&])(width|w|height|h)=\d+/gi, "").trim();
 }
 
+function categoryImage(category: NewsStory["category"]) {
+  const images: Record<NewsStory["category"], string> = {
+    MUSIC: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=1200&q=80",
+    TECH: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80",
+    AI: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=1200&q=80",
+    CREATOR: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=1200&q=80",
+    TRENDING: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+  };
+  return images[category];
+}
+
 function cleanIntelText(value: string) {
   return String(value || "")
     .replace(/<[^>]*>/g, " ")
@@ -189,7 +200,7 @@ function StoryCard({ story, variant }: { story: NewsStory; variant: "lead" | "wi
     variant === "tall" ? "md:row-span-2" :
     "";
   const titleSize = variant === "lead" ? "text-xl sm:text-2xl md:text-3xl" : variant === "wide" ? "text-lg sm:text-xl md:text-2xl" : "text-base sm:text-lg";
-  const img = story.thumbnail;
+  const img = story.thumbnail || categoryImage(story.category);
   const title = cleanIntelText(story.title);
   const snippet = cleanIntelText(story.contentSnippet || "");
   const seed = story.id.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0);

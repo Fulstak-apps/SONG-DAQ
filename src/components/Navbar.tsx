@@ -408,6 +408,8 @@ function MobileWalletSummary({
   if (!hasExternalWallet && !audius && !paperMode) return null;
 
   const short = address ? `${address.slice(0, 4)}…${address.slice(-4)}` : null;
+  const audiusWallet = audius?.wallets?.sol || null;
+  const shortAudiusWallet = audiusWallet ? `${audiusWallet.slice(0, 4)}…${audiusWallet.slice(-4)}` : "Not exposed";
   const audio = audioBalance ?? audius?.audioBalance ?? null;
   const openArtistWalletConnect = () => {
     setUserMode("ARTIST");
@@ -448,14 +450,17 @@ function MobileWalletSummary({
         ) : null}
 
         {audius ? (
-          <div className="flex min-h-11 shrink-0 items-center gap-2 rounded-xl border border-violet/25 bg-violet/10 px-3">
+          <div className="flex min-h-11 max-w-[82vw] shrink-0 items-center gap-2 rounded-xl border border-violet/25 bg-violet/10 px-3 py-2">
             <span className="h-2 w-2 rounded-full bg-violet shadow-[0_0_8px_rgba(155,81,224,0.75)]" />
-            <span className="flex flex-col leading-tight">
-              <span className="max-w-[130px] truncate text-[10px] font-black uppercase tracking-[0.18em] text-violet">
-                @{audius.handle}
+            <span className="flex min-w-0 flex-col leading-tight">
+              <span className="max-w-[210px] whitespace-normal break-words text-[10px] font-black uppercase leading-tight tracking-[0.12em] text-violet">
+                {audius.name || `@${audius.handle}`}
               </span>
-              <span className="font-mono text-xs font-black text-ink">
+              <span className="mt-0.5 font-mono text-xs font-black text-ink">
                 {audio != null ? `${audio.toLocaleString(undefined, { maximumFractionDigits: 0 })} AUDIO` : "Audius synced"}
+              </span>
+              <span className="mt-0.5 font-mono text-[10px] font-bold uppercase tracking-widest text-mute">
+                Audius wallet {shortAudiusWallet}
               </span>
             </span>
           </div>

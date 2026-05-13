@@ -21,6 +21,17 @@ const CAT_STYLE: Record<string, string> = {
   CREATOR: "text-neon border-neon/20 bg-neon/5",
 };
 
+function categoryImage(category: NewsItem["category"]) {
+  const images: Record<NewsItem["category"], string> = {
+    MUSIC: "https://images.unsplash.com/photo-1511379938547-c1f69419868d?auto=format&fit=crop&w=800&q=80",
+    TECH: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=800&q=80",
+    AI: "https://images.unsplash.com/photo-1677442136019-21780ecad995?auto=format&fit=crop&w=800&q=80",
+    CREATOR: "https://images.unsplash.com/photo-1497366754035-f200968a6e72?auto=format&fit=crop&w=800&q=80",
+    TRENDING: "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=800&q=80",
+  };
+  return images[category];
+}
+
 function cleanNewsText(value: string) {
   return String(value || "")
     .replace(/<[^>]*>/g, " ")
@@ -148,11 +159,9 @@ export function NewsFeed() {
                       <span className="num">{relTime(item.pubDate)}</span>
                     </div>
                   </div>
-                  {item.thumbnail && (
-                    <div className="w-10 h-10 shrink-0 rounded-md overflow-hidden border border-edge shadow-sm bg-black/30">
-                      <img src={item.thumbnail} alt="" className="w-full h-full object-contain" />
-                    </div>
-                  )}
+                  <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg border border-edge bg-black/30 shadow-sm">
+                    <img src={item.thumbnail || categoryImage(item.category)} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" referrerPolicy="no-referrer" />
+                  </div>
                 </a>
               </li>
             ))}

@@ -45,7 +45,7 @@ export function CoinCard({
   const sparkUp = spark.length >= 2 ? spark[spark.length - 1] >= spark[0] : change >= 0;
   const sparkColor = sparkUp ? "#00E572" : "#FF3366";
   const tier = getTier(c.marketCap ?? 0);
-  const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || null;
+  const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || (c.mint ? `/api/token-image/${c.mint}` : null);
   const isOpenAudio = Boolean(c.isOpenAudioCoin || c.source === "open_audio" || c.source === "audius_public");
   const isSongDaqLocal = !isOpenAudio && Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
   const marketValueReliable = !isSongDaqLocal || (c as any).isMarketValueReliable !== false;
@@ -253,7 +253,7 @@ export function CoinListRow({
   const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
   const change = c.priceChange24hPercent ?? 0;
   const tier = getTier(c.marketCap ?? 0);
-  const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || null;
+  const artwork = c.logo_uri || c.audius_track_artwork || c.artist_avatar || (c.mint ? `/api/token-image/${c.mint}` : null);
   const isOpenAudio = Boolean(c.isOpenAudioCoin || c.source === "open_audio" || c.source === "audius_public");
   const isSongDaqLocal = !isOpenAudio && Boolean(c.isSongDaqLocal || c.songId || c.mintAddress);
   const marketValueReliable = !isSongDaqLocal || (c as any).isMarketValueReliable !== false;
@@ -263,24 +263,26 @@ export function CoinListRow({
     <motion.div
       whileHover={{ x: 4 }}
       onClick={() => onOpen ? onOpen(c) : router.push(`/coin/${c.mint}`)}
-      className="panel p-3 flex flex-wrap sm:flex-nowrap items-center gap-3 sm:gap-4 cursor-pointer hover:bg-white/[0.07] transition-all duration-300 group"
+      className="panel relative grid cursor-pointer gap-3 p-3 transition-all duration-300 hover:bg-white/[0.07] group md:flex md:flex-nowrap md:items-center md:gap-4"
     >
       {/* Watchlist */}
       <button
         onClick={(e) => { e.stopPropagation(); watchlist.toggle(c.mint); }}
-        className={`w-6 h-6 flex items-center justify-center rounded-md shrink-0 transition-all ${
+        className={`absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl border border-edge bg-panel2 transition-all md:static md:h-6 md:w-6 md:border-0 md:bg-transparent ${
           watchlist.items.includes(c.mint) ? "text-gold" : "text-mute hover:text-ink"
         }`}
+        aria-label={watchlist.items.includes(c.mint) ? "Remove from watchlist" : "Add to watchlist"}
       >
         <Star size={10} fill={watchlist.items.includes(c.mint) ? "currentColor" : "none"} />
       </button>
-      
-      <div className="relative w-9 h-9 rounded-lg overflow-hidden border border-edge shrink-0 bg-panel2">
-        <SafeImage src={artwork} alt={c.ticker} fill sizes="36px" className="object-cover" fallback={c.ticker} />
-      </div>
-      <div className="min-w-[160px] flex-1">
-        <div className="flex items-center gap-2">
-          <span className="font-bold text-sm tracking-tight group-hover:text-neon transition">${c.ticker}</span>
+
+      <div className="grid min-w-0 grid-cols-[48px_minmax(0,1fr)] items-start gap-3 pr-11 md:flex md:flex-1 md:items-center md:gap-3 md:pr-0">
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-xl border border-edge bg-panel2 md:h-9 md:w-9 md:rounded-lg">
+          <SafeImage src={artwork} alt={c.ticker} fill sizes="48px" className="object-cover" fallback={c.ticker} />
+        </div>
+        <div className="min-w-0 md:min-w-[160px] md:flex-1">
+          <div className="flex flex-wrap items-center gap-1.5 md:gap-2">
+            <span className="font-bold text-base tracking-tight text-ink transition group-hover:text-neon md:text-sm">${c.ticker}</span>
           <RiskBadge coin={c as any} compact />
           <span className={`rounded-md border px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest ${
             isSongDaqLocal ? "border-neon/25 bg-neon/10 text-neon" : "border-violet/25 bg-violet/10 text-violet"
@@ -288,27 +290,32 @@ export function CoinListRow({
             {isSongDaqLocal ? "song-daq" : "Open Audio"}
           </span>
           {tier.label && <span className={`text-[11px] font-black uppercase tracking-widest px-1 py-0.5 rounded border ${tier.color}`}>{tier.label}</span>}
-          <span className="text-[11px] text-mute uppercase tracking-widest font-bold">{c.holder ?? 0} holders</span>
-        </div>
-        <div className="text-[11px] text-mute truncate uppercase tracking-widest mt-0.5">{c.artist_name || c.name}</div>
-      </div>
-      <div className="w-[calc(50%-0.375rem)] sm:w-28 text-left sm:text-right rounded-xl sm:rounded-none border border-edge sm:border-0 bg-white/[0.035] sm:bg-transparent px-3 py-2 sm:p-0">
-        <div className="num text-xs font-bold text-ink tracking-wider">{marketValueLabel}</div>
-        <div className="text-[11px] text-mute uppercase tracking-widest mt-0.5">Public Value</div>
-      </div>
-      <div className="w-[calc(50%-0.375rem)] sm:w-28 text-left sm:text-right rounded-xl sm:rounded-none border border-edge sm:border-0 bg-white/[0.035] sm:bg-transparent px-3 py-2 sm:p-0">
-        <div className="num text-xs font-bold text-ink tracking-wider">{formatDisplayFiat(c.price ?? 0, 6)}</div>
-        <div className={`num text-[11px] font-black uppercase tracking-widest mt-0.5 ${change >= 0 ? "text-neon" : "text-red"}`}>
-          {change >= 0 ? "▲" : "▼"} {fmtPct(change)}
+            <span className="text-[11px] text-mute uppercase tracking-widest font-bold">{c.holder ?? 0} holders</span>
+          </div>
+          <div className="mt-0.5 text-[12px] font-bold uppercase tracking-widest text-mute line-clamp-2 md:truncate md:text-[11px]">{c.artist_name || c.name}</div>
         </div>
       </div>
-      <div className="w-full sm:w-20 flex justify-stretch sm:justify-center gap-2 sm:gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+
+      <div className="grid grid-cols-2 gap-2 md:contents">
+        <div className="rounded-xl border border-edge bg-white/[0.035] px-3 py-2 text-left md:w-28 md:border-0 md:bg-transparent md:p-0 md:text-right">
+          <div className="num text-sm font-bold tracking-wider text-ink md:text-xs">{marketValueLabel}</div>
+          <div className="mt-0.5 text-[11px] uppercase tracking-widest text-mute">Public Value</div>
+        </div>
+        <div className="rounded-xl border border-edge bg-white/[0.035] px-3 py-2 text-left md:w-28 md:border-0 md:bg-transparent md:p-0 md:text-right">
+          <div className="num text-sm font-bold tracking-wider text-ink md:text-xs">{formatDisplayFiat(c.price ?? 0, 6)}</div>
+          <div className={`num mt-0.5 text-[11px] font-black uppercase tracking-widest ${change >= 0 ? "text-neon" : "text-red"}`}>
+            {change >= 0 ? "▲" : "▼"} {fmtPct(change)}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-2 md:flex md:w-20 md:justify-center md:gap-1 md:opacity-0 md:transition-opacity md:group-hover:opacity-100">
         <button
-          className="btn-primary flex-1 sm:flex-none px-2 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest"
+          className="btn-primary h-10 px-2 text-[11px] font-black uppercase tracking-widest md:h-auto md:flex-none md:rounded-lg md:py-1.5"
           onClick={(e) => { e.stopPropagation(); onTrade?.("BUY", c); }}
         >BUY</button>
         <button
-          className="btn flex-1 sm:flex-none px-2 py-1.5 rounded-lg text-[11px] font-black uppercase tracking-widest border-white/[0.04]"
+          className="btn h-10 border-white/[0.04] px-2 text-[11px] font-black uppercase tracking-widest md:h-auto md:flex-none md:rounded-lg md:py-1.5"
           onClick={(e) => { e.stopPropagation(); onTrade?.("SELL", c); }}
         >SELL</button>
       </div>

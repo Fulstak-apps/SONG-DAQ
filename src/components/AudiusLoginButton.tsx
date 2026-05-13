@@ -70,7 +70,7 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
             href={audius.handle ? `https://audius.co/${audius.handle}` : "#"}
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 rounded-xl border border-violet/30 bg-violet/10 px-2 py-1.5 text-violet backdrop-blur-md transition hover:bg-violet/14 min-w-0 max-w-[176px] 2xl:max-w-[220px]"
+            className="flex min-w-0 items-center gap-2 rounded-xl border border-violet/30 bg-violet/10 px-2 py-1.5 text-violet backdrop-blur-md transition hover:bg-violet/14 max-w-[min(260px,30vw)] 2xl:max-w-[320px]"
             title={`${audius.name} (@${audius.handle})`}
           >
             <span className="relative shrink-0 overflow-hidden rounded-full border border-violet/25 bg-violet/18 h-7 w-7">
@@ -88,7 +88,7 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
                 </span>
               )}
             </span>
-            <span className="min-w-0 truncate whitespace-nowrap text-[11px] font-black uppercase tracking-[0.12em] leading-tight text-violet/90">
+            <span className="min-w-0 whitespace-normal break-words text-[10px] font-black uppercase leading-tight tracking-[0.08em] text-violet/90 2xl:text-[11px]">
               {audius.name || `@${audius.handle}`}
             </span>
             {audius.verified && <ShieldCheck size={11} className="shrink-0 text-violet" />}

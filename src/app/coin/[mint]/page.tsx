@@ -372,9 +372,9 @@ export default function CoinPage() {
         <div className="min-h-16 border-b border-edge flex flex-wrap items-center justify-between gap-3 px-4 py-3 sm:px-6 shrink-0 bg-bg shadow-md z-10">
           <div className="flex min-w-0 flex-wrap items-center gap-3 sm:gap-4">
             <SafeImage src={coinArtwork} alt={coin.ticker} width={36} height={36} fallback={coin.ticker} className="rounded-md shadow-sm" />
-            <div className="flex items-center gap-3">
-              <h1 className="text-lg sm:text-xl font-bold tracking-tight text-white break-words">${coin.ticker}</h1>
-              {coin.artist_name ? <span className="text-sm font-bold text-white/80 break-words">{coin.artist_name}</span> : null}
+            <div className="flex min-w-0 max-w-full flex-wrap items-center gap-x-3 gap-y-1">
+              <h1 className="shrink-0 text-lg font-bold tracking-tight text-white sm:text-xl">${coin.ticker}</h1>
+              {coin.artist_name ? <span className="min-w-0 max-w-[min(76vw,520px)] whitespace-normal break-words text-sm font-bold leading-tight text-white/80 sm:text-base">{coin.artist_name}</span> : null}
             </div>
             <div className="w-px h-6 bg-white/10 mx-1 sm:mx-2 hidden sm:block" />
             <div className="flex items-baseline gap-2 sm:gap-3">
