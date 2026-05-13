@@ -4,7 +4,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useSession, type AudiusProfile } from "@/lib/store";
 import { SafeImage } from "./SafeImage";
-import { priceAgeText, useUsdToDisplayRate } from "@/lib/fiat";
+import { priceAgeText, useLiveFiatPrices, useUsdToDisplayRate } from "@/lib/fiat";
 
 interface BalState {
   balance: number | null;
@@ -184,9 +184,9 @@ export function useAudiusAudioBalance(handle: string | null | undefined) {
 export function WalletBalance({ compact = false }: { compact?: boolean } = {}) {
   const { address, kind, provider, audius, setSession } = useSession();
   const { currency, formatUsd, updatedAt: fiatUpdatedAt } = useUsdToDisplayRate();
+  const { prices: livePrices } = useLiveFiatPrices(["AUDIO"]);
   const hasTradingWallet = !!address && provider !== "audius" && provider !== "paper";
   const trading = useNativeBalance(hasTradingWallet ? address : null, hasTradingWallet ? kind ?? null : null);
-  const [audioUsdPrice, setAudioUsdPrice] = useState(0);
 
   // Backfill wallets for sessions persisted before we shipped this field —
   // re-fetch the public profile by handle so the SPL wallet address shows up.
@@ -214,19 +214,18 @@ export function WalletBalance({ compact = false }: { compact?: boolean } = {}) {
   const tradingTokens = useTokenHoldings(hasTradingWallet ? tradingAddr : null, "summary");
   const isLinkedWallet = !!(address && audiusAddr && address === audiusAddr);
   const audioToken = audiusTokens?.tokens.find((t) => t.isAudio) ?? null;
-  useEffect(() => {
-    let alive = true;
-    fetch("/api/coins?limit=100", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((j) => {
-        if (!alive) return;
-        const audio = (j?.coins ?? []).find((c: any) => String(c.ticker).toUpperCase() === "AUDIO");
-        setAudioUsdPrice(Number(audio?.price ?? 0));
-      })
-      .catch(() => {});
-    return () => { alive = false; };
-  }, []);
-  const audioValueUsd = audioToken?.valueUsd ?? ((audioBalance ?? 0) * audioUsdPrice);
+  const audioUsdPrice = Number(audioToken?.price ?? livePrices.AUDIO?.usdPrice ?? 0);
+  const audioValueUsd = audioToken?.valueUsd ?? (
+    audioBalance == null
+      ? null
+      : audioBalance === 0
+        ? 0
+        : audioUsdPrice > 0
+          ? audioBalance * audioUsdPrice
+          : null
+  );
+  const audioFiatLabel = audioValueUsd == null ? "Fiat estimate unavailable" : formatUsd(audioValueUsd);
+  const audioFiatInlineLabel = audioValueUsd == null ? audioFiatLabel : `~${audioFiatLabel}`;
 
   const ref = useRef<HTMLDivElement | null>(null);
   useEffect(() => {
@@ -274,11 +273,11 @@ export function WalletBalance({ compact = false }: { compact?: boolean } = {}) {
             onClick={() => setOpen((v) => !v)}
             onMouseEnter={() => setOpen(true)}
             className="h-8 px-2 rounded-xl border border-violet/35 bg-violet/12 text-ink flex items-center gap-1 hover:bg-violet/20 transition cursor-pointer min-w-0 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)]"
-            title={`Audius wallet @${audius?.handle}\nAUDIO: ${audioBalance != null ? fmtNum(audioBalance) : "0"}\n${currency}: ${formatUsd(audioValueUsd)}`}
+            title={`Audius wallet @${audius?.handle}\nAUDIO: ${audioBalance != null ? fmtNum(audioBalance) : "0"}\n${currency}: ${audioFiatLabel}`}
           >
             <span className="w-1.5 h-1.5 rounded-full bg-violet shadow-[0_0_5px_rgba(155,81,224,0.8)]" />
             <span className="num font-bold text-ink tracking-wider text-[11px] whitespace-nowrap">{audioBalance != null ? fmtNum(audioBalance) : "—"} <span className="text-[11px] uppercase tracking-widest font-bold text-violet">$AUDIO</span></span>
-            <span className="hidden text-[11px] uppercase tracking-widest text-mute whitespace-nowrap 2xl:inline">~{formatUsd(audioValueUsd)}</span>
+            <span className="hidden text-[11px] uppercase tracking-widest text-mute whitespace-nowrap 2xl:inline">{audioFiatInlineLabel}</span>
           </button>
         )}
         <AnimatePresence>
@@ -307,7 +306,7 @@ export function WalletBalance({ compact = false }: { compact?: boolean } = {}) {
                   </div>
                   <div className="text-right">
                     <div className="text-xs num font-bold text-ink tracking-wider">{fmtNum(audioBalance)}</div>
-                    <div className="text-[11px] uppercase tracking-widest text-mute mt-0.5">{formatUsd(audioValueUsd)}</div>
+                    <div className="text-[11px] uppercase tracking-widest text-mute mt-0.5">{audioFiatLabel}</div>
                   </div>
                 </div>
               )}
@@ -388,14 +387,14 @@ export function WalletBalance({ compact = false }: { compact?: boolean } = {}) {
           onClick={() => setOpen((v) => !v)}
           onMouseEnter={() => setOpen(true)}
           className={`rounded-xl border border-violet/35 bg-violet/12 text-ink flex items-center hover:bg-violet/20 transition cursor-pointer shadow-[inset_0_1px_0_0_rgba(255,255,255,0.1)] min-w-0 ${compact ? "h-8 px-2 gap-1.25" : "h-10 px-2.5 xl:px-3 gap-1.5 xl:gap-2"}`}
-          title={`Audius wallet @${audius?.handle}\nAUDIO: ${audioBalance != null ? fmtNum(audioBalance) : "0"}\n${currency}: ${formatUsd(audioValueUsd)}`}
+          title={`Audius wallet @${audius?.handle}\nAUDIO: ${audioBalance != null ? fmtNum(audioBalance) : "0"}\n${currency}: ${audioFiatLabel}`}
         >
           <span className="w-1.5 h-1.5 rounded-full bg-violet shadow-[0_0_5px_rgba(155,81,224,0.8)]" />
           <span className={`uppercase tracking-widest font-bold text-violet whitespace-nowrap ${compact ? "text-[11px]" : "text-[11px] xl:text-[11px]"}`}>Audius</span>
           <span className="flex flex-col items-start leading-none">
             <span className={`num font-bold text-ink tracking-wider ${compact ? "text-[11px]" : "text-[11px] xl:text-[12px]"}`}>{audioBalance != null ? fmtNum(audioBalance) : "—"} <span className={`uppercase tracking-widest font-bold text-violet ${compact ? "text-[11px]" : "text-[11px] xl:text-[11px]"}`}>$AUDIO</span></span>
             <span className={`uppercase tracking-widest font-bold text-mute ${compact ? "text-[11px]" : "text-[11px]"}`}>
-              {formatUsd(audioValueUsd)} {currency}
+              {audioFiatLabel} {audioValueUsd == null ? "" : currency}
             </span>
           </span>
           {audiusTokens && audiusTokens.artistCoinCount > 0 && (
@@ -432,7 +431,7 @@ export function WalletBalance({ compact = false }: { compact?: boolean } = {}) {
                 <div className="text-right">
                   <div className="text-xs num font-bold text-ink tracking-wider">{fmtNum(audioBalance)}</div>
                   <div className="text-[11px] uppercase tracking-widest text-mute mt-0.5">
-                    {formatUsd(audioValueUsd)}
+                    {audioFiatLabel}
                   </div>
                 </div>
               </div>

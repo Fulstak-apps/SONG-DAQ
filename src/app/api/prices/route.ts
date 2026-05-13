@@ -7,6 +7,9 @@ const SOL_MINT = "So11111111111111111111111111111111111111112";
 const AUDIO_MINT = "9LzCMqDgTKYz9Drzqnpgee3SGa89up3a247ypMj2xrqM";
 const JUPITER_PRICE_API = "https://lite-api.jup.ag/price/v3";
 const FIAT_CACHE_MS = 15 * 60_000;
+const STATIC_FALLBACK_USD: Record<string, number> = {
+  AUDIO: 0.18,
+};
 let fiatCache: { at: number; currency: string; rate: number; source: string } | null = null;
 
 function normalizeId(id: string) {
@@ -26,6 +29,20 @@ async function solFallback() {
       3_500,
     );
     const usd = Number(data?.solana?.usd ?? 0);
+    return usd > 0 ? usd : null;
+  } catch {
+    return null;
+  }
+}
+
+async function audioFallback() {
+  try {
+    const data = await fetchJson<{ audius?: { usd?: number } }>(
+      "https://api.coingecko.com/api/v3/simple/price?ids=audius&vs_currencies=usd",
+      { next: { revalidate: 60 } },
+      3_500,
+    );
+    const usd = Number(data?.audius?.usd ?? 0);
     return usd > 0 ? usd : null;
   } catch {
     return null;
@@ -108,6 +125,15 @@ export async function GET(req: NextRequest) {
   if (prices.SOL?.usd == null || prices.SOL?.usdPrice == null) {
     const fallback = await solFallback();
     if (fallback) setPrice("SOL", fallback, "coingecko");
+  }
+
+  if (prices.AUDIO?.usd == null || prices.AUDIO?.usdPrice == null) {
+    const fallback = await audioFallback();
+    if (fallback) {
+      setPrice("AUDIO", fallback, "coingecko");
+    } else {
+      setPrice("AUDIO", STATIC_FALLBACK_USD.AUDIO, "estimated-fallback", true);
+    }
   }
 
   return NextResponse.json({

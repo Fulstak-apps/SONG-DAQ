@@ -11,7 +11,7 @@ import { fmtNum } from "@/lib/pricing";
 import { getSolPriceUsd } from "@/lib/balance";
 import { readJson } from "@/lib/safeJson";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
-import { formatCryptoWithFiat, priceAgeText, useUsdToDisplayRate } from "@/lib/fiat";
+import { formatCryptoWithFiat, priceAgeText, useLiveFiatPrices, useUsdToDisplayRate } from "@/lib/fiat";
 import { PriceChart, type PricePointDTO } from "@/components/PriceChart";
 
 interface TokenRow {
@@ -150,6 +150,7 @@ export default function PortfolioPage() {
   const { address, kind, provider, audius } = useSession();
   const { openLoginModal } = useUI();
   const { currency, formatUsd: formatUsdDisplay, convertUsd, updatedAt: displayFiatUpdatedAt } = useUsdToDisplayRate();
+  const { prices: livePrices } = useLiveFiatPrices(["AUDIO"]);
   const paper = usePaperTrading();
   const { enabled: paperMode } = paper;
   const hasExternalWallet = !!address && provider !== "audius" && provider !== "paper";
@@ -160,7 +161,6 @@ export default function PortfolioPage() {
   const audiusTokens = useTokenHoldings(audius?.wallets?.sol, "full");
   const [portfolio, setPortfolio] = useState<any>(null);
   const [paperUsd, setPaperUsd] = useState({ sol: 0, audio: 0 });
-  const [audioUsdPrice, setAudioUsdPrice] = useState(0);
   const [solUsdPrice, setSolUsdPrice] = useState(0);
   const [coinIndex, setCoinIndex] = useState<Record<string, any>>({});
   const liveAudiusAudioBalance = useAudiusAudioBalance(audius?.handle);
@@ -211,13 +211,13 @@ export default function PortfolioPage() {
     let alive = true;
     const load = async () => {
       try {
-        const [solUsd, coinResp] = await Promise.allSettled([
+        const [solUsd, audioPriceResp] = await Promise.allSettled([
           getSolPriceUsd(),
-          fetch("/api/coins?limit=100", { cache: "no-store" }).then((r) => readJson<any>(r)),
+          fetch("/api/prices?ids=AUDIO&currency=USD", { cache: "no-store" }).then((r) => readJson<any>(r)),
         ]);
         if (!alive) return;
-        const audio = coinResp.status === "fulfilled"
-          ? Number((coinResp.value?.coins ?? []).find((c: any) => String(c.ticker).toUpperCase() === "AUDIO")?.price ?? 0)
+        const audio = audioPriceResp.status === "fulfilled"
+          ? Number(audioPriceResp.value?.prices?.AUDIO?.usdPrice ?? 0)
           : 0;
         setPaperUsd({
           sol: solUsd.status === "fulfilled" ? Number(solUsd.value || 0) : 0,
@@ -242,13 +242,10 @@ export default function PortfolioPage() {
       .then((j) => {
         if (!alive) return;
         const next: Record<string, any> = {};
-        let audioPrice = 0;
         for (const c of j?.coins ?? []) {
           next[c.mint] = c;
-          if (String(c.ticker).toUpperCase() === "AUDIO") audioPrice = Number(c.price ?? 0);
         }
         setCoinIndex(next);
-        setAudioUsdPrice(audioPrice);
       })
       .catch(() => {});
     return () => { alive = false; };
@@ -308,11 +305,19 @@ export default function PortfolioPage() {
   const audioBalance = externalAddress && audius?.wallets?.sol && externalAddress === audius.wallets.sol
     ? Math.max(tradingAudioBalance, audiusProfileAudioBalance)
     : tradingAudioBalance + audiusProfileAudioBalance;
-  const audioValueUsd = [
+  const audioUsdPrice = Number(livePrices.AUDIO?.usdPrice ?? 0);
+  const indexedAudioTokenValueUsd = [
     ...(tradingTokens.data?.tokens ?? []),
     ...(audiusTokens.data?.tokens ?? []),
   ].filter((t) => t.isAudio).reduce((sum, t) => sum + countedUsd(t), 0) ||
-    (audioBalance * audioUsdPrice);
+    0;
+  const audioValueUsd = indexedAudioTokenValueUsd > 0
+    ? indexedAudioTokenValueUsd
+    : audioBalance === 0
+      ? 0
+      : audioUsdPrice > 0
+        ? audioBalance * audioUsdPrice
+        : null;
   const cashUsd = paperMode
     ? paper.balances.cashUsd + (paper.balances.sol * paperUsd.sol) + (paper.balances.audio * paperUsd.audio)
     : 0;
@@ -331,7 +336,7 @@ export default function PortfolioPage() {
     ...(tradingTokens.data?.tokens ?? []),
     ...(audiusTokens.data?.tokens ?? []),
   ].filter((t) => t.isArtistCoin).reduce((sum, t) => sum + countedUsd(t), 0);
-  const audioValueTopUpUsd = Math.max(0, audioValueUsd - indexedAudioValueUsd);
+  const audioValueTopUpUsd = Math.max(0, (audioValueUsd ?? 0) - indexedAudioValueUsd);
   const artistValueTopUpUsd = Math.max(0, artistValueUsd - indexedArtistValueUsd);
   const songValueUsd = songValueSol * (solUsdPrice || (native.balance ? (native.usd ?? 0) / native.balance : 0));
   const royaltyUsd = royaltySol * (solUsdPrice || 0);
@@ -508,7 +513,7 @@ export default function PortfolioPage() {
       <section className="grid grid-cols-2 gap-2 lg:grid-cols-4 xl:grid-cols-7">
         <Metric label="Total Portfolio Value" value={formatUsdDisplay(totalIndexedValueUsd)} sub={issuerAllocationValueUsd > 0 ? "Liquid value; issuer allocation separated" : paperMode ? "Paper cash + wallet + AUDIO + coins" : "SOL + AUDIO + Song Coins + Artist Coins + other assets"} />
         <Metric label="SOL" value={externalAddress && native.balance != null ? formatCryptoWithFiat(native.balance, "SOL", convertUsd(native.usd), currency) : "Connect"} sub={externalAddress ? priceAgeText(displayFiatUpdatedAt || fiatUpdatedAt) : "Connect external wallet"} />
-        <Metric label="AUDIO" value={formatCryptoWithFiat(audioBalance, "AUDIO", convertUsd(audioValueUsd || null), currency)} sub="Audius token value included in total" />
+        <Metric label="AUDIO" value={formatCryptoWithFiat(audioBalance, "AUDIO", convertUsd(audioValueUsd), currency)} sub="Audius token value included in total" />
         <Metric label="Song Coins" value={fmtNum(songTokens.length)} sub={formatCryptoWithFiat(songValueSol, "SOL", convertUsd(songValueUsd), currency)} />
         <Metric label="Artist Coins" value={fmtNum(artistTokens.length)} sub={issuerAllocationValueUsd > 0 ? `${formatUsdDisplay(artistValueUsd)} liquid` : formatUsdDisplay(artistValueUsd)} />
         <Metric label="Other Assets" value={fmtNum(otherWalletAssets.length)} sub={formatUsdDisplay(otherWalletValueUsd)} />
@@ -833,8 +838,8 @@ function PortfolioWalletStrip({
   audiusName: string | null;
   audiusAddress: string | null;
   audioBalance: number;
-  audioValueUsd: number;
-  formatUsd: (value: number) => string;
+  audioValueUsd: number | null;
+  formatUsd: (value: number | null | undefined) => string;
 }) {
   return (
     <section className="grid gap-2 md:grid-cols-2">

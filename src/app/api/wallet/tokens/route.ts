@@ -185,13 +185,16 @@ export async function GET(req: NextRequest) {
     const audioAccounts = await fetchMintAccounts(address, AUDIO_MINT);
     const audioAmount = audioAccounts.reduce((sum, token) => sum + token.amount, 0);
     const audioCoin = coinMap.get(AUDIO_MINT);
-    const [priceMap, metaMap] = await Promise.all([
+    const [priceMap, metaMap, localRates] = await Promise.all([
       fetchJupiterPrices([AUDIO_MINT]),
       fetchJupiterTokenInfo([AUDIO_MINT]),
+      getAssetUsdRates(["AUDIO"]),
     ]);
     const audioMeta = metaMap.get(AUDIO_MINT);
     const audioJupiter = priceMap.get(AUDIO_MINT);
-    const audioPrice = Number(audioCoin?.price ?? audioJupiter?.usdPrice ?? audioJupiter?.price ?? 0);
+    const audioPrice = [audioCoin?.price, audioJupiter?.usdPrice, audioJupiter?.price, localRates.AUDIO]
+      .map((value) => Number(value || 0))
+      .find((value) => value > 0) ?? 0;
     const audioToken = audioAmount > 0 ? [{
       mint: AUDIO_MINT,
       amount: audioAmount,
@@ -205,7 +208,13 @@ export async function GET(req: NextRequest) {
       issuerAllocation: false,
       isAudio: true,
       isArtistCoin: !!audioCoin,
-      priceSource: audioPrice ? "jupiter" : null,
+      priceSource: Number(audioCoin?.price || 0) > 0
+        ? "audius"
+        : Number(audioJupiter?.usdPrice ?? audioJupiter?.price ?? 0) > 0
+          ? "jupiter"
+          : audioPrice > 0
+            ? "estimated"
+            : null,
       isVerified: audioMeta?.isVerified ?? true,
       metadataSource: audioMeta ? "jupiter" : "audius",
     }] : [];
@@ -293,7 +302,7 @@ export async function GET(req: NextRequest) {
       burnedSupply,
     }) : null;
     const songPrice = songValuation?.isMarketValueReliable ? Number(songValuation.priceUsd || 0) : 0;
-    const price = Number(songPrice || coin?.price || jupiterPrice?.usdPrice || jupiterPrice?.price || 0);
+    const price = Number(songPrice || coin?.price || jupiterPrice?.usdPrice || jupiterPrice?.price || (isAudio ? localRates.AUDIO : 0) || 0);
     const valueUsd = price ? price * t.amount : null;
     const isIssuerSongToken = Boolean(song?.artistWallet?.wallet && song.artistWallet.wallet === address);
     const artistAllocationTokens = song
@@ -327,7 +336,9 @@ export async function GET(req: NextRequest) {
       isAudio,
       isArtistCoin: !!coin || !!song,
       priceChange24h: jupiterPrice?.priceChange24h ?? null,
-      priceSource: price ? (coin?.price ? "audius" : "jupiter") : null,
+      priceSource: price
+        ? (coin?.price ? "audius" : (jupiterPrice?.usdPrice || jupiterPrice?.price) ? "jupiter" : isAudio ? "estimated" : "local")
+        : null,
       isVerified: meta?.isVerified ?? false,
       organicScoreLabel: meta?.organicScoreLabel ?? null,
       tags: meta?.tags ?? [],
