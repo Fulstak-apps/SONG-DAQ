@@ -3,14 +3,14 @@ import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useCoins } from "@/lib/useCoins";
-import { useUsdToDisplayRate } from "@/lib/fiat";
+import { formatFiat, useLiveFiatPrices, useUsdToDisplayRate } from "@/lib/fiat";
 
 interface CoinTick {
   kind: "coin";
   symbol: string;
   href: string;
-  priceUsd: number;
-  change: number;
+  priceText: string;
+  change: number | null;
 }
 interface NewsTick {
   kind: "news";
@@ -57,6 +57,7 @@ const SYNCING_TICKS: NewsTick[] = [
 export function MarketTicker() {
   const { coins } = useCoins("volume");
   const { formatUsd: formatDisplayFiat } = useUsdToDisplayRate();
+  const { currency, prices } = useLiveFiatPrices(["SOL"]);
   const [news, setNews] = useState<any[]>([]);
 
   useEffect(() => {
@@ -72,11 +73,19 @@ export function MarketTicker() {
   }, []);
 
   const ticks = useMemo<Tick[]>(() => {
+    const solPrice = Number(prices.SOL?.fiat ?? prices.SOL?.usd ?? 0);
+    const solTick: CoinTick[] = [{
+      kind: "coin",
+      symbol: "SOL",
+      href: "/market",
+      priceText: solPrice > 0 ? formatFiat(solPrice, currency, 2) : "Loading",
+      change: null,
+    }];
     const coinTicks: CoinTick[] = coins.slice(0, 30).map((c) => ({
       kind: "coin",
       symbol: c.ticker,
       href: `/coin/${c.mint}`,
-      priceUsd: c.price ?? 0,
+      priceText: formatDisplayFiat(c.price ?? 0, Math.abs(c.price ?? 0) >= 1 ? 2 : 6),
       change: c.priceChange24hPercent ?? 0,
     }));
     const newsTicks: NewsTick[] = (news ?? []).slice(0, 18).map((n: any) => ({
@@ -88,6 +97,7 @@ export function MarketTicker() {
     }));
 
     const mixed: Tick[] = [];
+    mixed.push(...solTick);
     let ci = 0, ni = 0;
     while (ci < coinTicks.length || ni < newsTicks.length) {
       for (let k = 0; k < 3 && ci < coinTicks.length; k++) mixed.push(coinTicks[ci++]);
@@ -95,7 +105,7 @@ export function MarketTicker() {
       if (ni < newsTicks.length) mixed.push(newsTicks[ni++]);
     }
     return mixed;
-  }, [coins, news]);
+  }, [coins, currency, formatDisplayFiat, news, prices.SOL?.fiat, prices.SOL?.usd]);
 
   const displayTicks: Tick[] = ticks.length ? ticks : SYNCING_TICKS;
   const doubled = [...displayTicks, ...displayTicks, ...displayTicks];
@@ -113,10 +123,16 @@ export function MarketTicker() {
             return (
               <Link key={`c${i}`} href={t.href} className="mx-0.5 flex w-[198px] sm:w-[258px] shrink-0 items-center gap-1 overflow-hidden rounded-lg px-2 text-[11px] transition hover:bg-white/[0.05] sm:gap-1.5 sm:px-2.5 sm:text-xs group">
                 <span className="font-mono font-black text-ink group-hover:text-neon transition truncate max-w-[76px] sm:max-w-[110px]">${t.symbol}</span>
-                <span className="num font-bold text-ink shrink-0 tabular-nums">{formatDisplayFiat(t.priceUsd, Math.abs(t.priceUsd) >= 1 ? 2 : 6)}</span>
-                <span className={`num font-black tracking-wider shrink-0 ${t.change >= 0 ? "text-neon animate-pulse" : "text-red"}`}>
-                  {t.change >= 0 ? "▲" : "▼"} {Math.abs(t.change).toFixed(2)}%
-                </span>
+                <span className="num font-bold text-ink shrink-0 tabular-nums">{t.priceText}</span>
+                {t.change == null ? (
+                  <span className="num shrink-0 rounded border border-neon/20 bg-neon/8 px-1.5 py-0.5 text-[10px] font-black uppercase tracking-widest text-neon">
+                    Live
+                  </span>
+                ) : (
+                  <span className={`num font-black tracking-wider shrink-0 ${t.change >= 0 ? "text-neon animate-pulse" : "text-red"}`}>
+                    {t.change >= 0 ? "▲" : "▼"} {Math.abs(t.change).toFixed(2)}%
+                  </span>
+                )}
                 <span className="text-mute/70 ml-0.5 shrink-0">│</span>
               </Link>
             );

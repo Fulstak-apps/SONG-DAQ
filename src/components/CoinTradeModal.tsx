@@ -7,7 +7,7 @@ import { SafeImage } from "./SafeImage";
 import { PriceChart, type PricePointDTO } from "./PriceChart";
 import { Glossary, WhyDidThisMove } from "./Tooltip";
 import { WalletButton } from "./WalletButton";
-import { usePaperTrading, usePlayer, useSession, useUI, type PlayerTrack } from "@/lib/store";
+import { useNavNotifications, usePaperTrading, usePlayer, useSession, useUI, type PlayerTrack } from "@/lib/store";
 import { sendSerializedTransaction, type WalletId } from "@/lib/wallet";
 import { toast } from "@/lib/toast";
 import { fmtNum, fmtPct } from "@/lib/pricing";
@@ -72,6 +72,7 @@ export function CoinTradeModal({
   const { address, kind, provider, audius } = useSession();
   const { openLoginModal } = useUI();
   const { enabled: paperMode, record: recordPaperTrade } = usePaperTrading();
+  const notifyNav = useNavNotifications((s) => s.push);
   const { current, playing, playTrack, toggle } = usePlayer();
   const { coins: allCoins } = useCoins("marketCap");
   const [side, setSide] = useState<"BUY" | "SELL">(initialSide);
@@ -473,6 +474,7 @@ export function CoinTradeModal({
       const msg = `${side === "BUY" ? "Bought" : "Sold"} $${coin!.ticker}`;
       setOk(`${msg} · ${sig.slice(0, 8)}…${sig.slice(-6)}`);
       toast.success(msg, `Confirmed on Solana · ${sig.slice(0, 8)}…${sig.slice(-6)}`);
+      notifyNav("portfolio", `${msg} synced to portfolio`);
       onDone?.();
     } catch (e: any) {
       const m = e.message ?? String(e);

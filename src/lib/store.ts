@@ -126,6 +126,32 @@ export const useUI = create<UIState>((set) => ({
   toggleSound: () => set((s) => ({ soundEnabled: !s.soundEnabled })),
 }));
 
+/* ── Bottom-nav notifications ─────────────────────────────────── */
+export type NavNotificationTarget = "market" | "portfolio" | "launch" | "intel" | "support" | "admin";
+
+interface NavNotificationState {
+  counts: Partial<Record<NavNotificationTarget, number>>;
+  lastMessage: string | null;
+  lastTarget: NavNotificationTarget | null;
+  lastAt: number;
+  push: (target: NavNotificationTarget, message: string) => void;
+  clear: (target: NavNotificationTarget) => void;
+}
+
+export const useNavNotifications = create<NavNotificationState>((set) => ({
+  counts: {},
+  lastMessage: null,
+  lastTarget: null,
+  lastAt: 0,
+  push: (target, message) => set((s) => ({
+    counts: { ...s.counts, [target]: Math.min(99, (s.counts[target] ?? 0) + 1) },
+    lastMessage: message,
+    lastTarget: target,
+    lastAt: Date.now(),
+  })),
+  clear: (target) => set((s) => ({ counts: { ...s.counts, [target]: 0 } })),
+}));
+
 interface PaperTrade {
   id: string;
   mint: string;
@@ -203,6 +229,10 @@ export const usePaperTrading = create<PaperTradeState>()(
         }
 
         holdings[trade.mint] = current;
+        useNavNotifications.getState().push(
+          "portfolio",
+          `${trade.side === "BUY" ? "Added" : "Updated"} $${trade.ticker} paper position`,
+        );
         return { trades, holdings, balances };
       }),
       getHolding: (mint) => get().holdings[mint] ?? null,

@@ -171,11 +171,11 @@ textarea {
 }
 
 .app-main-safe {
-  padding-bottom: calc(12rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(10.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 .app-footer-safe {
-  padding-bottom: calc(10.5rem + env(safe-area-inset-bottom, 0px));
+  padding-bottom: calc(8.25rem + env(safe-area-inset-bottom, 0px));
 }
 
 .global-player-safe {
@@ -188,11 +188,11 @@ textarea {
 
 @media (min-width: 768px) {
   .app-main-safe {
-    padding-bottom: calc(9rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(5.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .app-footer-safe {
-    padding-bottom: calc(7rem + env(safe-area-inset-bottom, 0px));
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
   }
 
   .global-player-safe {

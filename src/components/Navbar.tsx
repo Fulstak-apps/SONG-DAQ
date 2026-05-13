@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
@@ -23,10 +23,11 @@ import { AudiusLoginButton } from "./AudiusLoginButton";
 import { RoleToggle } from "./RoleToggle";
 import { LoginModal } from "./LoginModal";
 import { WalletButton } from "./WalletButton";
-import { PAPER_WALLET_ADDRESS, PAPER_WALLET_PROVIDER, isPaperWalletAddress, usePaperTrading, useSession, useUI, usePrestige, useAlerts, type AudiusProfile } from "@/lib/store";
+import { PAPER_WALLET_ADDRESS, PAPER_WALLET_PROVIDER, isPaperWalletAddress, useNavNotifications, usePaperTrading, useSession, useUI, usePrestige, useAlerts, type AudiusProfile, type NavNotificationTarget } from "@/lib/store";
 import { safeJson } from "@/lib/safeJson";
 import { disconnectWallet, getCurrentWalletAddress, isKnownWalletId, subscribeWalletChanges, type WalletId } from "@/lib/wallet";
 import { useUsdToDisplayRate } from "@/lib/fiat";
+import { useCoins } from "@/lib/useCoins";
 
 type NavItem = { href: string; label: string; icon: string; reqArtistMode?: boolean };
 
@@ -47,17 +48,48 @@ const TIER_COLORS: Record<string, string> = {
   diamond: "text-cyan",
 };
 
+function navNotificationTarget(href: string): NavNotificationTarget | null {
+  if (href.startsWith("/market")) return "market";
+  if (href.startsWith("/portfolio")) return "portfolio";
+  if (href.startsWith("/artist")) return "launch";
+  if (href.startsWith("/social")) return "intel";
+  if (href.startsWith("/faq")) return "support";
+  if (href.startsWith("/admin")) return "admin";
+  return null;
+}
+
 export function Navbar() {
   const path = usePathname();
   const router = useRouter();
   const { address, provider, audius, setSession } = useSession();
   const { loginModalOpen, openLoginModal, closeLoginModal, userMode, setUserMode, theme, setTheme, soundEnabled, toggleSound } = useUI();
   const { enabled: paperMode, setEnabled: setPaperMode } = usePaperTrading();
+  const paperHoldings = usePaperTrading((s) => s.holdings);
   const { tier } = usePrestige();
   const { alerts } = useAlerts();
+  const notificationCounts = useNavNotifications((s) => s.counts);
+  const clearNotification = useNavNotifications((s) => s.clear);
+  const pushNotification = useNavNotifications((s) => s.push);
+  const { coins } = useCoins("quality");
   const [mounted, setMounted] = useState(false);
   const [role, setRole] = useState<string | null>(null);
   const [adminSession, setAdminSession] = useState(false);
+  const [liveHoldingMints, setLiveHoldingMints] = useState<string[]>([]);
+  const previousOwnedPrices = useRef<Record<string, number>>({});
+  const lastOwnedMarketNotifyAt = useRef(0);
+  const paperHoldingMints = useMemo(() => (
+    Object.values(paperHoldings)
+      .filter((holding) => holding.amount > 0)
+      .map((holding) => holding.mint)
+      .sort()
+  ), [paperHoldings]);
+  const activePortfolioWallet = address && !isPaperWalletAddress(address) && provider !== PAPER_WALLET_PROVIDER ? address : null;
+  const heldMints = useMemo(() => (
+    [...new Set([...paperHoldingMints, ...liveHoldingMints])]
+      .filter(Boolean)
+      .sort()
+      .join("|")
+  ), [liveHoldingMints, paperHoldingMints]);
   useEffect(() => setMounted(true), []);
   useEffect(() => {
     if (!address || isPaperWalletAddress(address)) {
@@ -116,6 +148,64 @@ export function Navbar() {
     return subscribeWalletChanges(walletId, syncAddress);
   }, [address, provider, setSession]);
 
+  useEffect(() => {
+    if (!activePortfolioWallet) {
+      setLiveHoldingMints([]);
+      return;
+    }
+    let alive = true;
+    const loadPortfolioMints = () => {
+      fetch(`/api/portfolio?wallet=${encodeURIComponent(activePortfolioWallet)}`, { cache: "no-store" })
+        .then((r) => safeJson(r))
+        .then((j) => {
+          if (!alive) return;
+          const mints: string[] = ((j as any)?.coinHoldings ?? [])
+            .filter((holding: any) => Number(holding?.amount ?? 0) > 0 && holding?.mint)
+            .map((holding: any) => String(holding.mint));
+          setLiveHoldingMints([...new Set(mints)].sort());
+        })
+        .catch(() => {
+          if (alive) setLiveHoldingMints([]);
+        });
+    };
+    loadPortfolioMints();
+    const interval = window.setInterval(loadPortfolioMints, 45_000);
+    return () => {
+      alive = false;
+      window.clearInterval(interval);
+    };
+  }, [activePortfolioWallet]);
+
+  useEffect(() => {
+    if (!heldMints) {
+      previousOwnedPrices.current = {};
+      return;
+    }
+    const held = new Set(heldMints.split("|").filter(Boolean));
+    const nextPrices: Record<string, number> = {};
+    const marketMoves: Array<{ ticker: string; pct: number }> = [];
+    coins.forEach((coin) => {
+      if (!held.has(coin.mint)) return;
+      const price = Number(coin.price ?? 0);
+      if (!price) return;
+      nextPrices[coin.mint] = price;
+      const previous = previousOwnedPrices.current[coin.mint];
+      if (!previous) return;
+      const pct = ((price - previous) / previous) * 100;
+      if (Math.abs(pct) >= 1.15) marketMoves.push({ ticker: coin.ticker, pct });
+    });
+    previousOwnedPrices.current = { ...previousOwnedPrices.current, ...nextPrices };
+    const biggestMove = marketMoves.sort((a, b) => Math.abs(b.pct) - Math.abs(a.pct))[0];
+    if (!biggestMove) return;
+    const now = Date.now();
+    if (now - lastOwnedMarketNotifyAt.current < 18_000) return;
+    lastOwnedMarketNotifyAt.current = now;
+    const direction = biggestMove.pct >= 0 ? "up" : "down";
+    const message = `$${biggestMove.ticker} moved ${direction} ${Math.abs(biggestMove.pct).toFixed(1)}%`;
+    pushNotification("market", message);
+    pushNotification("portfolio", message);
+  }, [coins, heldMints, pushNotification]);
+
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
   const unreadAlerts = alerts.filter(a => a.triggered && !a.triggered).length;
   useEffect(() => {
@@ -156,6 +246,8 @@ export function Navbar() {
   const navigate = (href: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
     if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey || event.button !== 0) return;
     event.preventDefault();
+    const target = navNotificationTarget(href);
+    if (target) clearNotification(target);
     router.push(href);
   };
 
@@ -190,10 +282,14 @@ export function Navbar() {
             )}
           </Link>
 
+          <HeaderClock />
+
           <nav className="hidden lg:flex flex-1 min-w-0 items-center gap-0.5 overflow-x-auto no-scrollbar">
             {navItems.map((n) => {
               if (n.reqArtistMode && userMode !== "ARTIST" && !paperMode) return null;
               const active = path === n.href || (n.href !== "/" && path.startsWith(n.href));
+              const notificationTarget = navNotificationTarget(n.href);
+              const notificationCount = notificationTarget ? notificationCounts[notificationTarget] ?? 0 : 0;
               return (
                 <Link
                   key={n.href}
@@ -207,6 +303,11 @@ export function Navbar() {
                       : "text-mute hover:text-ink hover:bg-white/[0.045]"
                   }`}
                 >
+                  {notificationCount > 0 && (
+                    <span className="absolute -right-0.5 -top-0.5 z-10 grid min-h-[17px] min-w-[17px] place-items-center rounded-full border border-bg bg-neon px-1 font-mono text-[9px] font-black leading-none text-black shadow-[0_0_14px_rgba(0,229,114,0.55)]">
+                      {notificationCount > 9 ? "9+" : notificationCount}
+                    </span>
+                  )}
                   {active && (
                     <motion.div
                       layoutId="nav-active-pill"
@@ -301,7 +402,7 @@ export function Navbar() {
 
       <LoginModal isOpen={loginModalOpen} onClose={closeLoginModal} />
     </header>
-    <MobileBottomNav navItems={navItems} userMode={userMode} paperMode={paperMode} path={path} navigate={navigate} setUserMode={setUserMode} />
+    <MobileBottomNav navItems={navItems} userMode={userMode} paperMode={paperMode} path={path} navigate={navigate} setUserMode={setUserMode} notificationCounts={notificationCounts} />
     </>
   );
 }
@@ -310,6 +411,30 @@ function mobileNavLabel(label: string) {
   if (label === "LAUNCH COIN") return "Launch";
   if (label === "PORTFOLIO") return "Portfolio";
   return label.charAt(0) + label.slice(1).toLowerCase();
+}
+
+function HeaderClock() {
+  const [time, setTime] = useState("");
+
+  useEffect(() => {
+    const update = () => {
+      setTime(new Intl.DateTimeFormat(undefined, {
+        hour: "numeric",
+        minute: "2-digit",
+      }).format(new Date()));
+    };
+    update();
+    const interval = window.setInterval(update, 15_000);
+    return () => window.clearInterval(interval);
+  }, []);
+
+  if (!time) return null;
+
+  return (
+    <span className="inline-flex shrink-0 rounded-xl border border-edge bg-white/[0.045] px-1.5 py-1 font-mono text-[9px] font-black uppercase tracking-widest text-mute min-[390px]:px-2.5 min-[390px]:py-1.5 min-[390px]:text-[10px] xl:px-3 xl:text-[11px]">
+      {time}
+    </span>
+  );
 }
 
 function MobileNavIcon({ item }: { item: NavItem }) {
@@ -329,6 +454,7 @@ function MobileBottomNav({
   path,
   navigate,
   setUserMode,
+  notificationCounts,
 }: {
   navItems: NavItem[];
   userMode: string;
@@ -336,6 +462,7 @@ function MobileBottomNav({
   path: string;
   navigate: (href: string) => (event: React.MouseEvent<HTMLAnchorElement>) => void;
   setUserMode: (mode: "ARTIST" | "INVESTOR") => void;
+  notificationCounts: Partial<Record<NavNotificationTarget, number>>;
 }) {
   const visibleItems = navItems.filter((item) => !item.reqArtistMode || userMode === "ARTIST" || paperMode);
   if (!visibleItems.length) return null;
@@ -345,6 +472,8 @@ function MobileBottomNav({
       <div className="mx-auto flex max-w-[560px] items-stretch gap-1 overflow-x-auto no-scrollbar">
         {visibleItems.map((item) => {
           const active = path === item.href || (item.href !== "/" && path.startsWith(item.href));
+          const notificationTarget = navNotificationTarget(item.href);
+          const notificationCount = notificationTarget ? notificationCounts[notificationTarget] ?? 0 : 0;
           return (
             <Link
               key={item.href}
@@ -355,12 +484,18 @@ function MobileBottomNav({
                 navigate(item.href)(event);
               }}
               aria-current={active ? "page" : undefined}
-              className={`group flex min-h-[54px] min-w-[62px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl border px-1.5 text-center transition ${
+              className={`group relative flex min-h-[54px] min-w-[62px] flex-1 flex-col items-center justify-center gap-1 rounded-2xl border px-1.5 text-center transition ${
                 active
                   ? "border-neon/45 bg-neon/13 text-neon shadow-[inset_0_0_16px_rgba(0,229,114,0.08),0_0_18px_rgba(0,229,114,0.13)]"
                   : "border-transparent text-mute hover:border-edge hover:bg-white/[0.045] hover:text-ink"
               }`}
             >
+              {notificationCount > 0 && (
+                <span className="absolute right-1.5 top-1.5 z-10 grid min-h-[18px] min-w-[18px] place-items-center rounded-full border border-bg bg-neon px-1 font-mono text-[9px] font-black leading-none text-black shadow-[0_0_14px_rgba(0,229,114,0.65)]">
+                  <span className="absolute inset-0 rounded-full bg-neon/40 animate-ping" />
+                  <span className="relative">{notificationCount > 9 ? "9+" : notificationCount}</span>
+                </span>
+              )}
               <span className={`grid h-6 place-items-center transition ${active ? "scale-105" : "group-active:scale-95"}`}>
                 <MobileNavIcon item={item} />
               </span>
