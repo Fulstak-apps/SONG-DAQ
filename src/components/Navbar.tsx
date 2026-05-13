@@ -23,7 +23,7 @@ import { AudiusLoginButton } from "./AudiusLoginButton";
 import { RoleToggle } from "./RoleToggle";
 import { LoginModal } from "./LoginModal";
 import { WalletButton } from "./WalletButton";
-import { PAPER_WALLET_ADDRESS, PAPER_WALLET_PROVIDER, isPaperWalletAddress, useNavNotifications, usePaperTrading, useSession, useUI, usePrestige, useAlerts, type AudiusProfile, type NavNotificationTarget } from "@/lib/store";
+import { PAPER_WALLET_ADDRESS, PAPER_WALLET_PROVIDER, isPaperWalletAddress, useNavNotifications, usePaperTrading, usePlayer, useSession, useUI, usePrestige, useAlerts, type AudiusProfile, type NavNotificationTarget } from "@/lib/store";
 import { safeJson } from "@/lib/safeJson";
 import { disconnectWallet, getCurrentWalletAddress, isKnownWalletId, subscribeWalletChanges, type WalletId } from "@/lib/wallet";
 import { useUsdToDisplayRate } from "@/lib/fiat";
@@ -62,7 +62,9 @@ export function Navbar() {
   const path = usePathname();
   const router = useRouter();
   const { address, provider, audius, setSession } = useSession();
-  const { loginModalOpen, openLoginModal, closeLoginModal, userMode, setUserMode, theme, setTheme, soundEnabled, toggleSound } = useUI();
+  const { loginModalOpen, openLoginModal, closeLoginModal, userMode, setUserMode, theme, setTheme } = useUI();
+  const playerMuted = usePlayer((s) => s.muted);
+  const togglePlayerMute = usePlayer((s) => s.toggleMute);
   const { enabled: paperMode, setEnabled: setPaperMode } = usePaperTrading();
   const paperHoldings = usePaperTrading((s) => s.holdings);
   const { tier } = usePrestige();
@@ -207,6 +209,10 @@ export function Navbar() {
   }, [coins, heldMints, pushNotification]);
 
   const toggleTheme = () => setTheme(theme === "dark" ? "light" : "dark");
+  const handlePlayerMuteToggle = () => {
+    togglePlayerMute();
+    window.dispatchEvent(new Event("songdaq:show-player"));
+  };
   const unreadAlerts = alerts.filter(a => a.triggered && !a.triggered).length;
   useEffect(() => {
     if (audius && userMode !== "ARTIST") setUserMode("ARTIST");
@@ -255,7 +261,7 @@ export function Navbar() {
     <>
     <header className="mobile-header-safe sticky top-0 z-40 border-b border-edge transition-colors duration-500">
       {/* Glass background with premium blur */}
-      <div className="absolute inset-0 bg-bg shadow-[0_14px_34px_rgba(0,0,0,0.34)] backdrop-blur-2xl md:bg-bg/92 md:shadow-none" />
+      <div className="absolute inset-0 bg-bg shadow-[0_14px_34px_rgba(0,0,0,0.34)] backdrop-blur-xl md:bg-bg/92 md:shadow-none md:backdrop-blur-2xl" />
       {/* Top highlight line */}
       <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent" />
       
@@ -342,22 +348,29 @@ export function Navbar() {
               </div>
             ) : null}
 
-            {mounted && (address || audius || paperMode) ? (
+            {mounted && !(address || audius || paperMode) ? (
               <button
-                onClick={toggleSound}
-                className="hidden h-9 w-9 items-center justify-center rounded-xl border border-edge bg-white/[0.055] text-mute transition-all hover:bg-white/[0.09] hover:text-ink sm:flex xl:h-10 xl:w-10"
-                title={soundEnabled ? "Mute" : "Unmute"}
-              >
-                {soundEnabled ? <Volume2 size={14} /> : <VolumeX size={14} />}
-              </button>
-            ) : (
-              <button 
                 className="btn-primary h-9 min-h-0 px-2.5 py-0 text-[10px] font-black tracking-widest shadow-neon-glow min-[390px]:px-3.5 sm:h-10 sm:px-5 sm:text-xs"
                 onClick={openLoginModal}
               >
                 <span className="relative z-10">CONNECT</span>
               </button>
-            )}
+            ) : null}
+
+            {mounted ? (
+              <button
+                onClick={handlePlayerMuteToggle}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon/45 xl:h-10 xl:w-10 ${
+                  playerMuted
+                    ? "border-neon/28 bg-neon/10 text-neon"
+                    : "border-edge bg-white/[0.055] text-mute hover:bg-white/[0.09] hover:text-ink"
+                }`}
+                title={playerMuted ? "Unmute player" : "Mute player"}
+                aria-label={playerMuted ? "Unmute player" : "Mute player"}
+              >
+                {playerMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+              </button>
+            ) : null}
 
             <button
               onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
@@ -468,7 +481,7 @@ function MobileBottomNav({
   if (!visibleItems.length) return null;
 
   return (
-    <nav className="mobile-bottom-nav-safe fixed inset-x-0 bottom-0 z-[60] border-t border-edge/85 bg-bg/96 px-2 pt-2 shadow-[0_-18px_42px_rgba(0,0,0,0.44)] backdrop-blur-2xl md:hidden">
+    <nav className="mobile-bottom-nav-safe fixed inset-x-0 bottom-0 z-[60] border-t border-edge/85 bg-bg/96 px-2 pt-2 shadow-[0_-18px_42px_rgba(0,0,0,0.44)] backdrop-blur-xl md:hidden">
       <div className="mx-auto flex max-w-[560px] items-stretch gap-1 overflow-x-auto no-scrollbar">
         {visibleItems.map((item) => {
           const active = path === item.href || (item.href !== "/" && path.startsWith(item.href));

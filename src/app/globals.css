@@ -179,11 +179,29 @@ textarea {
 }
 
 .global-player-safe {
-  padding-bottom: 0.5rem;
+  padding-bottom: 0.25rem;
 }
 
 .mobile-bottom-nav-safe {
   padding-bottom: calc(0.55rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media (max-width: 767px) {
+  html,
+  body {
+    scroll-behavior: auto;
+  }
+
+  .mobile-header-safe,
+  .mobile-bottom-nav-safe,
+  .global-player-safe {
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+
+  .global-player-safe {
+    will-change: transform, opacity;
+  }
 }
 
 @media (min-width: 768px) {

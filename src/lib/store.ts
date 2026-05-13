@@ -403,7 +403,9 @@ interface PlayerState {
   queue: PlayerTrack[];
   playing: boolean;
   userPaused: boolean;
+  muted: boolean;
   volume: number;
+  previousVolume: number;
   currentTime: number;
   duration: number;
   seekRequest: number | null;
@@ -416,6 +418,7 @@ interface PlayerState {
   previous: () => void;
   setPlaying: (playing: boolean) => void;
   setVolume: (volume: number) => void;
+  toggleMute: () => void;
   setPlaybackTime: (currentTime: number, duration?: number) => void;
   seekTo: (seconds: number) => void;
 }
@@ -427,7 +430,9 @@ export const usePlayer = create<PlayerState>()(
       queue: [],
       playing: false,
       userPaused: false,
+      muted: false,
       volume: 0.1,
+      previousVolume: 0.1,
       currentTime: 0,
       duration: 0,
       seekRequest: null,
@@ -472,7 +477,26 @@ export const usePlayer = create<PlayerState>()(
         set({ current: prev, playing: true, userPaused: false });
       },
       setPlaying: (playing) => set({ playing }),
-      setVolume: (volume) => set({ volume: Math.max(0, Math.min(1, volume)) }),
+      setVolume: (volume) => set((state) => {
+        const nextVolume = Math.max(0, Math.min(1, volume));
+        return {
+          volume: nextVolume,
+          muted: nextVolume <= 0.001,
+          previousVolume: nextVolume > 0.001 ? nextVolume : state.previousVolume || 0.1,
+        };
+      }),
+      toggleMute: () => set((state) => {
+        if (state.muted) {
+          return {
+            muted: false,
+            volume: state.volume > 0.001 ? state.volume : state.previousVolume || 0.1,
+          };
+        }
+        return {
+          muted: true,
+          previousVolume: state.volume > 0.001 ? state.volume : state.previousVolume || 0.1,
+        };
+      }),
       setPlaybackTime: (currentTime, duration) => set((state) => ({
         currentTime: Number.isFinite(currentTime) ? currentTime : state.currentTime,
         duration: Number.isFinite(duration ?? state.duration) ? (duration ?? state.duration) : state.duration,
@@ -481,20 +505,27 @@ export const usePlayer = create<PlayerState>()(
     }),
     {
       name: "songdaq-player",
-      version: 4,
+      version: 5,
       migrate: (persistedState: any, version) => {
         if (version < 2) {
-          return { ...persistedState, volume: 0.1 };
+          return { ...persistedState, volume: 0.1, previousVolume: 0.1, muted: false };
         }
         if (version < 3) {
-          return { ...persistedState, volume: 0.1 };
+          return { ...persistedState, volume: 0.1, previousVolume: 0.1, muted: false };
         }
         if (version < 4) {
-          return { ...persistedState, volume: 0.1 };
+          return { ...persistedState, volume: 0.1, previousVolume: 0.1, muted: false };
+        }
+        if (version < 5) {
+          return {
+            ...persistedState,
+            previousVolume: Number(persistedState?.volume || 0.1) > 0 ? Number(persistedState?.volume || 0.1) : 0.1,
+            muted: false,
+          };
         }
         return persistedState;
       },
-      partialize: (state) => ({ volume: state.volume }),
+      partialize: (state) => ({ volume: state.volume, previousVolume: state.previousVolume, muted: state.muted }),
     },
   ),
 );

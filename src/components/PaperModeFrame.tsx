@@ -1,12 +1,18 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { CheckCircle2, ChevronDown, ChevronUp, Clock3, Gamepad2, Sparkles } from "lucide-react";
 import { usePaperTrading } from "@/lib/store";
 
 const GAME_DURATION_MS = 5 * 60 * 1000;
-const STORAGE_KEY = "songdaq-paper-intro-game-v2";
+const STORAGE_KEY = "songdaq-paper-intro-game-v5";
+const LEGACY_STORAGE_KEYS = [
+  "songdaq-paper-intro-game-v1",
+  "songdaq-paper-intro-game-v2",
+  "songdaq-paper-intro-game-v3",
+  "songdaq-paper-intro-game-v4",
+];
 
 type MissionId = "wallet" | "market" | "coin" | "trade" | "portfolio" | "launch";
 
@@ -14,6 +20,7 @@ type IntroGameState = {
   startedAt: number;
   collapsed: boolean;
   completedIds: MissionId[];
+  pendingId: MissionId | null;
 };
 
 function readGameState(): IntroGameState | null {
@@ -23,7 +30,11 @@ function readGameState(): IntroGameState | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as IntroGameState;
     return typeof parsed.startedAt === "number"
-      ? { ...parsed, completedIds: Array.isArray(parsed.completedIds) ? parsed.completedIds : [] }
+      ? {
+          ...parsed,
+          completedIds: Array.isArray(parsed.completedIds) ? parsed.completedIds : ["wallet"],
+          pendingId: parsed.pendingId ?? null,
+        }
       : null;
   } catch {
     return null;
@@ -33,6 +44,11 @@ function readGameState(): IntroGameState | null {
 function writeGameState(state: IntroGameState) {
   if (typeof window === "undefined") return;
   sessionStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+function clearLegacyGameState() {
+  if (typeof window === "undefined") return;
+  LEGACY_STORAGE_KEYS.forEach((key) => sessionStorage.removeItem(key));
 }
 
 function formatRemaining(ms: number) {
@@ -51,23 +67,24 @@ export function PaperModeFrame() {
   const router = useRouter();
   const [now, setNow] = useState(Date.now());
   const [gameState, setGameState] = useState<IntroGameState | null>(null);
-  const [autoCollapsed, setAutoCollapsed] = useState(false);
-  const lastCompletedRef = useRef(0);
   const hasTrade = trades.length > 0;
   const hasPosition = Object.values(holdings).some((holding) => holding.amount > 0);
 
   useEffect(() => {
     if (!enabled) {
       setGameState(null);
-      setAutoCollapsed(false);
-      lastCompletedRef.current = 0;
       return;
     }
+    clearLegacyGameState();
     const existing = readGameState();
     const stale = existing ? Date.now() - existing.startedAt > GAME_DURATION_MS : true;
-    const next = !existing || stale ? { startedAt: Date.now(), collapsed: false, completedIds: [] } : existing;
+    const freshStart = Date.now();
+    const next = !existing || stale
+      ? { startedAt: freshStart, collapsed: false, completedIds: ["wallet"] as MissionId[], pendingId: null }
+      : existing;
     writeGameState(next);
     setGameState(next);
+    setNow(freshStart);
   }, [enabled]);
 
   useEffect(() => {
@@ -75,17 +92,6 @@ export function PaperModeFrame() {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(id);
   }, [enabled]);
-
-  const derivedCompletedIds = useMemo<MissionId[]>(() => {
-    return [
-      "wallet",
-      ...(path.startsWith("/market") ? (["market"] as MissionId[]) : []),
-      ...(path.startsWith("/coin") || path.startsWith("/song") ? (["coin"] as MissionId[]) : []),
-      ...(hasTrade || hasPosition ? (["trade"] as MissionId[]) : []),
-      ...(path.startsWith("/portfolio") ? (["portfolio"] as MissionId[]) : []),
-      ...(path.startsWith("/artist") ? (["launch"] as MissionId[]) : []),
-    ];
-  }, [hasPosition, hasTrade, path]);
 
   const completedIds = gameState?.completedIds ?? [];
   const completedSet = useMemo(() => new Set<MissionId>(completedIds), [completedIds]);
@@ -96,13 +102,13 @@ export function PaperModeFrame() {
         id: "wallet" as MissionId,
         title: "Paper wallet ready",
         body: "You have simulated SOL and AUDIO.",
-        done: true,
+        done: completedSet.has("wallet"),
         href: "/market",
       },
       {
         id: "market" as MissionId,
-        title: "Browse the market",
-        body: "Scan live song and artist coins.",
+        title: "Review the market",
+        body: "Scan the live ticker, song coins, and artist coins.",
         done: completedSet.has("market"),
         href: "/market",
       },
@@ -144,8 +150,8 @@ export function PaperModeFrame() {
   const remaining = Math.max(0, GAME_DURATION_MS - elapsed);
   const gameComplete = completed === missions.length;
   const progress = Math.max(0, Math.min(100, gameComplete ? 100 : (completed / missions.length) * 100));
-  const ctaHref = gameComplete ? "/market" : nextMission.href;
-  const ctaLabel = gameComplete ? "Review Market" : `Next: ${nextMission.title}`;
+  const marketReadyToConfirm = nextMission.id === "market" && path.startsWith("/market");
+  const ctaLabel = gameComplete ? "Review Market" : marketReadyToConfirm ? "Mark Market Reviewed" : `Next: ${nextMission.title}`;
 
   const setCollapsed = (collapsed: boolean) => {
     setGameState((previous) => {
@@ -153,6 +159,7 @@ export function PaperModeFrame() {
         startedAt: previous?.startedAt ?? startedAt,
         collapsed,
         completedIds: previous?.completedIds ?? completedIds,
+        pendingId: previous?.pendingId ?? null,
       };
       writeGameState(next);
       return next;
@@ -166,16 +173,16 @@ export function PaperModeFrame() {
         startedAt: previous?.startedAt ?? startedAt,
         collapsed: reopen ? false : previous?.collapsed ?? gameState?.collapsed ?? false,
         completedIds: nextIds,
+        pendingId: null,
       };
       writeGameState(next);
       return next;
     });
-    if (reopen) setAutoCollapsed(false);
   };
 
   const missionIsActuallyDone = (id: MissionId) => {
     if (id === "wallet") return true;
-    if (id === "market") return path.startsWith("/market");
+    if (id === "market") return false;
     if (id === "coin") return path.startsWith("/coin") || path.startsWith("/song");
     if (id === "trade") return hasTrade || hasPosition;
     if (id === "portfolio") return path.startsWith("/portfolio");
@@ -184,49 +191,110 @@ export function PaperModeFrame() {
   };
 
   const guideTo = (href: string, missionId?: MissionId) => {
-    setAutoCollapsed(true);
-    setCollapsed(true);
+    setGameState((previous) => {
+      const next = {
+        startedAt: previous?.startedAt ?? startedAt,
+        collapsed: true,
+        completedIds: previous?.completedIds ?? completedIds,
+        pendingId: missionId ?? null,
+      };
+      writeGameState(next);
+      return next;
+    });
     router.push(href);
-    if (missionId && missionIsActuallyDone(missionId)) {
+    if (missionId === "market" && path.startsWith("/market")) {
+      window.setTimeout(() => {
+        setGameState((previous) => {
+          const next = {
+            startedAt: previous?.startedAt ?? startedAt,
+            collapsed: false,
+            completedIds: previous?.completedIds ?? completedIds,
+            pendingId: "market" as MissionId,
+          };
+          writeGameState(next);
+          return next;
+        });
+      }, 360);
+      return;
+    }
+    if (missionId && missionId !== "market" && missionIsActuallyDone(missionId)) {
       window.setTimeout(() => completeMission(missionId, true), 650);
     }
   };
 
+  const runMission = (mission: (typeof missions)[number]) => {
+    if (mission.done) {
+      guideTo(mission.href);
+      return;
+    }
+
+    if (mission.id === "market") {
+      if (path.startsWith("/market")) {
+        completeMission("market", true);
+        return;
+      }
+      guideTo("/market", "market");
+      return;
+    }
+
+    guideTo(mission.href, mission.id);
+  };
+
+  const runNextMission = () => {
+    if (gameComplete) {
+      guideTo("/market");
+      return;
+    }
+
+    if (nextMission.id === "market" && path.startsWith("/market")) {
+      completeMission("market", true);
+      return;
+    }
+
+    runMission(nextMission);
+  };
+
   const restartGame = () => {
     resetDemo();
-    const next = { startedAt: Date.now(), collapsed: false, completedIds: [] };
+    const next = { startedAt: Date.now(), collapsed: false, completedIds: ["wallet"] as MissionId[], pendingId: null };
     writeGameState(next);
     setGameState(next);
-    setAutoCollapsed(false);
-    lastCompletedRef.current = 0;
     setNow(Date.now());
     router.push("/market");
   };
 
   useEffect(() => {
     if (!enabled || !gameState) {
-      lastCompletedRef.current = 0;
-      setAutoCollapsed(false);
       return;
     }
 
-    const missing = derivedCompletedIds.filter((id) => !completedSet.has(id));
-    if (!missing.length) return;
+    const pendingId = gameState.pendingId;
 
-    const nextIds = Array.from(new Set<MissionId>([...completedIds, ...missing]));
-    const next = { ...gameState, completedIds: nextIds };
-    writeGameState(next);
-    setGameState(next);
+    if (pendingId === "market" && path.startsWith("/market") && gameState.collapsed && !completedSet.has("market")) {
+      const revealMarketStep = window.setTimeout(() => {
+        setGameState((previous) => {
+          const next = {
+            startedAt: previous?.startedAt ?? startedAt,
+            collapsed: false,
+            completedIds: previous?.completedIds ?? completedIds,
+            pendingId: "market" as MissionId,
+          };
+          writeGameState(next);
+          return next;
+        });
+      }, 420);
 
-    if (!autoCollapsed) return;
+      return () => window.clearTimeout(revealMarketStep);
+    }
+
+    if (!pendingId || completedSet.has(pendingId) || !missionIsActuallyDone(pendingId)) return;
 
     const reveal = window.setTimeout(() => {
-      setCollapsed(false);
-      setAutoCollapsed(false);
+      completeMission(pendingId, true);
     }, 520);
 
     return () => window.clearTimeout(reveal);
-  }, [autoCollapsed, completedIds, completedSet, derivedCompletedIds, enabled, gameState, startedAt]);
+  }, [completedSet, enabled, gameState, hasPosition, hasTrade, path, startedAt]);
 
   if (!enabled) return null;
 
@@ -234,11 +302,10 @@ export function PaperModeFrame() {
     <>
       <div className="pointer-events-none fixed inset-0 z-[9998] border-2 border-neon/80 shadow-[inset_0_0_24px_rgba(0,229,114,0.18),0_0_28px_rgba(0,229,114,0.35)]" />
       <section className="fixed inset-x-3 bottom-[calc(env(safe-area-inset-bottom)+6.4rem)] z-[70] mx-auto max-w-[520px] md:inset-x-auto md:bottom-5 md:right-5 md:mx-0 md:w-[420px]">
-        <div className="overflow-hidden rounded-2xl border border-neon/30 bg-bg/95 shadow-[0_18px_60px_rgba(0,0,0,0.55),0_0_32px_rgba(0,229,114,0.12)] backdrop-blur-2xl">
+        <div className="overflow-hidden rounded-2xl border border-neon/30 bg-bg/95 shadow-[0_18px_60px_rgba(0,0,0,0.55),0_0_32px_rgba(0,229,114,0.12)] backdrop-blur-xl md:backdrop-blur-2xl">
           <button
             type="button"
             onClick={() => {
-              setAutoCollapsed(false);
               setCollapsed(!gameState?.collapsed);
             }}
             className="flex min-h-14 w-full items-center gap-3 px-3 py-2 text-left transition hover:bg-white/[0.035] active:scale-[0.995] sm:px-4"
@@ -282,7 +349,7 @@ export function PaperModeFrame() {
                   <button
                     key={mission.title}
                     type="button"
-                    onClick={() => guideTo(mission.href, mission.id)}
+                    onClick={() => runMission(mission)}
                     className="flex w-full items-start gap-2 rounded-xl border border-edge/80 bg-white/[0.035] px-3 py-2 text-left transition hover:border-neon/30 hover:bg-neon/[0.055] active:scale-[0.995]"
                     aria-label={`Go to ${mission.title}`}
                   >
@@ -298,7 +365,7 @@ export function PaperModeFrame() {
               <div className="grid grid-cols-[1fr_auto] gap-2">
                 <button
                   type="button"
-                  onClick={() => guideTo(ctaHref, nextMission.id)}
+                  onClick={runNextMission}
                   className="btn-primary min-h-11 px-3 text-[11px] font-black uppercase tracking-widest"
                 >
                   {ctaLabel}

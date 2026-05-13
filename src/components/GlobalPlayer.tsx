@@ -1,6 +1,6 @@
 "use client";
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Pause, Play, SkipBack, SkipForward, Volume2 } from "lucide-react";
 import { usePlayer } from "@/lib/store";
 import { SafeImage } from "./SafeImage";
@@ -10,16 +10,27 @@ function clampVolume(value: number) {
   return Math.max(0, Math.min(1, value));
 }
 
+const SHOW_PLAYER_EVENT = "songdaq:show-player";
+const PLAYER_IDLE_REVEAL_MS = 60_000;
+
 export function GlobalPlayer() {
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const lastSrcRef = useRef<string | null>(null);
   const commandRef = useRef<"play" | "pause">("pause");
   const fadeRef = useRef<number | null>(null);
   const scrollHideRef = useRef<number | null>(null);
+  const scrollFrameRef = useRef<number | null>(null);
+  const lastScrollYRef = useRef(0);
+  const hiddenForScrollRef = useRef(false);
   const targetVolumeRef = useRef(0.05);
-  const { current, playing, userPaused, pause, resume, next, previous, setPlaying, volume, setVolume, setPlaybackTime, seekRequest } = usePlayer();
-  const [blocked, setBlocked] = useState(false);
+  const { current, playing, userPaused, pause, resume, next, previous, setPlaying, muted, volume, setVolume, setPlaybackTime, seekRequest } = usePlayer();
   const [hiddenForScroll, setHiddenForScroll] = useState(false);
+
+  const setScrollHidden = useCallback((hidden: boolean) => {
+    if (hiddenForScrollRef.current === hidden) return;
+    hiddenForScrollRef.current = hidden;
+    setHiddenForScroll(hidden);
+  }, []);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -34,13 +45,14 @@ export function GlobalPlayer() {
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
-    targetVolumeRef.current = clampVolume(volume);
+    targetVolumeRef.current = muted ? 0 : clampVolume(volume);
+    audio.muted = muted;
     if (fadeRef.current == null) {
       audio.volume = clampVolume(targetVolumeRef.current);
     }
-  }, [volume]);
+  }, [muted, volume]);
 
-  const sliderPct = Math.max(0, Math.min(100, Math.round(volume * 100)));
+  const sliderPct = muted ? 0 : Math.max(0, Math.min(100, Math.round(volume * 100)));
   const sliderStyle = {
     background: `linear-gradient(to right, var(--neon) 0%, var(--neon) ${sliderPct}%, rgba(255,255,255,0.14) ${sliderPct}%, rgba(255,255,255,0.14) 100%)`,
   };
@@ -78,7 +90,6 @@ export function GlobalPlayer() {
     if (shouldFade) audio.volume = 0;
     audio.play()
         .then(() => {
-          setBlocked(false);
           if (!shouldFade) return;
           const startedAt = performance.now();
           const duration = 450;
@@ -96,7 +107,6 @@ export function GlobalPlayer() {
           fadeRef.current = requestAnimationFrame(fade);
         })
         .catch(() => {
-          setBlocked(true);
           setPlaying(false);
         });
   }, [playing, userPaused, current?.id, setPlaying]);
@@ -111,51 +121,78 @@ export function GlobalPlayer() {
 
   useEffect(() => {
     if (!current) return;
-    const onScroll = () => {
-      setHiddenForScroll(true);
+    const revealPlayer = () => {
       if (scrollHideRef.current != null) window.clearTimeout(scrollHideRef.current);
-      scrollHideRef.current = window.setTimeout(() => setHiddenForScroll(false), 850);
+      setScrollHidden(false);
     };
+    const onScroll = () => {
+      if (scrollFrameRef.current != null) return;
+      scrollFrameRef.current = window.requestAnimationFrame(() => {
+        scrollFrameRef.current = null;
+        const isMobile = window.matchMedia("(max-width: 767px)").matches;
+        if (!isMobile) {
+          setScrollHidden(false);
+          return;
+        }
+        const nextY = window.scrollY || window.pageYOffset || 0;
+        const scrollingDown = nextY > lastScrollYRef.current + 10;
+        const scrollingUp = nextY < lastScrollYRef.current - 16;
+        const nearTop = nextY < 20;
+        lastScrollYRef.current = nextY;
+
+        if (scrollHideRef.current != null) window.clearTimeout(scrollHideRef.current);
+
+        if (nearTop || scrollingUp) {
+          scrollHideRef.current = window.setTimeout(() => setScrollHidden(false), nearTop ? 80 : 180);
+          return;
+        }
+
+        if (scrollingDown) {
+          setScrollHidden(true);
+          scrollHideRef.current = window.setTimeout(() => setScrollHidden(false), PLAYER_IDLE_REVEAL_MS);
+        }
+      });
+    };
+    lastScrollYRef.current = window.scrollY || window.pageYOffset || 0;
     window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener(SHOW_PLAYER_EVENT, revealPlayer);
     return () => {
       window.removeEventListener("scroll", onScroll);
+      window.removeEventListener(SHOW_PLAYER_EVENT, revealPlayer);
       if (scrollHideRef.current != null) window.clearTimeout(scrollHideRef.current);
+      if (scrollFrameRef.current != null) window.cancelAnimationFrame(scrollFrameRef.current);
       scrollHideRef.current = null;
+      scrollFrameRef.current = null;
     };
-  }, [current]);
+  }, [current, setScrollHidden]);
 
   if (!current) return <audio ref={audioRef} className="hidden" preload="none" />;
 
   return (
     <div
       aria-hidden={hiddenForScroll}
-      className={`global-player-safe fixed inset-x-0 bottom-[calc(4.65rem+env(safe-area-inset-bottom,0px))] z-50 border-t border-edge bg-bg/95 px-2.5 pt-1.5 shadow-[0_-14px_42px_rgba(0,0,0,0.34)] backdrop-blur-2xl transition-all duration-300 sm:px-4 md:bottom-0 ${
+      className={`global-player-safe fixed inset-x-0 bottom-[calc(4.45rem+env(safe-area-inset-bottom,0px))] z-50 border-t border-edge bg-bg/95 px-2 py-1 shadow-[0_-14px_42px_rgba(0,0,0,0.34)] backdrop-blur-xl transition-all duration-300 sm:px-4 sm:pt-1.5 md:bottom-0 md:backdrop-blur-2xl ${
         hiddenForScroll ? "translate-y-[calc(100%+1rem)] opacity-0 pointer-events-none" : "translate-y-0 opacity-100"
       }`}
     >
-      <div className="mx-auto flex w-full max-w-[1680px] items-center gap-2">
-        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg border border-edge bg-panel2">
+      <div className="mx-auto flex w-full max-w-[1680px] items-center gap-1.5 sm:gap-2">
+        <div className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg border border-edge bg-panel2 sm:h-9 sm:w-9">
           <SafeImage src={current.artwork} alt={current.title} fill sizes="40px" fallback={current.title} className="object-cover" />
         </div>
         <div className="min-w-0 flex-1">
           {current.href ? (
-            <Link href={current.href} className="block truncate text-xs font-bold text-ink transition hover:text-neon sm:text-sm">
+            <Link href={current.href} className="block truncate text-[11px] font-bold leading-tight text-ink transition hover:text-neon sm:text-sm">
               {current.title}
             </Link>
           ) : (
-            <div className="truncate text-xs font-bold text-ink sm:text-sm">{current.title}</div>
+            <div className="truncate text-[11px] font-bold leading-tight text-ink sm:text-sm">{current.title}</div>
           )}
-          <div className="truncate text-[10px] uppercase tracking-widest text-mute">{current.artist}</div>
-          {blocked && (
-            <div className="mt-0.5 text-[10px] uppercase tracking-widest text-neon">
-              Press play once to enable browser audio
-            </div>
-          )}
+          <div className="truncate text-[9px] uppercase tracking-[0.18em] text-mute sm:text-[10px]">{current.artist}</div>
         </div>
 
         <div className="flex items-center gap-1">
           <button
-            className="grid h-8 w-8 place-items-center rounded-xl border border-edge bg-white/[0.055] text-mute transition hover:bg-white/[0.1] hover:text-ink"
+            className="grid h-8 w-8 place-items-center rounded-xl border border-edge bg-white/[0.055] text-mute transition hover:bg-white/[0.1] hover:text-ink sm:h-9 sm:w-9"
             onClick={previous}
             title="Previous"
           >
@@ -169,7 +206,7 @@ export function GlobalPlayer() {
             {playing ? <Pause size={18} /> : <Play size={18} />}
           </button>
           <button
-            className="grid h-8 w-8 place-items-center rounded-xl border border-edge bg-white/[0.055] text-mute transition hover:bg-white/[0.1] hover:text-ink"
+            className="grid h-8 w-8 place-items-center rounded-xl border border-edge bg-white/[0.055] text-mute transition hover:bg-white/[0.1] hover:text-ink sm:h-9 sm:w-9"
             onClick={next}
             title="Next"
           >
@@ -177,7 +214,7 @@ export function GlobalPlayer() {
           </button>
         </div>
 
-        <div className="flex min-w-[82px] items-center gap-1.5 text-mute md:min-w-[180px] md:gap-2">
+        <div className="hidden min-w-[82px] items-center gap-1.5 text-mute min-[430px]:flex md:min-w-[180px] md:gap-2">
           <Volume2 size={14} />
           <input
             type="range"
@@ -196,7 +233,6 @@ export function GlobalPlayer() {
           ref={audioRef}
           onLoadedMetadata={(e) => setPlaybackTime(e.currentTarget.currentTime || 0, e.currentTarget.duration || 0)}
           onTimeUpdate={(e) => setPlaybackTime(e.currentTarget.currentTime || 0, e.currentTarget.duration || 0)}
-          onPlay={() => setBlocked(false)}
           onPause={() => {
             if (commandRef.current === "play" && !userPaused) setPlaying(false);
           }}

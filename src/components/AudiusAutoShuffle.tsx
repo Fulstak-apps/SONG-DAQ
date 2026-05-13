@@ -37,7 +37,7 @@ function toPlayerTrack(track: AudiusTrack): PlayerTrack {
 
 export function AudiusAutoShuffle() {
   const booted = useRef(false);
-  const { current, setQueue, setVolume } = usePlayer();
+  const { current, muted, setQueue, setVolume, volume } = usePlayer();
 
   useEffect(() => {
     if (booted.current || current) return;
@@ -47,7 +47,7 @@ export function AudiusAutoShuffle() {
 
     async function loadShuffle() {
       try {
-        setVolume(0.1);
+        if (!muted && volume <= 0.001) setVolume(0.1);
         const res = await fetch("/api/audius/search", { cache: "no-store" });
         const json = await res.json().catch(() => ({}));
         if (!alive) return;
@@ -63,7 +63,7 @@ export function AudiusAutoShuffle() {
     // the main app has had a moment to settle.
     timer = setTimeout(loadShuffle, 2_500);
     return () => { alive = false; if (timer) clearTimeout(timer); };
-  }, [current, setQueue, setVolume]);
+  }, [current, muted, setQueue, setVolume, volume]);
 
   return null;
 }
