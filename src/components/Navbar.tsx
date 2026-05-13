@@ -357,21 +357,6 @@ export function Navbar() {
               </button>
             ) : null}
 
-            {mounted ? (
-              <button
-                onClick={handlePlayerMuteToggle}
-                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon/45 xl:h-10 xl:w-10 ${
-                  playerMuted
-                    ? "border-neon/28 bg-neon/10 text-neon"
-                    : "border-edge bg-white/[0.055] text-mute hover:bg-white/[0.09] hover:text-ink"
-                }`}
-                title={playerMuted ? "Unmute player" : "Mute player"}
-                aria-label={playerMuted ? "Unmute player" : "Mute player"}
-              >
-                {playerMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
-              </button>
-            ) : null}
-
             <button
               onClick={() => window.dispatchEvent(new KeyboardEvent('keydown', { key: 'k', metaKey: true }))}
               className="hidden 2xl:flex w-9 h-9 xl:h-10 xl:w-10 items-center justify-center rounded-xl bg-white/[0.055] border border-edge text-mute hover:text-ink hover:bg-white/[0.09] transition shrink-0"
@@ -391,6 +376,21 @@ export function Navbar() {
             >
               Paper
             </button>
+
+            {mounted ? (
+              <button
+                onClick={handlePlayerMuteToggle}
+                className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border transition-all active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-neon/45 xl:h-10 xl:w-10 ${
+                  playerMuted
+                    ? "border-neon/28 bg-neon/10 text-neon"
+                    : "border-edge bg-white/[0.055] text-mute hover:bg-white/[0.09] hover:text-ink"
+                }`}
+                title={playerMuted ? "Unmute player" : "Mute player"}
+                aria-label={playerMuted ? "Unmute player" : "Mute player"}
+              >
+                {playerMuted ? <VolumeX size={14} /> : <Volume2 size={14} />}
+              </button>
+            ) : null}
 
             <button
               onClick={toggleTheme}
