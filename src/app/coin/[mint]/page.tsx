@@ -23,7 +23,7 @@ import { ArtistIntel } from "@/components/ArtistIntel";
 import { GamifiedCoinDetail, HypeMeterCard } from "@/components/GamificationLayer";
 import { pickAudiusArtwork } from "@/lib/audiusArtwork";
 import { useUsdToDisplayRate } from "@/lib/fiat";
-import { Pause, Play, RotateCcw, RotateCw } from "lucide-react";
+import { Pause, Play, RotateCcw, RotateCw, Volume2 } from "lucide-react";
 
 const CoinTradeModal = dynamic(() => import("@/components/CoinTradeModal").then((m) => m.CoinTradeModal), { ssr: false });
 const TradeFeed = dynamic(() => import("@/components/TradeFeed").then((m) => m.TradeFeed), { ssr: false });
@@ -71,7 +71,7 @@ function trackArtwork(track: any, fallback?: string | null) {
 export default function CoinPage() {
   const { mint } = useParams<{ mint: string }>();
   const { audius, address } = useSession();
-  const { current, playing, playTrack, toggle, currentTime, duration, seekTo } = usePlayer();
+  const { current, playing, playTrack, pause, resume, currentTime, duration, seekTo, volume, setVolume } = usePlayer();
   const [coin, setCoin] = useState<AudiusCoin | null>(null);
   const [err, setErr] = useState<string | null>(null);
   const [tradeSide, setTradeSide] = useState<"BUY" | "SELL" | null>(null);
@@ -348,8 +348,12 @@ export default function CoinPage() {
   };
 
   const playAudiusTrack = (track: PlayerTrack) => {
-    if (current?.id === track.id) toggle();
-    else playTrack(track);
+    if (current?.id === track.id) {
+      if (playing) pause();
+      else resume();
+    } else {
+      playTrack(track);
+    }
   };
 
   const modal = (
@@ -487,9 +491,11 @@ export default function CoinPage() {
                         active={isPrimaryActive}
                         currentTime={isPrimaryActive ? currentTime : 0}
                         duration={isPrimaryActive ? duration : 0}
+                        volume={volume}
                         onToggle={() => primaryTrack && playAudiusTrack(primaryTrack)}
                         onSeek={seekPrimaryTrack}
                         onSkip={skipPrimaryTrack}
+                        onVolume={setVolume}
                       />
                       {coin.audius_track_url ? (
                         <a href={coin.audius_track_url} target="_blank" rel="noreferrer" className="btn mt-3 h-10 px-4 text-[11px] uppercase tracking-widest font-black">
@@ -1043,11 +1049,7 @@ export default function CoinPage() {
                       <div className="mt-3 flex flex-wrap gap-2">
                         <button
                           type="button"
-                          onClick={() => {
-                            if (!trackPlayer) return;
-                            if (current?.id === trackPlayer.id) toggle();
-                            else playTrack(trackPlayer);
-                          }}
+                          onClick={() => trackPlayer && playAudiusTrack(trackPlayer)}
                           className="btn-primary h-9 px-3 text-[11px] uppercase tracking-widest font-black"
                         >
                           {isPlayingTrack ? "Pause" : "Play"}
@@ -1163,24 +1165,32 @@ function CoinPageAudioPlayer({
   active,
   currentTime,
   duration,
+  volume,
   onToggle,
   onSeek,
   onSkip,
+  onVolume,
 }: {
   disabled: boolean;
   playing: boolean;
   active: boolean;
   currentTime: number;
   duration: number;
+  volume: number;
   onToggle: () => void;
   onSeek: (seconds: number) => void;
   onSkip: (seconds: number) => void;
+  onVolume: (volume: number) => void;
 }) {
   const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
   const safeCurrent = safeDuration > 0 ? Math.min(currentTime, safeDuration) : 0;
   const pct = safeDuration > 0 ? Math.max(0, Math.min(100, (safeCurrent / safeDuration) * 100)) : 0;
   const rangeStyle = {
     background: `linear-gradient(to right, var(--neon) 0%, var(--neon) ${pct}%, rgba(255,255,255,0.16) ${pct}%, rgba(255,255,255,0.16) 100%)`,
+  };
+  const volumePct = Math.max(0, Math.min(100, Math.round(volume * 100)));
+  const volumeStyle = {
+    background: `linear-gradient(to right, var(--neon) 0%, var(--neon) ${volumePct}%, rgba(255,255,255,0.14) ${volumePct}%, rgba(255,255,255,0.14) 100%)`,
   };
 
   if (disabled) {
@@ -1232,6 +1242,21 @@ function CoinPageAudioPlayer({
                 />
               ))}
             </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2 text-mute">
+            <Volume2 size={14} className="shrink-0" />
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={volumePct}
+              onChange={(e) => onVolume(Number(e.target.value) / 100)}
+              className="h-2 w-full appearance-none rounded-full bg-white/10"
+              style={volumeStyle}
+              aria-label="Song volume"
+            />
+            <span className="w-10 text-right font-mono text-[11px] font-black text-mute">{volumePct}%</span>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:w-[92px]">

@@ -17,7 +17,7 @@ export function GlobalPlayer() {
   const fadeRef = useRef<number | null>(null);
   const scrollHideRef = useRef<number | null>(null);
   const targetVolumeRef = useRef(0.05);
-  const { current, playing, userPaused, toggle, next, previous, setPlaying, volume, setVolume, setPlaybackTime, seekRequest } = usePlayer();
+  const { current, playing, userPaused, pause, resume, next, previous, setPlaying, volume, setVolume, setPlaybackTime, seekRequest } = usePlayer();
   const [blocked, setBlocked] = useState(false);
   const [hiddenForScroll, setHiddenForScroll] = useState(false);
 
@@ -43,6 +43,20 @@ export function GlobalPlayer() {
   const sliderPct = Math.max(0, Math.min(100, Math.round(volume * 100)));
   const sliderStyle = {
     background: `linear-gradient(to right, var(--neon) 0%, var(--neon) ${sliderPct}%, rgba(255,255,255,0.14) ${sliderPct}%, rgba(255,255,255,0.14) 100%)`,
+  };
+  const handlePlayPause = () => {
+    const audio = audioRef.current;
+    if (playing) {
+      commandRef.current = "pause";
+      if (fadeRef.current != null) {
+        cancelAnimationFrame(fadeRef.current);
+        fadeRef.current = null;
+      }
+      audio?.pause();
+      pause();
+    } else {
+      resume();
+    }
   };
 
   useEffect(() => {
@@ -149,7 +163,7 @@ export function GlobalPlayer() {
           </button>
           <button
             className="grid h-9 w-9 place-items-center rounded-xl bg-neon text-pure-black shadow-neon-glow transition hover:bg-neondim sm:h-10 sm:w-10"
-            onClick={toggle}
+            onClick={handlePlayPause}
             title={playing ? "Pause" : "Play"}
           >
             {playing ? <Pause size={18} /> : <Play size={18} />}
@@ -163,7 +177,7 @@ export function GlobalPlayer() {
           </button>
         </div>
 
-        <div className="hidden md:flex items-center gap-2 text-mute min-w-[180px]">
+        <div className="flex min-w-[82px] items-center gap-1.5 text-mute md:min-w-[180px] md:gap-2">
           <Volume2 size={14} />
           <input
             type="range"
@@ -172,11 +186,11 @@ export function GlobalPlayer() {
             step="1"
             value={sliderPct}
             onChange={(e) => setVolume(Number(e.target.value) / 100)}
-            className="w-24 appearance-none h-1.5 rounded-full bg-white/10"
+            className="h-1.5 w-16 appearance-none rounded-full bg-white/10 md:w-24"
             style={sliderStyle}
             aria-label="Player volume"
           />
-          <span className="text-[11px] uppercase tracking-widest font-bold w-10 text-right">{sliderPct}%</span>
+          <span className="hidden w-10 text-right text-[11px] font-bold uppercase tracking-widest md:block">{sliderPct}%</span>
         </div>
         <audio
           ref={audioRef}

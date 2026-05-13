@@ -3,7 +3,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { AlertTriangle, BadgeCheck, ExternalLink, Lock, Pause, Play, RotateCcw, RotateCw, ShieldCheck } from "lucide-react";
+import { AlertTriangle, BadgeCheck, ExternalLink, Lock, Pause, Play, RotateCcw, RotateCw, ShieldCheck, Volume2 } from "lucide-react";
 import { PriceChart, type PricePointDTO } from "@/components/PriceChart";
 import { TradePanel } from "@/components/TradePanel";
 import { TradeFeed } from "@/components/TradeFeed";
@@ -21,7 +21,7 @@ export default function SongTradingPage() {
   const params = useParams<{ id: string }>();
   const id = params.id;
   const { address } = useSession();
-  const { current, playing, playTrack, toggle, currentTime, duration, seekTo } = usePlayer();
+  const { current, playing, playTrack, pause, resume, currentTime, duration, seekTo, volume, setVolume } = usePlayer();
   const [song, setSong] = useState<any>(null);
   const [points, setPoints] = useState<PricePointDTO[]>([]);
   const [holders, setHolders] = useState<any[]>([]);
@@ -141,8 +141,12 @@ export default function SongTradingPage() {
   } : null;
   const toggleSong = () => {
     if (!playerTrack) return;
-    if (current?.id === String(song.id)) toggle();
-    else playTrack(playerTrack);
+    if (current?.id === String(song.id)) {
+      if (playing) pause();
+      else resume();
+    } else {
+      playTrack(playerTrack);
+    }
   };
   const skipSong = (seconds: number) => {
     if (!playerTrack) return;
@@ -328,6 +332,7 @@ export default function SongTradingPage() {
               active={activeThis}
               currentTime={activeThis ? currentTime : 0}
               duration={activeThis ? (duration || Number(song.duration || 0)) : Number(song.duration || 0)}
+              volume={volume}
               onToggle={toggleSong}
               onSeek={(seconds) => {
                 if (!playerTrack) return;
@@ -335,6 +340,7 @@ export default function SongTradingPage() {
                 seekTo(seconds);
               }}
               onSkip={skipSong}
+              onVolume={setVolume}
             />
           </div>
           <div className="flex w-full flex-col gap-3 shrink-0 relative z-10 md:w-auto">
@@ -809,24 +815,32 @@ function SongPageAudioPlayer({
   active,
   currentTime,
   duration,
+  volume,
   onToggle,
   onSeek,
   onSkip,
+  onVolume,
 }: {
   disabled: boolean;
   playing: boolean;
   active: boolean;
   currentTime: number;
   duration: number;
+  volume: number;
   onToggle: () => void;
   onSeek: (seconds: number) => void;
   onSkip: (seconds: number) => void;
+  onVolume: (volume: number) => void;
 }) {
   const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0;
   const safeCurrent = safeDuration > 0 ? Math.min(currentTime, safeDuration) : 0;
   const pct = safeDuration > 0 ? Math.max(0, Math.min(100, (safeCurrent / safeDuration) * 100)) : 0;
   const rangeStyle = {
     background: `linear-gradient(to right, var(--neon) 0%, var(--neon) ${pct}%, rgba(255,255,255,0.16) ${pct}%, rgba(255,255,255,0.16) 100%)`,
+  };
+  const volumePct = Math.max(0, Math.min(100, Math.round(volume * 100)));
+  const volumeStyle = {
+    background: `linear-gradient(to right, var(--neon) 0%, var(--neon) ${volumePct}%, rgba(255,255,255,0.14) ${volumePct}%, rgba(255,255,255,0.14) 100%)`,
   };
 
   if (disabled) {
@@ -878,6 +892,21 @@ function SongPageAudioPlayer({
                 />
               ))}
             </div>
+          </div>
+          <div className="mt-3 flex items-center gap-2 text-mute">
+            <Volume2 size={14} className="shrink-0" />
+            <input
+              type="range"
+              min="0"
+              max="100"
+              step="1"
+              value={volumePct}
+              onChange={(e) => onVolume(Number(e.target.value) / 100)}
+              className="h-2 w-full appearance-none rounded-full bg-white/10"
+              style={volumeStyle}
+              aria-label="Song volume"
+            />
+            <span className="w-10 text-right font-mono text-[11px] font-black text-mute">{volumePct}%</span>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-2 sm:w-[92px]">

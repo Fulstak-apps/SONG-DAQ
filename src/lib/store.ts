@@ -52,6 +52,9 @@ export const useSession = create<SessionState>()(
       provider: null,
       audius: null,
       setSession: (s) => set((prev) => {
+        const nextAudius = Object.prototype.hasOwnProperty.call(s, "audius")
+          ? (s.audius ?? null)
+          : prev.audius;
         const nextAddress = s.provider === "audius"
           ? null
           : isPersistedSolanaAddress(s.address)
@@ -64,6 +67,7 @@ export const useSession = create<SessionState>()(
         return {
           ...prev,
           ...s,
+          audius: nextAudius,
           address: nextAddress,
           kind: nextAddress ? "solana" : null,
           provider: nextAddress ? (s.provider ?? prev.provider) : null,

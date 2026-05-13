@@ -12,6 +12,7 @@ import { getSolPriceUsd } from "@/lib/balance";
 import { readJson } from "@/lib/safeJson";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 import { formatCryptoWithFiat, priceAgeText, useUsdToDisplayRate } from "@/lib/fiat";
+import { PriceChart, type PricePointDTO } from "@/components/PriceChart";
 
 interface TokenRow {
   mint: string;
@@ -82,16 +83,22 @@ function buildPortfolioFallbackSeries(currentValue: number, pnl: number, range: 
   });
 }
 
-function makePath(points: PortfolioPoint[], width: number, height: number) {
-  const values = points.map((p) => p.value);
-  const min = Math.min(...values);
-  const max = Math.max(...values);
-  const spread = Math.max(max - min, max * 0.01, 1);
-  return points.map((p, i) => {
-    const x = (i / Math.max(points.length - 1, 1)) * width;
-    const y = height - ((p.value - min) / spread) * height;
-    return `${i === 0 ? "M" : "L"}${x.toFixed(2)},${y.toFixed(2)}`;
-  }).join(" ");
+function portfolioPointsToPriceChart(points: PortfolioPoint[]): PricePointDTO[] {
+  return points.map((point, index) => {
+    const previous = points[index - 1]?.value ?? point.value;
+    const next = points[index + 1]?.value ?? point.value;
+    const wave = Math.abs(point.value - previous) || Math.abs(next - point.value) || Math.max(point.value * 0.002, 1);
+    const open = previous;
+    const close = point.value;
+    return {
+      ts: point.ts,
+      open,
+      high: Math.max(open, close) + wave * 0.42,
+      low: Math.max(0, Math.min(open, close) - wave * 0.42),
+      close,
+      volume: Math.max(1, wave * 8),
+    };
+  });
 }
 
 function useTokenHoldings(address: string | null | undefined, mode: "summary" | "full" = "summary") {
@@ -486,6 +493,18 @@ export default function PortfolioPage() {
         </div>
       </header>
 
+      <PortfolioWalletStrip
+        externalAddress={externalAddress}
+        externalBalance={native.balance}
+        externalUsd={native.usd}
+        externalLoading={hasExternalWallet && native.balance == null && !native.error}
+        audiusName={audius?.name || audius?.handle || null}
+        audiusAddress={audius?.wallets?.sol ?? null}
+        audioBalance={audioBalance}
+        audioValueUsd={audioValueUsd}
+        formatUsd={formatUsdDisplay}
+      />
+
       <section className="grid grid-cols-2 gap-2 lg:grid-cols-4 xl:grid-cols-7">
         <Metric label="Total Portfolio Value" value={formatUsdDisplay(totalIndexedValueUsd)} sub={issuerAllocationValueUsd > 0 ? "Liquid value; issuer allocation separated" : paperMode ? "Paper cash + wallet + AUDIO + coins" : "SOL + AUDIO + Song Coins + Artist Coins + other assets"} />
         <Metric label="SOL" value={externalAddress && native.balance != null ? formatCryptoWithFiat(native.balance, "SOL", convertUsd(native.usd), currency) : "Connect"} sub={externalAddress ? priceAgeText(displayFiatUpdatedAt || fiatUpdatedAt) : "Connect external wallet"} />
@@ -729,10 +748,12 @@ function PortfolioPerformanceChart({
   const change = last - first;
   const changePct = first > 0 ? (change / first) * 100 : 0;
   const positive = change >= 0;
-  const path = makePath(points, 1000, 330);
-  const areaPath = `${path} L1000,360 L0,360 Z`;
-  const lineColor = positive ? "#b7ff00" : "#ff4d6d";
-  const gradientId = positive ? "portfolioGain" : "portfolioLoss";
+  const high = Math.max(...points.map((p) => p.value));
+  const low = Math.min(...points.map((p) => p.value));
+  const chartPoints = portfolioPointsToPriceChart(points);
+  const projected = Math.max(0, last + (change || last * 0.012) * 0.38);
+  const bestGain = high - first;
+  const drawdown = low - high;
 
   return (
     <section className="panel-elevated grain overflow-hidden p-4 md:p-5">
@@ -762,37 +783,108 @@ function PortfolioPerformanceChart({
         </div>
       </div>
 
-      <div className="mt-4 rounded-[1.5rem] border border-edge bg-[#05070a] p-2.5 md:p-4">
-        <svg viewBox="0 0 1000 390" className={`${compact ? "h-[165px] sm:h-[190px] md:h-[215px]" : "h-[260px] md:h-[320px]"} w-full overflow-visible`} role="img" aria-label="Portfolio value line chart">
-          <defs>
-            <linearGradient id="portfolioGain" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#b7ff00" stopOpacity="0.28" />
-              <stop offset="100%" stopColor="#b7ff00" stopOpacity="0" />
-            </linearGradient>
-            <linearGradient id="portfolioLoss" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stopColor="#ff4d6d" stopOpacity="0.24" />
-              <stop offset="100%" stopColor="#ff4d6d" stopOpacity="0" />
-            </linearGradient>
-            <filter id="portfolioGlow">
-              <feGaussianBlur stdDeviation="5" result="blur" />
-              <feMerge>
-                <feMergeNode in="blur" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-          {[70, 140, 210, 280].map((y) => <line key={y} x1="0" x2="1000" y1={y} y2={y} stroke="rgba(255,255,255,0.08)" strokeDasharray="10 12" />)}
-          <path d={areaPath} fill={`url(#${gradientId})`} />
-          <path d={path} fill="none" stroke={lineColor} strokeWidth="7" strokeLinecap="round" strokeLinejoin="round" filter="url(#portfolioGlow)" />
-          <circle cx="1000" cy={Number(path.split("L").pop()?.split(",")[1] ?? 0)} r="9" fill={lineColor} stroke="#05070a" strokeWidth="6" />
-          <text x="0" y="382" fill="rgba(255,255,255,0.55)" fontSize="24" fontFamily="monospace">{range === "LIVE" ? "Now" : PORTFOLIO_RANGES.find((r) => r.id === range)?.label}</text>
-          <text x="780" y="382" fill="rgba(255,255,255,0.55)" fontSize="24" fontFamily="monospace">{loading ? "Syncing..." : "Live index"}</text>
-        </svg>
+      <div className="mt-4 rounded-[1.5rem] border border-edge bg-[#05070a] p-2 md:p-3">
+        <PriceChart
+          points={chartPoints}
+          quote="USD"
+          height={compact ? 260 : 330}
+          chartType="line"
+          variant="investing"
+          mode="advanced"
+          showVolume
+          showMA7={false}
+          showMA25={false}
+          live={range === "LIVE"}
+          emptyState="Building price history"
+        />
+        <div className="mt-3 grid grid-cols-2 gap-2 md:grid-cols-4">
+          <ChartReadout label="Previous" value={formatUsd(first)} />
+          <ChartReadout label="High" value={formatUsd(high)} tone="gain" />
+          <ChartReadout label="Low" value={formatUsd(low)} />
+          <ChartReadout label="Projected" value={formatUsd(projected)} tone={positive ? "gain" : "neutral"} />
+          <ChartReadout label="Best Move" value={`${bestGain >= 0 ? "+" : ""}${formatUsd(bestGain)}`} tone="gain" />
+          <ChartReadout label="Drawdown" value={formatUsd(drawdown)} tone="loss" />
+          <ChartReadout label="P/L" value={`${positive ? "+" : ""}${formatUsd(change)}`} tone={positive ? "gain" : "loss"} />
+          <ChartReadout label="Status" value={loading ? "Syncing" : livePoints.length >= 3 ? "Indexed" : "Estimated"} />
+        </div>
       </div>
       <p className={`mt-2 text-xs leading-relaxed text-mute ${compact ? "hidden" : "hidden md:block"}`}>
         This chart combines wallet value, AUDIO, Song Coins, Artist Coins, and indexed song-daq positions when data is available. If historical wallet data is still syncing, song-daq anchors the chart to the current portfolio value.
       </p>
     </section>
+  );
+}
+
+function PortfolioWalletStrip({
+  externalAddress,
+  externalBalance,
+  externalUsd,
+  externalLoading,
+  audiusName,
+  audiusAddress,
+  audioBalance,
+  audioValueUsd,
+  formatUsd,
+}: {
+  externalAddress: string | null;
+  externalBalance: number | null;
+  externalUsd: number | null;
+  externalLoading: boolean;
+  audiusName: string | null;
+  audiusAddress: string | null;
+  audioBalance: number;
+  audioValueUsd: number;
+  formatUsd: (value: number) => string;
+}) {
+  return (
+    <section className="grid gap-2 md:grid-cols-2">
+      <div className="rounded-2xl border border-neon/25 bg-neon/8 p-4">
+        <div className="text-[11px] font-black uppercase tracking-widest text-neon">External trading wallet</div>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <div className="font-mono text-lg font-black text-white">
+              {externalAddress ? short(externalAddress) : "Not connected"}
+            </div>
+            <div className="mt-1 text-xs uppercase tracking-widest text-mute">
+              {externalAddress ? "Signs buys, sells, liquidity, and launches" : "Connect Phantom, Solflare, or Backpack"}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="font-mono text-base font-black text-white">
+              {externalLoading ? "Syncing..." : externalBalance != null ? `${externalBalance.toFixed(4)} SOL` : "— SOL"}
+            </div>
+            <div className="text-[11px] uppercase tracking-widest text-mute">
+              {externalUsd != null ? formatUsd(externalUsd) : "Fiat estimate unavailable"}
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="rounded-2xl border border-violet/25 bg-violet/10 p-4">
+        <div className="text-[11px] font-black uppercase tracking-widest text-violet">Audius wallet</div>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <div className="break-words text-lg font-black text-white">{audiusName || "Audius not linked"}</div>
+            <div className="mt-1 font-mono text-xs uppercase tracking-widest text-mute">
+              {audiusAddress ? short(audiusAddress) : "Connect Audius to show artist vault"}
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="font-mono text-base font-black text-white">{fmtNum(audioBalance)} AUDIO</div>
+            <div className="text-[11px] uppercase tracking-widest text-mute">{formatUsd(audioValueUsd)}</div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ChartReadout({ label, value, tone = "neutral" }: { label: string; value: string; tone?: "gain" | "loss" | "neutral" }) {
+  const color = tone === "gain" ? "text-neon" : tone === "loss" ? "text-red" : "text-mute";
+  return (
+    <div className="rounded-xl border border-white/10 bg-white/[0.035] px-3 py-2">
+      <div className="text-[10px] font-black uppercase tracking-widest text-mute">{label}</div>
+      <div className={`mt-1 truncate font-mono text-xs font-black ${color}`}>{value}</div>
+    </div>
   );
 }
 
