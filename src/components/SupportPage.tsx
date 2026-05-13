@@ -242,7 +242,7 @@ export function SupportPage() {
             <p className="text-sm text-mute">Support and royalty split review: <span className="font-mono text-neon">{ROYALTY_EMAIL}</span></p>
           </div>
         </div>
-        <Link href="/admin/login" className="text-[11px] uppercase tracking-widest font-black text-mute hover:text-neon">
+        <Link href="/admin/login" className="rounded-full border border-neon/25 bg-neon/10 px-4 py-2 text-[11px] uppercase tracking-widest font-black text-neon hover:bg-neon/15">
           Admin
         </Link>
       </section>

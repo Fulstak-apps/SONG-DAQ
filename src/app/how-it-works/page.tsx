@@ -43,12 +43,12 @@ const glossary = [
 ];
 
 const supportTopics = [
-  ["Launch help", "Create the coin, review supply, then add liquidity so the public market can open. song-daq shows crypto and fiat estimates before money moves."],
-  ["Wallet help", "Live mode uses your connected Solana wallet. Paper Mode gives you a simulated wallet so you can test launching, buying, selling, and portfolio changes."],
-  ["Royalty help", `Royalty splits happen after launch. Artists add ${ROYALTY_EMAIL} inside their distributor dashboard, then submit the setup request in song-daq.`],
-  ["Portfolio help", "Portfolio should roll up SOL, AUDIO, Song Coins, Artist Coins, other wallet assets, profit/loss, and recent activity in one place."],
+  ["Launch help", "Create the coin, review supply, choose a launch preset, then add liquidity so the public market can open. song-daq shows crypto and fiat estimates before money moves."],
+  ["Wallet help", "Live mode uses your connected Solana wallet. Paper Mode gives you a simulated wallet so you can test launching, buying, selling, and portfolio changes with no real funds."],
+  ["Royalty help", `Royalty splits happen after launch. Artists add ${ROYALTY_EMAIL} inside their distributor dashboard, return to song-daq, and submit the setup request for verification.`],
+  ["Portfolio help", "Portfolio rolls up SOL, AUDIO, Song Coins, Artist Coins, other wallet assets, profit/loss, and recent activity so investors can see the whole account in one place."],
   ["Liquidity help", "Liquidity is still called liquidity, but the app explains it as the public market money that lets fans buy and sell without waiting for a private buyer."],
-  ["Admin help", "Admin-only review, royalty verification, payment records, and asset sync health live inside the admin dashboard, not in the public launch flow."],
+  ["Admin help", "Admin-only review, royalty verification, payment records, support requests, and asset sync health live inside the admin dashboard, not in the public launch flow."],
 ] as const;
 
 const supportGraphs = [
@@ -66,10 +66,13 @@ export default function HowItWorksPage() {
           <div>
             <div className="text-[11px] uppercase tracking-[0.3em] font-black text-neon">How song-daq works</div>
             <h1 className="mt-4 max-w-4xl text-4xl font-black leading-[0.95] tracking-tight text-ink md:text-6xl">
-              A music coin marketplace for artists and fans.
+              Buy music coins and follow the live music economy.
             </h1>
             <p className="mt-5 max-w-3xl text-base leading-relaxed text-mute md:text-lg">
-              Artists launch coins tied to songs or artist profiles. Fans and investors buy from a public pool or curve, then song-daq tracks price, liquidity, portfolio value, royalty status, and artist momentum in one place.
+              song-daq lets fans invest in their favorite music and lets artists launch music coins with visible price, liquidity, wallet, and royalty signals. The goal is to make every market feel understandable before anyone spends money.
+            </p>
+            <p className="mt-3 max-w-3xl text-base font-semibold leading-relaxed text-ink/75 md:text-lg">
+              100% verified on-chain means the app surfaces the mint, wallet, pool, launch, and market records users need to inspect. Artists can launch coin markets for fans, and investors can compare Song Coins and Artist Coins from one clean screen.
             </p>
             <div className="mt-6 flex flex-wrap gap-2">
               <Link href="/market" className="btn-primary h-11 px-4 text-[11px] font-black uppercase tracking-widest">
@@ -103,7 +106,7 @@ export default function HowItWorksPage() {
               This page now combines the how-it-works guide with support details so beginners can understand launch, trading, liquidity, wallets, royalties, and portfolio updates without hunting through different pages.
             </p>
           </div>
-          <Link href="/admin/login" className="btn h-11 px-4 text-xs font-black uppercase tracking-widest">
+          <Link href="/admin/login" className="btn-primary h-11 px-4 text-xs font-black uppercase tracking-widest">
             Admin
           </Link>
         </div>
@@ -115,8 +118,8 @@ export default function HowItWorksPage() {
         <div className="mt-5 grid gap-3 lg:grid-cols-4">
           {supportGraphs.map(([title, body, color], index) => (
             <div key={title} className="rounded-2xl border border-edge bg-panel p-4">
-              <div className={`grid h-12 w-12 place-items-center rounded-2xl border border-white/10 bg-white/[0.055] ${color}`}>
-                {index === 0 ? <Coins size={22} /> : index === 1 ? <LineChart size={22} /> : index === 2 ? <BarChart3 size={22} /> : <FileCheck2 size={22} />}
+              <div className={`grid h-16 w-16 place-items-center rounded-[1.25rem] border border-white/10 bg-white/[0.055] ${color}`}>
+                {index === 0 ? <Coins size={32} /> : index === 1 ? <LineChart size={32} /> : index === 2 ? <BarChart3 size={32} /> : <FileCheck2 size={32} />}
               </div>
               <div className="mt-4 text-lg font-black text-ink">{title}</div>
               <p className="mt-1 text-base font-semibold leading-relaxed text-mute">{body}</p>

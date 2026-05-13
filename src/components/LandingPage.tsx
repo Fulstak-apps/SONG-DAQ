@@ -57,11 +57,12 @@ export function LandingPage() {
   const [statsLoaded, setStatsLoaded] = useState(false);
   const HERO_TEXT = [
     { a: "Buy music", b: "coins.", color: "text-gradient-neon" },
+    { a: "Invest in your", b: "favorite music.", color: "text-gradient-cyan" },
     { a: "100% verified", b: "on-chain.", color: "text-gradient-violet" },
-    { a: "Launch in", b: "under 2 min.", color: "text-gradient-cyan" },
+    { a: "Launch music", b: "coins for fans.", color: "text-gradient-neon" },
     { a: "Instant creator", b: "tokenization.", color: "text-gradient-gold" },
   ];
-  const trustBadges = ["100% verified on-chain", "Instant creator tokenization", "Launch in under 2 minutes"];
+  const trustBadges = ["100% verified on-chain", "Launch music coins for fans", "Instant creator tokenization"];
 
   useEffect(() => {
     const i = setInterval(() => setHeroIdx((curr) => (curr + 1) % HERO_TEXT.length), 4000);
@@ -135,7 +136,7 @@ export function LandingPage() {
             transition={{ duration: 0.7, delay: 0.35 }}
             className="text-mute text-sm sm:text-base md:text-lg max-w-xl font-medium leading-relaxed mx-auto lg:mx-0"
           >
-            Song-daq lets artists launch song coins and artist coins, then lets fans buy, sell, and track them with clear price, liquidity, wallet, and royalty signals before money moves.
+            song-daq turns music into a clear market experience. Artists can launch music coins tied to an artist profile or a specific song. Fans can discover those markets, review price, liquidity, royalty status, artist momentum, and wallet costs, then buy or sell with the same kind of clarity they expect from a finance app.
           </motion.p>
 
           <div className="flex flex-wrap justify-center gap-2 lg:justify-start">
@@ -152,9 +153,9 @@ export function LandingPage() {
             transition={{ duration: 0.7, delay: 0.5 }}
             className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-2"
           >
-            <PathButton href="/market" title="Fan / Investor" body="Browse coins, watch charts, buy, sell, and track your portfolio." tone="neon" />
-            <PathButton href="/artist" title="Artist" body="Connect Audius, choose Artist Coin or Song Coin, launch, add liquidity, and set up splits." tone="violet" />
-            <PathButton href="/demo" title="Investor Demo" body="Walk through Paper Mode, buying, selling, and portfolio tracking with simulated funds." tone="neon" />
+            <PathButton href="/market" title="Fan / Investor" body="Browse music markets, compare song coins and artist coins, check liquidity and royalty signals, then build a portfolio around the artists you believe in." tone="neon" />
+            <PathButton href="/artist" title="Artist" body="Connect Audius, choose an artist coin or song coin, pick a simple launch preset, add public liquidity, and set up royalty splits later." tone="violet" />
+            <PathButton href="/demo" title="Investor Demo" body="Use Paper Mode to practice buying, selling, launching, and tracking portfolio movement with simulated funds before real money moves." tone="neon" />
           </motion.div>
         </div>
 
@@ -207,17 +208,17 @@ export function LandingPage() {
           <SimpleStep
             num="01"
             title="Launch Artist Coin"
-            body="Artists connect Audius, choose an Artist Coin or Song Coin, and set the market structure in plain English."
+            body="Artists connect Audius, choose an Artist Coin or Song Coin, and use simple launch presets to define supply, allocation, public liquidity, and wallet caps."
           />
           <SimpleStep
             num="02"
             title="Fans Trade the Market"
-            body="Fans buy song coins from a public curve or liquidity pool, not from a hidden artist wallet."
+            body="Fans buy from a public pool or curve with visible price, liquidity, fees, and fiat estimates. The artist allocation is separate from the market."
           />
           <SimpleStep
             num="03"
             title="Earn From Activity + Growth"
-            body="Portfolio value can move with demand, market activity, and verified royalty signals."
+            body="Portfolio value can move with demand, trading activity, music momentum, and verified royalty signals that are tracked on each coin page."
           />
         </div>
       </Section>
@@ -225,9 +226,9 @@ export function LandingPage() {
       {/* ═══ HOW IT WORKS ═════════════════════════════════ */}
       <Section>
         <div className="grid gap-3 md:grid-cols-3">
-          <FlowCard title="Investors" items={["Browse market", "Open coin", "Review chart, artist, source, liquidity, royalty status", "Buy or sell", "Portfolio updates"]} />
-          <FlowCard title="Artists" items={["Connect Audius", "Choose Artist Coin or Song Coin", "Pick profile or song", "Choose a launch preset", "Launch, add liquidity, set up splits later"]} />
-          <FlowCard title="Admins" items={["Verify royalty requests", "Review trust issues", "Track wallet/API errors", "Manage payout records"]} />
+          <FlowCard title="Investors" items={["Browse music coins by market source, hype, price, and liquidity.", "Open a coin to review chart movement, artist proof, discography, royalty status, and trust signals.", "Buy or sell with crypto and USD estimates before confirming.", "Track SOL, AUDIO, song coins, artist coins, P/L, and recent activity in portfolio."]} />
+          <FlowCard title="Artists" items={["Connect Audius so catalog, profile, artwork, and artist identity are real.", "Choose Artist Coin or Song Coin, then pick a launch preset instead of guessing tokenomics.", "Launch the coin, add public liquidity, and show fans why the market can trade.", "Set up distributor royalty splits later and submit them for verification."]} />
+          <FlowCard title="Admins" items={["Review royalty requests, wallet errors, asset sync health, and suspicious market activity.", "Verify distributor split information before any coin becomes royalty verified.", "Record royalty payments, pool contributions, liquidity support, and payout history.", "Keep admin-only review controls out of the public testing flow."]} />
         </div>
       </Section>
 
@@ -239,12 +240,12 @@ export function LandingPage() {
       </Section>
 
       <div className="grid grid-cols-1 items-stretch gap-3 [grid-auto-rows:1fr] md:grid-cols-3 lg:grid-cols-6">
-        <Section className="h-full" delay={0}><Step num={1} title="Upload" icon={<CloudUpload className="text-violet" size={24} />} desc="Upload your track to Audius." /></Section>
-        <Section className="h-full" delay={0.05}><Step num={2} title="Distribute" icon={<Globe className="text-violet" size={24} />} desc="Release via DistroKid, TuneCore, etc." /></Section>
-        <Section className="h-full" delay={0.1}><Step num={3} title="Launch Coin" icon={<CircleDollarSign className="text-violet" size={24} />} desc="Create your song coin. Set royalty share (min 10%)." active /></Section>
-        <Section className="h-full" delay={0.15}><Step num={4} title="Lock Splits" icon={<Lock className="text-neon" size={24} />} desc="Send unique royalty email to your distributor." /></Section>
-        <Section className="h-full" delay={0.2}><Step num={5} title="Verify" icon={<ShieldCheck className="text-violet" size={24} />} desc="Distributor confirms → Splits Locked badge." /></Section>
-        <Section className="h-full" delay={0.25}><Step num={6} title="Fans Invest" icon={<Users className="text-violet" size={24} />} desc="Royalty activity and market updates become visible for holders and fans." /></Section>
+        <Section className="h-full" delay={0}><Step num={1} title="Upload" icon={<CloudUpload className="text-violet" size={34} />} desc="Start with a real Audius track, artwork, artist identity, and song metadata so the coin page does not feel empty." /></Section>
+        <Section className="h-full" delay={0.05}><Step num={2} title="Distribute" icon={<Globe className="text-violet" size={34} />} desc="Release through your distributor so the song has proper rights, splits, ISRC/UPC data, and a royalty path." /></Section>
+        <Section className="h-full" delay={0.1}><Step num={3} title="Launch Coin" icon={<CircleDollarSign className="text-violet" size={34} />} desc="Choose Artist Coin or Song Coin, set the ticker, use a preset, and review all crypto plus fiat costs before signing." active /></Section>
+        <Section className="h-full" delay={0.15}><Step num={4} title="Lock Splits" icon={<Lock className="text-neon" size={34} />} desc="After launch, add song-daq as a distributor split recipient so royalty activity can be verified later." /></Section>
+        <Section className="h-full" delay={0.2}><Step num={5} title="Verify" icon={<ShieldCheck className="text-violet" size={34} />} desc="Admin reviews the distributor split and updates the public royalty status only when the information matches." /></Section>
+        <Section className="h-full" delay={0.25}><Step num={6} title="Fans Invest" icon={<Users className="text-violet" size={34} />} desc="Fans trade from the public pool, follow momentum, watch royalty updates, and track the position in portfolio." /></Section>
       </div>
 
       {/* ═══ PRODUCT SHOWCASE ═════════════════════════════ */}
@@ -327,11 +328,11 @@ export function LandingPage() {
             {/* Royalty email card */}
             <div className="panel p-5 space-y-3">
               <div className="text-xs font-bold text-white/60 tracking-wide">DISTRIBUTOR SPLIT EMAIL</div>
-              <div className="flex items-center justify-between bg-panel2 border border-violet/20 rounded-xl p-3">
-                <span className="text-violet font-mono text-xs">admin@song-daq.com</span>
-                <button className="text-mute hover:text-white transition"><Copy size={14} /></button>
+              <div className="flex items-center justify-between bg-panel2 border border-neon/25 rounded-xl p-3">
+                <span className="text-neon font-mono text-xs">admin@song-daq.com</span>
+                <button className="text-neon/75 hover:text-neon transition"><Copy size={14} /></button>
               </div>
-              <Link href="/splits" className="text-[11px] text-violet hover:text-violet/80 transition flex items-center gap-1">
+              <Link href="/splits" className="text-[11px] text-neon hover:text-neon/80 transition flex items-center gap-1">
                 How to setup splits <ArrowRight size={12} />
               </Link>
             </div>
@@ -538,19 +539,19 @@ function PathButton({ href, title, body, tone }: { href: string; title: string; 
         {title}
         <ArrowRight size={14} className="transition-transform group-hover:translate-x-1" />
       </div>
-      <p className="mt-2 text-sm leading-relaxed text-mute">{body}</p>
+      <p className="mt-2 text-[15px] font-semibold leading-relaxed text-mute">{body}</p>
     </Link>
   );
 }
 
 function FlowCard({ title, items }: { title: string; items: string[] }) {
   return (
-    <div className="panel-elevated grain flex h-full min-h-[250px] flex-col p-5 md:p-6">
-      <div className="text-[11px] font-black uppercase tracking-[0.26em] text-neon">{title}</div>
-      <ul className="mt-4 space-y-3">
+    <div className="panel-elevated grain flex h-full min-h-[300px] flex-col p-5 md:p-7">
+      <div className="text-sm font-black uppercase tracking-[0.22em] text-neon">{title}</div>
+      <ul className="mt-5 space-y-4">
         {items.map((item) => (
-          <li key={item} className="flex items-start gap-2 text-sm leading-relaxed text-mute">
-            <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-neon" />
+          <li key={item} className="flex items-start gap-3 text-[15px] font-semibold leading-relaxed text-mute">
+            <CheckCircle2 size={17} className="mt-0.5 shrink-0 text-neon" />
             <span>{item}</span>
           </li>
         ))}
@@ -561,13 +562,13 @@ function FlowCard({ title, items }: { title: string; items: string[] }) {
 
 function SimpleStep({ num, title, body }: { num: string; title: string; body: string }) {
   return (
-    <div className="panel-elevated grain min-h-[190px] p-5 md:p-6">
+    <div className="panel-elevated grain min-h-[220px] p-5 md:p-7">
       <div className="flex items-start justify-between gap-4">
         <span className="font-mono text-2xl font-black text-neon">{num}</span>
         <span className="h-2 w-2 rounded-full bg-neon shadow-[0_0_16px_rgba(183,255,0,0.45)]" />
       </div>
       <h3 className="mt-5 text-2xl font-black tracking-tight text-ink">{title}</h3>
-      <p className="mt-3 text-sm leading-relaxed text-mute">{body}</p>
+      <p className="mt-3 text-[15px] font-semibold leading-relaxed text-mute">{body}</p>
     </div>
   );
 }
@@ -579,11 +580,11 @@ function Step({ num, title, icon, desc, active }: { num: number; title: string; 
       triggerClassName="flex h-full w-full items-stretch"
       content={<div><div className="font-black text-neon mb-1">{title}</div><p className="text-pure-white/70 text-sm leading-relaxed">{desc}</p></div>}
     >
-      <div className={`panel-elevated relative flex h-full min-h-[230px] w-full flex-col items-center justify-between gap-3 p-4 text-center md:aspect-square md:min-h-0 lg:aspect-square ${active ? "border-neon/20 shadow-neon-glow" : ""}`}>
+      <div className={`panel-elevated relative flex h-full min-h-[310px] w-full flex-col items-center justify-start gap-4 p-5 text-center md:min-h-[330px] ${active ? "border-neon/20 shadow-neon-glow" : ""}`}>
         <div className="shrink-0 text-[11px] font-black text-mute tracking-widest">{String(num).padStart(2, "0")}</div>
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-white/[0.06] bg-white/[0.03]">{icon}</div>
-        <div className="min-h-[2.5rem] shrink-0 text-sm font-black uppercase tracking-widest text-white/75 flex items-center justify-center">{title}</div>
-        <p className="flex flex-1 items-center text-sm text-mute leading-relaxed line-clamp-4">{desc}</p>
+        <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-[1.25rem] border border-white/[0.08] bg-white/[0.045] shadow-[inset_0_0_24px_rgba(255,255,255,0.025)]">{icon}</div>
+        <div className="min-h-[2.5rem] shrink-0 text-base font-black uppercase tracking-widest text-white/85 flex items-center justify-center">{title}</div>
+        <p className="text-[15px] font-semibold text-mute leading-relaxed">{desc}</p>
       </div>
     </Tooltip>
   );

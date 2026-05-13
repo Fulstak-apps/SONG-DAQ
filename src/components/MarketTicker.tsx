@@ -1,4 +1,5 @@
 "use client";
+import type { CSSProperties } from "react";
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useCoins } from "@/lib/useCoins";
@@ -103,7 +104,10 @@ export function MarketTicker() {
       <div className="absolute left-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-r from-bg to-transparent z-10 pointer-events-none" />
       <div className="absolute right-0 top-0 bottom-0 w-8 sm:w-16 bg-gradient-to-l from-bg to-transparent z-10 pointer-events-none" />
       
-      <div className="flex animate-ticker py-2 pl-2 pr-2 whitespace-nowrap items-center [animation-play-state:running] hover:[animation-play-state:paused]" style={{ animationDuration: ticks.length ? "150s" : "70s" }}>
+      <div
+        className="ticker-track flex py-2 pl-2 pr-2 whitespace-nowrap items-center hover:[animation-play-state:paused]"
+        style={{ "--ticker-duration": ticks.length ? "150s" : "70s" } as CSSProperties}
+      >
         {doubled.map((t, i) => {
           if (t.kind === "coin") {
             return (

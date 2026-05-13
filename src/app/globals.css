@@ -899,3 +899,16 @@ main {
   0% { transform: translate3d(0, 0, 0) rotate(var(--drift-rotate, 0deg)) scale(1); }
   100% { transform: translate3d(var(--drift-x, 5px), var(--drift-y, -6px), 0) rotate(calc(var(--drift-rotate, 0deg) * -1)) scale(var(--drift-scale, 1.018)); }
 }
+
+@keyframes tickerMarquee {
+  0% { transform: translate3d(0, 0, 0); }
+  100% { transform: translate3d(-33.333%, 0, 0); }
+}
+
+.ticker-track {
+  min-width: max-content;
+  animation: tickerMarquee var(--ticker-duration, 110s) linear infinite !important;
+  animation-duration: var(--ticker-duration, 110s) !important;
+  animation-iteration-count: infinite !important;
+  will-change: transform;
+}
