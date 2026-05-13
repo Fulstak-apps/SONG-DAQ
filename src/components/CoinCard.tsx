@@ -112,9 +112,9 @@ export function CoinCard({
               )}
               <RiskBadge coin={c as any} compact />
               {artistVerified && (
-                <Tooltip content="This artist is verified on Audius/Open Audio, so SONG·DAQ marks the artist identity as verified too.">
+                <Tooltip content="This artist is verified on Audius/Open Audio. SONG·DAQ uses that as the artist identity check.">
                   <span className="rounded-md border border-neon/25 bg-neon/10 px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest text-neon">
-                    SONG·DAQ verified
+                    Verified Artist
                   </span>
                 </Tooltip>
               )}

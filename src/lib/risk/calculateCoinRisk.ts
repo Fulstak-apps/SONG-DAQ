@@ -40,9 +40,9 @@ export function calculateCoinRisk(input: Partial<AudiusCoin> & Record<string, an
 
   if (audiusVerifiedArtist) badges.push("Audius verified artist");
   else if (artistResolved) badges.push("Audius-linked artist");
-  else { score -= 22; warnings.push("Artist identity is not fully verified."); badges.push("Unverified artist"); }
+  else { score -= 22; warnings.push("Artist identity needs review."); badges.push("Identity review"); }
   if (!input.audius_track_id && !input.audiusTrackId) { score -= 12; warnings.push("Song source is not linked to a verified catalog track."); badges.push("Song source pending"); }
-  if (!royaltyVerified) { score -= 10; warnings.push("Royalty-backed transparency signal is not verified."); badges.push("Royalty unverified"); }
+  if (!royaltyVerified) { score -= 10; warnings.push("Royalty-backed transparency signal is not verified yet."); badges.push("Royalty pending"); }
   if (liquidity <= 0) { score -= 35; warnings.push("No verified liquidity is available."); badges.push("No liquidity"); }
   else if (liquidity < 1) { score -= 18; warnings.push("Liquidity is low, so buys and sells may fail or move price sharply."); badges.push("Low liquidity"); }
   if (!liquidityLocked) { score -= 12; warnings.push("Liquidity lock is not verified."); badges.push("Liquidity not locked"); }
@@ -54,14 +54,22 @@ export function calculateCoinRisk(input: Partial<AudiusCoin> & Record<string, an
   const clamped = Math.max(0, Math.min(100, Math.round(score)));
   let level: RiskLevel = "LOWER_RISK";
   if (input.status === "RESTRICTED" || input.status === "DELISTED") level = "RESTRICTED";
-  else if (!verifiedArtist || liquidity <= 0) level = "UNVERIFIED";
+  else if (!verifiedArtist) level = "UNVERIFIED";
+  else if (liquidity <= 0) level = "MEDIUM_RISK";
   else if (clamped < 45) level = "HIGH_RISK";
   else if (clamped < 75) level = "MEDIUM_RISK";
+  const label = !verifiedArtist
+    ? "Identity Review"
+    : liquidity <= 0
+      ? "Market Review"
+      : level === "LOWER_RISK"
+        ? "Lower Risk"
+        : level.replace("_", " ").toLowerCase().replace(/\b\w/g, (m) => m.toUpperCase());
 
   return {
     score: clamped,
     level,
-    label: level === "LOWER_RISK" ? "Lower Risk" : level.replace("_", " ").toLowerCase().replace(/\b\w/g, (m) => m.toUpperCase()),
+    label,
     warnings,
     badges,
     canTrade: liquidity > 0 && level !== "RESTRICTED",

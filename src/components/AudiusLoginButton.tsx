@@ -71,7 +71,7 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
             target="_blank"
             rel="noreferrer"
             className="flex min-w-0 items-center gap-2 rounded-xl border border-violet/30 bg-violet/10 px-2 py-1.5 text-violet backdrop-blur-md transition hover:bg-violet/14 max-w-[min(260px,30vw)] 2xl:max-w-[320px]"
-            title={`${audius.name} (@${audius.handle})${audius.verified ? "\nSONG·DAQ verified via Audius" : ""}`}
+            title={`${audius.name} (@${audius.handle})${audius.verified ? "\nVerified artist via Audius" : ""}`}
           >
             <span className="relative shrink-0 overflow-hidden rounded-full border border-violet/25 bg-violet/18 h-7 w-7">
               {audius.avatar ? (
@@ -106,7 +106,7 @@ export function AudiusLoginButton({ compact = false }: { compact?: boolean }) {
           target="_blank"
           rel="noreferrer"
           className={`flex min-w-0 items-center rounded-2xl border border-violet/30 bg-violet/10 text-[11px] text-violet backdrop-blur-md transition hover:bg-violet/14 ${compact ? "gap-2 px-2 py-1.5" : "gap-2.5 px-2.5 py-1.5"}`}
-          title={`${audius.name} (@${audius.handle})${audius.verified ? "\nSONG·DAQ verified via Audius" : ""}`}
+          title={`${audius.name} (@${audius.handle})${audius.verified ? "\nVerified artist via Audius" : ""}`}
         >
             <span className={`relative shrink-0 overflow-hidden rounded-full border border-violet/25 bg-violet/18 ${compact ? "h-7 w-7" : "h-8 w-8"}`}>
               {audius.avatar ? (

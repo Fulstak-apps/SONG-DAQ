@@ -190,7 +190,7 @@ export default function ArtistProfilePage() {
       </section>
 
       <section className="grid grid-cols-1 md:grid-cols-4 gap-3">
-        <Insight icon={<ShieldCheck size={16} />} label="Verification" value={verified ? "SONG·DAQ verified" : "Unverified"} tone={verified ? "neon" : "amber"} />
+        <Insight icon={<ShieldCheck size={16} />} label="Verification" value={verified ? "Verified Artist" : "Identity review"} tone={verified ? "neon" : "amber"} />
         <Insight icon={<LockKeyhole size={16} />} label="Liquidity" value={pendingLiquidity ? `${pendingLiquidity} Pending` : "Active"} tone={pendingLiquidity ? "amber" : "neon"} />
         <Insight icon={<TrendingUp size={16} />} label="Market Cap" value={`$${fmtNum(totalCap)}`} tone="neon" />
         <Insight icon={<Radio size={16} />} label="Social Traction" value={`${fmtNum(totalPlays)} Plays`} tone="violet" />

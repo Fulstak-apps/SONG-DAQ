@@ -64,7 +64,7 @@ export function SongCard({ s, compact = false }: { s: SongRow; compact?: boolean
               <span className="w-2 h-2 rounded-full bg-neon block shadow-[0_0_6px_rgba(0,229,114,0.5)]" />
             </Tooltip>
           ) : (
-            <Tooltip content="Unverified: Royalties are not yet verified on-chain.">
+            <Tooltip content="Royalties are not verified yet. The song can still have a coin, but royalty splits are pending.">
               <span className="w-2 h-2 rounded-full bg-amber block shadow-[0_0_6px_rgba(245,158,11,0.5)]" />
             </Tooltip>
           )}

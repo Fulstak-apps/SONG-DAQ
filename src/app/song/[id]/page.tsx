@@ -355,7 +355,7 @@ export default function SongTradingPage() {
             {song.splitsLocked ? (
               <span className="text-[11px] uppercase tracking-widest font-bold text-neon flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-neon rounded-full shadow-[0_0_5px_rgba(0,229,114,0.8)]" /> Splits Locked</span>
             ) : (
-              <span className="text-[11px] uppercase tracking-widest font-bold text-orange-500 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(249,115,22,0.8)]" /> Unverified Splits</span>
+              <span className="text-[11px] uppercase tracking-widest font-bold text-orange-500 flex items-center gap-1.5"><span className="w-1.5 h-1.5 bg-orange-500 rounded-full animate-pulse shadow-[0_0_5px_rgba(249,115,22,0.8)]" /> Royalty Splits Pending</span>
             )}
           </div>
         </div>
@@ -478,7 +478,7 @@ export default function SongTradingPage() {
                 <ShieldCheck className="text-orange-500" size={20} />
               </div>
               <div className="space-y-1">
-                <h4 className="text-[11px] font-black uppercase tracking-widest text-orange-500">Unverified Splits</h4>
+                <h4 className="text-[11px] font-black uppercase tracking-widest text-orange-500">Royalty Splits Pending</h4>
                 <p className="text-[11px] text-mute leading-relaxed font-medium">This asset has not yet locked its royalty distribution protocol. Holders are not receiving streaming revenue.</p>
               </div>
             </div>

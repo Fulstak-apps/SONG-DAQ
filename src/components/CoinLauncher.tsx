@@ -1599,7 +1599,7 @@ function LaunchReadinessChecklist({
 }) {
   const items = [
     ["Wallet connected", walletConnected, "External Solana wallet is needed for real launch signing."],
-    ["SONG·DAQ artist verified", artistVerified, "Verified Audius artists are automatically treated as verified artist identities on SONG·DAQ."],
+    ["Verified artist", artistVerified, "Verified Audius artists are accepted as verified artist identities on SONG·DAQ."],
     ["Metadata ready", metadataReady, "Name, symbol, image, description, and token traits are prepared."],
     ["Liquidity ready", liquidityReady, "Public market liquidity is required before fans can buy."],
     ["Coin details", tokenTrustReady, "Rights, risk, vesting, and cap settings are accepted."],

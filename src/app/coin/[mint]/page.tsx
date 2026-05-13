@@ -1134,7 +1134,7 @@ export default function CoinPage() {
             <TrustCheck
               label="Artist"
               value={(coin as any).audiusVerified || (coin as any).songDaqVerified
-                ? `${coin.artist_name || "Unknown"} · SONG·DAQ verified via Audius`
+                ? `${coin.artist_name || "Unknown"} · Verified artist via Audius`
                 : coin.artist_name || "Unknown"}
               ok={Boolean((coin as any).audiusVerified || (coin as any).songDaqVerified || coin.artist_name)}
             />

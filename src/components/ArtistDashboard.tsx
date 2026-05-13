@@ -127,7 +127,7 @@ export function ArtistDashboard() {
           icon={<ShieldCheck size={18} />}
           title="Launch Readiness"
           value={launchReady ? "Ready" : "Needs Review"}
-          body={launchReady ? "Audius verified identity is recognized as SONG·DAQ verified, and your Solana wallet is connected." : "Connect a verified Audius identity and a Solana wallet before launch."}
+          body={launchReady ? "Audius verified identity is recognized as a verified artist on SONG·DAQ, and your Solana wallet is connected." : "Connect a verified Audius identity and a Solana wallet before launch."}
           tone={launchReady ? "neon" : "amber"}
         />
         <ReadinessCard

@@ -23,9 +23,9 @@ export function MarketSafetyPanel({ coin }: { coin: Partial<AudiusCoin> & Record
   const artistVerified = Boolean(coin.audiusVerified || coin.songDaqVerified || coin.artistWallet?.audiusVerified);
   const rows = [
     ["Asset type", isCompanyCoin ? "Official Audius company coin" : "Artist / song market asset"],
-    ["Artist verification", isCompanyCoin ? "Official" : artistVerified ? "SONG·DAQ verified via Audius" : coin.artist_handle ? "Audius linked" : "Unverified"],
+    ["Artist verification", isCompanyCoin ? "Official" : artistVerified ? "Verified via Audius" : coin.artist_handle ? "Audius linked" : "Identity review"],
     ["Song verification", isCompanyCoin ? "Not applicable" : coin.audius_track_id || coin.audiusTrackId ? "Catalog linked" : "Pending"],
-    ["Royalty signal", isCompanyCoin ? "Not applicable" : coin.splitsLocked || coin.royaltyStatus === "LOCKED" ? "Locked/verified" : "Unverified"],
+    ["Royalty signal", isCompanyCoin ? "Not applicable" : coin.splitsLocked || coin.royaltyStatus === "LOCKED" ? "Locked/verified" : "Not verified yet"],
     ["Liquidity status", isCompanyCoin ? "Official market asset" : Number(coin.liquidity ?? coin.reserveSol ?? coin.liquidityPairAmount ?? 0) > 0 ? "Active" : "No liquidity"],
     ["Liquidity lock", isCompanyCoin ? "Managed by Audius" : coin.liquidityLocked ? "Locked" : "Not verified"],
     ["Reports", String(coin.reportCount ?? 0)],
