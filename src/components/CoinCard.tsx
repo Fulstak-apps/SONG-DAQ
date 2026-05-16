@@ -13,6 +13,7 @@ import { toast } from "@/lib/toast";
 import { RiskBadge } from "./RiskBadge";
 import type { AudiusCoin } from "@/lib/audiusCoins";
 import { useUsdToDisplayRate } from "@/lib/fiat";
+import { AssetSourceBadges } from "@/components/AssetSourceBadges";
 
 /* Prestige tier based on market cap */
 function getTier(cap: number): { label: string; color: string; glow: string } {
@@ -125,6 +126,7 @@ export function CoinCard({
                   {isSongDaqLocal ? "SONG·DAQ" : "Open Audio"}
                 </span>
               </Tooltip>
+              <AssetSourceBadges asset={c as any} compact />
             </div>
             <div className="text-[11px] text-mute line-clamp-2 uppercase tracking-widest font-bold mt-1 leading-snug">
               {c.artist_name ? <>{c.artist_name}{c.artist_handle ? ` · @${c.artist_handle}` : ""}</> : c.name}

@@ -21,6 +21,7 @@ import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 import { ArtistIntel } from "@/components/ArtistIntel";
 import { GamifiedCoinDetail, HypeMeterCard } from "@/components/GamificationLayer";
+import { AssetSourceBadges, AssetSyncHealthCard, InvestorTrustPanel, PostLaunchCoinManager } from "@/components/AssetSourceBadges";
 import { pickAudiusArtwork } from "@/lib/audiusArtwork";
 import { useUsdToDisplayRate } from "@/lib/fiat";
 import { Pause, Play, RotateCcw, RotateCw, Volume2 } from "lucide-react";
@@ -476,6 +477,9 @@ export default function CoinPage() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <div className="text-[11px] uppercase tracking-[0.24em] font-black text-mute">{assetSourceLabel}</div>
+                      <div className="mt-2">
+                        <AssetSourceBadges asset={coin as any} compact />
+                      </div>
                       <h2 className="mt-1 text-2xl font-black tracking-tight text-white break-words">{coin.name || `$${coin.ticker}`}</h2>
                       <div className="mt-1 text-sm font-bold text-white/75 break-words">
                         {coin.artist_name || "Unknown Artist"} {coin.artist_handle ? <span className="font-mono text-mute">@{coin.artist_handle}</span> : null}
@@ -656,7 +660,10 @@ export default function CoinPage() {
               </div>
             </div>
             <HypeMeterCard asset={coin as any} compact />
+            <InvestorTrustPanel asset={coin as any} />
             <MarketPoolPanel coin={coin} localSongId={localSongId} isOwner={isOwner} isSongDaqLocal={isSongDaqLocal} />
+            <PostLaunchCoinManager asset={coin as any} localSongId={localSongId} isOwner={isOwner} />
+            <AssetSyncHealthCard asset={coin as any} />
             <SupplyDistributionCard coin={coin} />
             <WhyFansCanBuy compact />
             {isSongDaqLocal ? (
@@ -867,6 +874,7 @@ export default function CoinPage() {
               <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white drop-shadow-md break-words">${coin.ticker}</h1>
               <span className="text-mute text-sm tracking-wide break-words whitespace-normal">{coin.name}</span>
               <span className={`text-[11px] uppercase tracking-widest font-bold px-2 py-0.5 rounded border ${isSongDaqLocal ? "text-neon bg-neon/10 border-neon/30 shadow-[0_0_5px_rgba(0,229,114,0.25)]" : "text-violet bg-violet/10 border-violet/30 shadow-[0_0_5px_rgba(155,81,224,0.25)]"}`}>{assetSourceLabel}</span>
+              <AssetSourceBadges asset={coin as any} compact />
               <RiskBadge coin={coin as any} compact />
               {isOwner && <span className="text-[11px] uppercase tracking-widest font-bold text-violet bg-violet/10 px-2 py-0.5 rounded border border-violet/30 shadow-[0_0_5px_rgba(155,81,224,0.3)]">Your Asset</span>}
               {(coin as any).has_discord && <span className="text-[11px] uppercase tracking-widest font-bold text-[#5865F2] bg-[#5865F2]/10 px-2 py-0.5 rounded border border-[#5865F2]/30">Discord Active</span>}
@@ -984,6 +992,9 @@ export default function CoinPage() {
           trackId={coin.audius_track_id}
         />
         <WalletDiagnostics compact />
+        <InvestorTrustPanel asset={coin as any} />
+        <PostLaunchCoinManager asset={coin as any} localSongId={localSongId} isOwner={isOwner} />
+        <AssetSyncHealthCard asset={coin as any} />
 
         {/* News-style "tracks by artist" cards */}
         {!!tracks.length && (

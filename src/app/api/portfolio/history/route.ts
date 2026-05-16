@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { getCandles } from "@/lib/coinTicks";
+import { databaseReadiness } from "@/lib/appMode";
 
 export const dynamic = "force-dynamic";
 
@@ -14,13 +15,23 @@ export async function GET(req: NextRequest) {
   const range = (req.nextUrl.searchParams.get("range") as any) ?? "1D";
   if (!wallet) return NextResponse.json({ error: "wallet required" }, { status: 400 });
 
+  const database = databaseReadiness();
+  if (!database.productionReady) {
+    return NextResponse.json({
+      points: [],
+      databaseStatus: "unavailable",
+      warning: "Portfolio history needs a reachable production database.",
+      recommendation: database.recommendation,
+    });
+  }
+
   const user = await prisma.user.findUnique({
     where: { wallet },
     include: { holdings: { include: { song: true } } },
-  });
+  }).catch(() => null);
   if (!user) return NextResponse.json({ points: [] });
 
-  const coinHoldings = await prisma.coinHolding.findMany({ where: { userId: user.id } });
+  const coinHoldings = await prisma.coinHolding.findMany({ where: { userId: user.id } }).catch(() => []);
 
   // Collect timestamps from any coin tick series we have.
   const buckets: Map<number, number> = new Map();

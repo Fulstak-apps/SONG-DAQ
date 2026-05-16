@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { fetchJson } from "@/lib/fetchTimeout";
 import { databaseReadiness } from "@/lib/appMode";
+import { listCoins } from "@/lib/audiusCoins";
+import { getAssetUsdRates, valueLocalSongCoin } from "@/lib/serverAssetPrices";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +30,7 @@ export async function GET(req: NextRequest) {
     audiusTracks: [],
     audiusWallet: null,
     databaseStatus,
-    summary: { value: 0, cost: 0, pnl: 0, royalty: 0, coinValueUsd: 0, coinCostUsd: 0 },
+    summary: { value: 0, cost: 0, pnl: 0, royalty: 0, coinValueUsd: 0, coinCostUsd: 0, coinPnlUsd: 0, songValueUsd: 0, songCostUsd: 0, songPnlUsd: 0 },
   });
 
   let databaseUnavailable = false;
@@ -67,13 +69,63 @@ export async function GET(req: NextRequest) {
     cost += h.amount * h.costBasis;
   }
   const royalty = user.payouts.reduce((acc, p) => acc + p.amount, 0);
+  const solRateMap = await getAssetUsdRates(["SOL"]);
+  const solUsd = Number(solRateMap.SOL || 0);
+  const songValueUsd = solUsd > 0 ? value * solUsd : 0;
+  const songCostUsd = solUsd > 0 ? cost * solUsd : 0;
+  const songPnlUsd = songValueUsd - songCostUsd;
 
   // The chain remains the source of truth for token balances. These rows are
   // confirmed swap indexes used for fast activity and local cost-basis views.
   const coinHoldings = user.coinHoldings;
   const coinTrades = user.coinTrades;
-  const coinValueUsd = 0;
-  const coinCostUsd = coinHoldings.reduce((acc, h) => acc + h.costBasis, 0);
+  const mints = Array.from(new Set(coinHoldings.map((h) => h.mint).filter(Boolean)));
+  const [publicCoins, localSongs] = await Promise.all([
+    mints.length ? listCoins(100).catch(() => []) : Promise.resolve([]),
+    mints.length ? prisma.songToken.findMany({
+      where: {
+        OR: [
+          { mintAddress: { in: mints } },
+          { fakeTokenAddress: { in: mints } },
+          { id: { in: mints } },
+        ],
+      },
+      include: {
+        events: {
+          where: { kind: { in: ["LIQUIDITY", "BURN"] } },
+          orderBy: { createdAt: "desc" },
+          take: 80,
+          select: { kind: true, payload: true, createdAt: true },
+        },
+      },
+    }).catch(() => []) : Promise.resolve([]),
+  ]);
+  const publicMap = new Map(publicCoins.map((coin: any) => [String(coin.mint), coin]));
+  const localRateMap = await getAssetUsdRates(["SOL", "AUDIO", "USDC", ...localSongs.map((song) => song.liquidityPairAsset)]);
+  const localMap = new Map(localSongs.map((song: any) => {
+    const valuation = valueLocalSongCoin(song, localRateMap);
+    return [String(song.mintAddress || song.fakeTokenAddress || song.id), { song, valuation }];
+  }));
+  const pricedCoinHoldings = coinHoldings.map((h) => {
+    const publicCoin: any = publicMap.get(h.mint);
+    const local: any = localMap.get(h.mint);
+    const priceUsd = Number(publicCoin?.price ?? local?.valuation?.priceUsd ?? 0);
+    const averageBuyPriceUsd = h.amount > 0 ? h.costBasis / h.amount : 0;
+    const currentValueUsd = priceUsd > 0 ? h.amount * priceUsd : h.costBasis;
+    const unrealizedGainLossUsd = currentValueUsd - h.costBasis;
+    return {
+      ...h,
+      priceUsd: priceUsd || averageBuyPriceUsd,
+      averageBuyPriceUsd,
+      currentValueUsd,
+      unrealizedGainLossUsd,
+      priceSource: priceUsd > 0 ? (local ? local.valuation.basis : "open_audio_index") : "cost_basis_fallback",
+      metadataSource: local ? "SONG·DAQ" : publicCoin ? "Audius/Open Audio" : "Supabase",
+    };
+  });
+  const coinValueUsd = pricedCoinHoldings.reduce((acc, h) => acc + Number(h.currentValueUsd || 0), 0);
+  const coinCostUsd = pricedCoinHoldings.reduce((acc, h) => acc + Number(h.costBasis || 0), 0);
+  const coinPnlUsd = coinValueUsd - coinCostUsd;
 
   // Fetch Audius user tracks + wallet info
   const effectiveAudiusId = audiusUserId || user.audiusUserId;
@@ -119,12 +171,23 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({
     wallet,
     holdings: user.holdings,
-    coinHoldings,
+    coinHoldings: pricedCoinHoldings,
     audiusTracks,
     audiusWallet,
     trades: user.trades,
     coinTrades,
     payouts: user.payouts,
-    summary: { value, cost, pnl: value - cost, royalty, coinValueUsd, coinCostUsd },
+    summary: {
+      value,
+      cost,
+      pnl: songPnlUsd + coinPnlUsd,
+      royalty,
+      coinValueUsd,
+      coinCostUsd,
+      coinPnlUsd,
+      songValueUsd,
+      songCostUsd,
+      songPnlUsd,
+    },
   });
 }

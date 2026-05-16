@@ -2,7 +2,7 @@
   "name": "song-daq",
   "version": "0.1.0",
   "private": true,
-  "description": "Song-daq — Decentralized Audio Quotient. Stock market for songs on Solana.",
+  "description": "SONG·DAQ — music coin marketplace for artist and song markets on Solana.",
   "engines": {
     "node": "20.x"
   },

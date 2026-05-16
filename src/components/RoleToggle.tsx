@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { usePaperTrading, useSession, useUI } from "@/lib/store";
+import { readJson } from "@/lib/safeJson";
 
 export function RoleToggle() {
   const { address, audius } = useSession();
@@ -17,9 +18,9 @@ export function RoleToggle() {
       setMe(null);
       return;
     }
-    const r = await fetch(`/api/me?wallet=${address}`).then((r) => r.json()).catch(() => ({}));
-    setMe(r.user);
-    if (!audius && r.user?.preferredMode) setUserMode(r.user.preferredMode);
+    const r = await fetch(`/api/me?wallet=${address}`).then((r) => readJson<any>(r)).catch(() => null);
+    setMe(r?.user ?? null);
+    if (!audius && r?.user?.preferredMode) setUserMode(r.user.preferredMode);
   }
   useEffect(() => { load(); const i = setInterval(load, 6000); return () => clearInterval(i); }, [address, audius?.userId, userMode]);
 

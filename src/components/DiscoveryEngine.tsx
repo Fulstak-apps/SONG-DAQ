@@ -16,6 +16,7 @@ import { useSession, useUI, useWatchlist } from "@/lib/store";
 import { fmtSol, fmtNum, fmtPct } from "@/lib/pricing";
 import { useCoins } from "@/lib/useCoins";
 import type { AudiusCoin } from "@/lib/audiusCoins";
+import { readJson } from "@/lib/safeJson";
 
 import { Glossary, OnboardingHint } from "@/components/Tooltip";
 import { InfoBanner } from "@/components/InfoBanner";
@@ -175,13 +176,13 @@ function MarketPrimer({ onConnect }: { onConnect: () => void }) {
     {
       icon: <Music size={18} />,
       title: "Artists connect Audius first",
-      text: "Artist mode starts with your Audius identity. If your Audius profile has a Solana wallet, SONG·DAQ can use it; external wallets are optional.",
+      text: "Artist mode starts with your Audius identity. Keep your Audius profile linked, then add an external Solana wallet when a launch, buy, sell, or liquidity step needs a signature.",
       tone: "text-violet border-violet/20 bg-violet/8",
     },
     {
       icon: <ShieldCheck size={18} />,
       title: "Market data stays live",
-      text: "Prices, holders, volume, news, and artist profiles are live while you browse. Once connected, this area becomes a pure trading dashboard.",
+      text: "Prices, holders, volume, news, and artist profiles refresh while you browse. Once connected, this area becomes your trading dashboard.",
       tone: "text-cyan border-cyan/20 bg-cyan/8",
     },
   ];
@@ -254,15 +255,15 @@ export default function DiscoveryEngine() {
   useEffect(() => {
     let alive = true;
     const load = () => fetch("/api/stats", { cache: "no-store" })
-      .then((r) => r.json())
+      .then((r) => readJson<any>(r))
       .then((j) => {
         if (!alive) return;
         setNetworkStats({
-          tradingVolume: Number(j.tradingVolume ?? 0),
-          activeArtists: Number(j.activeArtists ?? 0),
-          artistCoins: Number(j.artistCoins ?? j.activeArtists ?? 0),
-          songCoins: Number(j.songCoins ?? Math.max(Number(j.songsTokenized ?? 0) - Number(j.artistCoins ?? 0), 0)),
-          songsTokenized: Number(j.songsTokenized ?? 0),
+          tradingVolume: Number(j?.tradingVolume ?? 0),
+          activeArtists: Number(j?.activeArtists ?? 0),
+          artistCoins: Number(j?.artistCoins ?? j?.activeArtists ?? 0),
+          songCoins: Number(j?.songCoins ?? Math.max(Number(j?.songsTokenized ?? 0) - Number(j?.artistCoins ?? 0), 0)),
+          songsTokenized: Number(j?.songsTokenized ?? 0),
         });
         setNetworkStatsLoaded(true);
       })
@@ -275,7 +276,7 @@ export default function DiscoveryEngine() {
   // Fetch user role
   useEffect(() => {
     if (!address) { setMe(null); return; }
-    fetch(`/api/me?wallet=${address}`).then((r) => r.json()).then((j) => setMe(j.user)).catch(() => {});
+    fetch(`/api/me?wallet=${address}`).then((r) => readJson<any>(r)).then((j) => setMe(j?.user ?? null)).catch(() => {});
   }, [address, audius]);
 
   // Fetch songs when switching to songs tab
@@ -285,8 +286,8 @@ export default function DiscoveryEngine() {
     setSongLoading(true);
     const load = async () => {
       try {
-        const j = await fetch(`/api/songs?sort=${songSort}`, { cache: "no-store" }).then((r) => r.json());
-        if (alive) setSongs(j.songs || []);
+        const j = await fetch(`/api/songs?sort=${songSort}`, { cache: "no-store" }).then((r) => readJson<any>(r));
+        if (alive) setSongs(j?.songs || []);
       } finally { if (alive) setSongLoading(false); }
     };
     load();
@@ -419,10 +420,10 @@ export default function DiscoveryEngine() {
     const t = setTimeout(async () => {
       setArtistSearching(true);
       try {
-        const j = await fetch(`/api/audius/search?q=${encodeURIComponent(q)}`, { cache: "no-store" }).then((r) => r.json());
+        const j = await fetch(`/api/audius/search?q=${encodeURIComponent(q)}`, { cache: "no-store" }).then((r) => readJson<any>(r));
         if (!alive) return;
         const byHandle = new Map<string, any>();
-        for (const track of j.tracks ?? []) {
+        for (const track of j?.tracks ?? []) {
           const user = track.user;
           if (!user?.handle || byHandle.has(user.handle)) continue;
           const coin = coins.find((c) =>
@@ -500,8 +501,8 @@ export default function DiscoveryEngine() {
           </div>
           <p className="text-mute text-sm sm:text-base md:text-lg max-w-xl font-medium leading-relaxed">
             {isArtist
-              ? `Establish your market presence, @${audius?.handle}. Convert streaming engagement into institutional capital.`
-              : "Discover breakout artists early. Support their Artist Coins and Song Coins, build your reputation, and gain status as they grow."}
+              ? `Launch a clear music market, @${audius?.handle}. Connect your catalog, choose a preset, review liquidity, and let fans trade with transparent price and wallet data.`
+              : "Discover artist coins and song coins, compare price, liquidity, royalties, and music momentum, then buy or sell with clear wallet and fiat estimates."}
           </p>
           <div className="flex flex-col sm:flex-row items-center gap-3 pt-2 shrink-0 relative z-10 w-full md:w-auto">
             {isArtist && (
@@ -518,7 +519,7 @@ export default function DiscoveryEngine() {
               </button>
             )}
             <Link href="/portfolio" className="w-full sm:w-auto btn-glass px-8 py-3.5 text-[11px] uppercase tracking-widest font-black text-center">
-              YOUR REPUTATION & PORTFOLIO
+              PORTFOLIO DASHBOARD
             </Link>
           </div>
         </div>
@@ -912,9 +913,9 @@ export default function DiscoveryEngine() {
                   </>
                 ) : (
                   <>
-                    <div className="text-lg font-bold mb-1 text-ink">No Artist Coins yet</div>
-                    <div className="text-mute text-sm mb-3">Be the first to tokenize your music.</div>
-                    {isArtist && <Link href="/artist" className="btn-primary text-xs">+ Launch Artist Coin</Link>}
+                    <div className="text-lg font-bold mb-1 text-ink">No Song Coins yet</div>
+                    <div className="text-mute text-sm mb-3">Switch to Artist Mode to launch a music coin tied to a specific song.</div>
+                    {isArtist && <Link href="/artist" className="btn-primary text-xs">+ Launch Song Coin</Link>}
                   </>
                 )}
               </div>

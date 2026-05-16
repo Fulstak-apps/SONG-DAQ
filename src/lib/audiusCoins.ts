@@ -63,8 +63,14 @@ export interface AudiusCoin {
   audius_play_count?: number;
   /** song-daq-local song coin metadata. Present for coins created in this app before Audius/Jupiter index them. */
   isSongDaqLocal?: boolean;
+  isSimulated?: boolean;
   isOpenAudioCoin?: boolean;
   source?: "songdaq" | "open_audio" | "audius_public";
+  dataSources?: string[];
+  priceSource?: string;
+  metadataSource?: string;
+  lastRefreshAt?: string;
+  auditTrail?: Array<{ label: string; source: string; status: string; at?: string | null }>;
   songId?: string;
   mintAddress?: string | null;
   createdAt?: string;

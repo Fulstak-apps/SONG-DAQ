@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useCoins } from "@/lib/useCoins";
 import { formatFiat, useLiveFiatPrices, useUsdToDisplayRate } from "@/lib/fiat";
+import { readJson } from "@/lib/safeJson";
 
 interface CoinTick {
   kind: "coin";
@@ -64,8 +65,8 @@ export function MarketTicker() {
     let alive = true;
     const loadNews = () =>
       fetch("/api/news", { cache: "no-store" })
-        .then((r) => r.json())
-        .then((j) => { if (alive) setNews(j.news ?? []); })
+        .then((r) => readJson<any>(r))
+        .then((j) => { if (alive) setNews(j?.news ?? []); })
         .catch(() => {});
     loadNews();
     const nI = setInterval(loadNews, 5 * 60_000);

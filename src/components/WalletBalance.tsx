@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useSession, type AudiusProfile } from "@/lib/store";
 import { SafeImage } from "./SafeImage";
 import { priceAgeText, useLiveFiatPrices, useUsdToDisplayRate } from "@/lib/fiat";
+import { errorFromJson, readJson } from "@/lib/safeJson";
 
 interface BalState {
   balance: number | null;
@@ -74,8 +75,8 @@ export function useNativeBalance(address: string | null | undefined, kind: "sola
           usd: prev.address === address ? prev.usd : null,
         }));
         const res = await fetch(`/api/wallet/sol-balance?address=${encodeURIComponent(address)}`, { cache: "no-store" });
-        const json = await res.json().catch(() => ({}));
-        if (!res.ok) throw new Error(json?.error || "Could not load wallet balance");
+        const json = await readJson<any>(res);
+        if (!res.ok) throw new Error(errorFromJson(json, "Could not load wallet balance"));
         if (!alive) return;
         setS({
           balance: Number(json?.sol ?? 0),
@@ -131,8 +132,8 @@ function useTokenHoldings(address: string | null | undefined, mode: "summary" | 
       try {
         const r = await fetch(`/api/wallet/tokens?address=${encodeURIComponent(address)}&mode=${mode}`, { cache: "no-store" });
         if (!r.ok) return;
-        const j = await r.json();
-        if (alive) setH(j);
+        const j = await readJson<Holdings>(r);
+        if (alive && j) setH(j);
       } catch { /* ignore */ }
       finally { loading = false; }
     };
@@ -168,7 +169,7 @@ export function useAudiusAudioBalance(handle: string | null | undefined) {
       try {
         const r = await fetch(`/api/audius/profile?handle=${encodeURIComponent(handle)}`, { cache: "no-store" });
         if (!r.ok) return;
-        const j = await r.json();
+        const j = await readJson<any>(r);
         if (alive && typeof j?.profile?.audioBalance === "number") {
           setBal(j.profile.audioBalance);
         }
@@ -195,7 +196,7 @@ export function WalletBalance({ compact = false }: { compact?: boolean } = {}) {
     if (audius.wallets?.sol) return;
     let alive = true;
     fetch(`/api/audius/profile?handle=${encodeURIComponent(audius.handle)}`, { cache: "no-store" })
-      .then((r) => r.json())
+      .then((r) => readJson<any>(r))
       .then((j) => {
         if (!alive || !j?.profile) return;
         const merged: AudiusProfile = { ...audius, ...j.profile };

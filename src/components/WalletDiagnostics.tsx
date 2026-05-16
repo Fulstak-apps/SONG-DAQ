@@ -8,6 +8,8 @@ import { useSession } from "@/lib/store";
 import { fmtSol } from "@/lib/pricing";
 import { toast } from "@/lib/toast";
 import { useWalletDiscoveryVersion } from "@/lib/useWalletDiscovery";
+import { readJson } from "@/lib/safeJson";
+import { MobileWalletHandoffTest } from "@/components/AssetSourceBadges";
 
 export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
   const { address, kind, provider, audius } = useSession();
@@ -27,7 +29,7 @@ export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
     setBusy(true);
     try {
       const r = await fetch("/api/health", { cache: "no-store" });
-      setHealth(await r.json().catch(() => null));
+      setHealth(await readJson(r));
     } finally {
       setBusy(false);
     }
@@ -101,6 +103,8 @@ export function WalletDiagnostics({ compact = false }: { compact?: boolean }) {
       <button onClick={reportIssue} disabled={reporting} className="btn-danger h-10 px-4 text-[11px] uppercase tracking-widest font-black">
         <Bug size={13} /> {reporting ? "Reporting…" : "Report wallet issue"}
       </button>
+
+      <MobileWalletHandoffTest />
     </section>
   );
 }

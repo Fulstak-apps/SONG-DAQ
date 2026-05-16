@@ -21,6 +21,7 @@ import { WalletButton } from "@/components/WalletButton";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 import { WhyFansCanBuy } from "@/components/WhyFansCanBuy";
 import { SongIPOStatusCard } from "@/components/GamificationLayer";
+import { readJson } from "@/lib/safeJson";
 import { ChevronRight, ChevronLeft, Rocket, Music, Settings, BarChart3, ShieldCheck, CheckCircle2 } from "lucide-react";
 
 type Step = 1 | 2 | 3 | 4 | 5 | 6;
@@ -141,9 +142,9 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
     if (!audius?.handle) return;
     setLoadingTracks(true); setTrackErr(null);
     fetch(`/api/audius/search?q=${encodeURIComponent(audius.handle)}`)
-      .then((r) => r.json())
+      .then((r) => readJson<any>(r))
       .then((j) => {
-        const mine = (j.tracks || []).filter((t: any) => String(t.user?.id) === String(audius.userId));
+        const mine = (j?.tracks || []).filter((t: any) => String(t.user?.id) === String(audius.userId));
         setTracks(mine);
       })
       .catch((e) => setTrackErr(e.message))
@@ -174,7 +175,7 @@ export function CoinLauncher({ onLaunched }: { onLaunched?: () => void }) {
 
   useEffect(() => {
     fetch("/api/launch/status", { cache: "no-store" })
-      .then((r) => r.json())
+      .then((r) => readJson<any>(r))
       .then((j) => setLaunchStatus(j))
       .catch(() => setLaunchStatus(null));
   }, []);

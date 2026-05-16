@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Glossary } from "./Tooltip";
+import { readJson } from "@/lib/safeJson";
 
 interface NewsItem {
   id: string;
@@ -60,9 +61,9 @@ export function NewsFeed() {
     async function load() {
       try {
         const r = await fetch("/api/news", { cache: "no-store" });
-        const j = await r.json();
+        const j = await readJson<any>(r);
         if (!alive) return;
-        setNews(j.news || []);
+        setNews(j?.news || []);
       } catch { /* ignore */ }
       finally { if (alive) setLoaded(true); }
     }

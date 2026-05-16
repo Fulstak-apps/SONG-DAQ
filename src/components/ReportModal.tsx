@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { X } from "lucide-react";
 import { useSession } from "@/lib/store";
 import { toast } from "@/lib/toast";
+import { errorFromJson, readJson } from "@/lib/safeJson";
 
 const REASONS = [
   ["IMPERSONATION", "Impersonation"],
@@ -30,8 +31,8 @@ export function ReportModal({ mint, songId, onClose }: { mint?: string; songId?:
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ wallet: address, mint, songId, reason, description, email }),
       });
-      const j = await r.json();
-      if (!r.ok) throw new Error(j.error || "Report failed");
+      const j = await readJson<any>(r);
+      if (!r.ok) throw new Error(errorFromJson(j, "Report failed"));
       toast.success("Report submitted", "The moderation queue will review this coin.");
       onClose();
     } catch (e: any) {

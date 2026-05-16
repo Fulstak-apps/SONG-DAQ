@@ -15,6 +15,7 @@ import { readJson } from "@/lib/safeJson";
 import { useCoins } from "@/lib/useCoins";
 import { pickAudiusArtwork } from "@/lib/audiusArtwork";
 import { useUsdToDisplayRate } from "@/lib/fiat";
+import { AssetSourceBadges } from "@/components/AssetSourceBadges";
 
 interface RecentTradeDTO {
   id: string;
@@ -303,6 +304,7 @@ export function CoinPreviewModal({
                 <span className="rounded-md border border-violet/20 bg-violet/10 px-2 py-0.5 text-[11px] uppercase tracking-widest font-black text-violet">
                   {isSongDaqLocal ? "Created on SONG·DAQ" : "Imported public market"}
                 </span>
+                <AssetSourceBadges asset={coin as any} compact />
               </div>
               <div className="mt-1 text-xs uppercase tracking-widest text-mute whitespace-normal break-words">
                 {coin.artist_name ?? coin.name}{coin.artist_handle ? ` · @${coin.artist_handle}` : ""}
@@ -525,6 +527,9 @@ export function CoinPreviewModal({
                   Security & Trust
                 </div>
                 <div className="grid gap-2 text-[11px] text-mute">
+                  <div className="mb-1">
+                    <AssetSourceBadges asset={coin as any} compact />
+                  </div>
                   <TrustLine ok label="Solana SPL token" />
                   <TrustLine ok={!!coin.artist_handle} label={coin.artist_handle ? "Audius artist resolved" : "Audius profile pending"} />
                   <TrustLine ok={artistVerified} label={artistVerified ? "Verified artist via Audius" : "Artist verification pending"} />

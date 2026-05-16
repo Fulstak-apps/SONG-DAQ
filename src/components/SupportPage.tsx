@@ -32,15 +32,15 @@ const launchChecklist = [
 ];
 
 const walletHelp = [
-  "If the wallet is not connected, SONG·DAQ should show a Connect Wallet button instead of zero balances.",
-  "If a wallet rejects a request, SONG·DAQ should show the real wallet error so it can be tested and fixed.",
+  "If the wallet is not connected, SONG·DAQ shows a Connect Wallet button instead of zero balances.",
+  "If a wallet rejects a request, SONG·DAQ shows the real wallet error so it can be tested and fixed.",
   "If a balance looks wrong, refresh the wallet connection and confirm the same wallet address is selected.",
-  "Live buys use SOL right now. Audius wallet buying is coming later because Audius has platform restrictions.",
+  "Live buys use an external Solana wallet signature right now. Audius stays linked as identity and catalog proof.",
 ];
 
 const portfolioHelp = [
-  "Your portfolio should show song coins bought on SONG·DAQ.",
-  "External wallet assets should show token names, images when available, token amounts, and fiat value.",
+  "Your portfolio shows song coins bought on SONG·DAQ.",
+  "External wallet assets show token names, images when available, token amounts, and fiat value.",
   "Paper Mode portfolio stays separate from Live Mode.",
   "If Phantom marks a token as spam, open Phantom and report it as not spam so it becomes visible.",
 ];
@@ -140,7 +140,7 @@ export function SupportPage() {
           <p><strong className="text-ink">Automatic:</strong> the app can show coin pages, charts, Paper Mode, wallet state, portfolio records, submitted royalty requests, and admin dashboard data.</p>
           <p><strong className="text-ink">Manual:</strong> royalty verification, royalty payments received from distributors, Royalty Pool contributions, and any treasury movement are admin-reviewed for the MVP.</p>
           <p>Manual royalty and treasury controls live in the admin dashboard. They do not stop users from testing the public launch, buy, sell, and wallet flows.</p>
-          <p>If a launch or trade fails, SONG·DAQ should show the real backend or wallet error instead of a fake paused state.</p>
+          <p>If a launch or trade fails, SONG·DAQ shows the real backend or wallet error instead of a fake paused state.</p>
         </SupportCard>
       </section>
 
@@ -184,7 +184,7 @@ export function SupportPage() {
           <div className="text-[11px] uppercase tracking-[0.28em] font-black text-mute">Trading Guide</div>
           <h2 className="text-3xl md:text-5xl font-black text-ink">How buying and selling should feel.</h2>
           <p className="mt-3 max-w-4xl text-sm md:text-base text-mute leading-relaxed">
-            SONG·DAQ should always tell users what they are about to do before money moves. A buy or sell confirmation should show token amount, crypto amount, fiat estimate, wallet address, estimated fees, and any slippage warning in plain English.
+            SONG·DAQ tells users what they are about to do before money moves. A buy or sell confirmation should show token amount, crypto amount, fiat estimate, wallet address, estimated fees, and any slippage warning in plain English.
           </p>
         </div>
         <div className="grid gap-3 md:grid-cols-3">

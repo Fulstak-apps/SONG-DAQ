@@ -13,6 +13,7 @@ import { readJson } from "@/lib/safeJson";
 import { WalletDiagnostics } from "@/components/WalletDiagnostics";
 import { formatCryptoWithFiat, priceAgeText, useLiveFiatPrices, useUsdToDisplayRate } from "@/lib/fiat";
 import { PriceChart, type PricePointDTO } from "@/components/PriceChart";
+import { AssetSourceBadges } from "@/components/AssetSourceBadges";
 
 interface TokenRow {
   mint: string;
@@ -33,6 +34,8 @@ interface TokenRow {
   isVerified?: boolean;
   organicScoreLabel?: string | null;
   metadataSource?: string | null;
+  averageBuyPriceUsd?: number | null;
+  unrealizedGainLossUsd?: number | null;
 }
 
 interface TokenHoldings {
@@ -255,7 +258,14 @@ export default function PortfolioPage() {
     const indexedHoldings: TokenRow[] = (portfolio?.coinHoldings ?? []).map((h: any) => {
       const coin = coinIndex[h.mint] ?? {};
       const amount = Number(h.amount ?? 0);
-      const price = Number.isFinite(Number(coin.price)) ? Number(coin.price) : (amount > 0 ? Number(h.costBasis ?? 0) / amount : null);
+      const price = Number.isFinite(Number(coin.price))
+        ? Number(coin.price)
+        : Number.isFinite(Number(h.priceUsd))
+          ? Number(h.priceUsd)
+          : (amount > 0 ? Number(h.costBasis ?? 0) / amount : null);
+      const valueUsd = Number.isFinite(Number(h.currentValueUsd))
+        ? Number(h.currentValueUsd)
+        : price != null ? amount * price : Number(h.costBasis ?? 0);
       return {
         mint: h.mint,
         amount,
@@ -264,11 +274,15 @@ export default function PortfolioPage() {
         name: coin.name || h.ticker || "Artist Token",
         logo_uri: coin.logo_uri ?? null,
         price,
-        valueUsd: price != null ? amount * price : Number(h.costBasis ?? 0),
-        countedValueUsd: price != null ? amount * price : Number(h.costBasis ?? 0),
+        valueUsd,
+        countedValueUsd: valueUsd,
         issuerAllocation: false,
         isAudio: String(h.ticker || coin.ticker).toUpperCase() === "AUDIO",
         isArtistCoin: true,
+        priceSource: h.priceSource || coin.priceSource || "Supabase",
+        metadataSource: h.metadataSource || coin.metadataSource || "Supabase",
+        averageBuyPriceUsd: h.averageBuyPriceUsd,
+        unrealizedGainLossUsd: h.unrealizedGainLossUsd,
       };
     });
     const all = [
@@ -347,7 +361,7 @@ export default function PortfolioPage() {
     ...(portfolio?.coinTrades ?? []).map((t: any) => ({ ...t, kind: "Artist", label: t.ticker ?? "TOKEN", total: formatUsdDisplay(t.totalUsd ?? 0) })),
     ...(portfolio?.payouts ?? []).map((p: any) => ({ ...p, side: "ROYALTY", kind: "Royalty", label: p.song?.symbol ?? "SONG", total: formatCryptoWithFiat(p.amount, "SOL", convertUsd(Number(p.amount ?? 0) * (solUsdPrice || 0)), currency) })),
   ].sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()).slice(0, 8);
-  const pnl = (portfolio?.summary?.pnl ?? 0) + (tradingTokens.data?.totalUsd ?? 0) - (tradingTokens.data?.totalUsd ?? 0);
+  const pnl = Number(portfolio?.summary?.pnl ?? 0);
   const concentration = Math.max(
     0,
     Math.min(
@@ -907,6 +921,15 @@ function TokenRow({ t }: { t: TokenRow }) {
           {t.issuerAllocation ? <span className="shrink-0 rounded-full border border-amber/25 bg-amber/10 px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest text-amber">Issuer</span> : null}
         </div>
         <div className="text-[11px] uppercase tracking-widest text-mute truncate">{t.name}</div>
+        <div className="mt-1">
+          <AssetSourceBadges
+            sources={[
+              t.metadataSource?.toLowerCase().includes("audius") ? "audius" : "supabase",
+              t.priceSource?.toLowerCase().includes("jupiter") ? "jupiter" : t.priceSource?.toLowerCase().includes("open_audio") ? "open_audio" : "songdaq",
+            ] as any}
+            compact
+          />
+        </div>
         {t.valuationNote ? <div className="mt-1 text-xs normal-case tracking-normal text-amber/80 line-clamp-2">{t.valuationNote}</div> : null}
       </div>
       <div className="text-right">
@@ -915,6 +938,11 @@ function TokenRow({ t }: { t: TokenRow }) {
           {t.issuerAllocation ? "Not counted" : liquidValue ? formatUsdDisplay(liquidValue) : "No price"}
         </div>
         {t.issuerAllocation && t.valueUsd != null ? <div className="text-[11px] uppercase tracking-widest text-mute">{formatUsdDisplay(t.valueUsd)} estimated</div> : null}
+        {t.unrealizedGainLossUsd != null ? (
+          <div className={`text-[11px] uppercase tracking-widest ${t.unrealizedGainLossUsd >= 0 ? "text-neon" : "text-red"}`}>
+            {t.unrealizedGainLossUsd >= 0 ? "+" : ""}{formatUsdDisplay(t.unrealizedGainLossUsd)}
+          </div>
+        ) : null}
       </div>
     </Link>
   );
@@ -934,6 +962,15 @@ function WalletAssetRow({ t }: { t: TokenRow }) {
           {t.isVerified ? <span className="shrink-0 rounded-full border border-neon/20 bg-neon/10 px-1.5 py-0.5 text-[11px] font-black uppercase tracking-widest text-neon">Verified</span> : null}
         </div>
         <div className="text-[11px] uppercase tracking-widest text-mute truncate">{t.name}</div>
+        <div className="mt-1">
+          <AssetSourceBadges
+            sources={[
+              t.metadataSource?.toLowerCase().includes("jupiter") ? "jupiter" : t.metadataSource?.toLowerCase().includes("audius") ? "audius" : "solana",
+              t.priceSource?.toLowerCase().includes("jupiter") ? "jupiter" : "solana",
+            ] as any}
+            compact
+          />
+        </div>
         <div className="mt-1 font-mono text-[11px] text-mute truncate">{short(t.mint)}</div>
       </div>
       <div className="text-right shrink-0">

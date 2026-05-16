@@ -15,7 +15,7 @@ import { formatCryptoWithFiat, formatFiatEstimate, priceAgeText, useLiveFiatPric
 import { CHART_RANGE_LABELS, CHART_RANGES, isFastRange, type ChartRange } from "@/lib/chartRanges";
 import type { AudiusCoin } from "@/lib/audiusCoins";
 import { calculateCoinRisk } from "@/lib/risk/calculateCoinRisk";
-import { readJson } from "@/lib/safeJson";
+import { errorFromJson, readJson } from "@/lib/safeJson";
 import { useCoins } from "@/lib/useCoins";
 import { WhyFansCanBuy } from "./WhyFansCanBuy";
 import { pickAudiusArtwork } from "@/lib/audiusArtwork";
@@ -211,9 +211,9 @@ export function CoinTradeModal({
           slippageBps,
         });
         const r = await fetch(`/api/jupiter?${qs.toString()}`, { cache: "no-store" });
-        const j = await r.json();
-        if (!r.ok) throw new Error(j.error || "No executable route");
-        if (alive) setQuote(j.quote);
+        const j = await readJson<any>(r);
+        if (!r.ok) throw new Error(errorFromJson(j, "No executable route"));
+        if (alive) setQuote(j?.quote ?? null);
       } catch (e: any) {
         if (alive) { setQuote(null); setErr(e.message ?? String(e)); }
       } finally {
@@ -422,7 +422,7 @@ export function CoinTradeModal({
     }
     if (!address || !canSignSolanaSwap) {
       openLoginModal();
-      setErr("Connect an external Solana wallet like Phantom, Solflare, or Backpack to buy or sell. Audius built-in wallet trading is coming later, but it cannot sign SONG·DAQ swaps yet.");
+      setErr("Connect an external Solana wallet like Phantom, Solflare, or Backpack to buy or sell. Audius login stays linked for identity, but market swaps need a Solana wallet signature.");
       return;
     }
     if (!quote) {
@@ -445,31 +445,35 @@ export function CoinTradeModal({
         headers: { "content-type": "application/json" },
         body: JSON.stringify({ quoteResponse: quote, userPublicKey: address }),
       });
-      const j = await r.json();
-      if (!r.ok || !j.swapTransaction) throw new Error(j.error || "Could not build swap transaction");
+      const j = await readJson<any>(r);
+      if (!r.ok || !j?.swapTransaction) throw new Error(errorFromJson(j, "Could not build swap transaction"));
       const sig = await sendSerializedTransaction(provider as WalletId, j.swapTransaction);
       const rawOut = quote.outAmount ? Number(quote.outAmount) / 10 ** route.outputDecimals : 0;
       const rawIn = toRawAmount(amount, route.inputDecimals);
       const inputUnits = Number(rawIn) / 10 ** route.inputDecimals;
       const tradedTokens = side === "BUY" ? rawOut : inputUnits;
-      const indexResponse = await fetch("/api/coins/trade", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          mint: coin!.mint,
-          side,
-          amount: tradedTokens,
-          wallet: address,
-          walletType: kind,
-          txSig: sig,
-          ticker: coin!.ticker,
-          priceUsd: coin!.price ?? 0,
-          totalUsd: (coin!.price ?? 0) * tradedTokens,
-        }),
-      }).catch((e) => ({ ok: false, json: async () => ({ error: e?.message || "Could not index trade" }) } as Response));
-      if (!indexResponse.ok) {
-        const indexError = await indexResponse.json().catch(() => ({}));
-        toast.error("Trade confirmed, portfolio sync pending", indexError?.error || "Your wallet token balance may take a moment to appear in Portfolio.");
+      try {
+        const indexResponse = await fetch("/api/coins/trade", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({
+            mint: coin!.mint,
+            side,
+            amount: tradedTokens,
+            wallet: address,
+            walletType: kind,
+            txSig: sig,
+            ticker: coin!.ticker,
+            priceUsd: coin!.price ?? 0,
+            totalUsd: (coin!.price ?? 0) * tradedTokens,
+          }),
+        });
+        if (!indexResponse.ok) {
+          const indexError = await readJson<any>(indexResponse);
+          toast.error("Trade confirmed, portfolio sync pending", errorFromJson(indexError, "Your wallet token balance may take a moment to appear in Portfolio."));
+        }
+      } catch (indexError: any) {
+        toast.error("Trade confirmed, portfolio sync pending", indexError?.message || "Your wallet token balance may take a moment to appear in Portfolio.");
       }
       const msg = `${side === "BUY" ? "Bought" : "Sold"} $${coin!.ticker}`;
       setOk(`${msg} · ${sig.slice(0, 8)}…${sig.slice(-6)}`);
@@ -603,7 +607,7 @@ export function CoinTradeModal({
                   <Glossary
                     term={side === "BUY" ? "Pay with" : "Receive"}
                     def={side === "BUY"
-                      ? "Real trading currently uses SOL from an external Solana wallet. Audius built-in wallet support is coming later."
+                      ? "Real trading currently uses SOL from an external Solana wallet. Audius login proves artist identity, while Phantom, Solflare, or Backpack signs market swaps."
                       : "Real selling currently pays back SOL to your external Solana wallet."}
                   >
                     {side === "BUY" ? "Pay with" : "Receive"}
@@ -617,9 +621,9 @@ export function CoinTradeModal({
                 </span>
               </div>
               <div className="rounded-xl border border-amber/20 bg-amber/10 p-3 text-sm leading-relaxed text-amber/90">
-                <div className="text-[11px] uppercase tracking-widest font-black text-amber">Audius wallet support coming soon</div>
+                <div className="text-[11px] uppercase tracking-widest font-black text-amber">Use an external Solana wallet</div>
                 <p className="mt-1">
-                  Audius login proves identity and can show your built-in Audius wallet balance. Real SONG·DAQ trades currently require an external Solana wallet like Phantom, Solflare, or Backpack.
+                  Audius login proves identity and can show your Audius wallet balance. Live SONG·DAQ swaps are signed by an external Solana wallet like Phantom, Solflare, or Backpack.
                 </p>
               </div>
 

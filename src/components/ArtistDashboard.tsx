@@ -12,6 +12,7 @@ import { useSession } from "@/lib/store";
 import { fmtNum } from "@/lib/pricing";
 import { formatCryptoWithFiat, useLiveFiatPrices, useUsdToDisplayRate } from "@/lib/fiat";
 import type { AudiusCoin } from "@/lib/audiusCoins";
+import { readJson } from "@/lib/safeJson";
 import { Users, BarChart3, Coins, TrendingUp, ExternalLink, Plus, Briefcase, ShieldCheck, LockKeyhole, AlertTriangle } from "lucide-react";
 
 export function ArtistDashboard() {
@@ -27,8 +28,8 @@ export function ArtistDashboard() {
   useEffect(() => {
     let alive = true;
     fetch("/api/songs?sort=new", { cache: "no-store" })
-      .then((r) => r.json())
-      .then((j) => { if (alive) setSongs(j.songs ?? []); })
+      .then((r) => readJson<any>(r))
+      .then((j) => { if (alive) setSongs(j?.songs ?? []); })
       .catch(() => {});
     return () => { alive = false; };
   }, []);
@@ -38,8 +39,8 @@ export function ArtistDashboard() {
     if (!address) { setRoyalty(0); return; }
     let alive = true;
     fetch(`/api/portfolio?wallet=${address}`, { cache: "no-store" })
-      .then((r) => r.json())
-      .then((j) => { if (alive) setRoyalty(j.summary?.royalty ?? 0); })
+      .then((r) => readJson<any>(r))
+      .then((j) => { if (alive) setRoyalty(j?.summary?.royalty ?? 0); })
       .catch(() => {});
     return () => { alive = false; };
   }, [address]);

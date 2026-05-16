@@ -5,6 +5,7 @@ import { usePaperTrading, useSession } from "@/lib/store";
 import { CoinLauncher } from "@/components/CoinLauncher";
 import { fmtNum } from "@/lib/pricing";
 import { formatCryptoWithFiat, priceAgeText, useLiveFiatPrices } from "@/lib/fiat";
+import { readJson } from "@/lib/safeJson";
 
 import { Glossary } from "@/components/Tooltip";
 
@@ -24,16 +25,16 @@ export default function ArtistPage() {
   async function loadMe(blocking = false) {
     if (!activeWallet) return;
     if (blocking) setLoadingMe(true);
-    const r = await fetch(`/api/me?wallet=${encodeURIComponent(activeWallet)}`, { cache: "no-store" }).then((r) => r.json()).catch(() => ({}));
-    setMe(r.user ?? null);
+    const r = await fetch(`/api/me?wallet=${encodeURIComponent(activeWallet)}`, { cache: "no-store" }).then((r) => readJson<any>(r)).catch(() => null);
+    setMe(r?.user ?? null);
     setCheckedMe(true);
     if (blocking) setLoadingMe(false);
   }
 
   async function loadSongs() {
     if (!activeWallet) return;
-    const r = await fetch(`/api/songs?sort=new&owner=${encodeURIComponent(activeWallet)}`).then((r) => r.json()).catch(() => ({}));
-    setMySongs(r.songs || []);
+    const r = await fetch(`/api/songs?sort=new&owner=${encodeURIComponent(activeWallet)}`).then((r) => readJson<any>(r)).catch(() => null);
+    setMySongs(r?.songs || []);
   }
 
   useEffect(() => {

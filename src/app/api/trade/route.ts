@@ -113,7 +113,7 @@ export async function POST(req: NextRequest) {
       { status: 503 },
     );
   }
-  const body = await req.json();
+  const body = await req.json().catch(() => ({}));
   const {
     songId,
     side,                // "BUY" | "SELL"

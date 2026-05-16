@@ -8,6 +8,7 @@ import { SafeImage } from "./SafeImage";
 import { useCoins } from "@/lib/useCoins";
 import { paperTradeEvents } from "@/lib/paperMarket";
 import { usePaperTrading } from "@/lib/store";
+import { readJson } from "@/lib/safeJson";
 
 interface Event {
   id: string;
@@ -35,9 +36,9 @@ export function TradeFeed({ songId, assetMint, detailMode = false }: { songId?: 
     async function load() {
       try {
         const r = await fetch("/api/feed", { cache: "no-store" });
-        const j = await r.json();
+        const j = await readJson<any>(r);
         if (!alive) return;
-        const list = (j.events || []) as Event[];
+        const list = (j?.events || []) as Event[];
         
         let filtered = list;
         if (songId) {

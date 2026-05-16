@@ -41,6 +41,8 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
   const liquidityDetails = liquidityPayload.liquidity || liquidityPayload;
   const launchPayload = parseEventPayload(latestLaunchEvent);
   const poolId = liquidityDetails.poolId || song.fakeLiquidityPoolAddress || null;
+  const now = new Date().toISOString();
+  const isSimulated = Boolean(song.isSimulated || (song.fakeTokenAddress && !song.mintAddress) || song.mode === "paper");
   return {
     name: song.coinName || `${song.title} Song Coin`,
     ticker: normalizeSymbol(song.symbol || song.title || "SONG"),
@@ -66,7 +68,24 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
     audius_play_count: Number(song.streams || 0),
     isSongDaqLocal: !isOpenAudio,
     isOpenAudioCoin: isOpenAudio,
+    isSimulated,
     source: isOpenAudio ? "open_audio" : "songdaq",
+    dataSources: [
+      isOpenAudio ? "open_audio" : "songdaq",
+      "supabase",
+      "solana",
+      song.artistWallet?.audiusHandle || song.audiusTrackId ? "audius" : "",
+      isSimulated ? "demo" : "",
+    ].filter(Boolean) as string[],
+    priceSource: valuation.basis,
+    metadataSource: song.artworkUrl ? "songdaq" : song.artistWallet?.audiusAvatar ? "audius" : "demo",
+    lastRefreshAt: now,
+    auditTrail: [
+      { label: "Song coin indexed", source: "SONG·DAQ", status: song.status || "indexed", at: song.createdAt ? new Date(song.createdAt).toISOString() : null },
+      { label: "Mint", source: "Solana", status: song.mintAddress ? "on-chain" : "simulated/pending", at: song.createdAt ? new Date(song.createdAt).toISOString() : null },
+      { label: "Liquidity", source: "SONG·DAQ", status: poolId ? "pool recorded" : Number(song.liquidityPairAmount || 0) > 0 ? "indexing" : "not added", at: latestLiquidityEvent?.createdAt ? new Date(latestLiquidityEvent.createdAt).toISOString() : null },
+      { label: "Royalty", source: "Supabase", status: song.royaltyVerificationStatus || "not_submitted", at: song.royaltyVerifiedAt ? new Date(song.royaltyVerifiedAt).toISOString() : null },
+    ],
     songId: song.id,
     mintAddress: song.mintAddress || null,
     createdAt: song.createdAt ? new Date(song.createdAt).toISOString() : undefined,
@@ -90,6 +109,34 @@ function localSongToCoin(song: any, rates: Record<string, number> = {}): AudiusC
     marketValueBasis: valuation.basis,
     marketValueNote: valuation.note,
     isMarketValueReliable: valuation.isMarketValueReliable,
+  };
+}
+
+function withSourceMeta(c: AudiusCoin): AudiusCoin {
+  const isOpenAudio = Boolean(c.isOpenAudioCoin || c.source === "open_audio" || c.source === "audius_public");
+  const isSongDaq = Boolean(c.isSongDaqLocal || c.source === "songdaq" || c.songId);
+  const now = new Date().toISOString();
+  return {
+    ...c,
+    dataSources: c.dataSources?.length
+      ? c.dataSources
+      : [
+          isSongDaq ? "songdaq" : "",
+          isOpenAudio ? "open_audio" : "",
+          c.artist_handle || c.audius_track_id ? "audius" : "",
+          c.mint ? "solana" : "",
+          c.price != null ? "jupiter" : "",
+        ].filter(Boolean) as string[],
+    priceSource: c.priceSource || (isSongDaq ? String((c as any).marketValueBasis || "songdaq_index") : "open_audio_index"),
+    metadataSource: c.metadataSource || (c.logo_uri ? (isOpenAudio ? "audius" : "songdaq") : "demo"),
+    lastRefreshAt: c.lastRefreshAt || now,
+    auditTrail: c.auditTrail?.length
+      ? c.auditTrail
+      : [
+          { label: "Market imported", source: isOpenAudio ? "Open Audio" : "SONG·DAQ", status: "indexed", at: now },
+          { label: "Mint", source: "Solana", status: c.mint ? "available" : "missing", at: now },
+          { label: "Price", source: c.priceSource || (isOpenAudio ? "Open Audio" : "SONG·DAQ"), status: Number(c.price || 0) > 0 ? "priced" : "not priced", at: now },
+        ],
   };
 }
 
@@ -135,7 +182,7 @@ export async function GET(_req: NextRequest, ctx: { params: { mint: string } }) 
       : {};
     const c = await getCoin(ctx.params.mint);
     if (!c && localFirst) {
-      return NextResponse.json({ coin: { ...localFirst, ...localSongToCoin(localFirst, rates) } });
+      return NextResponse.json({ coin: withSourceMeta({ ...localFirst, ...localSongToCoin(localFirst, rates) } as AudiusCoin) });
     }
     if (!c) return NextResponse.json({ error: "Coin not found yet. Refresh in a moment while SONG·DAQ syncs the new mint." }, { status: 404 });
     const [enriched] = await hydrateArtists([c]);
@@ -171,7 +218,7 @@ export async function GET(_req: NextRequest, ctx: { params: { mint: string } }) 
     const localCoin = localFirst ? localSongToCoin(localFirst, rates) : local ? localSongToCoin(local, rates) : {};
     // Keep the normalized valuation last so stale raw DB market-cap fields
     // cannot overwrite public-market-safe pricing for fresh local launches.
-    return NextResponse.json({ coin: { ...enriched, ...(local ?? {}), ...localCoin } });
+    return NextResponse.json({ coin: withSourceMeta({ ...enriched, ...(local ?? {}), ...localCoin } as AudiusCoin) });
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 500 });
   }
